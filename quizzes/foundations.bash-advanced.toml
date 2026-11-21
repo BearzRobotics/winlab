@@ -1,0 +1,463 @@
+schema_version = 1
+lesson = "foundations.bash-advanced"
+# Draft for owner review. Answers come from the tested output (adv1.sh) on bash 5.3.9, not from the unverified version table. Each attempt asks 10.
+draw = 10
+
+# ---- mapfile ----
+
+[[question]]
+id = "m-t"
+type = "choice"
+prompt = "What does the -t option of mapfile do?"
+choices = ["Strips the trailing newline from each line", "Sorts the lines", "Reads only text files", "Limits the number of lines"]
+answers = ["Strips the trailing newline from each line"]
+explanation = "Without -t each element ended with a newline ([one\\n][two words\\n]...)."
+review = "Arrays with `mapfile`"
+
+[[question]]
+id = "m-split"
+type = "choice"
+prompt = "a=($(cat lines.txt)) on a file with the lines one, two words, three gives how many elements?"
+choices = ["4 (words are split on spaces)", "3", "1", "2"]
+answers = ["4 (words are split on spaces)"]
+explanation = "mapfile -t gave 3, one per line."
+review = "Arrays with `mapfile`"
+
+[[question]]
+id = "m-opts"
+type = "multi"
+prompt = "Which mapfile options were shown?"
+choices = ["-n 2 (at most two lines)", "-s 1 (skip one line)", "-d '' (NUL-separated)", "-z (sort)"]
+answers = ["-n 2 (at most two lines)", "-s 1 (skip one line)", "-d '' (NUL-separated)"]
+explanation = "There is no -z option in the lesson."
+review = "Arrays with `mapfile`"
+
+[[question]]
+id = "m-nul"
+type = "choice"
+prompt = "Why use find -print0 with mapfile -d ''?"
+choices = ["File names may contain newlines but never a NUL byte", "It is shorter to type", "mapfile needs NUL", "It sorts the names"]
+answers = ["File names may contain newlines but never a NUL byte"]
+explanation = "Spaces, dashes and newlines in names arrived intact."
+review = "File names: NUL-separated"
+
+[[question]]
+id = "m-pipe"
+type = "choice"
+prompt = "What does echo x | mapfile -t a; echo ${#a[@]} print?"
+choices = ["0 (the pipeline part ran in a subshell)", "1", "x", "An error"]
+answers = ["0 (the pipeline part ran in a subshell)"]
+explanation = "mapfile -t a < <(echo x) gave 1, and so did shopt -s lastpipe."
+review = "Pipes lose the array; `< <(...)` and `lastpipe` keep it"
+
+[[question]]
+id = "m-pipefix"
+type = "multi"
+prompt = "Which keep the array or counter when the data comes from a command?"
+choices = ["mapfile -t a < <(cmd)", "shopt -s lastpipe (in a script) with cmd | mapfile -t a", "cmd | while read ...; do n=$((n+1)); done; echo $n", "Putting the loop and the echo together inside braces after the pipe"]
+answers = ["mapfile -t a < <(cmd)", "shopt -s lastpipe (in a script) with cmd | mapfile -t a", "Putting the loop and the echo together inside braces after the pipe"]
+explanation = "The plain pipe form printed n=0; the braces form printed n=3 because the echo ran in the same subshell."
+review = "Pipes lose the array; `< <(...)` and `lastpipe` keep it"
+
+[[question]]
+id = "m-last"
+type = "choice"
+prompt = "printf \"a\\nb\" | while read -r l; do echo \"[$l]\"; done prints:"
+choices = ["[a] only: the unterminated last line is dropped", "[a] and [b]", "Nothing", "[a b]"]
+answers = ["[a] only: the unterminated last line is dropped"]
+explanation = "Add || [ -n \"$l\" ] to the read, or use mapfile, which kept the last line."
+review = "Edge cases that matter"
+
+# ---- namerefs ----
+
+[[question]]
+id = "n-what"
+type = "choice"
+prompt = "What is local -n out=$1 for?"
+choices = ["Make out refer to the caller's variable named by $1", "Make out a copy of $1", "Make out read-only", "Export out"]
+answers = ["Make out refer to the caller's variable named by $1"]
+explanation = "fill() { local -n out=$1; out=(x y z); }; fill result filled the caller's array."
+review = "Namerefs"
+
+[[question]]
+id = "n-unset"
+type = "choice"
+prompt = "x=1; declare -n r=x; unset r. What is x afterwards?"
+choices = ["Unset: unset on a nameref removes the target", "1", "r", "Empty"]
+answers = ["Unset: unset on a nameref removes the target"]
+explanation = "unset -n r removes only the nameref (x stayed 1)."
+review = "Namerefs"
+
+[[question]]
+id = "n-clash"
+type = "choice"
+prompt = "f() { local -n out=$1; out=1; }; g() { local out; f out; echo \"g: out=$out\"; }; g printed on bash 5.3.9:"
+choices = ["circular name reference warnings and an empty out", "g: out=1", "A syntax error", "g: out=out"]
+answers = ["circular name reference warnings and an empty out"]
+explanation = "The nameref pointed at itself because the local had the same name. Use a distinctive nameref name such as _out."
+review = "Namerefs"
+
+[[question]]
+id = "n-loop"
+type = "choice"
+prompt = "How did the lesson loop over several arrays by name?"
+choices = ["for name in a b; do declare -n arr=$name; ...; unset -n arr; done", "eval only", "arrays cannot be looped", "for name in ${a b}"]
+answers = ["for name in a b; do declare -n arr=$name; ...; unset -n arr; done"]
+explanation = "It printed a has 2 and b has 3."
+review = "Namerefs"
+
+# ---- printf -v ----
+
+[[question]]
+id = "pf-v"
+type = "short"
+prompt = "What does printf -v s \"%05d-%s\" 42 ab; echo \"$s\" print?"
+answers = ["00042-ab"]
+explanation = "printf -v writes into the variable without a subshell."
+review = "`printf -v` and friends: build values without forks"
+
+[[question]]
+id = "pf-reuse"
+type = "short"
+prompt = "What does printf \"[%s]\" a b c print (no spaces)?"
+answers = ["[a][b][c]"]
+explanation = "The format is reused for each extra argument."
+review = "`printf -v` and friends: build values without forks"
+
+[[question]]
+id = "pf-q"
+type = "choice"
+prompt = "What is printf %q for?"
+choices = ["Quoting a value so it can be pasted back into bash", "Printing in a queue", "Printing quotes around numbers", "Quiet mode"]
+answers = ["Quoting a value so it can be pasted back into bash"]
+explanation = "It printed it\\'s\\ a\\ \\\"test\\\"\\ \\$HOME."
+review = "`printf -v` and friends: build values without forks"
+
+[[question]]
+id = "pf-case"
+type = "choice"
+prompt = "v=Hello; echo \"${v^^} ${v,,}\" prints:"
+choices = ["HELLO hello", "Hello Hello", "hello HELLO", "HELLO HELLO"]
+answers = ["HELLO hello"]
+explanation = "^^ upper-cases, ,, lower-cases (so do ${v@U} and ${v@L})."
+review = "`printf -v` and friends: build values without forks"
+
+[[question]]
+id = "pf-prefix"
+type = "short"
+prompt = "app_a=1 app_b=2; echo \"${!app_*}\" prints (the two names, one space between)"
+answers = ["app_a app_b"]
+explanation = "${!prefix*} expands to the variable NAMES starting with the prefix."
+review = "`printf -v` and friends: build values without forks"
+
+[[question]]
+id = "pf-slice"
+type = "short"
+prompt = "a=(a b c d); echo \"${a[@]:1:2}\" prints (two letters, one space)"
+answers = ["b c"]
+explanation = "Start at index 1, take 2 elements."
+review = "`printf -v` and friends: build values without forks"
+
+# ---- declare ----
+
+[[question]]
+id = "d-i"
+type = "choice"
+prompt = "declare -i n; n=abc; echo \"n=$n\" prints:"
+choices = ["n=0", "n=abc", "An error", "n="]
+answers = ["n=0"]
+explanation = "An integer variable evaluates assignments arithmetically; abc is an unset name, i.e. 0. (n=2+3 gave 5.)"
+review = "`declare`: types and attributes"
+
+[[question]]
+id = "d-r"
+type = "choice"
+prompt = "What does r=2 do after declare -r r=1?"
+choices = ["Fails with r: readonly variable (status 1)", "Changes r", "Unsets r", "Silently ignored"]
+answers = ["Fails with r: readonly variable (status 1)"]
+explanation = "unset r also failed: cannot unset: readonly variable."
+review = "`declare`: types and attributes"
+
+[[question]]
+id = "d-local"
+type = "choice"
+prompt = "Inside a function, declare v=inner (no -g) sets:"
+choices = ["A local variable; the global keeps its value", "The global variable", "An exported variable", "A nameref"]
+answers = ["A local variable; the global keeps its value"]
+explanation = "declare -g v=inner set the global."
+review = "`declare`: types and attributes"
+
+[[question]]
+id = "d-p"
+type = "choice"
+prompt = "Which command shows a variable's attributes and value, such as declare -A m=([k]=\"v\" )?"
+choices = ["declare -p m", "echo $m", "type m", "set -x"]
+answers = ["declare -p m"]
+explanation = "It shows the type flags too."
+review = "`declare`: types and attributes"
+
+[[question]]
+id = "d-lu"
+type = "short"
+prompt = "declare -l lo=ABC; declare -u up=abc; echo \"$lo $up\" prints (two words)"
+answers = ["abc ABC"]
+explanation = "-l lowers and -u uppers on assignment."
+review = "`declare`: types and attributes"
+
+[[question]]
+id = "a-noassoc"
+type = "choice"
+prompt = "Without declare -A, what do m[b]=2; m[a]=1; echo \"${#m[@]} ${m[0]}\" print?"
+choices = ["1 1: both keys were evaluated as index 0", "2 2", "2 1", "An error"]
+answers = ["1 1: both keys were evaluated as index 0"]
+explanation = "The keys are evaluated as arithmetic, so b and a are the unset names 0."
+review = "Associative arrays"
+
+[[question]]
+id = "a-order"
+type = "choice"
+prompt = "In what order does for k in \"${!m[@]}\" visit an associative array?"
+choices = ["No useful order: sort the keys yourself", "Insertion order", "Alphabetical", "Reverse order"]
+answers = ["No useful order: sort the keys yourself"]
+explanation = "The test printed c b a for keys inserted b a c."
+review = "Associative arrays"
+
+[[question]]
+id = "a-v"
+type = "choice"
+prompt = "Which test asks whether key k exists in the associative array m?"
+choices = ["[[ -v m[k] ]]", "[ -z m[k] ]", "[ $m = k ]", "m[k] == set"]
+answers = ["[[ -v m[k] ]]"]
+explanation = "It printed k set, and zz unset for a missing key."
+review = "Associative arrays"
+
+[[question]]
+id = "a-sparse"
+type = "choice"
+prompt = "a=(); a[5]=x; a[9]=y. What are ${#a[@]} and ${!a[@]}?"
+choices = ["2 and 5 9", "10 and 0 1 ... 9", "9 and 5 9", "2 and 0 1"]
+answers = ["2 and 5 9"]
+explanation = "The length counts set elements, not the highest index."
+review = "Associative arrays"
+
+# ---- shopt ----
+
+[[question]]
+id = "s-null"
+type = "choice"
+prompt = "Why use shopt -s nullglob before for f in *.log; do ...?"
+choices = ["With no match the loop runs zero times instead of once with the literal *.log", "It sorts the files", "It makes globs faster", "It enables dotfiles"]
+answers = ["With no match the loop runs zero times instead of once with the literal *.log"]
+explanation = "Without it echo *.zzz printed *.zzz."
+review = "`shopt`: shell options for globbing and more"
+
+[[question]]
+id = "s-fail"
+type = "choice"
+prompt = "What does failglob do when a pattern matches nothing?"
+choices = ["Prints no match and fails (status 1)", "Removes the pattern", "Keeps the pattern", "Matches everything"]
+answers = ["Prints no match and fails (status 1)"]
+explanation = "The command is not run at all."
+review = "`shopt`: shell options for globbing and more"
+
+[[question]]
+id = "s-dot"
+type = "choice"
+prompt = "In a directory with .hid, a.txt, B.TXT, c.log, what does shopt -s dotglob change for echo *?"
+choices = ["It adds .hid to the result", "It sorts differently", "It hides .hid", "Nothing"]
+answers = ["It adds .hid to the result"]
+explanation = "The output went from B.TXT a.txt c.log to .hid B.TXT a.txt c.log."
+review = "`shopt`: shell options for globbing and more"
+
+[[question]]
+id = "s-glob"
+type = "choice"
+prompt = "What does ** match under shopt -s globstar?"
+choices = ["Any number of directories", "Only one directory level", "Only dotfiles", "Nothing special"]
+answers = ["Any number of directories"]
+explanation = "**/*.txt found a.txt and d/e/deep.txt."
+review = "`shopt`: shell options for globbing and more"
+
+[[question]]
+id = "s-ext"
+type = "choice"
+prompt = "shopt -s extglob; echo !(a) on ONE line gives:"
+choices = ["A syntax error near unexpected token `('", "The files not named a", "Nothing", "All files"]
+answers = ["A syntax error near unexpected token `('"]
+explanation = "Bash parses the whole line before running shopt; put shopt -s extglob on an earlier line."
+review = "`extglob` must be on a line **before** the pattern"
+
+[[question]]
+id = "s-extp"
+type = "multi"
+prompt = "Which extglob examples worked once shopt -s extglob was on its own line?"
+choices = ["echo !(*.txt)  (everything not ending .txt)", "[[ report.txt == *.@(txt|log) ]]", "case abc in +([a-c])) ...", "echo !(*.txt) on the same line as the shopt"]
+answers = ["echo !(*.txt)  (everything not ending .txt)", "[[ report.txt == *.@(txt|log) ]]", "case abc in +([a-c])) ..."]
+explanation = "The same-line form failed."
+review = "`extglob` must be on a line **before** the pattern"
+
+[[question]]
+id = "s-nocase"
+type = "choice"
+prompt = "What does shopt -s nocasematch change?"
+choices = ["Comparisons in [[ ]] and case ignore case", "Only filenames", "Only variables", "Output case"]
+answers = ["Comparisons in [[ ]] and case ignore case"]
+explanation = "[[ ABC == abc ]] matched, and so did case HELLO in hello)."
+review = "`shopt`: shell options for globbing and more"
+
+# ---- completion ----
+
+[[question]]
+id = "c-compgen"
+type = "short"
+prompt = "How many candidates did compgen -W \"start stop status restart\" -- st print (number only)?"
+answers = ["3"]
+explanation = "start, stop and status; restart does not start with st."
+review = "Programmable completion"
+
+[[question]]
+id = "c-vars"
+type = "multi"
+prompt = "Which are used by a completion function?"
+choices = ["COMP_WORDS", "COMP_CWORD", "COMPREPLY", "BASH_REMATCH"]
+answers = ["COMP_WORDS", "COMP_CWORD", "COMPREPLY"]
+explanation = "BASH_REMATCH belongs to the =~ operator."
+review = "Programmable completion"
+
+[[question]]
+id = "c-attach"
+type = "choice"
+prompt = "Which command attaches a completion function _mytool to the command mytool?"
+choices = ["complete -F _mytool mytool", "compgen -F _mytool mytool", "alias mytool=_mytool", "set -o complete"]
+answers = ["complete -F _mytool mytool"]
+explanation = "complete -p mytool then printed complete -F _mytool mytool."
+review = "Programmable completion"
+
+[[question]]
+id = "c-outside"
+type = "choice"
+prompt = "What is ${COMP_WORDS[*]-unset} outside a completion function?"
+choices = ["unset", "empty", "an error", "the current command line"]
+answers = ["unset"]
+explanation = "That is why the lesson simulates it by setting COMP_WORDS and COMP_CWORD."
+review = "Programmable completion"
+
+# ---- forks ----
+
+[[question]]
+id = "f-why"
+type = "choice"
+prompt = "Why is x=$(basename \"$p\") in a loop of thousands slow?"
+choices = ["Each call starts a new process (fork and exec)", "basename is a slow algorithm", "$( ) is always slow", "bash has no builtins"]
+answers = ["Each call starts a new process (fork and exec)"]
+explanation = "About 4 ms each on the test machine; ${p##*/} took 0.009 s for the same 2000 iterations."
+review = "Avoiding forks: measured"
+
+[[question]]
+id = "f-path"
+type = "choice"
+prompt = "Did the long PATH (29 entries, 20 Windows directories) explain the slow external programs?"
+choices = ["No: absolute path, default PATH and a clean PATH all took about 1.9 s for 500 runs", "Yes, completely", "Only for date", "It was not measured"]
+answers = ["No: absolute path, default PATH and a clean PATH all took about 1.9 s for 500 runs"]
+explanation = "The real cause was not investigated."
+review = "Avoiding forks: measured"
+
+[[question]]
+id = "f-awk"
+type = "choice"
+prompt = "Adding 50,000 numbers: bash while-read loop 0.241 s, one awk 0.012 s. What does the lesson conclude?"
+choices = ["One process over all the data beats a bash loop, which beats a process per item", "Always use bash loops", "awk is never needed", "Builtins are always fastest"]
+answers = ["One process over all the data beats a bash loop, which beats a process per item"]
+explanation = "Builtins are best for one value, not for large data."
+review = "Avoiding forks: measured"
+
+[[question]]
+id = "f-cat"
+type = "choice"
+prompt = "Which reads a small file into a variable without starting cat?"
+choices = ["x=$(<file)", "x=$(cat file)", "x=`cat file`", "x=file"]
+answers = ["x=$(<file)"]
+explanation = "0.019 s against 8.05 s for 2000 iterations."
+review = "Avoiding forks: measured"
+
+[[question]]
+id = "f-time"
+type = "short"
+prompt = "Which bash variable holds the seconds since 1970 without running date? (name only, no $)"
+answers = ["EPOCHSECONDS"]
+explanation = "EPOCHREALTIME adds microseconds."
+review = "`printf -v` and friends: build values without forks"
+
+# ---- other tools ----
+
+[[question]]
+id = "o-waitn"
+type = "choice"
+prompt = "What does wait -n do?"
+choices = ["Returns when the first background job finishes, with its status", "Waits for all jobs", "Waits n seconds", "Lists jobs"]
+answers = ["Returns when the first background job finishes, with its status"]
+explanation = "The shorter job's status 4 came back first."
+review = "Other tools worth knowing"
+
+[[question]]
+id = "o-readt"
+type = "choice"
+prompt = "read -t 1 x on input that takes 3 seconds returned status 142. What does a status above 128 mean for read -t?"
+choices = ["The read timed out", "A syntax error", "End of file", "Success"]
+answers = ["The read timed out"]
+explanation = "It is the signal-style status for a timeout."
+review = "Other tools worth knowing"
+
+[[question]]
+id = "o-regex"
+type = "choice"
+prompt = "In [[ abc =~ \"$p\" ]] with p='^a.c$', the lesson's test gave:"
+choices = ["No match: quoting makes the pattern a literal string", "A match", "A syntax error", "An empty BASH_REMATCH only"]
+answers = ["No match: quoting makes the pattern a literal string"]
+explanation = "Unquoted [[ abc =~ $p ]] matched."
+review = "Other tools worth knowing"
+
+[[question]]
+id = "o-rematch"
+type = "short"
+prompt = "[[ \"2026-11-21\" =~ ^([0-9]+)-([0-9]+)-([0-9]+)$ ]]; what is ${BASH_REMATCH[2]} (the month)?"
+answers = ["11"]
+explanation = "Index 0 is the whole match, 1 the year, 2 the month, 3 the day."
+review = "Other tools worth knowing"
+
+[[question]]
+id = "o-func"
+type = "short"
+prompt = "a() { b; }; b() { echo \"${FUNCNAME[*]}\"; }; a prints (three words)"
+answers = ["b a main"]
+explanation = "FUNCNAME is the call stack, innermost first."
+review = "Other tools worth knowing"
+
+# ---- versions ----
+
+[[question]]
+id = "v-guard"
+type = "choice"
+prompt = "Which variable gives a script its bash version as an array of numbers?"
+choices = ["BASH_VERSINFO", "BASH_ARGV", "SHELLOPTS", "BASH_SOURCE"]
+answers = ["BASH_VERSINFO"]
+explanation = "BASH_VERSINFO[0] and [1] printed 5 and 3 on the test machine."
+review = "Bash versions and portability"
+
+[[question]]
+id = "v-honest"
+type = "choice"
+prompt = "The lesson's table of which feature needs which bash version is:"
+choices = ["From memory and not verified: check the NEWS file of the version you target", "Verified on every version", "Taken from the manual", "Tested on bash 3.2"]
+answers = ["From memory and not verified: check the NEWS file of the version you target"]
+explanation = "Only bash 5.3.9 was available for the tests."
+review = "Bash versions and portability"
+
+[[question]]
+id = "v-shebang"
+type = "choice"
+prompt = "A script that uses mapfile and declare -A should start with:"
+choices = ["#!/usr/bin/env bash (or #!/bin/bash)", "#!/bin/sh", "No shebang", "#!/bin/dash"]
+answers = ["#!/usr/bin/env bash (or #!/bin/bash)"]
+explanation = "These are bash features, not POSIX; sh might not be bash."
+review = "Bash versions and portability"

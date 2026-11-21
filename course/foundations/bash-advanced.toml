@@ -1,0 +1,59 @@
+schema_version = 1
+id = "foundations.bash-advanced"
+title = "Advanced bash: mapfile, namerefs, declare, shopt, completion and avoiding forks"
+summary = "The bash features that make large scripts shorter and faster, tested on bash 5.3.9: mapfile and NUL-separated file names, the pipeline-subshell trap and lastpipe, namerefs and their name-clash failure, printf -v and the string operators, declare attributes, associative arrays, shopt globbing options and the extglob same-line rule, programmable completion (compgen and a simulated completion function), a measured table of builtins against external programs, wait -n, coproc and BASH_REMATCH, and an honest, partly unverified section on bash versions."
+content = "bash-advanced.md"
+estimated_minutes = 150
+level = 5
+objectives = [
+  "Read lines and NUL-separated file names into arrays with mapfile, and explain why a pipe loses the array and how < <() and lastpipe keep it",
+  "Use namerefs to pass variables and arrays by name, and explain the circular-reference failure when names clash",
+  "Build strings with printf -v, ${v^^}, ${v@Q}, ${!prefix*} and array slices instead of starting programs",
+  "Use declare attributes (-a -A -i -r -l -u -x -n -g) and declare -p to inspect a variable",
+  "Use associative arrays correctly (declare -A, sorted keys, -v tests) and explain what happens without declare -A",
+  "Use nullglob, failglob, dotglob, nocaseglob, globstar and extglob, and explain why extglob must be set on an earlier line",
+  "Use compgen and write and test a completion function that fills COMPREPLY",
+  "Measure builtins against external programs and choose between a bash loop, a builtin and one awk over all the data",
+  "Use wait -n, coproc, read -t, FUNCNAME and BASH_REMATCH",
+  "Guard a script by BASH_VERSINFO and decide which bash versions to support, knowing which claims about versions still need checking",
+]
+prerequisites = ["foundations.bash-robust-scripts"]
+privilege = "standard"
+certifications = ["comptia-linux-plus/scripting-containers-automation"]
+evaluation_criteria = [
+  "Learner collects awkward file names with find -print0 and mapfile -d '' and shows every name arrived intact",
+  "Learner shows the pipe-subshell counter bug and fixes it three ways",
+  "Learner reproduces the nameref name clash and fixes it with a distinctive name",
+  "Learner counts words with declare -A and sorts the keys",
+  "Learner shows the extglob same-line syntax error and the fix",
+  "Learner times builtins against externals and computes the ratios",
+  "Learner writes and tests a completion function by simulating COMP_WORDS",
+]
+
+[[references]]
+title = "Bash Reference Manual"
+url = "https://tiswww.case.edu/php/chet/bash/bashref.html"
+
+[[references]]
+title = "Bash Reference Manual: Shell Parameter Expansion"
+url = "https://tiswww.case.edu/php/chet/bash/bashref.html#Shell-Parameter-Expansion"
+
+[[references]]
+title = "Bash Reference Manual: Arrays"
+url = "https://tiswww.case.edu/php/chet/bash/bashref.html#Arrays"
+
+[[references]]
+title = "Bash Reference Manual: Bash Builtins (mapfile, declare, printf, read)"
+url = "https://tiswww.case.edu/php/chet/bash/bashref.html#Bash-Builtins"
+
+[[references]]
+title = "Bash Reference Manual: The Shopt Builtin"
+url = "https://tiswww.case.edu/php/chet/bash/bashref.html#The-Shopt-Builtin"
+
+[[references]]
+title = "Bash Reference Manual: Programmable Completion"
+url = "https://tiswww.case.edu/php/chet/bash/bashref.html#Programmable-Completion"
+
+[[references]]
+title = "BashFAQ/024: variables set in a pipeline are lost (Greg's Wiki)"
+url = "https://mywiki.wooledge.org/BashFAQ/024"
