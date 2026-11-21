@@ -4,7 +4,7 @@ id = "labs.script-bash-backup-rotate"
 target = "linux"
 title = "Script (bash): make a backup and keep only the newest three"
 summary = "Create an archive, then delete the oldest ones. The result on disk is checked."
-lesson = "foundations.bash-control-flow"
+lesson = "foundations.bash-functions-and-scripts"
 symptom = '''
 Write a bash script and save it as /home/labadmin/labs/backup.sh.
 

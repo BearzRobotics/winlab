@@ -1,30 +1,54 @@
 schema_version = 1
 id = "foundations.bash-control-flow"
-title = "Bash scripting: tests, loops, case, functions and error handling"
-summary = "Conditions with [ ] and [[ ]], if/case, the loop forms, functions, arrays, reading files safely and failing safely."
+title = "Bash decisions and loops: tests, [[ ]], case, loops and reading input"
+summary = "How if tests a command's status, the quirks of [ ] and file tests, what [[ ]] fixes (patterns, regex with BASH_REMATCH, no splitting), (( )) and its inverted status, case with fall-through, every loop form with its traps (empty globs, last line without a newline, stdin theft, pipeline subshells), read with timeouts, retry loops, and the portable subset in dash and busybox ash."
 content = "bash-control-flow.md"
-estimated_minutes = 75
+estimated_minutes = 120
 level = 2
 objectives = [
-  "Write conditions with test operators for strings, numbers and files, and combine them with && and ||",
-  "Choose between if/elif/else and case, and write patterns for case",
-  "Use for, while read, until and C-style loops, with break and continue",
-  "Write a function with local variables, and return a status versus return a value",
-  "Handle errors deliberately: exit statuses, set -u and set -e, pipefail, and trap for cleanup",
+  "Explain that if runs a command and tests its exit status, and use !, &&, : and the status of pipelines correctly",
+  "Write robust [ ] tests: quote variables, use = for strings and -eq for integers, avoid unescaped > and -a/-o, and read the common error messages",
+  "Use file tests (-e -f -d -L -r -w -x -s -nt -ot -ef) and explain why -e and -L differ on a broken link and why test-then-use is racy",
+  "Use [[ ]] for pattern matching, regular expressions with BASH_REMATCH, string comparison and -v, and avoid the quoting and arithmetic-evaluation traps",
+  "Use (( )) for integer logic and explain its inverted status, octal and no-floats rules",
+  "Group commands with { } and ( ), write the die idiom, and state the main exceptions where set -e does not stop a script",
+  "Write case statements with glob patterns, quoting rules, fall-through (;& and ;;&), nocasematch and extglob",
+  "Write for, while, until, break N and continue N loops safely: guard empty globs, never loop over ls output, bound retries",
+  "Read input line by line without losing the last line, trimming data or letting an inner command steal stdin, and avoid the pipeline-subshell trap",
+  "Use read -t, -n, REPLY and select, and say which constructs are portable to dash and busybox ash",
 ]
-prerequisites = ["foundations.bash-basics"]
+prerequisites = ["foundations.bash-variables-and-expansion"]
 windows_features = []
 privilege = "standard"
 certifications = ["redhat-rhcsa/essential-tools", "comptia-linux-plus/scripting-containers-automation"]
 evaluation_criteria = [
-  "Learner writes a script that reads a file line by line and counts items by category",
-  "Learner explains what for f in $(ls) gets wrong and how to write it safely",
+  "Learner writes a script that reads a file line by line and counts items by category, keeping the last line and surviving spaces",
+  "Learner explains what for f in $(ls) gets wrong and writes the safe loop with an empty-glob guard",
+  "Learner reproduces [ 9 > 10 ] creating a file and fixes it",
+  "Learner shows an inner cat stealing a loop's stdin and fixes it",
+  "Learner finds every problem in the exercise-11 script",
 ]
 
 [[references]]
-title = "Bash Reference Manual: Shell Commands (GNU)"
-url = "https://www.gnu.org/software/bash/manual/bash.html#Shell-Commands"
+title = "Bash Reference Manual: Conditional Constructs, Looping Constructs, Conditional Expressions (Chet Ramey)"
+url = "https://tiswww.case.edu/php/chet/bash/bashref.html"
 
 [[references]]
-title = "Bash Reference Manual: Conditional Constructs (GNU)"
-url = "https://www.gnu.org/software/bash/manual/bash.html#Conditional-Constructs"
+title = "bash(1) manual page (man7.org)"
+url = "https://man7.org/linux/man-pages/man1/bash.1.html"
+
+[[references]]
+title = "test(1) manual page (man7.org)"
+url = "https://man7.org/linux/man-pages/man1/test.1.html"
+
+[[references]]
+title = "POSIX Shell Command Language: Compound Commands (The Open Group)"
+url = "https://pubs.opengroup.org/onlinepubs/9799919799/utilities/V3_chap02.html"
+
+[[references]]
+title = "ShellCheck"
+url = "https://www.shellcheck.net/"
+
+[[references]]
+title = "Bashism (Greg's Wiki)"
+url = "https://mywiki.wooledge.org/Bashism"

@@ -1,0 +1,476 @@
+schema_version = 1
+lesson = "foundations.bash-control-flow"
+# Draft for owner review. A bank of 51; each attempt asks 10, favouring questions missed last time.
+draw = 10
+
+# ---- if ----
+
+[[question]]
+id = "if-cmd"
+type = "choice"
+prompt = "What does if actually test?"
+choices = ["A command's exit status; 0 takes the then branch", "A boolean expression", "A string", "A file"]
+answers = ["A command's exit status; 0 takes the then branch"]
+explanation = "grep -q, cd, [ ] and [[ ]] are all just commands with a status."
+review = "`if` tests a command"
+
+[[question]]
+id = "if-pipe"
+type = "choice"
+prompt = "if true | false; then ... else ... fi takes which branch?"
+choices = ["else: the pipeline status is the last command's", "then", "Neither", "It is an error"]
+answers = ["else: the pipeline status is the last command's"]
+explanation = "pipefail (a later lesson) changes this."
+review = "`if` tests a command"
+
+[[question]]
+id = "if-empty"
+type = "choice"
+prompt = "Which fills an empty then branch?"
+choices = [":", "pass", "{}", "null"]
+answers = [":"]
+explanation = "if true; then fi is a syntax error; : is the do-nothing command."
+review = "`if` tests a command"
+
+[[question]]
+id = "if-none"
+type = "short"
+prompt = "if false; then echo; fi; echo $? prints what? (number)"
+answers = ["0"]
+explanation = "With no branch taken, the status of the if is 0."
+review = "`if` tests a command"
+
+# ---- [ ] ----
+
+[[question]]
+id = "br-prog"
+type = "choice"
+prompt = "Why must there be a space after [ and before ]?"
+choices = ["[ is a command, and ] is its last argument", "It is a style rule", "bash requires it only in functions", "Spaces are ignored"]
+answers = ["[ is a command, and ] is its last argument"]
+explanation = "[-f x] is read as the word [-f: command not found."
+review = "`test` and `[ ]`: a command with quirks"
+
+[[question]]
+id = "br-n"
+type = "choice"
+prompt = "v=\"\". What does [ -n $v ] evaluate to?"
+choices = ["True, because it becomes [ -n ]", "False", "An error", "It depends on the shell"]
+answers = ["True, because it becomes [ -n ]"]
+explanation = "Quote it: [ -n \"$v\" ]."
+review = "`test` and `[ ]`: a command with quirks"
+
+[[question]]
+id = "br-unary"
+type = "choice"
+prompt = "[ $v = x ] with v empty gives what?"
+choices = ["[: =: unary operator expected", "false, cleanly", "true", "Nothing"]
+answers = ["[: =: unary operator expected"]
+explanation = "The empty variable vanished, leaving [ = x ]."
+review = "`test` and `[ ]`: a command with quirks"
+
+[[question]]
+id = "br-gt"
+type = "choice"
+prompt = "What does [ 9 > 10 ] do?"
+choices = ["Runs [ 9 ] and writes its output to a file named 10 (status 0)", "Compares numerically: false", "Compares as strings: true", "Syntax error"]
+answers = ["Runs [ 9 ] and writes its output to a file named 10 (status 0)"]
+explanation = "> is a redirection. Use -gt, or \\> for a string comparison."
+review = "`test` and `[ ]`: a command with quirks"
+
+[[question]]
+id = "br-eq"
+type = "choice"
+prompt = "[ abc -eq 1 ] returns what?"
+choices = ["An error: integer expected, status 2", "False, status 1", "True", "0"]
+answers = ["An error: integer expected, status 2"]
+explanation = "A non-number is an error, not just false."
+review = "`test` and `[ ]`: a command with quirks"
+
+[[question]]
+id = "br-str"
+type = "choice"
+prompt = "Which compares as STRINGS?"
+choices = ["[ 10 = 10.0 ]", "[ 10 -eq 10 ]", "[ 3 -lt 4 ]", "(( 3 < 4 ))"]
+answers = ["[ 10 = 10.0 ]"]
+explanation = "Numbers use letters (-eq), strings use symbols (=). 10 = 10.0 is false."
+review = "`test` and `[ ]`: a command with quirks"
+
+[[question]]
+id = "br-zero"
+type = "choice"
+prompt = "How is 010 read by [ 010 -eq 10 ] and by (( 010 == 8 ))?"
+choices = ["Decimal 10 in [ ]; octal 8 in (( ))", "Octal in both", "Decimal in both", "An error in both"]
+answers = ["Decimal 10 in [ ]; octal 8 in (( ))"]
+explanation = "Both were true. Strip zeros or force base 10 with 10#."
+review = "Numbers: `(( ))` and `$(( ))`"
+
+[[question]]
+id = "br-eqeq"
+type = "choice"
+prompt = "Which is portable for comparing strings in [ ]?"
+choices = ["=", "==", "-eq", "==="]
+answers = ["="]
+explanation = "dash: [: a: unexpected operator for ==."
+review = "`test` and `[ ]`: a command with quirks"
+
+# ---- file tests ----
+
+[[question]]
+id = "ft-link"
+type = "choice"
+prompt = "For a broken symlink, what do -e and -L return?"
+choices = ["-e false, -L true", "-e true, -L false", "Both true", "Both false"]
+answers = ["-e false, -L true"]
+explanation = "-e follows the link to a target that is not there."
+review = "File tests"
+
+[[question]]
+id = "ft-dir"
+type = "choice"
+prompt = "[ -f dir ] for a directory is:"
+choices = ["False; use -e or -d", "True", "An error", "True if readable"]
+answers = ["False; use -e or -d"]
+explanation = "-f is for regular files."
+review = "File tests"
+
+[[question]]
+id = "ft-s"
+type = "short"
+prompt = "Which file test is true only for a file that exists AND is not empty? (include the dash)"
+answers = ["-s"]
+explanation = "The empty file failed -s."
+review = "File tests"
+
+[[question]]
+id = "ft-ef"
+type = "choice"
+prompt = "What does [ f -ef hard ] test?"
+choices = ["That they are the same file (for example a hard link)", "That they are equal in content", "That f is newer", "That both exist"]
+answers = ["That they are the same file (for example a hard link)"]
+explanation = "-nt and -ot compare modification times."
+review = "File tests"
+
+[[question]]
+id = "ft-toctou"
+type = "choice"
+prompt = "Why is [ -f x ] && cat x a race?"
+choices = ["The file can change between the check and the use", "cat is slow", "[ is not atomic with echo", "Files cannot be tested"]
+answers = ["The file can change between the check and the use"]
+explanation = "For security-relevant code, attempt the operation and handle the failure."
+review = "File tests"
+
+[[question]]
+id = "ft-nt"
+type = "choice"
+prompt = "In my run, [ b -nt a ] for two files created back to back:"
+choices = ["bash said newer; dash and ash did not", "All three said newer", "None did", "dash said newer only"]
+answers = ["bash said newer; dash and ash did not"]
+explanation = "Not POSIX in older editions; do not rely on it for files created in the same second."
+review = "File tests"
+
+# ---- [[ ]] ----
+
+[[question]]
+id = "dk-split"
+type = "choice"
+prompt = "v=\"two words\". What does [[ $v = x ]] do?"
+choices = ["false, with no error", "[[: too many arguments", "true", "Syntax error"]
+answers = ["false, with no error"]
+explanation = "[[ ]] is a keyword and sees the original word."
+review = "`[[ ]]`: the safer test (bash)"
+
+[[question]]
+id = "dk-pat"
+type = "choice"
+prompt = "f=report.log. Which is true?"
+choices = ["[[ $f == *.log ]]", "[[ $f == \"*.log\" ]]", "[ $f == *.log ] in dash", "[[ $f =~ *.log ]] as a glob"]
+answers = ["[[ $f == *.log ]]"]
+explanation = "Quoting the right side makes it literal and false."
+review = "`[[ ]]`: the safer test (bash)"
+
+[[question]]
+id = "dk-star"
+type = "choice"
+prompt = "a=x; b='*'. What are [[ $a = $b ]] and [ \"$a\" = \"$b\" ]?"
+choices = ["true and false", "false and false", "true and true", "false and true"]
+answers = ["true and false"]
+explanation = "The right side of [[ = ]] is a pattern. Quote it if it is input."
+review = "`[[ ]]`: the safer test (bash)"
+
+[[question]]
+id = "dk-lt"
+type = "choice"
+prompt = "[[ 9 > 10 ]] is what?"
+choices = ["True: it compares as strings", "False: numeric", "An error", "A redirection"]
+answers = ["True: it compares as strings"]
+explanation = "Use (( 9 > 10 )) or -gt for numbers."
+review = "`[[ ]]`: the safer test (bash)"
+
+[[question]]
+id = "dk-rematch"
+type = "short"
+prompt = "Which array holds the captured groups after a successful =~ match?"
+answers = ["BASH_REMATCH"]
+explanation = "[0] is the whole match; [1], [2]... are the groups."
+review = "`=~`: regular expressions"
+
+[[question]]
+id = "dk-requote"
+type = "choice"
+prompt = "[[ $s =~ \"^build\" ]] for s=build-1: what happens?"
+choices = ["No match: quoting makes the regex literal text", "Matches", "Syntax error", "Matches case-insensitively"]
+answers = ["No match: quoting makes the regex literal text"]
+explanation = "Put the regex in a variable and leave it unquoted."
+review = "`=~`: regular expressions"
+
+[[question]]
+id = "dk-v"
+type = "choice"
+prompt = "x=\"\" (set but empty). [[ -v x ]] is:"
+choices = ["True", "False", "An error", "True only with set -u"]
+answers = ["True"]
+explanation = "-v tests that a variable is set, not that it is non-empty."
+review = "`[[ ]]`: the safer test (bash)"
+
+[[question]]
+id = "dk-eq"
+type = "choice"
+prompt = "n=2+3. What does [[ $n -eq 5 ]] give, and [ \"$n\" -eq 5 ]?"
+choices = ["True (it was evaluated as arithmetic); integer expected", "False; true", "True; true", "An error; an error"]
+answers = ["True (it was evaluated as arithmetic); integer expected"]
+explanation = "That evaluation can run commands hidden in untrusted text. Validate input first."
+review = "A warning about `-eq` in `[[ ]]`"
+
+# ---- (( )) ----
+
+[[question]]
+id = "nu-status"
+type = "choice"
+prompt = "What status does (( 0 )) return?"
+choices = ["1 (false); (( 5 )) returns 0", "0", "2", "It does not set a status"]
+answers = ["1 (false); (( 5 )) returns 0"]
+explanation = "Non-zero is true. Under set -e a bare ((i=0)) can end the script."
+review = "Numbers: `(( ))` and `$(( ))`"
+
+[[question]]
+id = "nu-float"
+type = "choice"
+prompt = "(( 3.5 > 2 )) gives:"
+choices = ["An arithmetic syntax error: integers only", "True", "False", "3"]
+answers = ["An arithmetic syntax error: integers only"]
+explanation = "Use bc or awk for decimals."
+review = "Numbers: `(( ))` and `$(( ))`"
+
+# ---- grouping ----
+
+[[question]]
+id = "gp-andor"
+type = "choice"
+prompt = "Why is a && b || c not if/else?"
+choices = ["If b fails, c runs too", "|| binds tighter", "&& ignores b", "c runs first"]
+answers = ["If b fails, c runs too"]
+explanation = "Use if for real branching."
+review = "`&&`, `||`, grouping and short forms"
+
+[[question]]
+id = "gp-sub"
+type = "choice"
+prompt = "x=1; ( x=2 ); { x=3; }; echo $x prints what?"
+choices = ["3", "1", "2", "Nothing"]
+answers = ["3"]
+explanation = "( ) is a subshell and loses its changes; { } runs in the current shell."
+review = "`&&`, `||`, grouping and short forms"
+
+[[question]]
+id = "gp-die"
+type = "short"
+prompt = "Complete the idiom: cd /somewhere ... { echo \"cannot cd\" >&2; exit 1; } (the two characters before the brace)"
+answers = ["||", "|| "]
+explanation = "|| runs the group only if cd failed."
+review = "`&&`, `||`, grouping and short forms"
+
+[[question]]
+id = "gp-sete"
+type = "multi"
+prompt = "In which places did set -e NOT stop the script in my tests?"
+choices = ["A failing command in an if condition", "On the left of &&", "After || true", "A bare failing command on its own line"]
+answers = ["A failing command in an if condition", "On the left of &&", "After || true"]
+explanation = "A bare false does stop it. set -e is not a safety net."
+review = "`&&`, `||`, grouping and short forms"
+
+# ---- case ----
+
+[[question]]
+id = "cs-glob"
+type = "choice"
+prompt = "case patterns are:"
+choices = ["Globs, not regular expressions", "Regular expressions", "Exact strings only", "Extended regex by default"]
+answers = ["Globs, not regular expressions"]
+explanation = "a+ matched only the literal text a+."
+review = "`case`"
+
+[[question]]
+id = "cs-ampamp"
+type = "choice"
+prompt = "In bash, what does ;& at the end of a case branch do?"
+choices = ["Runs the next branch's commands without testing its pattern", "Ends the case", "Repeats the branch", "Is a syntax error in bash"]
+answers = ["Runs the next branch's commands without testing its pattern"]
+explanation = "dash and ash reject it. ;;& continues testing later patterns."
+review = "`case`"
+
+[[question]]
+id = "cs-quote"
+type = "choice"
+prompt = "p='*'. Which matches only a literal *?"
+choices = ["case xyz in \"$p\")", "case xyz in $p)", "case xyz in *)", "case xyz in p)"]
+answers = ["case xyz in \"$p\")"]
+explanation = "Unquoted, $p is a pattern and matched everything."
+review = "`case`"
+
+[[question]]
+id = "cs-none"
+type = "short"
+prompt = "A case with no matching branch and no *) returns what status? (number)"
+answers = ["0"]
+explanation = "It does nothing, silently."
+review = "`case`"
+
+[[question]]
+id = "cs-ext"
+type = "choice"
+prompt = "Why must shopt -s extglob be on an earlier line than the case that uses @(png|jpg)?"
+choices = ["bash parses the whole line before running shopt", "extglob needs a restart", "It is a style rule", "case is parsed later"]
+answers = ["bash parses the whole line before running shopt"]
+explanation = "Otherwise a syntax error near unexpected token (."
+review = "`case`"
+
+# ---- loops ----
+
+[[question]]
+id = "lp-glob"
+type = "choice"
+prompt = "for f in *.log with no matching files runs the body:"
+choices = ["Once, with f=*.log", "Never", "An error", "Twice"]
+answers = ["Once, with f=*.log"]
+explanation = "Guard with [ -e \"$f\" ] || continue, or shopt -s nullglob."
+review = "`for`"
+
+[[question]]
+id = "lp-ls"
+type = "choice"
+prompt = "for f in $(ls sp*) with a file 'sp ace' gives:"
+choices = ["[sp] and [ace]", "[sp ace]", "An error", "Nothing"]
+answers = ["[sp] and [ace]"]
+explanation = "for f in sp* gave [sp ace]. Loop over a glob, not over ls."
+review = "`for`"
+
+[[question]]
+id = "lp-noin"
+type = "choice"
+prompt = "What does a for loop with no 'in' iterate over?"
+choices = ["\"$@\", the script's arguments", "The current folder", "$*", "Nothing"]
+answers = ["\"$@\", the script's arguments"]
+explanation = "for x; do ...; done."
+review = "`for`"
+
+[[question]]
+id = "lp-break"
+type = "choice"
+prompt = "What does continue 2 do?"
+choices = ["Skips to the next iteration of the OUTER loop", "Leaves both loops", "Skips two iterations", "Is an error"]
+answers = ["Skips to the next iteration of the OUTER loop"]
+explanation = "break 2 leaves both loops."
+review = "`while`, `until`, `break` and `continue`"
+
+[[question]]
+id = "lp-retry"
+type = "choice"
+prompt = "What must every retry loop have?"
+choices = ["A limit (attempt count or timeout)", "A sleep of exactly 1 second", "set -e", "A trap"]
+answers = ["A limit (attempt count or timeout)"]
+explanation = "Otherwise a command that never succeeds loops forever."
+review = "`while`, `until`, `break` and `continue`"
+
+[[question]]
+id = "lr-last"
+type = "choice"
+prompt = "A file's last line has no newline. What does while IFS= read -r line do with it?"
+choices = ["Drops it; add || [ -n \"$line\" ]", "Reads it normally", "Reads it twice", "Fails the loop"]
+answers = ["Drops it; add || [ -n \"$line\" ]"]
+explanation = "read returns failure at EOF even though it filled the variable. Same in dash and ash."
+review = "Reading input line by line"
+
+[[question]]
+id = "lr-steal"
+type = "choice"
+prompt = "A loop reads five lines, but a cat > /dev/null inside it makes it stop after the first. Why?"
+choices = ["cat reads the loop's stdin and consumes the rest", "cat exits the shell", "read is broken", "> /dev/null closes the file"]
+answers = ["cat reads the loop's stdin and consumes the rest"]
+explanation = "Give the inner command its own input: cat < /dev/null."
+review = "Reading input line by line"
+
+[[question]]
+id = "lr-plain"
+type = "choice"
+prompt = "What does plain 'read line' (no IFS=, no -r) do to '  lead and trail  ' and ' a\\b '?"
+choices = ["Trims spaces and eats the backslash", "Keeps both exactly", "Fails", "Splits into words"]
+answers = ["Trims spaces and eats the backslash"]
+explanation = "IFS= read -r keeps them exactly."
+review = "Reading input line by line"
+
+[[question]]
+id = "lr-pipe"
+type = "choice"
+prompt = "printf 'a\\nb\\n' | while read -r _; do ((c++)); done leaves c as:"
+choices = ["Unchanged: the loop ran in a subshell", "2", "1", "An error"]
+answers = ["Unchanged: the loop ran in a subshell"]
+explanation = "done < <(printf ...) keeps the loop in the current shell."
+review = "Reading input line by line"
+
+[[question]]
+id = "lr-t"
+type = "choice"
+prompt = "read -t 1 times out. What is the status?"
+choices = ["Greater than 128 (142 in my run)", "0", "1", "124"]
+answers = ["Greater than 128 (142 in my run)"]
+explanation = "timeout the command gives 124; bash's read gives >128."
+review = "`read` with a timeout, a default and a menu"
+
+[[question]]
+id = "lr-sel"
+type = "choice"
+prompt = "select menu: the user types 9 for a 2-item menu. What is the variable?"
+choices = ["Empty, with REPLY=9", "The first item", "9", "The last item"]
+answers = ["Empty, with REPLY=9"]
+explanation = "Always check for an empty variable."
+review = "`read` with a timeout, a default and a menu"
+
+# ---- portable ----
+
+[[question]]
+id = "po-dash"
+type = "multi"
+prompt = "Which of these are NOT available in dash?"
+choices = ["[[ ]]", "(( ))", "C-style for ((;;))", "case with |"]
+answers = ["[[ ]]", "(( ))", "C-style for ((;;))"]
+explanation = "case with | and break 2 are portable."
+review = "What stays portable (dash and busybox ash)"
+
+[[question]]
+id = "po-sh"
+type = "choice"
+prompt = "A script with [[ ]] and select has which shebang?"
+choices = ["One that names bash", "#!/bin/sh", "None", "#!/bin/dash"]
+answers = ["One that names bash"]
+explanation = "A #!/bin/sh script must stay in the portable subset."
+review = "What stays portable (dash and busybox ash)"
+
+[[question]]
+id = "rd-ex11"
+type = "multi"
+prompt = "Which are problems in the exercise-11 script?"
+choices = ["[ $count > 5 ] is a redirection and is true whenever count is non-empty", "for f in $(ls *.log) splits names on spaces", "== in a #!/bin/sh script", "while read line without -r and the last-line guard", "[ -f ] on a directory"]
+answers = ["[ $count > 5 ] is a redirection and is true whenever count is non-empty", "for f in $(ls *.log) splits names on spaces", "== in a #!/bin/sh script", "while read line without -r and the last-line guard"]
+explanation = "Also unquoted $f and echo $line."
+review = "Reading an unknown script (decisions and loops)"

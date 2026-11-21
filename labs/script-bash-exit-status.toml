@@ -4,7 +4,7 @@ id = "labs.script-bash-exit-status"
 target = "linux"
 title = "Script (bash): report success or failure with an exit status"
 summary = "Test a file and exit with the right status so other programs can react."
-lesson = "foundations.bash-control-flow"
+lesson = "foundations.bash-functions-and-scripts"
 symptom = '''
 Write a bash script and save it as /home/labadmin/labs/check-file.sh.
 

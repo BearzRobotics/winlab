@@ -4,7 +4,7 @@ id = "labs.script-bash-arguments"
 target = "linux"
 title = "Script (bash): work with command-line arguments"
 summary = "Count the arguments and print each with a number."
-lesson = "foundations.bash-control-flow"
+lesson = "foundations.bash-functions-and-scripts"
 symptom = '''
 Write a bash script and save it as /home/labadmin/labs/args.sh.
 
