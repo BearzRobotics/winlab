@@ -1,6 +1,6 @@
 schema_version = 1
 lesson = "foundations.bash-advanced"
-# Draft for owner review. Answers come from the tested output (adv1.sh) on bash 5.3.9, not from the unverified version table. Each attempt asks 10.
+# Draft for owner review. Answers come from the tested output (adv1.sh) on bash 5.3.9, and the version table is from the NEWS file (not run on old versions). Each attempt asks 10.
 draw = 10
 
 # ---- mapfile ----
@@ -447,11 +447,11 @@ review = "Bash versions and portability"
 [[question]]
 id = "v-honest"
 type = "choice"
-prompt = "The lesson's table of which feature needs which bash version is:"
-choices = ["From memory and not verified: check the NEWS file of the version you target", "Verified on every version", "Taken from the manual", "Tested on bash 3.2"]
-answers = ["From memory and not verified: check the NEWS file of the version you target"]
-explanation = "Only bash 5.3.9 was available for the tests."
-review = "Bash versions and portability"
+prompt = "In which bash release did namerefs (declare -n) and wait -n appear, according to the NEWS file?"
+choices = ["4.3", "4.0", "4.4", "5.0"]
+answers = ["4.3"]
+explanation = "4.0 added associative arrays and mapfile, 4.2 lastpipe, 4.3 wait -n and namerefs, 4.4 inherit_errexit and mapfile -d, 5.0 EPOCHSECONDS."
+review = "Which version added what (from the bash changelog)"
 
 [[question]]
 id = "v-shebang"
@@ -461,3 +461,30 @@ choices = ["#!/usr/bin/env bash (or #!/bin/bash)", "#!/bin/sh", "No shebang", "#
 answers = ["#!/usr/bin/env bash (or #!/bin/bash)"]
 explanation = "These are bash features, not POSIX; sh might not be bash."
 review = "Bash versions and portability"
+
+[[question]]
+id = "v-upper"
+type = "choice"
+prompt = "Which bash release added ${v@U} and ${v@L}, and what is the older spelling?"
+choices = ["5.1; ${v^^} and ${v,,} (4.0)", "4.0; ${v^^}", "4.4; ${v@Q}", "5.3; tr"]
+answers = ["5.1; ${v^^} and ${v,,} (4.0)"]
+explanation = "From the NEWS file: ${v^^} and ${v,,} are 4.0 entries; the U, u and L parameter transformations are 5.1."
+review = "Which version added what (from the bash changelog)"
+
+[[question]]
+id = "v-macos"
+type = "choice"
+prompt = "What does the lesson say about bash on macOS?"
+choices = ["macOS 10.14 shipped bash 3.2.57; what current releases ship was not confirmed", "macOS always ships the newest bash", "macOS has no bash", "macOS ships bash 5.3"]
+answers = ["macOS 10.14 shipped bash 3.2.57; what current releases ship was not confirmed"]
+explanation = "Based on news coverage of the Catalina change to zsh; check /bin/bash --version on the Mac you target."
+review = "Bash 3.2 on macOS."
+
+[[question]]
+id = "v-guard2"
+type = "choice"
+prompt = "Which feature needs bash 4.0, so is missing from bash 3.2?"
+choices = ["mapfile", "printf -v", "BASH_REMATCH", "the [ ] builtin"]
+answers = ["mapfile"]
+explanation = "printf -v is 3.1, BASH_REMATCH is in the 3.0 section; mapfile, declare -A, coproc and globstar are 4.0."
+review = "Which version added what (from the bash changelog)"

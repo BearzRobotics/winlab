@@ -1,6 +1,6 @@
 *Draft for owner review.* This lesson collects the bash features that make large scripts shorter, safer and faster: **`mapfile`** for reading lines into arrays, **namerefs** for passing arrays and variables by name, **`printf -v`** and the string operators that avoid starting programs, **`declare`** and its attributes, **`shopt`** options (globbing, `lastpipe`), **programmable completion**, a **measured** comparison of builtins against external programs, and a few more tools (`wait -n`, `coproc`, `BASH_REMATCH`, `read -t`). It ends with the question every advanced script must answer: **which bash versions does it need, and what does it do on a machine with an older one?**
 
-**What was tested, and where.** Everything below was run on **Ubuntu 26.04 (WSL2)** with **bash 5.3.9** (`tests/verification/bash/adv1.sh`). **Not tested:** any other bash version. In particular I had **no bash 3.2** (the version Apple ships) or bash 4.x available, so the table of "needs bash N" near the end is **from my memory of the bash release notes and is not verified here**; check it against the NEWS file of the version you target before you rely on it. Also not tested: interactive completion at a real terminal (I tested the completion *function* and `compgen`, simulating what readline does), `select` at a terminal, and non-Linux systems. All timings are from **one machine**, where `basename`, `cat`, `wc`, `tr` and `sort` are the Rust **uutils** coreutils (`foundations.bash-text-processing`); numbers on GNU coreutils or a native Linux install will differ, the **ratios** are the point.
+**What was tested, and where.** Everything below was run on **Ubuntu 26.04 (WSL2)** with **bash 5.3.9** (`tests/verification/bash/adv1.sh`). **Not tested:** any other bash version: I had **no bash 3.2 or 4.x** to run. The table of "needs bash N" near the end is **not from my memory**: I looked every feature up in the bash project's own changelog, the [NEWS file](https://tiswww.case.edu/php/chet/bash/NEWS) (downloaded 2026-11-21, read by section), so it says when each feature was **added**, but I did not run the examples on those older versions. Also not tested: interactive completion at a real terminal (I tested the completion *function* and `compgen`, simulating what readline does), `select` at a terminal, and non-Linux systems. All timings are from **one machine**, where `basename`, `cat`, `wc`, `tr` and `sort` are the Rust **uutils** coreutils (`foundations.bash-text-processing`); numbers on GNU coreutils or a native Linux install will differ, the **ratios** are the point.
 
 Everything here is **bash**, not POSIX `sh`: a script that uses it starts `#!/usr/bin/env bash` (or `#!/bin/bash`), never `#!/bin/sh` (`foundations.shells-and-posix`). Reference: the [Bash Reference Manual](https://tiswww.case.edu/php/chet/bash/bashref.html), in particular [Shell Parameter Expansion](https://tiswww.case.edu/php/chet/bash/bashref.html#Shell-Parameter-Expansion), [Arrays](https://tiswww.case.edu/php/chet/bash/bashref.html#Arrays), [Bash Builtins](https://tiswww.case.edu/php/chet/bash/bashref.html#Bash-Builtins) (`mapfile`, `declare`, `printf`, `read`, `shopt`), [The Shopt Builtin](https://tiswww.case.edu/php/chet/bash/bashref.html#The-Shopt-Builtin) and [Programmable Completion](https://tiswww.case.edu/php/chet/bash/bashref.html#Programmable-Completion). I checked that the manual's main page loads; I did not re-read each section, so the behaviour below comes from my own runs.
 
@@ -28,7 +28,7 @@ mapfile -d "" -t f < <(find . -maxdepth 1 -type f -name "[ac]*" -print0 | sort -
    -> [./a b][./c]
 ```
 
-(`-d` needs bash 4.4 or later according to my memory of the release notes; see the version section.)
+(`mapfile -d` was added in bash 4.4; see the version section.)
 
 ### Pipes lose the array; `< <(...)` and `lastpipe` keep it
 
@@ -99,7 +99,7 @@ printf "%(%Y-%m-%d)T\n" -1                      -> today's date, without running
 
 (`printf '%(%Y-%m-%d)T' 0` printed `1969-12-31`: the argument is a time in seconds since 1970, shown in the **local time zone**, and `-1` means "now"; I did not check what the other values depend on.) Related built-in variables: `$EPOCHSECONDS` (seconds since 1970; tested `> 1700000000`), `$EPOCHREALTIME` (with microseconds, tested format `NNN.NNNNNN`), `$SECONDS` (seconds since the shell started; settable: `SECONDS=0; sleep 1` gave `SECONDS=1`).
 
-More parameter-expansion operators that replace `tr`, `sed`, `basename` (all tested):
+More parameter-expansion operators that replace `tr`, `sed`, `basename` (all tested on 5.3.9; `${v@U}` and `${v@L}` need bash 5.1 and `${v@Q}` 4.4 according to the NEWS file, see the version table):
 
 ```text
 v="Hello"; echo "${v@U} ${v@L} ${v^^} ${v,,}"       -> HELLO hello HELLO hello
@@ -277,17 +277,30 @@ if [ "${BASH_VERSINFO[0]}" -lt 4 ] || { [ "${BASH_VERSINFO[0]}" -eq 4 ] && [ "${
 fi
 ```
 
-(Only the `[ "${BASH_VERSINFO[0]}" -ge 4 ]` form was run.) **From my memory (not verified here): the old bash 3.2 that macOS ships as `/bin/bash` has no associative arrays, no `mapfile`, no `${v^^}` and no namerefs**, so scripts using them fail there. Which feature arrived in which version, **also from my memory of the release notes (not verified here)**:
+I ran the comparison logic with simulated version numbers (`3.2`, `4.0`, `4.3` were "too old"; `4.4`, `5.0`, `5.3` were "ok"); only `5.3` is a real bash I ran.
 
-| Feature | Needs bash (unverified) |
+### Which version added what (from the bash changelog)
+
+Every row below was looked up in the project's [NEWS file](https://tiswww.case.edu/php/chet/bash/NEWS) (each entry sits under a heading such as "bash-4.0 since bash-3.2"), not recalled. The NEWS file says when a feature **appeared**; **I did not run these examples on those older versions**.
+
+| Added in | Feature (NEWS wording shortened) |
 |---|---|
-| associative arrays (`declare -A`), `mapfile`/`readarray`, `coproc`, `globstar`, `${v^^}` `${v,,}` | 4.0 |
-| `lastpipe`, `printf '%(fmt)T'`, `declare -g` | 4.2 |
-| `wait -n`, namerefs (`declare -n`), `${var@...}` partly | 4.3 to 4.4 |
-| `inherit_errexit`, `mapfile -d`, `${v@Q}` | 4.4 |
-| `$EPOCHSECONDS`, `$EPOCHREALTIME` | 5.0 |
+| **3.1** | `printf -v var` |
+| **4.0** (since 3.2) | associative arrays (*"The shell provides associative array variables"*), `declare -l` and `-u`, `mapfile` and its synonym `readarray`, the `coproc` reserved word, `shopt -s globstar`, case-modifying expansions `${v^^}` and `${v,,}`, `$BASHPID`, fractional `read -t`, `;&` and `;;&` in `case`, `&>>`, `\|&` |
+| **4.1** | `printf -v` can assign to an array index |
+| **4.2** | `shopt -s lastpipe`, `printf '%(fmt)T'`, `declare -g`, `test`/`[`/`[[ -v var ]]`, negative subscripts on indexed arrays (`${a[-1]}`) |
+| **4.3** | `wait -n`, namerefs (`declare -n`, `local -n`) |
+| **4.4** | `shopt -s inherit_errexit`, `mapfile -d`, the `${parameter@spec}` family (`${v@Q}`) |
+| **5.0** | `$EPOCHSECONDS`, `$EPOCHREALTIME`, the `assoc_expand_once` shell option |
+| **5.1** | `${v@U}`, `${v@u}`, `${v@L}`, `declare -I` and `local -I`, `[ -v N ]` for a positional parameter, `wait -p` |
+| **5.2** | the `patsub_replacement` shell option |
+| **5.3** | `compgen -V varname` |
 
-Treat that table as a **list of things to look up**, not as fact: read the `NEWS` file in the bash source for the versions you care about, and test on the oldest bash you support. The honest portability choices are: (a) **require bash 4.4 or newer** and say so, (b) write to the **bash 3.2** subset (no associative arrays: use `case` or parallel arrays) or (c) write **POSIX `sh`** and test it with dash (`foundations.shells-and-posix`; the POSIX lessons).
+What this means for the lesson's examples: `mapfile`, `declare -A`, `${v^^}`, `globstar` need **4.0**; `lastpipe`, `printf '%(…)T'`, `declare -g`, `[[ -v ]]` need **4.2**; `wait -n` and namerefs need **4.3**; `inherit_errexit`, `mapfile -d ''` and `${v@Q}` need **4.4**; `$EPOCHSECONDS` needs **5.0**; and the **`${v@U}` and `${v@L}` I used in the `printf -v` section need 5.1** (the safe, older spelling is `${v^^}` and `${v,,}`). The guard above, `4.4`, is what the `mapfile -d ''` example needs.
+
+**Bash 3.2 on macOS.** Everything in the 4.0 row is **missing from bash 3.2**, because the 4.0 section of NEWS lists it as new since 3.2. Apple's `/bin/bash` has been 3.2: news coverage of the Catalina switch to zsh reports that **macOS 10.14 Mojave shipped GNU bash 3.2.57(1)** and that Catalina kept bash 3.2 for `sh` compatibility, with the commonly cited reason being the GPLv3 licence of later bash releases ([The Next Web, 2019](https://thenextweb.com/news/why-does-macos-catalina-use-zsh-instead-of-bash-licensing); I did not read it in full, and Apple gave no reason in its own announcement). **I could not confirm what macOS releases after 2020 ship**; check `/bin/bash --version` on the Mac you target.
+
+The honest portability choices are: (a) **require a minimum bash version** (4.4 for this lesson's examples) and say so, (b) write to the **bash 3.2** subset (no associative arrays, no `mapfile`: use `case`, parallel arrays and `while read`) or (c) write **POSIX `sh`** and test it with dash (`foundations.shells-and-posix`; the POSIX lessons).
 
 ## Common mistakes
 

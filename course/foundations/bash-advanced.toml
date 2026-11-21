@@ -1,7 +1,7 @@
 schema_version = 1
 id = "foundations.bash-advanced"
 title = "Advanced bash: mapfile, namerefs, declare, shopt, completion and avoiding forks"
-summary = "The bash features that make large scripts shorter and faster, tested on bash 5.3.9: mapfile and NUL-separated file names, the pipeline-subshell trap and lastpipe, namerefs and their name-clash failure, printf -v and the string operators, declare attributes, associative arrays, shopt globbing options and the extglob same-line rule, programmable completion (compgen and a simulated completion function), a measured table of builtins against external programs, wait -n, coproc and BASH_REMATCH, and an honest, partly unverified section on bash versions."
+summary = "The bash features that make large scripts shorter and faster, tested on bash 5.3.9: mapfile and NUL-separated file names, the pipeline-subshell trap and lastpipe, namerefs and their name-clash failure, printf -v and the string operators, declare attributes, associative arrays, shopt globbing options and the extglob same-line rule, programmable completion (compgen and a simulated completion function), a measured table of builtins against external programs, wait -n, coproc and BASH_REMATCH, and a bash-version table taken from the bash NEWS changelog (examples were run on 5.3.9 only)."
 content = "bash-advanced.md"
 estimated_minutes = 150
 level = 5
@@ -15,7 +15,7 @@ objectives = [
   "Use compgen and write and test a completion function that fills COMPREPLY",
   "Measure builtins against external programs and choose between a bash loop, a builtin and one awk over all the data",
   "Use wait -n, coproc, read -t, FUNCNAME and BASH_REMATCH",
-  "Guard a script by BASH_VERSINFO and decide which bash versions to support, knowing which claims about versions still need checking",
+  "Guard a script by BASH_VERSINFO and decide which bash versions to support, using the NEWS-file table of which version added each feature",
 ]
 prerequisites = ["foundations.bash-robust-scripts"]
 privilege = "standard"
