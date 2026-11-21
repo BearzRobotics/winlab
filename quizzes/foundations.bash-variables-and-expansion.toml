@@ -1,0 +1,477 @@
+schema_version = 1
+lesson = "foundations.bash-variables-and-expansion"
+# Draft for owner review. A bank of 52; each attempt asks 10, favouring questions missed last time.
+draw = 10
+
+# ---- Order and quoting ----
+
+[[question]]
+id = "or-order"
+type = "choice"
+prompt = "Which is the correct order of bash expansions?"
+choices = ["Brace, tilde, parameter/arithmetic/command substitution, word splitting, globbing, quote removal", "Globbing, word splitting, brace, tilde", "Word splitting, brace, parameter, globbing", "Parameter, brace, quote removal, globbing"]
+answers = ["Brace, tilde, parameter/arithmetic/command substitution, word splitting, globbing, quote removal"]
+explanation = "Quoting stops word splitting and globbing of the unquoted results."
+review = "The order of expansion"
+
+[[question]]
+id = "or-brace"
+type = "choice"
+prompt = "Why did n=3; echo {1..$n} print {1..3}?"
+choices = ["Brace expansion happens before $n is expanded", "Variables cannot hold numbers", "echo does not support ranges", "The braces were quoted"]
+answers = ["Brace expansion happens before $n is expanded"]
+explanation = "eval \"echo {1..$n}\" worked, but eval is dangerous."
+review = "The order of expansion"
+
+[[question]]
+id = "or-tilde"
+type = "choice"
+prompt = "In echo {x,y}\"$v\"~ the ~ stayed literal. Why?"
+choices = ["Tilde expansion only applies at the start of a word", "Tilde is disabled in bash", "Quotes disabled it", "Braces consumed it"]
+answers = ["Tilde expansion only applies at the start of a word"]
+explanation = "set -x showed + echo 'xa b~' 'ya b~' 2."
+review = "The order of expansion"
+
+[[question]]
+id = "or-only"
+type = "choice"
+prompt = "Word splitting and globbing apply to what?"
+choices = ["The results of unquoted expansions", "Everything on the line", "Only quoted text", "Only variables set with export"]
+answers = ["The results of unquoted expansions"]
+explanation = "That is the whole point of quoting."
+review = "The order of expansion"
+
+[[question]]
+id = "qu-double"
+type = "choice"
+prompt = "With f=\"my notes.txt\", args \"$f *.txt\" gives how many words?"
+choices = ["1", "2", "3", "0"]
+answers = ["1"]
+explanation = "Double quotes keep $f expanded but switch off splitting and globbing."
+review = "Quoting"
+
+[[question]]
+id = "qu-single"
+type = "choice"
+prompt = "What does echo '$HOME' print?"
+choices = ["$HOME", "The home folder", "Nothing", "An error"]
+answers = ["$HOME"]
+explanation = "Single quotes make everything literal."
+review = "Quoting"
+
+[[question]]
+id = "qu-unq"
+type = "choice"
+prompt = "f=\"my notes.txt\". How many words does args $f receive?"
+choices = ["2", "1", "3", "0"]
+answers = ["2"]
+explanation = "The space splits it: [my] [notes.txt]."
+review = "The unquoted variable is the bug"
+
+[[question]]
+id = "qu-empty"
+type = "multi"
+prompt = "empty=\"\". Which statements are true?"
+choices = ["args $empty receives 0 words", "args \"$empty\" receives 1 empty word", "args $empty receives 1 word", "args \"$empty\" receives 0 words"]
+answers = ["args $empty receives 0 words", "args \"$empty\" receives 1 empty word"]
+explanation = "An unquoted empty variable vanishes; a quoted one stays as an empty argument."
+review = "The unquoted variable is the bug"
+
+[[question]]
+id = "qu-star"
+type = "choice"
+prompt = "star=\"*.txt\". What does args $star do?"
+choices = ["Expands the glob to matching file names", "Passes the text *.txt as one word", "Fails", "Lists the variable"]
+answers = ["Expands the glob to matching file names"]
+explanation = "args \"$star\" passed the literal [*.txt]."
+review = "The unquoted variable is the bug"
+
+[[question]]
+id = "qu-test"
+type = "choice"
+prompt = "v=\"\". What is the status of [ -n $v ]?"
+choices = ["True (0), because it becomes [ -n ]", "False", "A syntax error", "It depends on the shell"]
+answers = ["True (0), because it becomes [ -n ]"]
+explanation = "A one-argument test is true; bash, dash and ash all agreed. Use [ -n \"$v\" ]."
+review = "The unquoted variable is the bug"
+
+[[question]]
+id = "qu-at"
+type = "choice"
+prompt = "set -- \"one two\" three four. How many words does \"$@\" give?"
+choices = ["3", "4", "1", "2"]
+answers = ["3"]
+explanation = "\"$@\" keeps each argument intact. $@, $* give 4; \"$*\" gives 1."
+review = "`\"$@\"` and `$*`"
+
+[[question]]
+id = "qu-noargs"
+type = "choice"
+prompt = "With no arguments, what do \"$@\" and \"$*\" expand to?"
+choices = ["\"$@\" gives 0 words; \"$*\" gives 1 empty word", "Both give 0 words", "Both give 1 empty word", "An error"]
+answers = ["\"$@\" gives 0 words; \"$*\" gives 1 empty word"]
+explanation = "Another reason to use \"$@\" to pass arguments along."
+review = "`\"$@\"` and `$*`"
+
+[[question]]
+id = "qu-ifs"
+type = "choice"
+prompt = "IFS=: and line=\"a:b::c\". How many words does unquoted $line give?"
+choices = ["4 (an empty one between the colons)", "3", "1", "2"]
+answers = ["4 (an empty one between the colons)"]
+explanation = "Non-whitespace separators keep empty fields."
+review = "`IFS`: what splitting splits on"
+
+[[question]]
+id = "qu-readifs"
+type = "choice"
+prompt = "Why is the safe loop while IFS= read -r line?"
+choices = ["IFS= keeps leading and trailing spaces; -r keeps backslashes", "It makes the loop faster", "It reads binary files", "It avoids needing quotes"]
+answers = ["IFS= keeps leading and trailing spaces; -r keeps backslashes"]
+explanation = "read -r l <<< '  keep spaces  ' gave [keep spaces]; with IFS= the spaces stayed."
+review = "`IFS`: what splitting splits on"
+
+# ---- Variables ----
+
+[[question]]
+id = "va-assign"
+type = "choice"
+prompt = "What does name = value (with spaces) do?"
+choices = ["Runs a command called name with arguments = and value", "Assigns value to name", "Compares them", "Declares a constant"]
+answers = ["Runs a command called name with arguments = and value"]
+explanation = "Assignments have no spaces around =."
+review = "Variables"
+
+[[question]]
+id = "va-pipe"
+type = "choice"
+prompt = "Why did count stay 0 after printf 'a\\nb\\n' | while read -r _; do ((count++)); done?"
+choices = ["The while loop ran in a subshell", "((count++)) is invalid", "read failed", "printf was empty"]
+answers = ["The while loop ran in a subshell"]
+explanation = "Reading from < <(printf ...) kept the loop in the current shell (count=2)."
+review = "Variables"
+
+[[question]]
+id = "va-special"
+type = "short"
+prompt = "Which special parameter holds the exit status of the last command?"
+answers = ["$?", "?"]
+explanation = "1 after false."
+review = "Special parameters"
+
+[[question]]
+id = "va-bang"
+type = "short"
+prompt = "Which special parameter holds the pid of the last background job?"
+answers = ["$!", "!"]
+explanation = "$$ is the shell's own pid."
+review = "Special parameters"
+
+[[question]]
+id = "de-colon"
+type = "choice"
+prompt = "v is set but empty. What does ${v:-d} give, and ${v-d}?"
+choices = ["d, and empty", "d and d", "empty and d", "empty and empty"]
+answers = ["d, and empty"]
+explanation = "The colon form treats empty like unset; the colon-less form triggers only for unset."
+review = "Set, empty, unset: the default operators"
+
+[[question]]
+id = "de-alt"
+type = "choice"
+prompt = "v=\"\" (empty). What does ${v:+alt} give?"
+choices = ["Empty", "alt", "An error", "d"]
+answers = ["Empty"]
+explanation = "${v+alt} (no colon) gave alt for an empty variable."
+review = "Set, empty, unset: the default operators"
+
+[[question]]
+id = "de-req"
+type = "short"
+prompt = "Write the line that stops a script with 'usage: x NAME' when $1 is missing or empty (include the leading colon command)."
+answers = [": \"${1:?usage: x NAME}\"", ": ${1:?usage: x NAME}"]
+explanation = "${1:?message} aborts with the message when $1 is unset or empty."
+review = "Set, empty, unset: the default operators"
+
+[[question]]
+id = "de-setu"
+type = "choice"
+prompt = "Under set -u, which is allowed for a variable that may be unset?"
+choices = ["${name-}", "$name", "\"$name\"", "$((name))"]
+answers = ["${name-}"]
+explanation = "Using $name directly gives 'unbound variable'."
+review = "Set, empty, unset: the default operators"
+
+# ---- Parameter expansion ----
+
+[[question]]
+id = "pe-base"
+type = "short"
+prompt = "With p=/home/user/archive.tar.gz, what does ${p##*/} give?"
+answers = ["archive.tar.gz"]
+explanation = "Longest match removed from the front: like basename."
+review = "Parameter expansion: working on the value"
+
+[[question]]
+id = "pe-dir"
+type = "short"
+prompt = "With p=/home/user/archive.tar.gz, what does ${p%/*} give?"
+answers = ["/home/user"]
+explanation = "Shortest match removed from the end: like dirname."
+review = "Parameter expansion: working on the value"
+
+[[question]]
+id = "pe-ext"
+type = "choice"
+prompt = "With p=/home/user/archive.tar.gz, what does ${p%%.*} give?"
+choices = ["/home/user/archive", "/home/user/archive.tar", "gz", "archive"]
+answers = ["/home/user/archive"]
+explanation = "%% removes the longest match from the end (from the first dot)."
+review = "Parameter expansion: working on the value"
+
+[[question]]
+id = "pe-neg"
+type = "choice"
+prompt = "w=\"hello world\". Which gives the last five characters?"
+choices = ["${w: -5}", "${w:-5}", "${w#-5}", "${w:5}"]
+answers = ["${w: -5}"]
+explanation = "A space before the minus. ${w:-5} is the default operator and returned the whole string."
+review = "Parameter expansion: working on the value"
+
+[[question]]
+id = "pe-ind"
+type = "short"
+prompt = "name=count_a; count_a=7. Which expansion gives 7 from name? (write it)"
+answers = ["${!name}"]
+explanation = "Indirect expansion. dash and ash do not have it."
+review = "Parameter expansion: working on the value"
+
+[[question]]
+id = "pe-port"
+type = "multi"
+prompt = "Which worked identically in bash, dash and busybox ash?"
+choices = ["${#v}", "${v:-d}", "${v##*.}", "${v^^}"]
+answers = ["${#v}", "${v:-d}", "${v##*.}"]
+explanation = "${v^^} failed in dash and ash."
+review = "Parameter expansion: working on the value"
+
+[[question]]
+id = "pe-tilde"
+type = "choice"
+prompt = "Why did ${p/#\\/home/~} print /home/dakota/user/... instead of ~/user/...?"
+choices = ["The unquoted ~ was tilde-expanded", "The replace operator is broken", "p was changed", "~ is a wildcard"]
+answers = ["The unquoted ~ was tilde-expanded"]
+explanation = "Escape or quote it: ${p/#\\/home/\\~}."
+review = "Parameter expansion: working on the value"
+
+# ---- Arrays ----
+
+[[question]]
+id = "ar-expand"
+type = "choice"
+prompt = "arr=(apple \"banana split\" cherry). Which expansion gives exactly 3 words?"
+choices = ["\"${arr[@]}\"", "${arr[@]}", "\"${arr[*]}\"", "${arr[*]}"]
+answers = ["\"${arr[@]}\""]
+explanation = "Unquoted gave 4 words; \"${arr[*]}\" gave 1."
+review = "Arrays"
+
+[[question]]
+id = "ar-len"
+type = "choice"
+prompt = "What is ${#arr[1]} for arr[1]=\"banana split\"?"
+choices = ["12, the length of that element", "3, the number of elements", "2, the number of words", "1"]
+answers = ["12, the length of that element"]
+explanation = "The count is ${#arr[@]}."
+review = "Arrays"
+
+[[question]]
+id = "ar-hole"
+type = "choice"
+prompt = "After unset 'arr[1]' on a four-element array, what are the indices?"
+choices = ["0 2 3 (a hole; not renumbered)", "0 1 2", "1 2 3", "0 1 2 3"]
+answers = ["0 2 3 (a hole; not renumbered)"]
+explanation = "The count becomes 3 but the last index is still 3."
+review = "Arrays"
+
+[[question]]
+id = "ar-mapfile"
+type = "choice"
+prompt = "Which fills an array with one element per output LINE?"
+choices = ["mapfile -t parts < <(cmd)", "parts=($(cmd))", "parts=\"$(cmd)\"", "parts=(cmd)"]
+answers = ["mapfile -t parts < <(cmd)"]
+explanation = "parts=($(cmd)) re-splits and globs: a b and c became 3 elements."
+review = "Arrays"
+
+[[question]]
+id = "ar-first"
+type = "choice"
+prompt = "x=(one two). What does y=\"$x\" store?"
+choices = ["one (only element 0)", "one two", "The number 2", "An error"]
+answers = ["one (only element 0)"]
+explanation = "Use \"${x[@]}\" for all elements."
+review = "Arrays"
+
+[[question]]
+id = "ar-assoc"
+type = "choice"
+prompt = "What happens with q[apple]=1; q[banana]=2 when q was never declared with declare -A?"
+choices = ["An indexed array with one element, q[0]=2", "An associative array with two keys", "An error", "Two separate variables"]
+answers = ["An indexed array with one element, q[0]=2"]
+explanation = "apple and banana were evaluated as arithmetic (0). A silent bug."
+review = "Associative arrays (dictionaries)"
+
+[[question]]
+id = "ar-order"
+type = "choice"
+prompt = "Is the key order of an associative array the insertion order?"
+choices = ["No; sort the keys if you need an order", "Yes", "Alphabetical", "Reverse"]
+answers = ["No; sort the keys if you need an order"]
+explanation = "declare -p printed [cherry] [apple] [banana] for keys inserted apple, banana, cherry."
+review = "Associative arrays (dictionaries)"
+
+# ---- Globs ----
+
+[[question]]
+id = "gl-nomatch"
+type = "choice"
+prompt = "By default, what does *.nomatch expand to when nothing matches?"
+choices = ["The literal text *.nomatch", "An empty list", "An error", "All files"]
+answers = ["The literal text *.nomatch"]
+explanation = "So for f in *.log runs once with the text *.log when there are no logs."
+review = "Globbing and filename expansion"
+
+[[question]]
+id = "gl-opts"
+type = "multi"
+prompt = "Which shopt options make no-match, hidden files and recursion behave differently?"
+choices = ["nullglob (expands to nothing)", "failglob (an error)", "dotglob (includes hidden files)", "globstar (** is recursive)", "colorglob (adds colours)"]
+answers = ["nullglob (expands to nothing)", "failglob (an error)", "dotglob (includes hidden files)", "globstar (** is recursive)"]
+explanation = "Also nocaseglob and extglob."
+review = "Globbing and filename expansion"
+
+[[question]]
+id = "gl-extglob"
+type = "choice"
+prompt = "Why did bash -c 'shopt -s extglob; echo !(*.txt)' fail?"
+choices = ["Bash parses the whole line before running shopt, so the pattern was a syntax error", "extglob does not exist", "! is reserved", "echo cannot take patterns"]
+answers = ["Bash parses the whole line before running shopt, so the pattern was a syntax error"]
+explanation = "Put shopt -s extglob on its own earlier line."
+review = "Globbing and filename expansion"
+
+[[question]]
+id = "gl-dash"
+type = "choice"
+prompt = "A folder contains a file named -rf.txt. How do you safely glob it?"
+choices = ["./* or end options with --", "* is fine", "Use quotes around *", "Rename it first"]
+answers = ["./* or end options with --"]
+explanation = "A name starting with - is read as an option by most commands."
+review = "Globbing and filename expansion"
+
+[[question]]
+id = "br-nonbash"
+type = "choice"
+prompt = "What does echo {1..3} print in dash?"
+choices = ["{1..3}", "1 2 3", "An error", "Nothing"]
+answers = ["{1..3}"]
+explanation = "Brace expansion is bash-only. Use a while loop with $((i + 1))."
+review = "Brace expansion"
+
+[[question]]
+id = "br-pad"
+type = "short"
+prompt = "Write the brace expansion for 01 02 03 (zero-padded)."
+answers = ["{01..03}"]
+explanation = "Zero padding in the range keeps the width."
+review = "Brace expansion"
+
+# ---- Command substitution ----
+
+[[question]]
+id = "cs-trail"
+type = "choice"
+prompt = "What does $(printf 'line1\\nline2\\n\\n\\n') do with the trailing newlines?"
+choices = ["Removes all of them", "Keeps one", "Keeps all", "Turns them into spaces"]
+answers = ["Removes all of them"]
+explanation = "That is why a trailing-newline count cannot be read back from a variable."
+review = "Command substitution"
+
+[[question]]
+id = "cs-local"
+type = "choice"
+prompt = "local v=$(false); echo $? prints what, and why?"
+choices = ["0, the status of local replaces the substitution's", "1, the status of false", "127", "It is an error"]
+answers = ["0, the status of local replaces the substitution's"]
+explanation = "Declare first, then assign: local v; v=$(false) gave status 1."
+review = "Command substitution"
+
+# ---- Arithmetic and eval ----
+
+[[question]]
+id = "ar-octal"
+type = "short"
+prompt = "What is $((010)) in bash? (number)"
+answers = ["8"]
+explanation = "A leading 0 means octal. $((08)) is an error; $((10#08)) is 8."
+review = "Arithmetic"
+
+[[question]]
+id = "ar-float"
+type = "choice"
+prompt = "What does $((3.5 + 1)) do?"
+choices = ["Fails: no floating point in shell arithmetic", "Prints 4.5", "Prints 4", "Prints 3"]
+answers = ["Fails: no floating point in shell arithmetic"]
+explanation = "Use bc or awk for decimals."
+review = "Arithmetic"
+
+[[question]]
+id = "ar-set-e"
+type = "choice"
+prompt = "Under set -e, why can ((count = 0)) end a script?"
+choices = ["(( )) returns status 1 when the result is 0", "(( )) is not allowed", "count is readonly", "set -e disables arithmetic"]
+answers = ["(( )) returns status 1 when the result is 0"]
+explanation = "Write count=$((count + 1)) or add || true where you mean it."
+review = "Arithmetic"
+
+[[question]]
+id = "ar-inject"
+type = "choice"
+prompt = "v='a[$(echo X >&2)]'; echo $((v)) in bash does what?"
+choices = ["Runs the command substitution hidden in the text", "Prints 0 without running anything", "Prints an error only", "Treats v as a string"]
+answers = ["Runs the command substitution hidden in the text"]
+explanation = "dash and busybox ash refused it. Never use arithmetic on untrusted text without validating."
+review = "Arithmetic on text from outside is code execution"
+
+[[question]]
+id = "ar-test"
+type = "choice"
+prompt = "Which numeric comparison of untrusted text did NOT run the hidden command in my test?"
+choices = ["[ \"$v\" -eq 5 ] (integer expected)", "[[ $v -eq 5 ]]", "(( v == 5 ))", "$((v))"]
+answers = ["[ \"$v\" -eq 5 ] (integer expected)"]
+explanation = "[[ -eq ]] ran it; plain [ ] refused. Validate first with a regex anyway."
+review = "Arithmetic on text from outside is code execution"
+
+[[question]]
+id = "ev-eval"
+type = "choice"
+prompt = "Why is eval \"echo $input\" dangerous?"
+choices = ["Everything is expanded a second time, so injected text becomes commands", "eval is slow", "echo is deprecated", "It needs root"]
+answers = ["Everything is expanded a second time, so injected text becomes commands"]
+explanation = "With input='; echo INJECTED' it ran two commands."
+review = "`eval`, and expanding twice"
+
+[[question]]
+id = "ev-pf"
+type = "short"
+prompt = "Which printf directive quotes a string safely for reuse by the shell (bash)? (e.g. %x)"
+answers = ["%q"]
+explanation = "printf '%q' \"$input\" printed \\;\\ echo\\ INJECTED. dash and ash do not support it."
+review = "`eval`, and expanding twice"
+
+[[question]]
+id = "ps-subst"
+type = "choice"
+prompt = "What does < <(cmd) do for a while loop?"
+choices = ["Keeps the loop in the current shell, so variables survive", "Runs the loop in the background", "Makes it faster", "Reads a file named cmd"]
+answers = ["Keeps the loop in the current shell, so variables survive"]
+explanation = "count=2 instead of 0. It is a bash feature (dash fails on it)."
+review = "Process substitution and here-strings (bash)"
