@@ -113,7 +113,7 @@ Quiz authoring rules (`docs/quizzes.md`): every question has an `explanation`; `
 
 The project is now a **local git repository** on branch `main` (created 2026-11-21 at the owner's request, after a session with no history in which one file was corrupted and repaired by hand). The first commit holds everything. There is **no remote yet**; section 13 says how to create one. Commit small and often from now on, and run `winlab check course` before each commit.
 
-What is tracked and what is not (`.gitignore`): `.zig-cache/`, `zig-out/` and `*.pdb` are ignored. **`zig-pkg/` is tracked**, as ADR 0003 decides (offline, reproducible builds; about 127 MB and 3,357 files, the largest 22 MB, so well under GitHub's 100 MB per-file limit). The repo is therefore large (about 130 MB) mainly because of `zig-pkg/`.
+What is tracked and what is not (`.gitignore`): `.zig-cache/`, `zig-out/` and `*.pdb` are ignored. **`zig-pkg/` is tracked**, as ADR 0003 decides (offline, reproducible builds; about 127 MB and 3,357 files, the largest 22 MB, so well under GitHub's 100 MB per-file limit). The working tree is large (about 130 MB with `zig-pkg/`); the compressed `.git` folder after the first commit is about 38 MB.
 
 The commit **author identity is set locally** (`git config user.name` and `user.email` in this repo) to the owner's name and the email address on their account. If the repository will be public, change it before the first push so the email is not published: `git config user.email "<id>+<username>@users.noreply.github.com"` and `git commit --amend --reset-author --no-edit` (only safe before anything is pushed).
 
