@@ -1,0 +1,51 @@
+schema_version = 1
+id = "linux.dinit-basics"
+title = "dinit basics: services, dinitctl, enable, reload and finding out why a service failed"
+summary = "How to look at and control a dinit system, tested on Chimera Linux 20261103 with dinit 0.22.0 (pre-1.0; upstream has 0.23.0 beta, untested): service directories and on-demand loading, the boot and system services with boot.d link directories, dinitctl status/list/start/stop/restart/release/wake/pin, explicit activation versus dependency, enable (which also starts) and disable, writing a first service (only double quotes quote), reload versus unload, failure messages with their Stage line, dinit-check, and dinit's own log through syslog-ng."
+content = "dinit-basics.md"
+estimated_minutes = 120
+level = 3
+objectives = [
+  "Say where dinit service files live on Chimera, that they are loaded on demand and never re-read automatically, and what boot, system and the boot.d directories do",
+  "Read dinitctl status, is-started and list output, including the list indicators and the two Activation values",
+  "Start, stop, restart, release, wake and pin services and explain explicit activation versus start due to dependents",
+  "Explain what enable and disable really do (a link in a waits-for.d directory; enable also starts), --offline, @meta enable-via and --from",
+  "Write a first process service, read its buffered log with catlog, and explain why single quotes do not work in a command line",
+  "Change a service correctly with reload or unload and explain the may-have-changed warning",
+  "Diagnose a failed start from the Stage and Reason lines, and use dinit-check to find the file, line and reason for a bad service description",
+  "Find dinit's own messages by running a syslog daemon, and say what Check dinit log means",
+]
+prerequisites = ["foundations.troubleshooting-method"]
+privilege = "administrator"
+certifications = ["comptia-linux-plus/system-management"]
+evaluation_criteria = [
+  "Learner writes, starts, enables, breaks and fixes a service on the Chimera VM",
+  "Learner reproduces the explicit-activation table including the refused stop and --force",
+  "Learner shows that restart without reload keeps the old command and that reload then restart applies the new one",
+  "Learner produces three different Stage lines and finds them in the system log after enabling syslog-ng",
+  "Learner finds four kinds of mistake with dinit-check",
+]
+
+[[references]]
+title = "dinit project page (version and manual pages)"
+url = "https://davmac.org/projects/dinit/"
+
+[[references]]
+title = "dinit(8)"
+url = "https://davmac.org/projects/dinit/man-pages-html/dinit.8.html"
+
+[[references]]
+title = "dinit-service(5)"
+url = "https://davmac.org/projects/dinit/man-pages-html/dinit-service.5.html"
+
+[[references]]
+title = "dinitctl(8)"
+url = "https://davmac.org/projects/dinit/man-pages-html/dinitctl.8.html"
+
+[[references]]
+title = "dinit-chimera: Chimera's service suite for dinit"
+url = "https://github.com/chimera-linux/dinit-chimera"
+
+[[references]]
+title = "Chimera Linux: Service management"
+url = "https://chimera-linux.org/docs/configuration/services"

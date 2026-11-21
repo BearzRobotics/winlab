@@ -1,0 +1,428 @@
+schema_version = 1
+lesson = "linux.dinit-basics"
+# Draft for owner review. Every answer comes from the tested output (dn1.sh to dn5, Chimera 20261103, dinit 0.22.0). Each attempt asks 12.
+draw = 12
+
+# ---- what / where ----
+
+[[question]]
+id = "w-types"
+type = "multi"
+prompt = "Which are dinit service types?"
+choices = ["process", "scripted", "internal", "oneshot"]
+answers = ["process", "scripted", "internal"]
+explanation = "The five types are process, bgprocess, scripted, internal and triggered. oneshot is a systemd type."
+review = "What dinit does"
+
+[[question]]
+id = "w-ver"
+type = "choice"
+prompt = "Which dinit version did the lessons test, and what does the lesson say about 1.0?"
+choices = ["0.22.0; dinit is pre-1.0 and 0.23.0 (beta) was not tested", "1.0; everything is stable", "0.23.0; 0.22.0 was not tested", "2.0 from Chimera"]
+answers = ["0.22.0; dinit is pre-1.0 and 0.23.0 (beta) was not tested"]
+explanation = "The project page shows 0.23.0 beta (2026-11-07); Chimera shipped 0.22.0."
+review = "Version warning"
+
+[[question]]
+id = "w-dirs"
+type = "choice"
+prompt = "Where do the administrator's own service files go on Chimera?"
+choices = ["/etc/dinit.d", "/usr/lib/dinit.d", "/etc/systemd/system", "/var/dinit"]
+answers = ["/etc/dinit.d"]
+explanation = "Packages use /usr/lib/dinit.d (/lib is a link to usr/lib); a file in /etc/dinit.d wins."
+review = "Where service files are"
+
+[[question]]
+id = "w-load"
+type = "choice"
+prompt = "When does dinit read a service file?"
+choices = ["Only when the service is first needed; it is not re-read automatically", "At every start of the service", "Every minute", "Only at boot"]
+answers = ["Only when the service is first needed; it is not re-read automatically"]
+explanation = "dinitctl list did not show wl-hello before the first start, and a loaded description is never unloaded automatically."
+review = "Where service files are"
+
+[[question]]
+id = "w-reload"
+type = "choice"
+prompt = "What replaces systemd's daemon-reload in dinit?"
+choices = ["dinitctl reload SERVICE or unload then start", "dinitctl daemon-reload", "dinitctl refresh", "Nothing: files are always re-read"]
+answers = ["dinitctl reload SERVICE or unload then start"]
+explanation = "There is no daemon-reload command."
+review = "Where service files are"
+
+# ---- boot ----
+
+[[question]]
+id = "b-boot"
+type = "choice"
+prompt = "What does the boot service's line waits-for.d: /etc/dinit.d/boot.d mean?"
+choices = ["Every name in that directory becomes a waits-for dependency of boot", "boot waits for the directory to be mounted", "Files in it are run as scripts", "It lists services to disable"]
+answers = ["Every name in that directory becomes a waits-for dependency of boot"]
+explanation = "The contents of the files do not matter; they are usually symlinks."
+review = "How the system starts: `boot`"
+
+[[question]]
+id = "b-link"
+type = "choice"
+prompt = "What is enabling a service in dinit, at the file level?"
+choices = ["A symbolic link in /etc/dinit.d/boot.d", "A line in /etc/fstab", "A line in rc.conf", "A copy in /boot"]
+answers = ["A symbolic link in /etc/dinit.d/boot.d"]
+explanation = "The listing showed wl-enab -> ../wl-enab."
+review = "How the system starts: `boot`"
+
+[[question]]
+id = "b-type"
+type = "short"
+prompt = "Which service type is boot (one word)?"
+answers = ["internal"]
+explanation = "type = internal: it only groups other services."
+review = "How the system starts: `boot`"
+
+# ---- looking ----
+
+[[question]]
+id = "l-active"
+type = "multi"
+prompt = "Which Activation values appeared in dinitctl status?"
+choices = ["explicitly started", "start due to dependent(s)", "enabled at boot", "masked"]
+answers = ["explicitly started", "start due to dependent(s)"]
+explanation = "boot was explicitly started; sshd was started due to dependents."
+review = "Looking at the system"
+
+[[question]]
+id = "l-x"
+type = "choice"
+prompt = "What does {X} mean in dinitctl list, as in [     {X}] wl-bad?"
+choices = ["The service failed to start (or its process ended with an error)", "Excluded", "Masked", "Waiting for a trigger"]
+answers = ["The service failed to start (or its process ended with an error)"]
+explanation = "[     {-}] is simply stopped."
+review = "Looking at the system"
+
+[[question]]
+id = "l-isstarted"
+type = "choice"
+prompt = "dinitctl is-started no-such-service prints and returns:"
+choices = ["No state is printed, status 1", "STOPPED, status 1", "STARTED, status 0", "An error with status 4"]
+answers = ["No state is printed, status 1"]
+explanation = "For a stopped service it printed STOPPED with status 1."
+review = "Looking at the system"
+
+[[question]]
+id = "l-cat"
+type = "choice"
+prompt = "dinitctl has no command like systemctl cat. How do you see a service's definition?"
+choices = ["Read the file in /usr/lib/dinit.d or /etc/dinit.d", "dinitctl show", "dinitctl cat", "dinit-check -v"]
+answers = ["Read the file in /usr/lib/dinit.d or /etc/dinit.d"]
+explanation = "The dinitctl command list contains no such command."
+review = "Looking at the system"
+
+# ---- start/stop ----
+
+[[question]]
+id = "s-wait"
+type = "choice"
+prompt = "Does dinitctl start return before or after the service has started?"
+choices = ["After: it waits (use --no-wait to return at once)", "Before", "Only for scripted services", "Only with --pin"]
+answers = ["After: it waits (use --no-wait to return at once)"]
+explanation = "It printed Service 'wl-hello' started. and returned 0."
+review = "Starting and stopping"
+
+[[question]]
+id = "s-missing"
+type = "choice"
+prompt = "dinitctl start wl-nonexistent prints:"
+choices = ["failed to find service description (status 1)", "Service not found (status 4)", "Nothing (status 0)", "A systemd-style unit not found"]
+answers = ["failed to find service description (status 1)"]
+explanation = "It also hints: check service description file exists / service name spelling."
+review = "Starting and stopping"
+
+[[question]]
+id = "a-dep"
+type = "choice"
+prompt = "wl-need depends on wl-db, both stopped. You start wl-need, then stop wl-need. What happens to wl-db?"
+choices = ["It stops too: nobody else activated it", "It stays running", "It restarts", "It is disabled"]
+answers = ["It stops too: nobody else activated it"]
+explanation = "wl-db had Activation: start due to dependent(s)."
+review = "Explicit activation: why a dependency stops or stays"
+
+[[question]]
+id = "a-expl"
+type = "choice"
+prompt = "You run start wl-db, start wl-need, then stop wl-need. What is wl-db's state?"
+choices = ["STARTED: it was explicitly started", "STOPPED", "FAILED", "STARTING"]
+answers = ["STARTED: it was explicitly started"]
+explanation = "A service stays up while it is explicitly activated or something running needs it."
+review = "Explicit activation: why a dependency stops or stays"
+
+[[question]]
+id = "a-refuse"
+type = "choice"
+prompt = "dinitctl stop wl-db while wl-need (which depends on it) is running:"
+choices = ["Refused, listing the dependents; --force stops both", "Stops only wl-db", "Stops everything", "Succeeds silently"]
+answers = ["Refused, listing the dependents; --force stops both"]
+explanation = "Message: cannot stop service 'wl-db' due to the following dependents. With --force, need was stopped too."
+review = "Explicit activation: why a dependency stops or stays"
+
+[[question]]
+id = "a-release"
+type = "choice"
+prompt = "What does dinitctl release do?"
+choices = ["Removes the explicit activation mark; with no dependents the service stops", "Reloads the service file", "Unloads the service", "Releases the pin"]
+answers = ["Removes the explicit activation mark; with no dependents the service stops"]
+explanation = "release wl-act printed Service 'wl-act' stopped."
+review = "Explicit activation: why a dependency stops or stays"
+
+[[question]]
+id = "a-wake"
+type = "choice"
+prompt = "dinitctl wake on a stopped service nothing depends on prints:"
+choices = ["service has no active dependents, cannot wake", "Service started", "Service not found", "Nothing"]
+answers = ["service has no active dependents, cannot wake"]
+explanation = "wake starts a service only as a dependency of an active one."
+review = "Explicit activation: why a dependency stops or stays"
+
+[[question]]
+id = "a-pin"
+type = "choice"
+prompt = "What does start --pin do?"
+choices = ["Locks the state: stop is refused until unpin", "Pins it to a CPU", "Marks it as boot-enabled", "Prints its PID"]
+answers = ["Locks the state: stop is refused until unpin"]
+explanation = "stop printed: cannot stop service 'wl-db' as it is pinned started."
+review = "Explicit activation: why a dependency stops or stays"
+
+# ---- enable ----
+
+[[question]]
+id = "e-start"
+type = "choice"
+prompt = "dinitctl enable wl-enab (not running) did what?"
+choices = ["Made the link AND started the service", "Only made the link", "Only started it", "Nothing until reboot"]
+answers = ["Made the link AND started the service"]
+explanation = "It printed has been enabled and then started. systemctl enable only links."
+review = "`enable` and `disable`"
+
+[[question]]
+id = "e-stop"
+type = "choice"
+prompt = "After dinitctl stop of an enabled service, is it still enabled?"
+choices = ["Yes: the link remains", "No: stop disables it", "Only after reboot", "It becomes masked"]
+answers = ["Yes: the link remains"]
+explanation = "ls /etc/dinit.d/boot.d still showed wl-enab."
+review = "`enable` and `disable`"
+
+[[question]]
+id = "e-offline"
+type = "choice"
+prompt = "What does dinitctl --offline enable do?"
+choices = ["Makes the link without contacting the daemon", "Enables for offline users", "Disables networking", "Is not allowed"]
+answers = ["Makes the link without contacting the daemon"]
+explanation = "It applies only to enable and disable."
+review = "`enable` and `disable`"
+
+[[question]]
+id = "e-via"
+type = "choice"
+prompt = "Where does enable link a service that has @meta enable-via wl-grpA?"
+choices = ["Into wl-grpA's waits-for.d directory", "Into /etc/dinit.d/boot.d", "Into /usr/lib/dinit.d", "Nowhere"]
+answers = ["Into wl-grpA's waits-for.d directory"]
+explanation = "--from NAME chooses another group; a group without waits-for.d is an error."
+review = "Enabling into another group"
+
+[[question]]
+id = "e-from"
+type = "choice"
+prompt = "dinitctl enable --from wl-nodir wl-member where wl-nodir has no waits-for.d prints:"
+choices = ["service 'wl-nodir' has no waits-for.d directory specified (status 1)", "Service enabled", "Syntax error", "Nothing"]
+answers = ["service 'wl-nodir' has no waits-for.d directory specified (status 1)"]
+explanation = "enable needs a directory to put the link in."
+review = "Enabling into another group"
+
+[[question]]
+id = "e-hang"
+type = "choice"
+prompt = "What happened once when enable was run for a group member while the group service was NOT started?"
+choices = ["It printed has been enabled and then did not return (timeout, rc 124)", "It failed at once", "It started the group", "It deleted the group"]
+answers = ["It printed has been enabled and then did not return (timeout, rc 124)"]
+explanation = "The lesson says it was seen once and not fully explained: start the group first and wrap enable in timeout."
+review = "Enabling into another group"
+
+# ---- first service / quotes ----
+
+[[question]]
+id = "f-quote"
+type = "choice"
+prompt = "In a dinit service file, which quote characters quote an argument with spaces?"
+choices = ["Only double quotes", "Single and double quotes", "Only single quotes", "Backticks"]
+answers = ["Only double quotes"]
+explanation = "With single quotes the shell saw :;: Syntax error: Unterminated quoted string."
+review = "Quotes: only double quotes quote"
+
+[[question]]
+id = "f-catlog"
+type = "choice"
+prompt = "Which setting lets dinitctl catlog show a service's output?"
+choices = ["log-type = buffer", "log-type = file", "log-type = none", "logfile = none"]
+answers = ["log-type = buffer"]
+explanation = "With log-type none, catlog said: cannot cat log for service not configured to buffer output."
+review = "Your first service"
+
+[[question]]
+id = "f-shell"
+type = "choice"
+prompt = "How do you use a pipe or redirect in command =?"
+choices = ["Run /bin/sh -c \"...\" or a script file: the command is not run by a shell", "Just write it", "Use |& ", "Use @pipe"]
+answers = ["Run /bin/sh -c \"...\" or a script file: the command is not run by a shell"]
+explanation = "The same idea as systemd's ExecStart."
+review = "Quotes: only double quotes quote"
+
+# ---- reload ----
+
+[[question]]
+id = "r-restart"
+type = "choice"
+prompt = "You change command = ... in the file of a running service and run dinitctl restart. Which command runs?"
+choices = ["The old one, with a warning that the description may have changed", "The new one", "Both", "Neither"]
+answers = ["The old one, with a warning that the description may have changed"]
+explanation = "reload then restart ran the new one."
+review = "Changing a service: `reload` and `unload`"
+
+[[question]]
+id = "r-ok"
+type = "multi"
+prompt = "Which sequences applied a changed command in the tests?"
+choices = ["reload, then restart", "stop, unload, start", "stop, reload, start", "restart only"]
+answers = ["reload, then restart", "stop, unload, start", "stop, reload, start"]
+explanation = "A plain restart kept the old definition."
+review = "Changing a service: `reload` and `unload`"
+
+[[question]]
+id = "r-type"
+type = "choice"
+prompt = "reload after changing a RUNNING service's type from process to scripted:"
+choices = ["Refused: could not reload service; service in wrong state, incompatible change, or bad service description", "Applied at once", "Restarts it", "Silently ignored"]
+answers = ["Refused: could not reload service; service in wrong state, incompatible change, or bad service description"]
+explanation = "The type of a running service cannot be changed."
+review = "Changing a service: `reload` and `unload`"
+
+[[question]]
+id = "r-unload"
+type = "choice"
+prompt = "Unloading a service that another loaded service depends on:"
+choices = ["Fails: unload dependents first", "Unloads both", "Unloads it and breaks the dependent", "Is not possible for stopped services"]
+answers = ["Fails: unload dependents first"]
+explanation = "Message: could not unload service; service not stopped, or is a dependency of another service."
+review = "Changing a service: `reload` and `unload`"
+
+# ---- failures ----
+
+[[question]]
+id = "x-stage"
+type = "choice"
+prompt = "A process service's command does not exist. What does dinitctl start show?"
+choices = ["failed to start, with Stage: executing command and Error: No such file or directory (rc 1)", "Success, then failed later", "Unit not found", "Nothing"]
+answers = ["failed to start, with Stage: executing command and Error: No such file or directory (rc 1)"]
+explanation = "Unlike systemd Type=simple, dinit's start fails at once."
+review = "A program that cannot be executed"
+
+[[question]]
+id = "x-stages"
+type = "multi"
+prompt = "Which Stage: values did the tests produce?"
+choices = ["executing command", "opening log file", "changing directory", "loading cgroup"]
+answers = ["executing command", "opening log file", "changing directory"]
+explanation = "logfile in a missing directory gave opening log file; working-dir missing gave changing directory."
+review = "A program that cannot be executed"
+
+[[question]]
+id = "x-isfailed"
+type = "choice"
+prompt = "For the unit that could not be launched, dinitctl is-failed printed STOPPED with status:"
+choices = ["0 (it counts as failed)", "1", "3", "4"]
+answers = ["0 (it counts as failed)"]
+explanation = "A service that started and then crashed past its restart limit gave status 1."
+review = "A program that cannot be executed"
+
+[[question]]
+id = "x-timeout"
+type = "choice"
+prompt = "A service that never becomes ready, with start-timeout = 1, ends as:"
+choices = ["failed to start: Reason: start timed out. State: STOPPED (start timed out)", "STARTED", "Masked", "Restarting forever"]
+answers = ["failed to start: Reason: start timed out. State: STOPPED (start timed out)"]
+explanation = "The lesson's wl-slow service."
+review = "A program that cannot be executed"
+
+[[question]]
+id = "x-dep"
+type = "choice"
+prompt = "A service with depends-on: on a dependency that fails to start prints:"
+choices = ["Reason: a dependency of the service failed to start. Check dinit log.", "Started", "Unit masked", "Dependency cycle"]
+answers = ["Reason: a dependency of the service failed to start. Check dinit log."]
+explanation = "A waits-for dependency would not stop it from starting."
+review = "A program that cannot be executed"
+
+[[question]]
+id = "k-check"
+type = "choice"
+prompt = "Which command shows the file, line and reason for an unknown setting?"
+choices = ["dinit-check SERVICE", "dinitctl status SERVICE", "dinitctl list", "dinit --check"]
+answers = ["dinit-check SERVICE"]
+explanation = "It printed Service 'wl-bogus' (/etc/dinit.d/wl-bogus:3): unknown setting: 'bogus-setting'."
+review = "Files dinit cannot read: `dinit-check`"
+
+[[question]]
+id = "k-msgs"
+type = "multi"
+prompt = "Which are real dinitctl error messages from the lesson?"
+choices = ["failed to find service description", "error in service description", "error loading service (or dependency of service)", "unit file corrupt"]
+answers = ["failed to find service description", "error in service description", "error loading service (or dependency of service)"]
+explanation = "Run dinit-check NAME for the detail."
+review = "Files dinit cannot read: `dinit-check`"
+
+[[question]]
+id = "k-cycle"
+type = "choice"
+prompt = "Can dinit-check find a dependency cycle without starting anything?"
+choices = ["Yes", "No, only systemd-analyze can", "Only at boot", "Only with --force"]
+answers = ["Yes"]
+explanation = "It reported wl-cyc1 -> wl-cyc2 ... as a cycle."
+review = "Files dinit cannot read: `dinit-check`"
+
+# ---- log ----
+
+[[question]]
+id = "g-where"
+type = "choice"
+prompt = "Where did dinit's own messages appear once syslog-ng was running?"
+choices = ["/var/log/messages", "/var/log/dinit.log", "/etc/dinit.d/log", "Nowhere"]
+answers = ["/var/log/messages"]
+explanation = "For example: err dinit[1]: service wl-logbad failed to start."
+review = "dinit's own log"
+
+[[question]]
+id = "g-nolog"
+type = "choice"
+prompt = "On the fresh Chimera install, why did /var/log/messages not exist?"
+choices = ["syslog-ng is installed but not enabled", "dinit does not log", "The disk was full", "messages is only created by systemd"]
+answers = ["syslog-ng is installed but not enabled"]
+explanation = "The no-system-log lab is this situation; dinitctl enable syslog-ng fixes it."
+review = "dinit's own log"
+
+[[question]]
+id = "g-opt"
+type = "choice"
+prompt = "What does options: starts-log tell dinit (as in the syslog-ng service)?"
+choices = ["The system log daemon is up: start logging through /dev/log", "Log to a file", "Start the log at boot", "Rotate logs"]
+answers = ["The system log daemon is up: start logging through /dev/log"]
+explanation = "From dinit-service(5)."
+review = "dinit's own log"
+
+# ---- mistakes ----
+
+[[question]]
+id = "m-sed"
+type = "choice"
+prompt = "Why does the lesson rewrite service files with cat or printf instead of sed -i?"
+choices = ["BSD sed -i on Chimera does not work like GNU sed -i; the next lesson shows how it broke the tests", "sed is not installed", "dinit forbids sed", "Files are read-only"]
+answers = ["BSD sed -i on Chimera does not work like GNU sed -i; the next lesson shows how it broke the tests"]
+explanation = "The earlier lesson showed sed -i 's/a/b/' f failing on Chimera."
+review = "Changing a service: `reload` and `unload`"
