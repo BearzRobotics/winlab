@@ -1,0 +1,404 @@
+schema_version = 1
+lesson = "foundations.posix-sh-scripting"
+# Draft for owner review. Answers come from the tested output (psh2.sh, psh3.sh) in dash 0.5.12, busybox ash 1.35.0 and Chimera's FreeBSD sh. Each attempt asks 10.
+draw = 10
+
+# ---- header ----
+
+[[question]]
+id = "h-top"
+type = "multi"
+prompt = "Which belong at the top of a portable #!/bin/sh script in this lesson?"
+choices = ["set -eu", "PATH=/usr/bin:/bin; export PATH", "umask 077", "set -o pipefail as the only safety net"]
+answers = ["set -eu", "PATH=/usr/bin:/bin; export PATH", "umask 077"]
+explanation = "pipefail ran in the three shells but ShellCheck flags it (SC3040) and not every sh has it."
+review = "The top of a portable script"
+
+[[question]]
+id = "h-err"
+type = "choice"
+prompt = "Why does the POSIX template have no trap ... ERR?"
+choices = ["dash and the FreeBSD sh reject ERR (bad trap / bad signal)", "ERR is slower", "ERR is POSIX but rare", "busybox forbids it"]
+answers = ["dash and the FreeBSD sh reject ERR (bad trap / bad signal)"]
+explanation = "Failures are reported by explicit die calls instead."
+review = "The template, tested"
+
+[[question]]
+id = "h-dash"
+type = "choice"
+prompt = "After set -eu, echo \"$-\" printed ue in dash and eu in the FreeBSD sh. What does that teach?"
+choices = ["Never compare $- as a string; test with case $- in *e*)", "dash is wrong", "Use $- to detect the shell", "It is always eu"]
+answers = ["Never compare $- as a string; test with case $- in *e*)"]
+explanation = "The order of option letters differs between shells."
+review = "The top of a portable script"
+
+[[question]]
+id = "h-status"
+type = "choice"
+prompt = "set -u on an unset variable ended the script with status 2 in all three POSIX shells. In the earlier bash 5.3.9 tests it gave:"
+choices = ["1", "2", "0", "127"]
+answers = ["1"]
+explanation = "Do not test those exact statuses across shells."
+review = "The top of a portable script"
+
+# ---- options ----
+
+[[question]]
+id = "o-case"
+type = "choice"
+prompt = "In a hand-written option loop, what does the -- case do?"
+choices = ["Stops option processing so the rest are arguments (shift, break)", "Starts a comment", "Ends the script", "Enables verbose mode"]
+answers = ["Stops option processing so the rest are arguments (shift, break)"]
+explanation = "set -- -v -o result.txt -- -file gave rest=-file."
+review = "Arguments and options"
+
+[[question]]
+id = "o-getopts"
+type = "choice"
+prompt = "After the getopts loop, which line removes the parsed options from the positional parameters?"
+choices = ["shift $((OPTIND - 1))", "shift OPTARG", "set -- OPTIND", "unset OPTIND"]
+answers = ["shift $((OPTIND - 1))"]
+explanation = "It gave rest=file1 file2."
+review = "Arguments and options"
+
+[[question]]
+id = "o-default"
+type = "choice"
+prompt = "Which expression gives a default for a missing $1 under set -u?"
+choices = ["${1:-none}", "$1 || none", "${1?none}", "[$1]"]
+answers = ["${1:-none}"]
+explanation = "${1:-none} printed none; ${2-unset-ok} printed unset-ok."
+review = "Arguments and options"
+
+[[question]]
+id = "o-usage"
+type = "choice"
+prompt = "In the lesson, what status does a missing-argument usage error exit with, and where does the message go?"
+choices = ["2, to standard error", "0, to standard output", "1, to the log", "127, to standard error"]
+answers = ["2, to standard error"]
+explanation = "[ $# -ge 1 ] || { echo \"usage: ...\" >&2; exit 2; }"
+review = "Arguments and options"
+
+# ---- lists ----
+
+[[question]]
+id = "l-array"
+type = "choice"
+prompt = "What is the portable array in POSIX sh?"
+choices = ["The positional parameters, built with set -- \"$@\" item", "arr=(1 2 3)", "declare -a", "mapfile"]
+answers = ["The positional parameters, built with set -- \"$@\" item"]
+explanation = "It printed [a b][c][d e] with count=3."
+review = "Lists without arrays"
+
+[[question]]
+id = "l-dash"
+type = "choice"
+prompt = "Why loop with for f in ./* instead of for f in *?"
+choices = ["A name starting with a dash becomes ./-n instead of an option", "It is faster", "It sorts the files", "It includes dotfiles"]
+answers = ["A name starting with a dash becomes ./-n instead of an option"]
+explanation = "The output was [./-n][./a b][./s.sh][./x]."
+review = "Lists without arrays"
+
+[[question]]
+id = "l-ifs"
+type = "choice"
+prompt = "Why set -f before IFS=,; set -- $v when v=\"a,b*,c\"?"
+choices = ["So the * in b* is not expanded as a glob", "To speed it up", "To keep the commas", "To enable arrays"]
+answers = ["So the * in b* is not expanded as a glob"]
+explanation = "With set -f the second element stayed b*. Restore IFS afterwards."
+review = "Lists without arrays"
+
+# ---- reading lines ----
+
+[[question]]
+id = "r-ifs"
+type = "short"
+prompt = "printf \"  a b  \\n\" | { IFS= read -r x; printf \"[%s]\\n\" \"$x\"; } prints (include the brackets)"
+answers = ["[  a b  ]"]
+explanation = "Without IFS= the blanks are trimmed and it printed [a b]."
+review = "Reading lines, and the pipeline trap"
+
+[[question]]
+id = "r-last"
+type = "choice"
+prompt = "Which keeps an unterminated last line in a while read loop?"
+choices = ["while read -r l || [ -n \"$l\" ]; do", "while read l; do", "while read -n; do", "for l in $(cat f); do"]
+answers = ["while read -r l || [ -n \"$l\" ]; do"]
+explanation = "It printed [a][b] for a file without a final newline."
+review = "Reading lines, and the pipeline trap"
+
+[[question]]
+id = "r-pipe"
+type = "short"
+prompt = "n=0; printf \"a\\nb\\nc\\n\" | while read -r l; do n=$((n+1)); done; echo \"n=$n\" prints in dash, ash and the FreeBSD sh (answer like n=0)"
+answers = ["n=0"]
+explanation = "The loop ran in a subshell."
+review = "Reading lines, and the pipeline trap"
+
+[[question]]
+id = "r-fix"
+type = "multi"
+prompt = "Which fixes kept the counter (n=3) in all three shells?"
+choices = ["A here-document feeding the loop", "A temp file redirected into the loop", "Braces around the loop and the echo after the pipe", "shopt -s lastpipe"]
+answers = ["A here-document feeding the loop", "A temp file redirected into the loop", "Braces around the loop and the echo after the pipe"]
+explanation = "lastpipe and < <(cmd) do not exist in POSIX sh."
+review = "Reading lines, and the pipeline trap"
+
+# ---- strings ----
+
+[[question]]
+id = "s-contains"
+type = "choice"
+prompt = "How does portable sh test whether a string contains world?"
+choices = ["case $s in *world*) ...;; esac", "[[ $s == *world* ]]", "${s/world/}", "echo $s | grep"]
+answers = ["case $s in *world*) ...;; esac"]
+explanation = "case does the pattern match; [[ ]] is a bashism."
+review = "Strings without bashisms"
+
+[[question]]
+id = "s-upper"
+type = "short"
+prompt = "Which command (name only) does the case change in the lesson: printf '%s\\n' Hello | ??? '[:lower:]' '[:upper:]'"
+answers = ["tr"]
+explanation = "${v^^} is a bashism."
+review = "Strings without bashisms"
+
+[[question]]
+id = "s-expr"
+type = "choice"
+prompt = "expr length hello gave 5 on Ubuntu. What did it give on Chimera (BSD expr)?"
+choices = ["expr: syntax error (use ${#s})", "5", "0", "hello"]
+answers = ["expr: syntax error (use ${#s})"]
+explanation = "${#s} works everywhere."
+review = "Strings without bashisms"
+
+[[question]]
+id = "s-float"
+type = "choice"
+prompt = "What does $((1.5+1)) do in all three shells?"
+choices = ["Arithmetic error: integers only", "2.5", "2", "1.51"]
+answers = ["Arithmetic error: integers only"]
+explanation = "Use awk for decimals."
+review = "Strings without bashisms"
+
+[[question]]
+id = "s-cmp"
+type = "choice"
+prompt = "[ \"10\" = \"10.0\" ] || echo strings-differ prints strings-differ. Why?"
+choices = ["= compares text, not numbers (-eq compares integers)", "[ ] is broken", "10.0 is invalid", "dash bug"]
+answers = ["= compares text, not numbers (-eq compares integers)"]
+explanation = "[ 10 -gt 9 ] is the numeric test."
+review = "Strings without bashisms"
+
+# ---- echo/printf ----
+
+[[question]]
+id = "e-printf"
+type = "choice"
+prompt = "Which is correct for any value in every shell?"
+choices = ["printf '%s\\n' \"$value\"", "echo \"$value\"", "echo -e \"$value\"", "print \"$value\""]
+answers = ["printf '%s\\n' \"$value\""]
+explanation = "v=-n: printf printed -n, echo printed nothing."
+review = "`echo` versus `printf`, again"
+
+[[question]]
+id = "e-b"
+type = "choice"
+prompt = "printf \"%b\\n\" \"a\\tb\" prints in all three shells:"
+choices = ["a<TAB>b (%b interprets escapes)", "a\\tb", "An error", "ab"]
+answers = ["a<TAB>b (%b interprets escapes)"]
+explanation = "printf \"%s\\n\" \"a\\tb\" printed a\\tb."
+review = "`echo` versus `printf`, again"
+
+# ---- return values ----
+
+[[question]]
+id = "v-capture"
+type = "short"
+prompt = "f() { printf \"%s\\n\" \"$(($1 * 2))\"; }; r=$(f 21); echo \"r=$r\" prints"
+answers = ["r=42"]
+explanation = "Print and capture is the safe way to return a value."
+review = "Returning a value from a function"
+
+[[question]]
+id = "v-eval"
+type = "choice"
+prompt = "When is setvar() { eval \"$1=\\$2\"; } safe?"
+choices = ["Only when the variable name in $1 comes from you, never from input", "Always", "Never", "Only in dash"]
+answers = ["Only when the variable name in $1 comes from you, never from input"]
+explanation = "A name like x; rm -rf ~ would be code execution."
+review = "Returning a value from a function"
+
+# ---- files ----
+
+[[question]]
+id = "f-mktemp"
+type = "choice"
+prompt = "Why use mktemp and not /tmp/work.$$?"
+choices = ["$$ is guessable; mktemp gives a random private name", "$$ is empty in dash", "mktemp is POSIX", "It is shorter"]
+answers = ["$$ is guessable; mktemp gives a random private name"]
+explanation = "mktemp is not POSIX but exists on every system tested, including Chimera."
+review = "Files, temporary files, cleanup, locks"
+
+[[question]]
+id = "f-trapfn"
+type = "choice"
+prompt = "f() { trap \"echo cleanup-in-f\" EXIT; return 5; }; f; echo \"rc=$?\" prints:"
+choices = ["rc=5 then cleanup-in-f (the EXIT trap runs when the script exits)", "cleanup-in-f then rc=5", "rc=0", "Nothing"]
+answers = ["rc=5 then cleanup-in-f (the EXIT trap runs when the script exits)"]
+explanation = "The trap belongs to the shell, not the function."
+review = "Files, temporary files, cleanup, locks"
+
+[[question]]
+id = "f-lock"
+type = "choice"
+prompt = "Why is mkdir lock a portable lock?"
+choices = ["It fails if the directory exists, and only one process can create it", "flock is POSIX", "It locks the file system", "It is slow"]
+answers = ["It fails if the directory exists, and only one process can create it"]
+explanation = "The second mkdir printed busy. A SIGKILLed script leaves the lock behind."
+review = "Files, temporary files, cleanup, locks"
+
+[[question]]
+id = "f-atomic"
+type = "choice"
+prompt = "How is a config file replaced atomically in the lesson?"
+choices = ["Write a temp file in the same directory, then mv -f over the target", "Write straight into it with >", "cp over it", "sed -i"]
+answers = ["Write a temp file in the same directory, then mv -f over the target"]
+explanation = "No temp file was left behind."
+review = "Files, temporary files, cleanup, locks"
+
+[[question]]
+id = "f-term"
+type = "short"
+prompt = "A TERM sent to the template while it slept left no temp file. What exit status did it return (number only)?"
+answers = ["143"]
+explanation = "128 + 15, in all three shells."
+review = "The template, tested"
+
+# ---- tool differences ----
+
+[[question]]
+id = "t-sedi"
+type = "choice"
+prompt = "On Chimera (BSD sed), sed -i \"s/a/b/\" f did what?"
+choices = ["Failed with invalid command code f and left the file unchanged", "Edited f in place", "Created f.bak", "Printed the file"]
+answers = ["Failed with invalid command code f and left the file unchanged"]
+explanation = "BSD sed takes the next word as the backup suffix; the portable form is sed ... f > f.new && mv f.new f."
+review = "`sed -i`, `stat -c` and other tool differences"
+
+[[question]]
+id = "t-stat"
+type = "choice"
+prompt = "stat -c %a f on Chimera gave:"
+choices = ["stat: unrecognized option: c", "644", "An empty line", "The file size"]
+answers = ["stat: unrecognized option: c"]
+explanation = "stat -c is GNU; the BSD stat uses -f."
+review = "`sed -i`, `stat -c` and other tool differences"
+
+[[question]]
+id = "t-posix"
+type = "choice"
+prompt = "A script is POSIX-clean at the language level and still fails on Chimera. Which cause is shown in the lesson?"
+choices = ["It uses a GNU option of an external tool, such as sed -i or stat -c", "The shell is bash", "set -e is broken", "The shebang is wrong"]
+answers = ["It uses a GNU option of an external tool, such as sed -i or stat -c"]
+explanation = "POSIX standardises the shell and a list of utilities with limited options."
+review = "`sed -i`, `stat -c` and other tool differences"
+
+[[question]]
+id = "t-find"
+type = "choice"
+prompt = "find -print0 | xargs -0 worked on all three systems in the tests. What does the lesson still say?"
+choices = ["It is not POSIX; it worked here but check on other systems", "It is POSIX", "It never works on BSD", "Use it always"]
+answers = ["It is not POSIX; it worked here but check on other systems"]
+explanation = "find -exec ... {} + is the POSIX form."
+review = "`sed -i`, `stat -c` and other tool differences"
+
+[[question]]
+id = "t-which"
+type = "choice"
+prompt = "Which is the portable check that a command exists?"
+choices = ["command -v tool >/dev/null 2>&1", "which tool", "type -t tool", "tool --version"]
+answers = ["command -v tool >/dev/null 2>&1"]
+explanation = "which is a program, not part of the shell."
+review = "`sed -i`, `stat -c` and other tool differences"
+
+[[question]]
+id = "t-env"
+type = "short"
+prompt = "V=one sh -c 'echo \"in: $V\"'; echo \"out: ${V-unset}\" prints on its second line"
+answers = ["out: unset"]
+explanation = "A variable assignment before a command applies to that command only."
+review = "`sed -i`, `stat -c` and other tool differences"
+
+# ---- shell detection and harness ----
+
+[[question]]
+id = "d-detect"
+type = "choice"
+prompt = "Why not branch on BASH_VERSION in a portable script?"
+choices = ["None of the three set BASH_VERSION, KSH_VERSION or ZSH_VERSION; write the portable thing instead", "It is always set", "It is slow", "ShellCheck forbids it"]
+answers = ["None of the three set BASH_VERSION, KSH_VERSION or ZSH_VERSION; write the portable thing instead"]
+explanation = "ls -l /bin/sh tells you what sh is on a machine."
+review = "Which shell am I in?"
+
+[[question]]
+id = "d-harness"
+type = "choice"
+prompt = "What two inputs does the 13-test harness take?"
+choices = ["TOOL (the script) and SUT (the shell command that runs it)", "A shell name only", "Two scripts", "A log file"]
+answers = ["TOOL (the script) and SUT (the shell command that runs it)"]
+explanation = "TOOL=/path/tool.sh SUT=dash dash harness.sh."
+review = "One test harness, three shells"
+
+[[question]]
+id = "d-result"
+type = "short"
+prompt = "How many tests passed in each of dash, busybox ash and Chimera's sh (number only)?"
+answers = ["13"]
+explanation = "13 passed, 0 failed in all three."
+review = "One test harness, three shells"
+
+[[question]]
+id = "d-limit"
+type = "multi"
+prompt = "Which limits of the three-shell result does the lesson state?"
+choices = ["It is evidence, not proof: yash, ksh and zsh were not run", "The harness uses mktemp and grep -c, which are not POSIX", "The read-only test relies on running as a normal user", "dash cannot run the harness"]
+answers = ["It is evidence, not proof: yash, ksh and zsh were not run", "The harness uses mktemp and grep -c, which are not POSIX", "The read-only test relies on running as a normal user"]
+explanation = "dash ran it: 13 passed."
+review = "One test harness, three shells"
+
+[[question]]
+id = "b-variant"
+type = "choice"
+prompt = "A copy of the template with set -euo pipefail and arr=(1 2) was run. What did dash do?"
+choices = ["Stopped with Syntax error: \"(\" unexpected (line 10); bash would have run it", "Ran it fine", "Ignored the array", "Printed a warning only"]
+answers = ["Stopped with Syntax error: \"(\" unexpected (line 10); bash would have run it"]
+explanation = "ShellCheck -s sh reported SC3040 and SC3030."
+review = "What a bashism does to the template"
+
+[[question]]
+id = "b-clean"
+type = "choice"
+prompt = "What did shellcheck -s sh report for the POSIX template?"
+choices = ["No findings", "SC3043", "SC3040", "SC2086"]
+answers = ["No findings"]
+explanation = "It is clean; the bashism variant was not."
+review = "The template, tested"
+
+[[question]]
+id = "m-rule"
+type = "multi"
+prompt = "Which are listed as common mistakes?"
+choices = ["Testing with bash", "echo for data, echo -e, echo -n", "sed -i and stat -c without checking the target system", "Using printf '%s\\n'"]
+answers = ["Testing with bash", "echo for data, echo -e, echo -n", "sed -i and stat -c without checking the target system"]
+explanation = "printf '%s\\n' is the fix, not a mistake."
+review = "Common mistakes"
+
+[[question]]
+id = "m-dot"
+type = "choice"
+prompt = ". lib.sh without ./ worked on Chimera. Which shells failed?"
+choices = ["dash and busybox ash", "All three", "Only Chimera's", "None"]
+answers = ["dash and busybox ash"]
+explanation = "Always source with a path: . ./lib.sh."
+review = "Common mistakes"

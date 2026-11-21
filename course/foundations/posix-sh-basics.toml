@@ -1,0 +1,52 @@
+schema_version = 1
+id = "foundations.posix-sh-basics"
+title = "POSIX sh basics: the portable shell language, tested in dash, busybox ash and FreeBSD sh"
+summary = "The shell language that a #!/bin/sh script may use, with dash as the reference shell and busybox ash and Chimera's FreeBSD sh as the second and third checks (120 snippets run in all three, with ShellCheck as the not-POSIX oracle): quoting, the POSIX parameter-expansion subset, arithmetic, tests and case, set --, functions, here-documents, getopts, trap, printf versus echo; where even the POSIX core differs (echo escapes, local without a value, shift past the end, LINENO, sourcing without ./); and a table of which bashisms each shell accepts, rejects or silently misreads."
+content = "posix-sh-basics.md"
+estimated_minutes = 120
+level = 3
+objectives = [
+  "Say which shell /bin/sh is on a machine and run a script under dash, busybox ash and the system sh without bash",
+  "Write the POSIX subset: quoting, # ## % %% :- := :? :+, $(( )), [ ] with =, case, set -- as the portable array, functions without the function keyword, here-documents, getopts, trap on EXIT and signal names without SIG",
+  "Use printf instead of echo for data and explain why echo is not portable",
+  "Name where the POSIX core still differs between shells (echo escapes, local with no value, shift past the end, $LINENO, . file without ./, $RANDOM, exit statuses)",
+  "Recognise Bad substitution, [[: not found, unexpected operator and Syntax error near ( as bashisms reaching a POSIX shell",
+  "Explain why a pass in busybox ash or the FreeBSD sh does not prove a script is POSIX, and why dash is the reference",
+  "Identify the silent bashisms (&>, (( )), {1..3}, echo -e, $'...', $(<file)) that do not fail but do something else",
+  "Check a script with shellcheck -s sh, dash, busybox ash and the target system's sh",
+]
+prerequisites = ["foundations.shells-and-posix"]
+privilege = "standard"
+certifications = ["comptia-linux-plus/scripting-containers-automation", "redhat-rhcsa/essential-tools"]
+evaluation_criteria = [
+  "Learner runs one script under bash, dash and busybox ash and explains each difference",
+  "Learner converts a bash fragment with an array and [[ ]] to POSIX sh and proves it with dash",
+  "Learner shows echo 'a\\tb' in two shells and fixes it with printf",
+  "Learner reproduces the local-without-a-value difference and fixes the function",
+  "Learner names the bashism behind each of Bad substitution, [[: not found, unexpected operator and Syntax error near (",
+  "Learner runs shellcheck -s sh and lists the SC3 codes it printed",
+]
+
+[[references]]
+title = "POSIX Shell Command Language (The Open Group)"
+url = "https://pubs.opengroup.org/onlinepubs/9799919799/utilities/V3_chap02.html"
+
+[[references]]
+title = "POSIX Utilities index (The Open Group)"
+url = "https://pubs.opengroup.org/onlinepubs/9799919799/idx/utilities.html"
+
+[[references]]
+title = "dash(1) manual page (Debian)"
+url = "https://manpages.debian.org/unstable/dash/dash.1.en.html"
+
+[[references]]
+title = "sh(1) manual page (FreeBSD, the shell Chimera's sh comes from)"
+url = "https://man.freebsd.org/cgi/man.cgi?query=sh"
+
+[[references]]
+title = "BusyBox"
+url = "https://busybox.net/"
+
+[[references]]
+title = "ShellCheck wiki"
+url = "https://www.shellcheck.net/wiki/"

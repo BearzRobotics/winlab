@@ -1,0 +1,52 @@
+schema_version = 1
+id = "foundations.posix-sh-scripting"
+title = "POSIX sh scripting: portable patterns, GNU versus BSD tools, and a test harness for three shells"
+summary = "How to write a #!/bin/sh script that really is portable, tested in dash, busybox ash and Chimera's FreeBSD sh: options with case and getopts, lists with set --, IFS=read -r, the pipeline-subshell counter trap and its fixes, strings without bashisms, printf versus echo, returning values, mktemp, EXIT/INT/TERM cleanup, mkdir locks, atomic updates, a table of GNU versus BSD tool differences (sed -i, stat -c, expr length), a tested POSIX template, and a 13-test harness that runs the same tests under each shell."
+content = "posix-sh-scripting.md"
+estimated_minutes = 120
+level = 4
+objectives = [
+  "Write the top of a portable script (set -eu, PATH, umask) and say why pipefail and an ERR trap are left out",
+  "Parse options with a case loop and with getopts, and handle defaults and missing arguments",
+  "Use set -- as an array, read lines with IFS= read -r, and avoid or fix the pipeline-subshell counter trap",
+  "Do string work with parameter expansion, case, cut, tr and sed, and use printf instead of echo for data",
+  "Return a value from a function by printing and capturing it, and say when eval is and is not safe",
+  "Use mktemp, EXIT/INT/TERM traps, mkdir locks and atomic temp-file updates",
+  "Name the GNU versus BSD differences that break POSIX scripts (sed -i, stat -c, expr length) and give the portable replacement",
+  "Write a POSIX template and a harness that runs the same tests under dash, busybox ash and the system sh",
+  "Explain what three passing shells prove and what they do not",
+]
+prerequisites = ["foundations.posix-sh-basics"]
+privilege = "standard"
+certifications = ["comptia-linux-plus/scripting-containers-automation", "redhat-rhcsa/essential-tools"]
+evaluation_criteria = [
+  "Learner runs one script under dash, busybox ash and the system sh and keeps a results table",
+  "Learner reproduces the pipeline counter trap and fixes it three ways",
+  "Learner reproduces the BSD sed -i failure or explains how they would test it",
+  "Learner extends the template and the harness and keeps all tests passing in every shell",
+  "Learner fixes every SC3 finding from shellcheck -s sh on their own script",
+]
+
+[[references]]
+title = "POSIX Shell Command Language (The Open Group)"
+url = "https://pubs.opengroup.org/onlinepubs/9799919799/utilities/V3_chap02.html"
+
+[[references]]
+title = "POSIX Utilities index (The Open Group)"
+url = "https://pubs.opengroup.org/onlinepubs/9799919799/idx/utilities.html"
+
+[[references]]
+title = "dash(1) manual page (Debian)"
+url = "https://manpages.debian.org/unstable/dash/dash.1.en.html"
+
+[[references]]
+title = "sh(1) manual page (FreeBSD)"
+url = "https://man.freebsd.org/cgi/man.cgi?query=sh"
+
+[[references]]
+title = "ShellCheck wiki"
+url = "https://www.shellcheck.net/wiki/"
+
+[[references]]
+title = "BusyBox"
+url = "https://busybox.net/"

@@ -1,0 +1,415 @@
+schema_version = 1
+lesson = "foundations.posix-sh-basics"
+# Draft for owner review. Every answer comes from the tested output (psh1.sh, psh4.sh) in dash 0.5.12, busybox ash 1.35.0 and Chimera's FreeBSD sh. Each attempt asks 10.
+draw = 10
+
+# ---- which shell, testing ----
+
+[[question]]
+id = "w-ubuntu"
+type = "choice"
+prompt = "On the Ubuntu 26.04 test system, what did ls -l /bin/sh show?"
+choices = ["/bin/sh -> dash", "/bin/sh -> bash", "/bin/sh -> busybox", "A regular program"]
+answers = ["/bin/sh -> dash"]
+explanation = "On Chimera /bin/sh was a regular program (chimerautils 15.1.2-r0), not a link."
+review = "Which shell is `/bin/sh`?"
+
+[[question]]
+id = "w-chimera"
+type = "choice"
+prompt = "Which package owns /usr/bin/sh on the Chimera lab VM?"
+choices = ["chimerautils", "bash", "dash", "busybox"]
+answers = ["chimerautils"]
+explanation = "apk info --who-owns /usr/bin/sh said chimerautils-15.1.2-r0; it is the FreeBSD sh."
+review = "Which shell is `/bin/sh`?"
+
+[[question]]
+id = "w-nobash"
+type = "choice"
+prompt = "Why must a #!/bin/sh script not be tested with bash script.sh?"
+choices = ["bash accepts nearly everything, so a pass proves nothing", "bash is slower", "bash cannot read the file", "bash rejects shebangs"]
+answers = ["bash accepts nearly everything, so a pass proves nothing"]
+explanation = "The reference shells here are dash first, then busybox ash and the system sh."
+review = "Which shell is `/bin/sh`?"
+
+[[question]]
+id = "w-ref"
+type = "choice"
+prompt = "Which of the three test shells is the strictest, and so the reference?"
+choices = ["dash", "busybox ash", "FreeBSD sh", "They are equally strict"]
+answers = ["dash"]
+explanation = "Almost everything that failed in dash is a bashism; ash and the FreeBSD sh each accept a different set of extensions."
+review = "Bashisms: who accepts what?"
+
+[[question]]
+id = "w-ash"
+type = "choice"
+prompt = "busybox ash was run as busybox ash s.sh. What does that test?"
+choices = ["The shell only: external commands such as mktemp were the system's", "The whole of busybox including its tools", "Only dash compatibility", "Nothing"]
+answers = ["The shell only: external commands such as mktemp were the system's"]
+explanation = "The lesson notes this limitation of the second check."
+review = "Which shell is `/bin/sh`?"
+
+# ---- core language ----
+
+[[question]]
+id = "c-split"
+type = "short"
+prompt = "v=\"a b\"; set -- $v; echo $# prints (number only)"
+answers = ["2"]
+explanation = "Unquoted $v splits into two words; \"$v\" gives 1."
+review = "Quoting, word splitting and globbing"
+
+[[question]]
+id = "c-brace"
+type = "choice"
+prompt = "What does echo {1..3} print in dash, ash and the FreeBSD sh?"
+choices = ["{1..3} (brace expansion does not exist)", "1 2 3", "1", "An error"]
+answers = ["{1..3} (brace expansion does not exist)"]
+explanation = "A silent bashism: no error, but not what bash prints."
+review = "Quoting, word splitting and globbing"
+
+[[question]]
+id = "c-glob"
+type = "choice"
+prompt = "echo *.zzz in a directory with no .zzz files prints:"
+choices = ["*.zzz (the pattern stays literal)", "Nothing", "An error", "All files"]
+answers = ["*.zzz (the pattern stays literal)"]
+explanation = "The same in all three shells."
+review = "Quoting, word splitting and globbing"
+
+[[question]]
+id = "p-trim"
+type = "short"
+prompt = "v=/a/b.tar.gz; echo \"${v##*/}\" prints"
+answers = ["b.tar.gz"]
+explanation = "## removes the longest prefix matching */."
+review = "Parameter expansion (the POSIX subset)"
+
+[[question]]
+id = "p-colon"
+type = "choice"
+prompt = "e=; echo \"[${e:-d}] [${e-d}]\" prints:"
+choices = ["[d] []", "[d] [d]", "[] []", "[] [d]"]
+answers = ["[d] []"]
+explanation = ":- also replaces an EMPTY value; - only replaces an unset one."
+review = "Parameter expansion (the POSIX subset)"
+
+[[question]]
+id = "p-bad"
+type = "multi"
+prompt = "Which expansions are NOT in the portable set (they failed with Bad substitution in dash)?"
+choices = ["${v:1:2}", "${v/a/b}", "${v^^}", "${v#*/}"]
+answers = ["${v:1:2}", "${v/a/b}", "${v^^}"]
+explanation = "# ## % %% :- := :? :+ and ${#v} are the portable operators."
+review = "Parameter expansion (the POSIX subset)"
+
+[[question]]
+id = "p-subst"
+type = "choice"
+prompt = "In busybox ash ${v:1:2} gave bc. What does that mean for a #!/bin/sh script?"
+choices = ["Nothing: ash accepts bash extensions, dash rejects it", "It is portable", "It is POSIX", "dash also accepts it"]
+answers = ["Nothing: ash accepts bash extensions, dash rejects it"]
+explanation = "Always check with dash."
+review = "Bashisms: who accepts what?"
+
+[[question]]
+id = "a-float"
+type = "choice"
+prompt = "What does $((1.5+1)) do in these shells?"
+choices = ["An arithmetic error (integers only)", "Prints 2.5", "Prints 2", "Prints 1.51"]
+answers = ["An arithmetic error (integers only)"]
+explanation = "Use awk or bc for decimals."
+review = "Arithmetic"
+
+[[question]]
+id = "a-incr"
+type = "multi"
+prompt = "Which are portable arithmetic in all three shells?"
+choices = ["i=$((i+2))", "$((7/2)) giving 3", "$((i++))", "$((2**3))"]
+answers = ["i=$((i+2))", "$((7/2)) giving 3"]
+explanation = "$((i++)) and ** worked in busybox ash only; dash and the FreeBSD sh gave an arithmetic error."
+review = "Arithmetic"
+
+[[question]]
+id = "t-eq"
+type = "choice"
+prompt = "What does [ a == a ] do in dash?"
+choices = ["Error: unexpected operator (status 2)", "True", "False", "Works like [["]
+answers = ["Error: unexpected operator (status 2)"]
+explanation = "ash and the FreeBSD sh accepted it; use a single =."
+review = "Tests: `[ ]`, `case`, exit status"
+
+[[question]]
+id = "t-case"
+type = "choice"
+prompt = "case x in y) echo y;; esac; echo \"rc=$?\" prints:"
+choices = ["rc=0 (no match gives status 0)", "rc=1", "rc=2", "y"]
+answers = ["rc=0 (no match gives status 0)"]
+explanation = "And case x in x) false;; esac gives rc=1: the status of the last command."
+review = "Tests: `[ ]`, `case`, exit status"
+
+[[question]]
+id = "t-ao"
+type = "choice"
+prompt = "What happened to x=\"!\"; [ \"$x\" -a \"$x\" ] in all three shells?"
+choices = ["It failed with an error: data that looks like an operator confused it", "It printed true", "It printed false quietly", "It ran in bash mode"]
+answers = ["It failed with an error: data that looks like an operator confused it"]
+explanation = "Use [ ... ] && [ ... ] instead of -a and -o."
+review = "Tests: `[ ]`, `case`, exit status"
+
+[[question]]
+id = "pp-10"
+type = "short"
+prompt = "set -- a b c d e f g h i j; echo \"$10\" prints (two characters)"
+answers = ["a0"]
+explanation = "$10 is $1 followed by a literal 0; ${10} is the tenth argument (j)."
+review = "Positional parameters, `set --`, loops"
+
+[[question]]
+id = "pp-set"
+type = "choice"
+prompt = "Which command appends an element to the positional parameters (the portable array)?"
+choices = ["set -- \"$@\" 4", "args+=(4)", "shift 4", "push 4"]
+answers = ["set -- \"$@\" 4"]
+explanation = "It printed 4 1 2 3 4 for set -- 1 2 3; set -- \"$@\" 4."
+review = "Positional parameters, `set --`, loops"
+
+[[question]]
+id = "pp-shift"
+type = "choice"
+prompt = "set -- a; shift 2; echo after. What happens in dash?"
+choices = ["dash exits with status 2: can't shift that many", "It prints after", "shift returns 1 and the script continues", "Nothing happens"]
+answers = ["dash exits with status 2: can't shift that many"]
+explanation = "busybox ash and the FreeBSD sh returned 1 and continued."
+review = "Where the POSIX core still differs"
+
+[[question]]
+id = "f-kw"
+type = "choice"
+prompt = "What does function f { echo hi; } do in dash?"
+choices = ["Syntax error", "Defines f", "Prints hi", "Works with a warning"]
+answers = ["Syntax error"]
+explanation = "It worked in busybox ash and gave a syntax error in dash and the FreeBSD sh. Write f() { ...; }."
+review = "Functions"
+
+[[question]]
+id = "f-local"
+type = "choice"
+prompt = "y=g; f() { local y; echo \"[${y-unset}]\"; }; f prints in dash, busybox ash and the FreeBSD sh respectively:"
+choices = ["[g], [unset], [g]", "[unset] in all three", "[g] in all three", "[unset], [g], [unset]"]
+answers = ["[g], [unset], [g]"]
+explanation = "A local with no value keeps the outer value in dash and the FreeBSD sh. Give local a value, or avoid it."
+review = "Functions"
+
+[[question]]
+id = "f-localpos"
+type = "choice"
+prompt = "ShellCheck's verdict on local in a #!/bin/sh script is:"
+choices = ["SC3043: In POSIX sh, 'local' is undefined", "No finding", "An error in dash", "It is required"]
+answers = ["SC3043: In POSIX sh, 'local' is undefined"]
+explanation = "All three shells nevertheless accepted it, with different semantics."
+review = "Functions"
+
+[[question]]
+id = "h-here"
+type = "choice"
+prompt = "In cat <<'EOF', what is different from cat <<EOF?"
+choices = ["The quoted delimiter stops all expansion inside", "It strips tabs", "It reads from a file", "It adds a newline"]
+answers = ["The quoted delimiter stops all expansion inside"]
+explanation = "<<-EOF is the tab-stripping form."
+review = "Here-documents and redirection"
+
+[[question]]
+id = "h-str"
+type = "choice"
+prompt = "What happened with a <<< here-string?"
+choices = ["Syntax error in all three shells", "Worked in ash only", "Worked everywhere", "Worked in dash only"]
+answers = ["Syntax error in all three shells"]
+explanation = "Use a here-document or printf | command."
+review = "Bashisms: who accepts what?"
+
+[[question]]
+id = "g-opts"
+type = "choice"
+prompt = "Which is the portable option parser?"
+choices = ["getopts (the builtin)", "getopt (the external program)", "optparse", "a bash array"]
+answers = ["getopts (the builtin)"]
+explanation = "getopts ran the same in all three shells."
+review = "Options: `getopts`"
+
+[[question]]
+id = "t-names"
+type = "multi"
+prompt = "Which trap forms work in a portable script?"
+choices = ["trap 'echo bye' EXIT", "trap '...' TERM", "trap '...' SIGTERM", "trap '...' ERR"]
+answers = ["trap 'echo bye' EXIT", "trap '...' TERM"]
+explanation = "SIGTERM was a bad trap in dash (the script was killed, status 15) and ERR was rejected in dash and the FreeBSD sh."
+review = "`trap`"
+
+[[question]]
+id = "e-echo"
+type = "choice"
+prompt = "echo 'a\\tb' printed a tab in dash. In busybox ash and the FreeBSD sh it printed:"
+choices = ["a\\tb (literally)", "A tab", "An error", "ab"]
+answers = ["a\\tb (literally)"]
+explanation = "echo is not portable. Use printf '%s\\n' \"$value\"."
+review = "`printf` and `echo`"
+
+[[question]]
+id = "e-ech"
+type = "choice"
+prompt = "echo -e 'a\\tb' printed what in dash?"
+choices = ["-e a<TAB>b (the -e was printed)", "a<TAB>b", "An error", "Nothing"]
+answers = ["-e a<TAB>b (the -e was printed)"]
+explanation = "It worked in busybox ash and the FreeBSD sh. A silent bashism."
+review = "Bashisms: who accepts what?"
+
+[[question]]
+id = "e-printfv"
+type = "choice"
+prompt = "printf -v s %03d 7 in busybox ash:"
+choices = ["Printed -v: it treated -v as the format (silent)", "Set s to 007", "Failed with Illegal option", "Printed 007"]
+answers = ["Printed -v: it treated -v as the format (silent)"]
+explanation = "dash and the FreeBSD sh said Illegal option -v."
+review = "Bashisms: who accepts what?"
+
+[[question]]
+id = "e-printf"
+type = "short"
+prompt = "printf \"[%s]\" a b c; echo prints (no spaces)"
+answers = ["[a][b][c]"]
+explanation = "The format is reused for each argument, in every shell."
+review = "`printf` and `echo`"
+
+[[question]]
+id = "b-cmdv"
+type = "choice"
+prompt = "Which is the portable way to ask whether a command exists?"
+choices = ["command -v name", "which name", "type -t name", "hash -v name"]
+answers = ["command -v name"]
+explanation = "which is a program, not part of the shell language; type -t is not portable."
+review = "Other everyday builtins"
+
+[[question]]
+id = "b-pipe"
+type = "choice"
+prompt = "false | true; echo $? prints (portable behaviour):"
+choices = ["0", "1", "141", "2"]
+answers = ["0"]
+explanation = "A pipeline's status is its last command's (without pipefail, which should not be relied on)."
+review = "Other everyday builtins"
+
+[[question]]
+id = "b-pf"
+type = "choice"
+prompt = "set -o pipefail worked in all three shells in the tests. What does the lesson conclude?"
+choices = ["Do not rely on it in portable scripts: ShellCheck calls it undefined in POSIX sh", "It is POSIX", "Use it everywhere", "dash lacks it"]
+answers = ["Do not rely on it in portable scripts: ShellCheck calls it undefined in POSIX sh"]
+explanation = "SC3040; the lesson did not test every sh in existence."
+review = "Bashisms: who accepts what?"
+
+[[question]]
+id = "b-u"
+type = "choice"
+prompt = "set -u with an unset variable in a script ended it with status:"
+choices = ["2 in all three POSIX shells (bash gave 1 in the earlier test)", "1 in all", "0", "127"]
+answers = ["2 in all three POSIX shells (bash gave 1 in the earlier test)"]
+explanation = "Exit statuses are not portable either."
+review = "Other everyday builtins"
+
+# ---- differences ----
+
+[[question]]
+id = "d-line"
+type = "choice"
+prompt = "echo \"line $LINENO\" in dash 0.5.12-12ubuntu3 printed:"
+choices = ["line  (empty value)", "line 1", "An error", "line 0"]
+answers = ["line  (empty value)"]
+explanation = "busybox ash and the FreeBSD sh printed line 1. Do not rely on $LINENO in portable code."
+review = "Where the POSIX core still differs"
+
+[[question]]
+id = "d-dot"
+type = "choice"
+prompt = ". l.sh (the file is in the current directory, no ./) worked in:"
+choices = ["Only the FreeBSD sh", "dash and ash", "All three", "None"]
+answers = ["Only the FreeBSD sh"]
+explanation = "Source with a path: . ./l.sh"
+review = "Where the POSIX core still differs"
+
+[[question]]
+id = "d-random"
+type = "choice"
+prompt = "Which of the three shells had $RANDOM set?"
+choices = ["busybox ash only", "dash only", "FreeBSD sh only", "All three"]
+answers = ["busybox ash only"]
+explanation = "$RANDOM is not POSIX; neither dash nor the FreeBSD sh has it."
+review = "Where the POSIX core still differs"
+
+[[question]]
+id = "d-err"
+type = "multi"
+prompt = "Which messages mean a bashism reached a POSIX shell?"
+choices = ["Bad substitution", "[[: not found", "unexpected operator", "Permission denied"]
+answers = ["Bad substitution", "[[: not found", "unexpected operator"]
+explanation = "Also Syntax error: \"(\" unexpected."
+review = "How each shell reports syntax errors"
+
+# ---- silent bashisms ----
+
+[[question]]
+id = "s-amp"
+type = "choice"
+prompt = "echo hi &> out.txt in dash left out.txt empty and printed hi on the screen. Why?"
+choices = ["dash read it as echo hi & (background) followed by an empty redirect", "&> is POSIX", "out.txt was read-only", "echo failed"]
+answers = ["dash read it as echo hi & (background) followed by an empty redirect"]
+explanation = "busybox ash treated it like bash. The FreeBSD sh behaved like dash."
+review = "Bashisms: who accepts what?"
+
+[[question]]
+id = "s-dparen"
+type = "choice"
+prompt = "i=1; ((i++)); echo $i in dash prints an error and then:"
+choices = ["1: it tried to run a command named i++", "2", "0", "Nothing"]
+answers = ["1: it tried to run a command named i++"]
+explanation = "A silent failure in all three shells: i++: not found."
+review = "Bashisms: who accepts what?"
+
+[[question]]
+id = "s-cmdsub"
+type = "choice"
+prompt = "x=$(<f) where f contains hi gave what in all three shells?"
+choices = ["An empty x (use $(cat f))", "hi", "An error", "f"]
+answers = ["An empty x (use $(cat f))"]
+explanation = "$(<file) is a bash feature; $(cat f) gave hi."
+review = "Bashisms: who accepts what?"
+
+[[question]]
+id = "s-dollar"
+type = "choice"
+prompt = "Why is $'a\\tb' a \"silent\" bashism in dash?"
+choices = ["It prints a literal $ before the text instead of failing", "It is an error", "It is POSIX", "It prints nothing"]
+answers = ["It prints a literal $ before the text instead of failing"]
+explanation = "ash and the FreeBSD sh handled it like bash."
+review = "Bashisms: who accepts what?"
+
+# ---- checking ----
+
+[[question]]
+id = "k-order"
+type = "multi"
+prompt = "Which checks does the lesson list for a #!/bin/sh script?"
+choices = ["shellcheck -s sh script.sh", "Run it with dash script.sh", "Run it with busybox ash and the system sh", "Run it only with bash script.sh"]
+answers = ["shellcheck -s sh script.sh", "Run it with dash script.sh", "Run it with busybox ash and the system sh"]
+explanation = "bash is never used to test a #!/bin/sh script."
+review = "Checking a script"
+
+[[question]]
+id = "k-feature"
+type = "choice"
+prompt = "Why can you not feature-test a bashism in the middle of a #!/bin/sh script?"
+choices = ["The shell parses the whole line first, so a syntax error aborts before your test runs", "ShellCheck forbids it", "dash has no if", "It would be too slow"]
+answers = ["The shell parses the whole line first, so a syntax error aborts before your test runs"]
+explanation = "For example arrays and [[ ]] fail at parse time."
+review = "Bashisms: who accepts what?"

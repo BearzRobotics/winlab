@@ -1,0 +1,11 @@
+schema_version = 1
+id = "posix-sh"
+title = "Portable shell scripting: POSIX sh"
+goal = "Write #!/bin/sh scripts that really are portable, and test them under dash, busybox ash and the FreeBSD sh instead of bash."
+audience = "Anyone who writes scripts that must run on more than one Linux distribution or on the BSDs, in containers, or in small images."
+order = 52
+
+[[stage]]
+title = "The portable language"
+lessons = ["foundations.bash-basics", "foundations.shells-and-posix", "foundations.posix-sh-basics", "foundations.posix-sh-scripting"]
+labs = []
