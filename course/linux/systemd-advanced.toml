@@ -1,0 +1,62 @@
+schema_version = 1
+id = "linux.systemd-advanced"
+title = "systemd in depth: timers, transient units, sockets, paths, sandboxing, resource limits and analysis"
+summary = "The rest of the everyday systemd toolbox, tested on systemd 259 (Ubuntu 26.04 in WSL2): service and timer pairs, monotonic and calendar timers with systemd-analyze calendar, AccuracySec and a test that did not show a delay, systemd-run transient units, socket activation with Accept=yes, path units, templates and specifiers, sandboxing with before and after exposure scores (9.6 to 5.2), CPU, task and memory limits (MemoryMax swaps unless MemorySwapMax=0), set-property, systemd-analyze verify, blame and critical-chain, and user units."
+content = "systemd-advanced.md"
+estimated_minutes = 150
+level = 4
+objectives = [
+  "Write a service and timer pair, choose between monotonic and calendar timers, and check a calendar expression with systemd-analyze calendar",
+  "Explain AccuracySec and Persistent, and why a timer's start time must be measured rather than assumed",
+  "Use systemd-run for one-off, resource-limited and scheduled commands, and explain --wait, --collect and --scope",
+  "Write a socket unit with a template service (Accept=yes) and show one instance per connection",
+  "Write a path unit and explain why the triggered service must clear its trigger",
+  "Use templates, instances, specifiers and systemd-escape",
+  "Sandbox a service with DynamicUser, ProtectSystem, ProtectHome, PrivateTmp, PrivateNetwork, NoNewPrivileges and CapabilityBoundingSet, and read systemd-analyze security",
+  "Limit CPU, tasks and memory, explain why MemoryMax alone did not stop an allocation when swap existed, and use set-property and revert",
+  "Find mistakes with systemd-analyze verify and slow starts with blame and critical-chain",
+  "Run and inspect user units and explain linger",
+]
+prerequisites = ["linux.systemd"]
+privilege = "administrator"
+certifications = ["redhat-rhcsa/running-systems", "comptia-linux-plus/system-management"]
+evaluation_criteria = [
+  "Learner builds a timer, checks its calendar expression, and shows the observed gaps",
+  "Learner replaces a cron job with a service and timer",
+  "Learner shows a socket-activated echo service with one instance per connection",
+  "Learner shows before and after sandbox results and exposure scores for one service",
+  "Learner reproduces the CPU quota and the memory limit with and without MemorySwapMax=0",
+  "Learner finds a misspelled key, a missing program and an ordering cycle with systemd-analyze verify",
+]
+
+[[references]]
+title = "systemd.timer(5)"
+url = "https://www.freedesktop.org/software/systemd/man/latest/systemd.timer.html"
+
+[[references]]
+title = "systemd.time(7): time and calendar specifications"
+url = "https://www.freedesktop.org/software/systemd/man/latest/systemd.time.html"
+
+[[references]]
+title = "systemd.socket(5)"
+url = "https://www.freedesktop.org/software/systemd/man/latest/systemd.socket.html"
+
+[[references]]
+title = "systemd.path(5)"
+url = "https://www.freedesktop.org/software/systemd/man/latest/systemd.path.html"
+
+[[references]]
+title = "systemd.exec(5): sandboxing and execution settings"
+url = "https://www.freedesktop.org/software/systemd/man/latest/systemd.exec.html"
+
+[[references]]
+title = "systemd.resource-control(5)"
+url = "https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html"
+
+[[references]]
+title = "systemd-run(1)"
+url = "https://www.freedesktop.org/software/systemd/man/latest/systemd-run.html"
+
+[[references]]
+title = "systemd-analyze(1)"
+url = "https://www.freedesktop.org/software/systemd/man/latest/systemd-analyze.html"

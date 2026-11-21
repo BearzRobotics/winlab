@@ -1,0 +1,388 @@
+schema_version = 1
+lesson = "linux.systemd-advanced"
+# Draft for owner review. Every answer comes from the tested output (sd2.sh to sd4.sh) on systemd 259, Ubuntu 26.04 in WSL2. Each attempt asks 12.
+draw = 12
+
+# ---- timers ----
+
+[[question]]
+id = "t-start"
+type = "choice"
+prompt = "To activate a timer called backup.timer, which unit do you start or enable?"
+choices = ["backup.timer", "backup.service", "backup.target", "backup.socket"]
+answers = ["backup.timer"]
+explanation = "The timer starts its service; starting the service by hand runs the job once."
+review = "Timers"
+
+[[question]]
+id = "t-gaps"
+type = "choice"
+prompt = "With OnActiveSec=1 and OnUnitActiveSec=2, the measured gaps between runs were about:"
+choices = ["2 seconds", "1 second", "1 minute", "10 seconds"]
+answers = ["2 seconds"]
+explanation = "2.1, 2.1 and 2.0 seconds."
+review = "Timers"
+
+[[question]]
+id = "t-types"
+type = "multi"
+prompt = "Which timer settings did the lesson actually run?"
+choices = ["OnActiveSec=", "OnUnitActiveSec=", "OnCalendar=", "OnBootSec="]
+answers = ["OnActiveSec=", "OnUnitActiveSec=", "OnCalendar="]
+explanation = "OnBootSec, OnStartupSec and OnUnitInactiveSec were described from the manual, not run."
+review = "Monotonic timers and calendar timers"
+
+[[question]]
+id = "t-weekly"
+type = "choice"
+prompt = "systemd-analyze calendar \"weekly\" normalised to which expression?"
+choices = ["Mon *-*-* 00:00:00", "Sun *-*-* 00:00:00", "*-*-01 00:00:00", "*-*-* 00:00:00"]
+answers = ["Mon *-*-* 00:00:00"]
+explanation = "weekly is Monday at midnight; daily is *-*-* 00:00:00."
+review = "Calendar expressions: test them before you use them"
+
+[[question]]
+id = "t-every"
+type = "choice"
+prompt = "systemd-analyze normalised *:0/15 to *-*-* *:00/15:00. What does it mean?"
+choices = ["Every 15 minutes, starting at minute 0 of each hour", "Once a day at 00:15", "Every 15 hours", "Every 15 seconds"]
+answers = ["Every 15 minutes, starting at minute 0 of each hour"]
+explanation = "/n means every n; the next time printed was 16:30 on the test machine."
+review = "Calendar expressions: test them before you use them"
+
+[[question]]
+id = "t-bad"
+type = "choice"
+prompt = "What does systemd-analyze calendar \"funday\" print?"
+choices = ["Failed to parse calendar specification 'funday': Invalid argument", "Next elapse: Sunday", "Nothing", "A warning only"]
+answers = ["Failed to parse calendar specification 'funday': Invalid argument"]
+explanation = "Check every OnCalendar expression before shipping a timer."
+review = "Calendar expressions: test them before you use them"
+
+[[question]]
+id = "t-span"
+type = "short"
+prompt = "systemd-analyze timespan 2d printed how many microseconds (digits only)?"
+answers = ["172800000000"]
+explanation = "2 days = 172,800 seconds."
+review = "Calendar expressions: test them before you use them"
+
+[[question]]
+id = "t-acc"
+type = "choice"
+prompt = "What is the default AccuracySec for a timer?"
+choices = ["1 minute", "1 second", "1 hour", "0"]
+answers = ["1 minute"]
+explanation = "The manual says Defaults to 1min and systemctl show printed AccuracyUSec=1min."
+review = "`AccuracySec`, `Persistent` and a test that did not show what I expected"
+
+[[question]]
+id = "t-acctest"
+type = "choice"
+prompt = "In the lesson's test of OnActiveSec=2 with the default accuracy versus AccuracySec=1s, when did each timer run?"
+choices = ["Both about 3.1 seconds after start: no delay was seen", "The default one ran a minute late", "The 1s one ran first", "Neither ran"]
+answers = ["Both about 3.1 seconds after start: no delay was seen"]
+explanation = "The lesson says not to expect the delay every time and to set AccuracySec for exact timing."
+review = "`AccuracySec`, `Persistent` and a test that did not show what I expected"
+
+[[question]]
+id = "t-persist"
+type = "choice"
+prompt = "What does Persistent=yes do for a calendar timer?"
+choices = ["Runs it once after boot if a run was missed while the machine was off", "Keeps the log forever", "Runs it twice", "Makes the unit static"]
+answers = ["Runs it once after boot if a run was missed while the machine was off"]
+explanation = "Not tested in the lesson because no reboot was done."
+review = "`AccuracySec`, `Persistent` and a test that did not show what I expected"
+
+# ---- systemd-run ----
+
+[[question]]
+id = "r-collect"
+type = "choice"
+prompt = "What does systemd-run --collect do?"
+choices = ["Removes the transient unit when it ends, even if it failed", "Collects the journal", "Collects core dumps", "Runs it twice"]
+answers = ["Removes the transient unit when it ends, even if it failed"]
+explanation = "After stop, no wl- file remained in /run/systemd/transient."
+review = "Transient units with `systemd-run`"
+
+[[question]]
+id = "r-where"
+type = "choice"
+prompt = "Where does a transient unit live?"
+choices = ["/run/systemd/transient (lost at reboot)", "/etc/systemd/system", "/usr/lib/systemd/system", "/var/lib/systemd"]
+answers = ["/run/systemd/transient (lost at reboot)"]
+explanation = "ls /run/systemd/transient listed wl-trans.service."
+review = "Transient units with `systemd-run`"
+
+[[question]]
+id = "r-opts"
+type = "multi"
+prompt = "Which options of systemd-run are described in the lesson?"
+choices = ["--wait", "--scope", "--on-active=", "--rewind"]
+answers = ["--wait", "--scope", "--on-active="]
+explanation = "--wait blocks and prints the result; --scope keeps the command in the foreground inside a cgroup."
+review = "Transient units with `systemd-run`"
+
+# ---- sockets and paths ----
+
+[[question]]
+id = "s-inst"
+type = "choice"
+prompt = "A socket unit has Accept=yes. What does systemd start on each connection?"
+choices = ["One instance of a template service (name@.service)", "The same single service", "A new socket", "Nothing"]
+answers = ["One instance of a template service (name@.service)"]
+explanation = "The instance name contained the connection; after the client closed there were 0 instances."
+review = "Socket activation"
+
+[[question]]
+id = "s-stdin"
+type = "choice"
+prompt = "With StandardInput=socket and ExecStart=-/bin/cat, what does the service do?"
+choices = ["Echoes what the client sends: stdin and stdout are the connection", "Prints the file system", "Closes the connection", "Writes to the journal only"]
+answers = ["Echoes what the client sends: stdin and stdout are the connection"]
+explanation = "The client sent hello-socket and read it back."
+review = "Socket activation"
+
+[[question]]
+id = "s-addr"
+type = "choice"
+prompt = "Why was ListenStream=127.0.0.1:47651 used rather than just 47651?"
+choices = ["A bare port number listens on all addresses; 127.0.0.1 keeps it local", "It is faster", "47651 is invalid", "systemd requires an address"]
+answers = ["A bare port number listens on all addresses; 127.0.0.1 keeps it local"]
+explanation = "Open a port only on the address you mean."
+review = "Socket activation"
+
+[[question]]
+id = "s-count"
+type = "short"
+prompt = "systemctl show wl-echo.socket printed NAccepted for the one client that connected. What number?"
+answers = ["1"]
+explanation = "NAccepted=1 and NConnections=0 after the client closed."
+review = "Socket activation"
+
+[[question]]
+id = "p-remove"
+type = "choice"
+prompt = "Why does the service started by PathExists=/tmp/wl-trigger remove the trigger file?"
+choices = ["Otherwise the path unit would start the service again at once", "To save disk space", "Because rm is required", "To avoid permissions"]
+answers = ["Otherwise the path unit would start the service again at once"]
+explanation = "The log showed one run and the file was consumed."
+review = "Path units"
+
+# ---- templates ----
+
+[[question]]
+id = "tp-spec"
+type = "multi"
+prompt = "For the unit wl-inst@alpha.service, which specifier values were printed?"
+choices = ["%i = alpha", "%n = wl-inst@alpha.service", "%p = wl-inst", "%i = wl-inst"]
+answers = ["%i = alpha", "%n = wl-inst@alpha.service", "%p = wl-inst"]
+explanation = "%N was wl-inst@alpha (no suffix); %H was the host name."
+review = "Templates and instances"
+
+[[question]]
+id = "tp-default"
+type = "choice"
+prompt = "What does DefaultInstance=main do when you run systemctl enable wl-inst@ ?"
+choices = ["Enables wl-inst@main", "Fails", "Enables every instance", "Starts alpha"]
+answers = ["Enables wl-inst@main"]
+explanation = "It created a symlink for wl-inst@main.service."
+review = "Templates and instances"
+
+[[question]]
+id = "tp-esc"
+type = "short"
+prompt = "systemd-escape --path /var/lib/my-app printed var-lib-my followed by what (the rest, 4 characters)?"
+answers = ["\\x2dapp"]
+explanation = "The dash inside my-app is escaped as \\x2d; slashes become dashes."
+review = "Templates and instances"
+
+# ---- sandbox ----
+
+[[question]]
+id = "b-strict"
+type = "choice"
+prompt = "ProtectSystem=strict makes what read-only?"
+choices = ["The whole file system except /dev, /proc, /sys and ReadWritePaths", "Only /usr", "Only /etc", "Only the home directories"]
+answers = ["The whole file system except /dev, /proc, /sys and ReadWritePaths"]
+explanation = "touch /etc/... failed with Read-only file system in the closed service."
+review = "Sandboxing a service"
+
+[[question]]
+id = "b-tmp"
+type = "choice"
+prompt = "With PrivateTmp=yes the service wrote a file in /tmp. What did the host see?"
+choices = ["Nothing: the service has its own /tmp", "The file", "An error", "An empty file"]
+answers = ["Nothing: the service has its own /tmp"]
+explanation = "The file visible on the host came from the unsandboxed service."
+review = "Sandboxing a service"
+
+[[question]]
+id = "b-net"
+type = "choice"
+prompt = "With PrivateNetwork=yes, which network links did the service see?"
+choices = ["Only lo", "eth0 and lo", "None at all", "All of them"]
+answers = ["Only lo"]
+explanation = "The unsandboxed service saw eth0 and lo."
+review = "Sandboxing a service"
+
+[[question]]
+id = "b-cap"
+type = "choice"
+prompt = "CapabilityBoundingSet= (empty) gave CapEff of:"
+choices = ["0000000000000000: no capabilities", "000001ffffffffff", "0000000000000001", "ffffffffffffffff"]
+answers = ["0000000000000000: no capabilities"]
+explanation = "The unsandboxed root service had 000001ffffffffff."
+review = "Sandboxing a service"
+
+[[question]]
+id = "b-dyn"
+type = "choice"
+prompt = "What did DynamicUser=yes do to the service's identity?"
+choices = ["It ran as a temporary user with its own UID instead of root", "It ran as root", "It used the invoking user", "It created a login shell"]
+answers = ["It ran as a temporary user with its own UID instead of root"]
+explanation = "The closed service printed uid=62922 and the user name wl-closed."
+review = "Sandboxing a service"
+
+[[question]]
+id = "b-score"
+type = "choice"
+prompt = "systemd-analyze security rated the unrestricted service 9.6 UNSAFE. What did the restricted one get?"
+choices = ["5.2 MEDIUM", "0.0 SAFE", "9.6 UNSAFE", "10 EXPOSED"]
+answers = ["5.2 MEDIUM"]
+explanation = "The remaining crosses suggest the next settings to consider."
+review = "Sandboxing a service"
+
+[[question]]
+id = "b-method"
+type = "choice"
+prompt = "How should you add sandbox restrictions?"
+choices = ["One at a time, testing the service after each", "All at once", "Only in production", "Never"]
+answers = ["One at a time, testing the service after each"]
+explanation = "Any of them can break a service that needs what you took away."
+review = "Sandboxing a service"
+
+# ---- resources ----
+
+[[question]]
+id = "l-cpu"
+type = "choice"
+prompt = "CPUQuota=20% on a busy loop that ran 4.241 s consumed about how much CPU time?"
+choices = ["862 ms (about 20%)", "4.2 s", "8 s", "0 s"]
+answers = ["862 ms (about 20%)"]
+explanation = "RuntimeMaxSec=4 ended it with Result=timeout."
+review = "Resource control"
+
+[[question]]
+id = "l-tasks"
+type = "choice"
+prompt = "TasksMax=5 and a script starting 8 background processes: what happened?"
+choices = ["fork failed with Resource temporarily unavailable", "All 8 started", "The scope was killed", "systemd raised the limit"]
+answers = ["fork failed with Resource temporarily unavailable"]
+explanation = "The sixth process could not be created."
+review = "Resource control"
+
+[[question]]
+id = "l-mem"
+type = "choice"
+prompt = "MemoryMax=40M on a machine with swap and a command allocating 150 MB (no MemorySwapMax): result?"
+choices = ["The command succeeded, swapping 286 MB", "OOM-killed at once", "It never started", "It was limited to 40 MB of data"]
+answers = ["The command succeeded, swapping 286 MB"]
+explanation = "With MemorySwapMax=0 it was OOM-killed (Result=oom-kill)."
+review = "The memory limit is not a kill switch by itself"
+
+[[question]]
+id = "l-swap"
+type = "choice"
+prompt = "Which extra setting turned the memory limit into a hard kill?"
+choices = ["MemorySwapMax=0", "MemoryHigh=0", "TasksMax=1", "CPUQuota=0"]
+answers = ["MemorySwapMax=0"]
+explanation = "The lesson says the swap interaction is a test result on this machine, not a documented quotation."
+review = "The memory limit is not a kill switch by itself"
+
+[[question]]
+id = "l-prop"
+type = "multi"
+prompt = "What did set-property do?"
+choices = ["Without --runtime it wrote a drop-in under /etc/systemd/system.control", "With --runtime it wrote under /run/systemd/system.control", "systemctl revert removed both", "It required a reboot"]
+answers = ["Without --runtime it wrote a drop-in under /etc/systemd/system.control", "With --runtime it wrote under /run/systemd/system.control", "systemctl revert removed both"]
+explanation = "For a transient unit the running value changed and no /etc file appeared."
+review = "Changing limits on a running unit"
+
+[[question]]
+id = "l-cg"
+type = "choice"
+prompt = "What file system type showed that the test machine used cgroup v2?"
+choices = ["cgroup2fs", "tmpfs", "ext4", "overlay"]
+answers = ["cgroup2fs"]
+explanation = "stat -fc %T /sys/fs/cgroup printed cgroup2fs."
+review = "Resource control"
+
+# ---- analyze ----
+
+[[question]]
+id = "a-verify"
+type = "multi"
+prompt = "What does systemd-analyze verify find?"
+choices = ["Misspelled key names such as Execstart", "A program that is not executable", "Ordering cycles", "Slow boots"]
+answers = ["Misspelled key names such as Execstart", "A program that is not executable", "Ordering cycles"]
+explanation = "blame and critical-chain are for slow starts."
+review = "`systemd-analyze`: find mistakes and slow starts"
+
+[[question]]
+id = "a-chain"
+type = "choice"
+prompt = "What does systemd-analyze critical-chain show?"
+choices = ["The chain of units that determined the total start time", "The longest unit file", "Dependencies of one unit only", "Failed units"]
+answers = ["The chain of units that determined the total start time"]
+explanation = "A slow service only delays boot if it is on the critical chain."
+review = "`systemd-analyze`: find mistakes and slow starts"
+
+[[question]]
+id = "a-case"
+type = "choice"
+prompt = "A unit contains Execstart=/bin/true. What happens?"
+choices = ["The key is unknown and ignored (verify warns)", "It works", "systemd fixes the case", "The unit is masked"]
+answers = ["The key is unknown and ignored (verify warns)"]
+explanation = "Key names are case-sensitive: Unknown key 'Execstart' in section [Service], ignoring."
+review = "`systemd-analyze`: find mistakes and slow starts"
+
+# ---- user units ----
+
+[[question]]
+id = "w-user"
+type = "choice"
+prompt = "Where do a user's own units live, and which command manages them?"
+choices = ["~/.config/systemd/user, systemctl --user", "/etc/systemd/user only", "~/.systemd, systemctl --me", "/usr/local/systemd"]
+answers = ["~/.config/systemd/user, systemctl --user"]
+explanation = "The test unit was ~/.config/systemd/user/wl-user.service."
+review = "User units"
+
+[[question]]
+id = "w-linger"
+type = "choice"
+prompt = "What did the lesson show about linger for root?"
+choices = ["Linger=no; enable-linger is the documented way to keep a user's services running, but it was not tested", "Linger=yes", "It was tested at logout", "Linger does not exist"]
+answers = ["Linger=no; enable-linger is the documented way to keep a user's services running, but it was not tested"]
+explanation = "The lesson says it did not test logout behaviour."
+review = "User units"
+
+# ---- mistakes ----
+
+[[question]]
+id = "m-timer"
+type = "choice"
+prompt = "Which is a common mistake with timers?"
+choices = ["Starting the .service and expecting a schedule", "Starting the .timer", "Running systemd-analyze calendar", "Using list-timers"]
+answers = ["Starting the .service and expecting a schedule"]
+explanation = "Enable the .timer, not the service."
+review = "Common mistakes"
+
+[[question]]
+id = "m-limit"
+type = "choice"
+prompt = "Why can MemoryMax= alone be a weak limit?"
+choices = ["On a machine with swap the excess can be swapped instead of killed", "It is ignored", "It needs a reboot", "It only limits CPU"]
+answers = ["On a machine with swap the excess can be swapped instead of killed"]
+explanation = "Use MemorySwapMax=0 too for a hard limit."
+review = "Common mistakes"

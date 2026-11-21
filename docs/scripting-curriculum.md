@@ -53,7 +53,7 @@ Taught on the Chimera lab VM (`docs/decisions/0009-chimera-lab.md`), version-pin
 Also candidates: a "FreeBSD userland on Linux" lesson (what differs in `ls`, `sed -i`, `grep`, `sh`, `tar` on Chimera, from the real outputs), and a lab for `apk` (lab `chimera-apk-repo-typo` exists).
 
 ### Linux system (alongside)
-- `linux.systemd`: units, targets, `systemctl`, `journalctl`, timers, writing and overriding unit files, sandboxing options, `systemd-analyze`.
+- `linux.systemd` and `linux.systemd-advanced` (written 2026-11-21, drafts; batteries `tests/verification/systemd/sd1-5.sh`, tested only on Ubuntu 26.04 in WSL2 with systemd 259, as root): units, targets, `systemctl`, `journalctl`, timers, writing and overriding unit files, sandboxing options, `systemd-analyze`.
 
 ## Two clarifications (owner, 2026-11-21)
 
