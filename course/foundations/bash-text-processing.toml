@@ -1,0 +1,71 @@
+schema_version = 1
+id = "foundations.bash-text-processing"
+title = "Text processing: regular expressions, grep, sed, awk, sort and xargs"
+summary = "Regular expressions (BRE, ERE, PCRE) and the grep, cut, tr, sort, uniq, sed, awk, find and xargs tools, tested on a real machine, with the traps that silently corrupt data (sed -i, grep -q under pipefail, CSV quoting, variables spliced into programs), a log-analysis pipeline, speed comparisons, and a table of GNU, uutils, BusyBox and mawk differences."
+content = "bash-text-processing.md"
+estimated_minutes = 150
+level = 3
+objectives = [
+  "Choose between grep, cut, tr, sort, uniq, sed, awk and xargs for a task",
+  "Write regular expressions in BRE, ERE and PCRE, escape the dot, understand greedy matching, and use grep -F for literal data",
+  "Use grep's options and exit statuses, and explain binary-file, CRLF and pattern-starting-with-dash traps",
+  "Explain why grep -q under pipefail can return 141 and give two fixes",
+  "Use cut, tr, paste and column correctly and say what they cannot do (runs of spaces, multi-character replacement, multibyte characters)",
+  "Sort and count correctly: numeric, version and human sort, -k field ranges, stability, locale, uniq on sorted input, comm, join and diff",
+  "Use sed for substitution, addresses and commands, edit in place safely with a backup, and explain the GNU/BSD sed -i difference",
+  "Pass shell values to sed and awk without injection or metacharacter bugs",
+  "Use awk for fields, patterns, associative arrays, two-file joins and formatting, and explain its string versus number comparison and CSV limits",
+  "Use xargs safely (-0, -d, -r, -n, -P) and avoid {} inside sh -c strings",
+  "Build and test a log-analysis pipeline, and name where GNU, uutils, BusyBox and mawk differ",
+]
+prerequisites = ["foundations.bash-control-flow"]
+privilege = "standard"
+certifications = ["redhat-rhcsa/essential-tools", "comptia-linux-plus/scripting-containers-automation"]
+evaluation_criteria = [
+  "Learner builds a top-N pipeline from a log file with awk, sort and uniq and explains each stage",
+  "Learner shows grep 'file.txt' matching fileXtxt and fixes it two ways",
+  "Learner reproduces the sort file > file truncation and the grep -q 141 under pipefail",
+  "Learner edits a config in place with sed -i.bak on a copy and checks it with diff -u",
+  "Learner reproduces the awk injection through string interpolation and fixes it with -v",
+  "Learner finds every problem in the exercise-12 script",
+]
+
+[[references]]
+title = "grep(1) manual page (man7.org)"
+url = "https://man7.org/linux/man-pages/man1/grep.1.html"
+
+[[references]]
+title = "sed(1) manual page (man7.org)"
+url = "https://man7.org/linux/man-pages/man1/sed.1.html"
+
+[[references]]
+title = "sort(1) manual page (man7.org)"
+url = "https://man7.org/linux/man-pages/man1/sort.1.html"
+
+[[references]]
+title = "xargs(1) manual page (man7.org)"
+url = "https://man7.org/linux/man-pages/man1/xargs.1.html"
+
+[[references]]
+title = "find(1) manual page (man7.org)"
+url = "https://man7.org/linux/man-pages/man1/find.1.html"
+
+[[references]]
+title = "regex(7): POSIX regular expressions (man7.org)"
+url = "https://man7.org/linux/man-pages/man7/regex.7.html"
+
+[[references]]
+title = "POSIX awk specification (The Open Group)"
+url = "https://pubs.opengroup.org/onlinepubs/9799919799/utilities/awk.html"
+
+[[references]]
+title = "POSIX sed specification (The Open Group)"
+url = "https://pubs.opengroup.org/onlinepubs/9799919799/utilities/sed.html"
+
+[[references]]
+title = "uutils coreutils"
+url = "https://github.com/uutils/coreutils"
+
+[[references]]
+title = "BusyBox"
+url = "https://busybox.net/"

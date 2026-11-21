@@ -1,0 +1,505 @@
+schema_version = 1
+lesson = "foundations.bash-text-processing"
+# Draft for owner review. A bank of 55; each attempt asks 10, favouring questions missed last time.
+draw = 10
+
+# ---- Choosing and regex ----
+
+[[question]]
+id = "ch-cut"
+type = "choice"
+prompt = "Which tool splits columns separated by runs of spaces?"
+choices = ["awk", "cut -d' '", "tr", "uniq"]
+answers = ["awk"]
+explanation = "cut splits on exactly one character: cut -d' ' -f2 on 'a   b  c' gave an empty field."
+review = "Choosing the tool"
+
+[[question]]
+id = "ch-sed"
+type = "choice"
+prompt = "Which tool is the right one for replacing a WORD with another?"
+choices = ["sed", "tr", "cut", "uniq"]
+answers = ["sed"]
+explanation = "tr translates single characters, not strings."
+review = "Choosing the tool"
+
+[[question]]
+id = "re-bre"
+type = "choice"
+prompt = "In a basic regular expression (grep without -E), what does + mean?"
+choices = ["A literal plus sign", "One or more of the previous", "Zero or one", "Alternation"]
+answers = ["A literal plus sign"]
+explanation = "grep 'a\\+b' (GNU) or grep -E 'a+b' make it a quantifier."
+review = "Regular expressions"
+
+[[question]]
+id = "re-pcre"
+type = "choice"
+prompt = "Which grep option enables Perl-style regex (\\d, lazy quantifiers)?"
+choices = ["-P (GNU grep only)", "-E", "-F", "-X"]
+answers = ["-P (GNU grep only)"]
+explanation = "BusyBox grep said unrecognized option: P."
+review = "Regular expressions"
+
+[[question]]
+id = "re-dot"
+type = "choice"
+prompt = "Why does grep 'file.txt' match 'fileXtxt'?"
+choices = ["An unescaped . matches any character", "grep ignores the dot", "X is a wildcard", "-i is on"]
+answers = ["An unescaped . matches any character"]
+explanation = "Escape it (file\\.txt) or use grep -F."
+review = "Regular expressions"
+
+[[question]]
+id = "re-greedy"
+type = "choice"
+prompt = "sed 's/<.*>/[]/' on x<a>y<b>z gives what?"
+choices = ["x[]z (greedy: first < to last >)", "x[]y<b>z", "x<a>y[]z", "An error"]
+answers = ["x[]z (greedy: first < to last >)"]
+explanation = "A negated class fixes it: s/<[^>]*>/[]/."
+review = "Regular expressions"
+
+[[question]]
+id = "re-fixed"
+type = "short"
+prompt = "Which grep option treats the pattern as a fixed string, with no regex characters? (include the dash)"
+answers = ["-F"]
+explanation = "Use it when the pattern is data: names, IPs, text from a variable."
+review = "Regular expressions"
+
+[[question]]
+id = "re-dash"
+type = "choice"
+prompt = "How do you grep for the literal text -v?"
+choices = ["grep -- '-v' file", "grep '-v' file", "grep \\-v file", "grep -v '' file"]
+answers = ["grep -- '-v' file"]
+explanation = "A pattern starting with a dash is read as an option unless you end the options with --."
+review = "Regular expressions"
+
+[[question]]
+id = "re-class"
+type = "choice"
+prompt = "Which is the portable way to say 'a digit' in a regex?"
+choices = ["[[:digit:]]", "\\d", "[0-9]+ only", "%d"]
+answers = ["[[:digit:]]"]
+explanation = "\\d is PCRE (grep -P); POSIX classes work in BRE and ERE."
+review = "Regular expressions"
+
+# ---- grep ----
+
+[[question]]
+id = "gr-count"
+type = "choice"
+prompt = "What does grep -c count?"
+choices = ["Matching lines, not occurrences", "Occurrences of the pattern", "Words", "Files"]
+answers = ["Matching lines, not occurrences"]
+explanation = "'aa aa' gave 1; grep -o a | wc -l gave 4."
+review = "`grep`"
+
+[[question]]
+id = "gr-status"
+type = "choice"
+prompt = "grep exits with which statuses for match, no match and error?"
+choices = ["0, 1, 2", "1, 0, 2", "0, 2, 1", "0, 0, 1"]
+answers = ["0, 1, 2"]
+explanation = "That is why if grep -q pattern file; then works."
+review = "`grep`"
+
+[[question]]
+id = "gr-binary"
+type = "choice"
+prompt = "grep apple on a file containing a NUL byte prints:"
+choices = ["binary file matches, not the line; -a treats it as text", "The line", "Nothing", "An error"]
+answers = ["binary file matches, not the line; -a treats it as text"]
+explanation = "-I skips binary files."
+review = "`grep`"
+
+[[question]]
+id = "gr-crlf"
+type = "choice"
+prompt = "Why did grep 'done$' match 0 lines of 'done\\r\\n'?"
+choices = ["The line ends with a carriage return before the newline", "$ is not supported", "done is reserved", "The file was binary"]
+answers = ["The line ends with a carriage return before the newline"]
+explanation = "tr -d '\\r' fixed it. Check with cat -A."
+review = "`grep`"
+
+[[question]]
+id = "gr-r"
+type = "choice"
+prompt = "Which finds TODO in .c and .h files under src, skipping .git?"
+choices = ["grep -r --include='*.c' --include='*.h' --exclude-dir=.git TODO src", "grep -R TODO src/*.c", "grep -x TODO src", "grep -l TODO src"]
+answers = ["grep -r --include='*.c' --include='*.h' --exclude-dir=.git TODO src"]
+explanation = "With -r and no path grep searches the current folder."
+review = "`grep`"
+
+[[question]]
+id = "gr-ctx"
+type = "choice"
+prompt = "Which option prints one line after each match?"
+choices = ["-A1", "-B1", "-C1", "-O1"]
+answers = ["-A1"]
+explanation = "-B is before, -C both."
+review = "`grep`"
+
+[[question]]
+id = "gp-141"
+type = "short"
+prompt = "Under set -o pipefail, seq 1 200000 | grep -q '^1$' returns what status? (number)"
+answers = ["141"]
+explanation = "128 + 13 (SIGPIPE): grep -q exits at the first match and seq is killed."
+review = "`grep -q` and `set -o pipefail`: a surprise"
+
+[[question]]
+id = "gp-fix"
+type = "multi"
+prompt = "Which fixes gave status 0 for the grep -q/pipefail problem?"
+choices = ["Drop -q and send the output to /dev/null", "Capture the producer's output first, then grep -q <<< \"$out\"", "Add 2>/dev/null", "Use sort first"]
+answers = ["Drop -q and send the output to /dev/null", "Capture the producer's output first, then grep -q <<< \"$out\""]
+explanation = "The consumer must not exit early while the producer is still writing."
+review = "`grep -q` and `set -o pipefail`: a surprise"
+
+# ---- cut, tr, sort ----
+
+[[question]]
+id = "cu-missing"
+type = "choice"
+prompt = "echo nocolon | cut -d: -f2 prints:"
+choices = ["nocolon (the whole line); -s skips such lines", "An empty line", "An error", "Nothing"]
+answers = ["nocolon (the whole line); -s skips such lines"]
+explanation = "A line without the delimiter is printed whole."
+review = "`cut`, `tr`, `paste` and friends"
+
+[[question]]
+id = "cu-multibyte"
+type = "choice"
+prompt = "cut -c1 on 'é1' (UTF-8) printed what on this machine?"
+choices = ["A broken half character: it counted bytes", "é", "1", "Nothing"]
+answers = ["A broken half character: it counted bytes"]
+explanation = "Use awk substr, or the options your implementation documents for characters."
+review = "`cut`, `tr`, `paste` and friends"
+
+[[question]]
+id = "tr-set"
+type = "choice"
+prompt = "echo abba | tr 'ab' 'xy' gives:"
+choices = ["xyyx: tr maps single characters", "xyxy", "abba", "an error"]
+answers = ["xyyx: tr maps single characters"]
+explanation = "To replace words use sed."
+review = "`cut`, `tr`, `paste` and friends"
+
+[[question]]
+id = "tr-cd"
+type = "short"
+prompt = "Which tr command keeps ONLY digits from stdin? (e.g. tr -XX '0-9'; give the two letters)"
+answers = ["cd", "-cd", "tr -cd '0-9'"]
+explanation = "-c complements the set, -d deletes. tel: 555-1234 became 5551234."
+review = "`cut`, `tr`, `paste` and friends"
+
+[[question]]
+id = "so-text"
+type = "choice"
+prompt = "sort on the lines 10, 9, 2, 100 (default) gives:"
+choices = ["10 100 2 9", "2 9 10 100", "100 10 9 2", "9 2 10 100"]
+answers = ["10 100 2 9"]
+explanation = "Text order; -n gives 2 9 10 100."
+review = "`sort`, `uniq`, `comm`, `join`, `diff`"
+
+[[question]]
+id = "so-v"
+type = "choice"
+prompt = "Which sorts 1.2, 1.9, 1.10 in version order?"
+choices = ["sort -V", "sort -n", "sort -h", "sort -r"]
+answers = ["sort -V"]
+explanation = "sort -h is for human sizes (1K 3M 2G); BusyBox sort lacks -h."
+review = "`sort`, `uniq`, `comm`, `join`, `diff`"
+
+[[question]]
+id = "so-k"
+type = "choice"
+prompt = "What does sort -k2 (no ,2) sort by?"
+choices = ["From field 2 to the end of the line, as text", "Field 2 only, numerically", "Field 2 only, as text", "The whole line"]
+answers = ["From field 2 to the end of the line, as text"]
+explanation = "Write -k2,2n for field 2 only, numerically."
+review = "`sort`, `uniq`, `comm`, `join`, `diff`"
+
+[[question]]
+id = "so-uniq"
+type = "choice"
+prompt = "Why sort before uniq -c?"
+choices = ["uniq only collapses adjacent duplicates", "uniq needs numbers", "sort is required by uniq -c only", "To lower memory"]
+answers = ["uniq only collapses adjacent duplicates"]
+explanation = "sort | uniq -c | sort -rn | head is the top-N idiom."
+review = "`sort`, `uniq`, `comm`, `join`, `diff`"
+
+[[question]]
+id = "so-locale"
+type = "choice"
+prompt = "How do you make sort order reproducible in a script?"
+choices = ["LC_ALL=C sort", "sort -r", "sort -q", "Nothing is needed"]
+answers = ["LC_ALL=C sort"]
+explanation = "Locale and collation change the order (the uutils sort gave a A b B under en_US.UTF-8, C gave A B a b)."
+review = "`sort`, `uniq`, `comm`, `join`, `diff`"
+
+[[question]]
+id = "so-o"
+type = "choice"
+prompt = "Which is safe for sorting a file in place?"
+choices = ["sort -o file file", "sort file > file", "sort file | tee file", "sort file >> file"]
+answers = ["sort -o file file"]
+explanation = "sort file > file empties the file before sort reads it."
+review = "`sort`, `uniq`, `comm`, `join`, `diff`"
+
+# ---- sed ----
+
+[[question]]
+id = "sd-file"
+type = "choice"
+prompt = "What does sed 's/a/b/' file do to file?"
+choices = ["Nothing: it writes the result to stdout", "Edits it in place", "Appends", "Makes a backup"]
+answers = ["Nothing: it writes the result to stdout"]
+explanation = "Only -i edits in place."
+review = "`sed`: the stream editor"
+
+[[question]]
+id = "sd-g"
+type = "choice"
+prompt = "On 'a a a', what does sed 's/a/X/2' give?"
+choices = ["a X a", "X a a", "X X X", "a a X"]
+answers = ["a X a"]
+explanation = "A number replaces only that occurrence; 2g replaces the 2nd and the rest."
+review = "Substitution"
+
+[[question]]
+id = "sd-np"
+type = "choice"
+prompt = "What does sed 's/b/X/p' print WITHOUT -n for the line abc?"
+choices = ["aXc twice", "aXc once", "abc", "Nothing"]
+answers = ["aXc twice"]
+explanation = "Use -n with p to print only substituted lines."
+review = "Substitution"
+
+[[question]]
+id = "sd-addr"
+type = "short"
+prompt = "Which sed command prints lines 2 to 4? (e.g. sed -n ...; give the address and command)"
+answers = ["2,4p", "sed -n 2,4p", "sed -n '2,4p'"]
+explanation = "$ is the last line; 1~2 is every odd line."
+review = "Addresses and commands"
+
+[[question]]
+id = "sd-i"
+type = "choice"
+prompt = "Which keeps a backup while editing in place (GNU sed)?"
+choices = ["sed -i.bak 's/a/b/' file", "sed -b file", "sed --backup", "sed -i -b"]
+answers = ["sed -i.bak 's/a/b/' file"]
+explanation = "BSD/macOS sed -i needs a separate suffix argument (sed -i '' ...)."
+review = "`sed -i`: editing in place, and its dangers"
+
+[[question]]
+id = "sd-typo"
+type = "choice"
+prompt = "sed -i 's/db1/' file (a typo in the program). What happens to the file?"
+choices = ["It is left unchanged; sed reports an unterminated s command", "It is emptied", "It is corrupted", "A backup is made"]
+answers = ["It is left unchanged; sed reports an unterminated s command"]
+explanation = "Still test without -i first."
+review = "`sed -i`: editing in place, and its dangers"
+
+[[question]]
+id = "sd-link"
+type = "choice"
+prompt = "What happened to a symlink edited with sed -i (GNU)?"
+choices = ["It was replaced by a regular file", "The target was edited and the link kept", "Nothing", "An error"]
+answers = ["It was replaced by a regular file"]
+explanation = "[ -L lnk ] was false afterwards."
+review = "`sed -i`: editing in place, and its dangers"
+
+[[question]]
+id = "sd-var"
+type = "choice"
+prompt = "x='a.b'; sed \"s/$x/[&]/g\" also matches aXb. Why?"
+choices = ["The . in the variable is a regex wildcard", "sed ignores quotes", "& is a wildcard", "x is global"]
+answers = ["The . in the variable is a regex wildcard"]
+explanation = "Escape the value first, or avoid regex for literal text."
+review = "Shell variables inside `sed`"
+
+[[question]]
+id = "sd-amp"
+type = "choice"
+prompt = "In a sed replacement, what does & mean?"
+choices = ["The whole matched text", "A literal ampersand", "The line number", "A background job"]
+answers = ["The whole matched text"]
+explanation = "Write \\& for a literal one."
+review = "Shell variables inside `sed`"
+
+# ---- awk ----
+
+[[question]]
+id = "aw-nf"
+type = "short"
+prompt = "Which awk variable holds the last field of the line? (with $)"
+answers = ["$NF", "NF"]
+explanation = "NF is the number of fields; $NF is the last."
+review = "`awk`: fields and small programs"
+
+[[question]]
+id = "aw-count"
+type = "choice"
+prompt = "awk '{c[$3]++} END{for (k in c) print k, c[k]}' does what, and in what order?"
+choices = ["Counts by the third field, in unspecified order (pipe to sort)", "Counts lines in file order", "Sums column 3", "Prints unique lines"]
+answers = ["Counts by the third field, in unspecified order (pipe to sort)"]
+explanation = "awk arrays are associative."
+review = "`awk`: fields and small programs"
+
+[[question]]
+id = "aw-dedupe"
+type = "short"
+prompt = "Write the awk program that removes duplicate lines keeping the first occurrence in order. (the pattern only)"
+answers = ["!seen[$0]++", "'!seen[$0]++'", "awk '!seen[$0]++'"]
+explanation = "gave 'b a c' for 'b a b c a'."
+review = "`awk`: fields and small programs"
+
+[[question]]
+id = "aw-fnr"
+type = "choice"
+prompt = "In the two-file idiom awk 'NR==FNR{...; next} ...' roles.txt data, what is NR==FNR true for?"
+choices = ["Only while reading the first file", "Only the last line", "Every line", "Never"]
+answers = ["Only while reading the first file"]
+explanation = "FNR restarts per file; NR does not."
+review = "`awk`: fields and small programs"
+
+[[question]]
+id = "aw-cmp"
+type = "choice"
+prompt = "awk 'BEGIN{a=\"10\"; b=\"9\"; print (a>b)}' prints 0 or 1?"
+choices = ["0: string constants compare as strings", "1: numeric", "An error", "Nothing"]
+answers = ["0: string constants compare as strings"]
+explanation = "Fields that look numeric compare as numbers; add +0 to force it."
+review = "Awk traps"
+
+[[question]]
+id = "aw-v"
+type = "choice"
+prompt = "How should a shell value be passed into an awk program?"
+choices = ["awk -v name=\"$value\" ...", "By splicing it into a double-quoted program", "By export only", "With eval"]
+answers = ["awk -v name=\"$value\" ..."]
+explanation = "A value with a quote spliced into the program printed every line (injection). -v processes backslash escapes; ENVIRON does not."
+review = "Awk traps"
+
+[[question]]
+id = "aw-csv"
+type = "choice"
+prompt = "awk -F, on '\"Smith, John\",3' sees how many fields?"
+choices = ["3: the quoted comma splits it", "2", "1", "4"]
+answers = ["3: the quoted comma splits it"]
+explanation = "gawk FPAT can handle it (gawk only); use a CSV-aware tool for real CSV."
+review = "Awk traps"
+
+[[question]]
+id = "aw-impl"
+type = "multi"
+prompt = "Which are true in my tests?"
+choices = ["mawk has no gensub or asort", "BusyBox awk printed 2^40 with printf %d as -2147483648", "gawk has gensub", "All awks print 1099511627776"]
+answers = ["mawk has no gensub or asort", "BusyBox awk printed 2^40 with printf %d as -2147483648", "gawk has gensub"]
+explanation = "Stick to POSIX awk for portable scripts, and say when you need gawk."
+review = "Awk traps"
+
+# ---- xargs ----
+
+[[question]]
+id = "xa-quote"
+type = "choice"
+prompt = "echo \"it's\" | xargs echo fails. Why, and what is a fix?"
+choices = ["xargs interprets quotes; use -d '\\n' (GNU) or -0 with -print0", "xargs cannot read apostrophes", "echo is broken", "Use sudo"]
+answers = ["xargs interprets quotes; use -d '\\n' (GNU) or -0 with -print0"]
+explanation = "unmatched single quote."
+review = "`find` and `xargs`"
+
+[[question]]
+id = "xa-r"
+type = "choice"
+prompt = "xargs echo ran < /dev/null prints ran (GNU). Which option prevents it?"
+choices = ["-r (--no-run-if-empty)", "-n0", "-0", "-P"]
+answers = ["-r (--no-run-if-empty)"]
+explanation = "Otherwise the command runs once with no arguments."
+review = "`find` and `xargs`"
+
+[[question]]
+id = "xa-123"
+type = "short"
+prompt = "What exit status does xargs return if at least one invocation failed? (number)"
+answers = ["123"]
+explanation = "I got 123 from sh -c 'exit 1'."
+review = "`find` and `xargs`"
+
+[[question]]
+id = "xa-inject"
+type = "choice"
+prompt = "Why is xargs -I{} sh -c 'echo {}' dangerous?"
+choices = ["The item is spliced into a shell string, so x; echo INJECTED runs the second command", "sh -c is slow", "{} is reserved", "It cannot read lines"]
+answers = ["The item is spliced into a shell string, so x; echo INJECTED runs the second command"]
+explanation = "Safe: xargs -I{} sh -c 'echo \"$1\"' _ {} (pass as an argument)."
+review = "`find` and `xargs`"
+
+[[question]]
+id = "xa-p"
+type = "choice"
+prompt = "printf '1\\n1\\n1\\n1\\n' | xargs -P4 -n1 sleep took about:"
+choices = ["1 second: four in parallel", "4 seconds", "0 seconds", "It hangs"]
+answers = ["1 second: four in parallel"]
+explanation = "-P sets the number of parallel processes."
+review = "`find` and `xargs`"
+
+# ---- pipelines, speed, portability ----
+
+[[question]]
+id = "pl-top"
+type = "short"
+prompt = "Which command prints the top 3 most frequent values (assume stdin has one value per line)? Name the last two stages after sort | uniq -c."
+answers = ["sort -rn | head -3", "sort -rn | head", "sort -nr | head -3"]
+explanation = "sort | uniq -c | sort -rn | head -3."
+review = "Putting it together: log analysis"
+
+[[question]]
+id = "pl-fields"
+type = "choice"
+prompt = "Why check a sample line before using awk '{print $9}' on a log?"
+choices = ["A format with extra or quoted fields shifts the field numbers", "awk is case sensitive", "$9 does not exist", "awk reads only 8 fields"]
+answers = ["A format with extra or quoted fields shifts the field numbers"]
+explanation = "Test one stage at a time with head -3."
+review = "Putting it together: log analysis"
+
+[[question]]
+id = "sp-fast"
+type = "choice"
+prompt = "Counting 100,000 lines: wc -l took 9 ms. A bash while read loop took about:"
+choices = ["525 ms", "10 ms", "5 ms", "5 s"]
+answers = ["525 ms"]
+explanation = "Use text tools on whole files; use loops for orchestration."
+review = "The right tool is also faster"
+
+[[question]]
+id = "im-bb"
+type = "multi"
+prompt = "Which did BusyBox 1.35 lack in my tests?"
+choices = ["grep -P", "sed -z", "sort -h", "sed -E"]
+answers = ["grep -P", "sed -z", "sort -h"]
+explanation = "sed -E and sort -V worked."
+review = "Differences between implementations (what to check on another machine)"
+
+[[question]]
+id = "im-u"
+type = "choice"
+prompt = "BusyBox sed with s/.*/\\U&/ on hello printed:"
+choices = ["Uhello: \\U is a GNU extension", "HELLO", "hello", "An error"]
+answers = ["Uhello: \\U is a GNU extension"]
+explanation = "Check portability with busybox sed and mawk."
+review = "Differences between implementations (what to check on another machine)"
+
+[[question]]
+id = "rd-ex12"
+type = "multi"
+prompt = "Which are problems in the exercise-12 script?"
+choices = ["sed -i on /etc/passwd with an unescaped, unchecked user name", "grep -q in a pipeline under pipefail", "A predictable temp name /tmp/report.$$", "for f in $(grep -l ...) breaks on names with spaces", "wc -l has no -l option"]
+answers = ["sed -i on /etc/passwd with an unescaped, unchecked user name", "grep -q in a pipeline under pipefail", "A predictable temp name /tmp/report.$$", "for f in $(grep -l ...) breaks on names with spaces"]
+explanation = "Also unquoted $user, user as a regex, and no check for $1."
+review = "Reading an unknown script (text processing)"
