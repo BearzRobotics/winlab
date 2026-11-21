@@ -45,6 +45,8 @@ pub const PathStage = struct {
     pages: []const usize,
     /// Worth doing on this path but not needed to finish it.
     optional: []const usize = &.{},
+    /// Lab ids that practise this stage (looked up in `Options.labs`).
+    labs: []const []const u8 = &.{},
 };
 
 /// A learning path for the window (docs/learning-paths.md). Memory is borrowed like `Page`.
@@ -803,13 +805,20 @@ fn sidebar(a: *App) void {
     var col = dvui.box(@src(), .{}, .{ .expand = .both, .background = true, .style = .window, .padding = .{ .x = 10, .y = 10, .w = 6, .h = 6 } });
     defer col.deinit();
 
-    dvui.labelNoFmt(@src(), "WinLab", .{}, .{ .font = dvui.Font.theme(.title) });
+    {
+        // The button shares the title row so it can never be squeezed out by a long path name.
+        var tb = dvui.box(@src(), .{ .dir = .horizontal }, .{ .expand = .horizontal });
+        defer tb.deinit();
+        dvui.labelNoFmt(@src(), "WinLab", .{}, .{ .font = dvui.Font.theme(.title), .expand = .horizontal, .gravity_y = 0.5 });
+        if (a.o.paths.len > 0) {
+            if (dvui.button(@src(), "Paths...", .{}, .{ .gravity_y = 0.5 })) a.show_picker = true;
+        }
+    }
     if (a.o.paths.len > 0) {
-        var pb = dvui.box(@src(), .{ .dir = .horizontal }, .{ .expand = .horizontal, .margin = .{ .y = 2, .h = 2 } });
-        defer pb.deinit();
         const name: []const u8 = if (a.path) |pi| a.o.paths[pi].title else "All lessons";
-        dvui.labelNoFmt(@src(), name, .{}, .{ .font = dvui.Font.theme(.heading), .expand = .horizontal, .gravity_y = 0.5 });
-        if (dvui.button(@src(), "Paths...", .{}, .{ .gravity_y = 0.5 })) a.show_picker = true;
+        var tl = dvui.textLayout(@src(), .{}, .{ .expand = .horizontal, .background = false, .padding = .all(0), .margin = .{ .y = 2, .h = 2 } });
+        tl.addText(name, .{ .font = dvui.Font.theme(.heading) });
+        tl.deinit();
     }
     if (a.o.tracking != null) {
         var done: usize = 0;
@@ -917,6 +926,26 @@ fn pathBody(a: *App, pi: usize) void {
             lessonRow(a, p, row);
             row += 1;
         }
+        stageLabs(a, st, si);
+    }
+}
+
+/// The labs of a stage as small buttons under its lessons (only labs the course really has).
+fn stageLabs(a: *App, st: PathStage, si: usize) void {
+    var shown = false;
+    for (st.labs, 0..) |lab_id, li| {
+        var found: ?usize = null;
+        for (a.o.labs, 0..) |l, i| if (std.mem.eql(u8, l.id, lab_id)) {
+            found = i;
+        };
+        const idx = found orelse continue;
+        if (!shown) {
+            dvui.labelNoFmt(@src(), "Practice", .{}, .{ .padding = .{ .x = 4, .y = 4, .h = 2 }, .color_text = .{ .color = dvui.themeGet().text.opacity(0.7) }, .id_extra = si });
+            shown = true;
+        }
+        var buf: [200]u8 = undefined;
+        const label = std.fmt.bufPrint(&buf, "Lab: {s}", .{a.o.labs[idx].title}) catch a.o.labs[idx].title;
+        if (dvui.button(@src(), label, .{}, .{ .expand = .horizontal, .margin = .{ .x = 4, .y = 1, .w = 8, .h = 1 }, .id_extra = si * 1000 + li })) openLab(a, idx);
     }
 }
 
@@ -1072,20 +1101,29 @@ fn prerequisiteNotice(a: *App) void {
 }
 
 fn header(a: *App) void {
-    var bar = dvui.box(@src(), .{ .dir = .horizontal }, .{ .expand = .horizontal, .background = true, .style = .window, .padding = .{ .x = 16, .y = 8, .w = 12, .h = 8 } });
+    var bar = dvui.box(@src(), .{ .dir = .vertical }, .{ .expand = .horizontal, .background = true, .style = .window, .padding = .{ .x = 16, .y = 8, .w = 12, .h = 8 } });
     defer bar.deinit();
 
-    dvui.labelNoFmt(@src(), a.pages[a.current].title, .{}, .{ .font = dvui.Font.theme(.heading).withSize(dvui.Font.theme(.body).size * 1.15), .expand = .horizontal, .gravity_y = 0.5 });
-    const cur = a.pages[a.current];
-    if (cur.level != 0) {
-        dvui.label(@src(), "Level {d}  -  {d} min", .{ cur.level, cur.minutes }, .{ .gravity_y = 0.5, .margin = .{ .w = 12 }, .color_text = .{ .color = dvui.themeGet().text.opacity(0.7) } });
+    {
+        // Title with the level and time on a second line.
+        var tcol = dvui.box(@src(), .{}, .{ .expand = .horizontal });
+        defer tcol.deinit();
+        dvui.labelNoFmt(@src(), a.pages[a.current].title, .{}, .{ .font = dvui.Font.theme(.heading).withSize(dvui.Font.theme(.body).size * 1.15), .expand = .horizontal });
+        const cur = a.pages[a.current];
+        if (cur.level != 0) {
+            dvui.label(@src(), "Level {d}  -  {d} min", .{ cur.level, cur.minutes }, .{ .color_text = .{ .color = dvui.themeGet().text.opacity(0.7) } });
+        }
     }
+
+    // The buttons get their own row, so a long title can never push them off the window.
+    var btns = dvui.box(@src(), .{ .dir = .horizontal }, .{ .expand = .horizontal, .margin = .{ .y = 4 } });
+    defer btns.deinit();
 
     if (a.o.tracking != null) {
         var buf: [96]u8 = undefined;
         const s = statusOf(a, a.current);
         const label = std.fmt.bufPrint(&buf, "Status: {s}", .{s.label()}) catch "Status";
-        if (dvui.button(@src(), label, .{}, .{ .gravity_y = 0.5 })) setStatus(a, nextStatus(s));
+        if (dvui.button(@src(), label, .{}, .{ .gravity_y = 0.5, .margin = .{ .w = 8 } })) setStatus(a, nextStatus(s));
     }
     // A quiz button only for a lesson that has a quiz; it shows the best score so far.
     if (quizFor(a, a.pages[a.current].id)) |qi| {
@@ -1100,7 +1138,7 @@ fn header(a: *App) void {
             (std.fmt.bufPrint(&qbuf, "Quiz (best {d}%)", .{best.quiz_best}) catch "Quiz")
         else
             "Take the quiz";
-        if (dvui.button(@src(), label, .{}, .{ .gravity_y = 0.5 })) startQuiz(a, qi);
+        if (dvui.button(@src(), label, .{}, .{ .gravity_y = 0.5, .margin = .{ .w = 8 } })) startQuiz(a, qi);
     }
     // A lab button only for a lesson that has labs.
     const lesson = a.pages[a.current].id;
@@ -1936,7 +1974,9 @@ fn quizResults(a: *App) void {
         dvui.label(@src(), "Best score {d}%, attempts {d}. The bank has {d} questions; each attempt draws {d}.", .{ e.quiz_best, e.quiz_attempts, quiz.questions.len, quiz.draw }, .{ .color_text = .{ .color = dvui.themeGet().text.opacity(0.7) }, .margin = .{ .y = 4 } });
     }
     if (z.marked_known) {
-        dvui.labelNoFmt(@src(), "You passed the placement threshold: this lesson is now marked Known and counts as done. You can still read it any time.", .{}, .{ .font = dvui.Font.theme(.heading), .margin = .{ .y = 8 }, .color_text = .{ .color = .{ .r = 0x2e, .g = 0x9e, .b = 0x5b } } });
+        var tl = dvui.textLayout(@src(), .{}, .{ .expand = .horizontal, .background = false, .padding = .all(0), .margin = .{ .y = 8 } });
+        tl.addText("You passed the placement threshold: this lesson is now marked Known and counts as done. You can still read it any time.", .{ .font = dvui.Font.theme(.heading), .color_text = .{ .color = .{ .r = 0x2e, .g = 0x9e, .b = 0x5b } } });
+        tl.deinit();
     }
     if (z.missed_n > 0) {
         dvui.labelNoFmt(@src(), "To review (these come back first next time):", .{}, .{ .font = dvui.Font.theme(.heading), .margin = .{ .y = 12, .h = 4 } });

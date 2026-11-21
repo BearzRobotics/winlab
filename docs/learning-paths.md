@@ -130,8 +130,8 @@ The seven PowerShell lessons in order, plus the two planned ones. This is path 4
 - "Skip" is a status chosen from the Lesson menu or by cycling the status button; there is no separate Skip button.
 
 **Not built yet**
-- Showing a stage's labs in the sidebar, and a path-level "next lesson" button on the picker.
+- A path-level "continue where I left off" button on the picker (the window already reopens at your last lesson on the path).
 - The home-lab path (no lessons for it yet) and the cybersecurity path.
 - The "all lessons" view still orders lessons inside an area by lesson id (so `bash-basics` sorts before `cmd-basics`); paths give the teaching order. A prerequisite-based order for that view would fix it.
-- Not driven in the running window: the placement quiz end to end (the rule is unit-tested and the button opens the quiz as before), keyboard navigation in path mode, 150% and 200% DPI.
+- Not checked: 200% scale and Narrator. Driven in the running window (2026-11-21, synthetic mouse and key messages, throwaway profile): the placement quiz end to end (100% on an unstarted lesson saved `known`, the sidebar and header updated), Down-arrow navigation in path mode (two presses moved two lessons in path order), stage labs in the sidebar, and 150% text scale (found and fixed two layout problems: the Paths button was squeezed out and the header buttons were pushed off; the buttons now sit on their own row).
 - Open questions below (threshold, whether Known counts toward certification coverage, whether placement attempts are recorded as normal attempts) are still open; today a placement attempt is an ordinary attempt.

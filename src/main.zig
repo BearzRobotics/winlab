@@ -2004,7 +2004,7 @@ fn pathViews(arena: std.mem.Allocator, set: *const winlab.paths.Set, cat: *const
                 try opt.append(arena, i);
                 try listed.append(arena, i);
             }
-            out.* = .{ .title = st.title, .entry_hint = st.entry_hint, .pages = req.items, .optional = opt.items };
+            out.* = .{ .title = st.title, .entry_hint = st.entry_hint, .pages = req.items, .optional = opt.items, .labs = st.labs };
         }
         const s = winlab.paths.summarize(p, cat);
         v.* = .{ .id = p.id, .title = p.title, .goal = p.goal, .audience = p.audience, .stages = stages, .minutes = s.minutes, .level_min = s.level_min, .level_max = s.level_max };
