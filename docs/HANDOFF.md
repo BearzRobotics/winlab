@@ -137,7 +137,7 @@ The commit **author identity is set locally** (`git config user.name` and `user.
 
 ## 12. Learning paths (built 2026-11-21)
 
-The course is already about **39 hours** of estimated lesson time across 38 lessons (about 76 hours is the sum for all nine paths with overlap; a single path is 2 to 25 hours), and far more is planned. A learner with a goal (help desk, networking, Windows admin, scripting, Linux, MD-102, security, home lab) should not have to do every lesson in order, and may already know some of it. The owner asked for this to be recorded; it is **designed but not implemented**.
+The course is already about **39 hours** of estimated lesson time across 38 lessons (a single path is about 2 to 25 hours; paths overlap, so they do not add up), and far more is planned. A learner with a goal (help desk, networking, Windows admin, scripting, Linux, MD-102, security, home lab) should not have to do every lesson in order, and may already know some of it. The owner asked for this to be recorded; it is **designed but not implemented**.
 
 Full design and the first ten path definitions (real lesson ids, estimated hours, entry points, planned additions) are in **`docs/learning-paths.md`**. In short:
 
