@@ -1,4 +1,4 @@
-*Draft for owner review.* A script is one file; real automation is **reusable modules**, code that **runs on other machines**, work done **in the background or in parallel**, and **secrets handled without leaking them**. This lesson covers modules (writing, loading, versioning, the PowerShell Gallery and why installing from it is a trust decision), script signing, credentials, jobs, and remoting over WinRM and SSH. It also says plainly what I could and could not test: modules, jobs, signatures and credentials were run on Windows PowerShell 5.1, PowerShell 7 and PowerShell 7 on Linux; WinRM remoting was then run for real against a **Windows Server 2022 lab VM** (as `Administrator`), and the lesson shows both the error from a non-elevated prompt and the working results. Remoting **over SSH** was attempted and **not completed**; the lesson says exactly where it stopped.
+*Draft for owner review.* A script is one file; real automation is **reusable modules**, code that **runs on other machines**, work done **in the background or in parallel**, and **secrets handled without leaking them**. This lesson covers modules (writing, loading, versioning, the PowerShell Gallery and why installing from it is a trust decision), script signing, credentials, jobs, and remoting over WinRM and SSH. It also says plainly what I could and could not test: modules, jobs, signatures and credentials were run on Windows PowerShell 5.1, PowerShell 7 and PowerShell 7 on Linux; WinRM remoting was then run for real against a **Windows Server 2022 lab VM** (as `Administrator`), and the lesson shows both the error from a non-elevated prompt and the working results. Remoting **over SSH** failed on the first attempt, and the lesson shows the cause I found and the working run afterwards (Windows target only; a Linux target was not tested).
 
 ## Modules
 
@@ -185,7 +185,7 @@ Remove-PSSession $s
 ### Two transports
 
 - **WinRM** (WS-Management) is the Windows transport, HTTP on port **5985** and HTTPS on **5986**. It is the default for `-ComputerName`, authenticates with **Kerberos** inside a domain (and NTLM otherwise), and encrypts the payload.
-- **SSH** is the cross-platform transport, available in PowerShell 7: `New-PSSession -HostName server01 -UserName admin` (and `-SSHTransport`). It needs an SSH server with a PowerShell subsystem on the target and works to Linux and macOS as well as Windows. See [PowerShell remoting over SSH](https://learn.microsoft.com/powershell/scripting/security/remoting/ssh-remoting-in-powershell).
+- **SSH** is the cross-platform transport, available in PowerShell 7: `New-PSSession -HostName server01 -UserName admin` (and `-SSHTransport`). It needs an SSH server with a PowerShell subsystem on the target (a `Subsystem powershell` line placed **above** any `Match` block, see my verified run below) and works to Linux and macOS as well as Windows. See [PowerShell remoting over SSH](https://learn.microsoft.com/powershell/scripting/security/remoting/ssh-remoting-in-powershell).
 
 Windows PowerShell 5.1 uses WinRM only.
 
@@ -221,7 +221,19 @@ With that credential I verified, in this order:
 - **`-AsJob`** returned a `PSRemotingJob` (state `Running` at once) that `Receive-Job` completed.
 - **By IP address:** `Invoke-Command -ComputerName 127.0.0.1` also worked, because that is the loopback address; for another machine's IP address, NTLM needs HTTPS or an entry in `TrustedHosts` (from the documentation; not tested).
 
-**Remoting over SSH: not completed.** On the same VM I unpacked PowerShell 7 into `C:\pwsh7`, added `Subsystem powershell C:/pwsh7/pwsh.exe -sshs -NoLogo -NoProfile` to `C:\ProgramData\ssh\sshd_config`, restarted `sshd`, and from the host ran `New-PSSession -HostName 127.0.0.1 -Port 44024 -UserName Administrator -KeyFilePath <key> -Options @{...}`. It failed with `subsystem request failed on channel 0` / `The SSH transport process has abruptly terminated`. I did not find the cause (the candidates are that `sshd` had not yet reloaded its configuration, or that the subsystem command could not start under that service account), so everything in this lesson about SSH remoting comes from the documentation, not from my own run. Treat it as unverified until someone reproduces it.
+**Remoting over SSH (verified on a Windows Server 2022 VM, PowerShell 7.6.10 on both ends).** On the VM I unpacked the PowerShell 7 zip into `C:\pwsh7` (a 109 MB download) and added a `Subsystem powershell C:/pwsh7/pwsh.exe -sshs -NoLogo -NoProfile` line to `C:\ProgramData\ssh\sshd_config`. **The first attempt failed** with `subsystem request failed on channel 0` / `The SSH transport process has abruptly terminated`, because I had added the line at the **end of the file, after a `Match Group administrators` block**. In `sshd_config`, everything after a `Match` line belongs to that block, so the subsystem was not a global setting: `sshd -T` (which prints the effective configuration) listed only `subsystem sftp sftp-server.exe`. Moving the line to sit **right after the `sftp` Subsystem line, above the `Match` block**, made `sshd -t` (syntax check) return 0 and `sshd -T` list both subsystems. After `Restart-Service sshd` this worked from the host:
+
+```powershell
+$s = New-PSSession -HostName 127.0.0.1 -Port 44024 -UserName Administrator -KeyFilePath $key
+Invoke-Command -Session $s -ScriptBlock { "$env:COMPUTERNAME as $([Environment]::UserName) PS $($PSVersionTable.PSVersion)" }
+```
+
+```
+Transport=SSH State=Opened
+WINLAB-LAB-C as Administrator PS 7.6.10 (Core)
+```
+
+What else I observed over SSH: `$using:limit` worked; state persisted in the session; results were deserialized (`System.Management.Automation.PSObject`, no `Stop()` method) just as with WinRM; an error in the script block arrived as a `RemoteException`; `Copy-Item -ToSession` copied a file; the session was elevated because the account is an administrator. The **diagnostic habit** is the lesson: when a remote service will not do what its config says, ask the service for its *effective* configuration (`sshd -T`) instead of re-reading the file you edited. Key-based login and the host-key prompt are the same ones you use for ordinary `ssh`; use a key, not a password, and do not disable `StrictHostKeyChecking` outside a throwaway lab (I did, in a VM that is restored after each use).
 
 See [about_Remote_Requirements](https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_remote_requirements) and [about_Remote_Troubleshooting](https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_remote_troubleshooting).
 

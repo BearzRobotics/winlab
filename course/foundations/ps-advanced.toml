@@ -1,0 +1,76 @@
+schema_version = 1
+id = "foundations.ps-advanced"
+title = "Advanced PowerShell: classes, .NET, performance, logging and constrained language"
+summary = "Classes and enums and their traps, calling .NET directly and compiling C# with Add-Type, measured performance habits (array +=, foreach versus pipeline, Where, -Parallel), script block logging and constrained language mode, and a map of Windows PowerShell 5.1 versus PowerShell 7, with a checklist for reading obfuscated or risky scripts."
+content = "ps-advanced.md"
+estimated_minutes = 120
+objectives = [
+  "Write a class and an enum, and explain typed properties, hidden, static members, return rules and why a live session cannot redefine a class",
+  "Call .NET types and generic collections from PowerShell and explain :: versus . and silent type coercion",
+  "Use Add-Type and explain why compiling code at run time deserves scrutiny",
+  "Measure with Measure-Command and avoid the array += pattern, choosing between the foreach statement, the pipeline and .Where()",
+  "Use ForEach-Object -Parallel with $using and explain when parallelism does not help",
+  "Enable and read script block logging (event 4104) and state what it records, including decoded encoded commands and secrets",
+  "Explain what constrained language mode blocks and how it differs from execution policy",
+  "List the main differences between Windows PowerShell 5.1 and PowerShell 7 and write version-aware scripts",
+  "Decode a Base64 command safely and read an obfuscated script without running it",
+]
+prerequisites = ["foundations.ps-system-admin-scripting"]
+windows_features = ["Windows PowerShell", "PowerShell 7", "Event Viewer"]
+privilege = "administrator"
+certifications = ["comptia-a-core2/security", "comptia-a-core2/operating-systems"]
+evaluation_criteria = [
+  "Learner writes a class whose method fails to parse without return, and explains why",
+  "Learner shows with timings why array += is a performance bug and fixes it",
+  "Learner finds an event 4104 for a marker string in a lab VM and removes the policy afterwards",
+  "Learner explains the ${u}?.Length trap",
+  "Learner decodes the Base64 sample without executing it and names what it begins to do",
+]
+
+[[references]]
+title = "about_Classes (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_classes"
+
+[[references]]
+title = "about_Enum (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_enum"
+
+[[references]]
+title = "Add-Type (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/add-type"
+
+[[references]]
+title = "about_Operators (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_operators"
+
+[[references]]
+title = "about_Pipeline_Chain_Operators (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_pipeline_chain_operators"
+
+[[references]]
+title = "PowerShell scripting performance considerations (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/scripting/dev-cross-plat/performance/script-authoring-considerations"
+
+[[references]]
+title = "ForEach-Object (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/foreach-object"
+
+[[references]]
+title = "StringBuilder class (Microsoft Learn)"
+url = "https://learn.microsoft.com/dotnet/api/system.text.stringbuilder"
+
+[[references]]
+title = "about_Logging_Windows (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_logging_windows"
+
+[[references]]
+title = "about_Language_Modes (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_language_modes"
+
+[[references]]
+title = "Script enforcement with App Control for Business (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/security/application-security/application-control/app-control-for-business/design/script-enforcement"
+
+[[references]]
+title = "Differences between Windows PowerShell 5.1 and PowerShell 7.x (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/scripting/whats-new/differences-from-windows-powershell"

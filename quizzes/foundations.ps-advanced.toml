@@ -1,0 +1,455 @@
+schema_version = 1
+lesson = "foundations.ps-advanced"
+# Draft for owner review. A bank of 50; each attempt asks 10, favouring questions missed last time.
+draw = 10
+
+# ---- Classes ----
+
+[[question]]
+id = "cl-when"
+type = "choice"
+prompt = "When is a class better than a [pscustomobject]?"
+choices = ["You need a fixed shape, typed properties and behaviour shared by several functions", "You only pass two values around once", "The script must run in PowerShell 3", "You want the member list hidden for security"]
+answers = ["You need a fixed shape, typed properties and behaviour shared by several functions"]
+explanation = "For a simple bag of data, a pscustomobject is lighter."
+review = "Classes"
+
+[[question]]
+id = "cl-new"
+type = "short"
+prompt = "Which static method creates an instance of a class named Point? (write the full expression start, e.g. [Point]::...)"
+answers = ["[Point]::new", "[Point]::new()"]
+explanation = "Constructors are called through ::new(...)."
+review = "Classes"
+
+[[question]]
+id = "cl-this"
+type = "short"
+prompt = "Which automatic variable refers to the current instance inside a class method? (with $)"
+answers = ["$this", "this"]
+explanation = "Static members belong to the class and are reached as [Point]::Count."
+review = "Classes"
+
+[[question]]
+id = "cl-hidden"
+type = "choice"
+prompt = "What does the hidden keyword do for a class member?"
+choices = ["Keeps it out of Get-Member and tab completion; it is still readable", "Makes it private and unreadable", "Encrypts the value", "Makes it read-only"]
+answers = ["Keeps it out of Get-Member and tab completion; it is still readable"]
+explanation = "hidden is not access control and not security."
+review = "Classes"
+
+[[question]]
+id = "cl-typed"
+type = "choice"
+prompt = "A property is declared [int]$X. What does $p.X = '7' do?"
+choices = ["Converts the string and stores the Int32 7", "Fails because it is a string", "Stores the string '7'", "Silently ignores it"]
+answers = ["Converts the string and stores the Int32 7"]
+explanation = "'abc' fails with a conversion error; '7' converts."
+review = "Classes"
+
+[[question]]
+id = "cl-return"
+type = "choice"
+prompt = "class Bad { [int] Get() { 5 } } fails with 'Not all code path returns value within method.' When is the error raised?"
+choices = ["At parse time", "When the method is first called", "Only in PowerShell 7", "Never"]
+answers = ["At parse time"]
+explanation = "In a method only return produces output. In a function the bare 5 would be output."
+review = "Classes"
+
+[[question]]
+id = "cl-leak"
+type = "choice"
+prompt = "A class method calls $list.Add(1) without discarding the result and then returns 5. What does the caller receive?"
+choices = ["Only 5", "0 and 5", "An error", "Nothing"]
+answers = ["Only 5"]
+explanation = "Methods do not leak stray pipeline output the way functions do."
+review = "Classes"
+
+[[question]]
+id = "cl-cast"
+type = "choice"
+prompt = "In my tests, ([Animal]$dog).Speak() on a Dog that overrides Speak returned which result?"
+choices = ["The base method's result", "The override's result", "An error", "Null"]
+answers = ["The base method's result"]
+explanation = "Do not assume C#-style virtual dispatch through a cast without testing it."
+review = "Classes"
+
+[[question]]
+id = "cl-redef"
+type = "choice"
+prompt = "How do you pick up changes to a class definition during development?"
+choices = ["Start a new session", "Run the class again; it replaces the old one", "Use Remove-Type", "Use Clear-Host"]
+answers = ["Start a new session"]
+explanation = "The earlier definition stayed in use in my test."
+review = "Classes"
+
+[[question]]
+id = "cl-enum"
+type = "choice"
+prompt = "What happens with [Level]'Nope' when Level is an enum without that name?"
+choices = ["An error that lists the valid names", "It returns null", "It returns 0", "It creates a new member"]
+answers = ["An error that lists the valid names"]
+explanation = "Enums as parameter types also give tab completion and validation."
+review = "Enums"
+
+[[question]]
+id = "cl-enumval"
+type = "short"
+prompt = "enum Level { Low = 1; Mid; High } : what is [int][Level]::High? (number)"
+answers = ["3"]
+explanation = "After Low = 1, the next values count up: Mid is 2 and High is 3."
+review = "Enums"
+
+# ---- .NET ----
+
+[[question]]
+id = "net-round"
+type = "short"
+prompt = "What does [math]::Round(2.5) return? (number)"
+answers = ["2"]
+explanation = "It rounds to the even neighbour; [MidpointRounding]::AwayFromZero gives 3."
+review = "Using .NET directly"
+
+[[question]]
+id = "net-colon"
+type = "choice"
+prompt = "Why did [math].Round(2.5) fail with a RuntimeException?"
+choices = ["The dot asks the Type object for a method; static members need ::", "Round does not exist", "It needs administrator rights", "Math is a class, not a type"]
+answers = ["The dot asks the Type object for a method; static members need ::"]
+explanation = "Static members use [Type]::Member; instance members use $object.Member."
+review = "Using .NET directly"
+
+[[question]]
+id = "net-coerce"
+type = "choice"
+prompt = "What happened with $l.Add(5) on a List[string]?"
+choices = ["The 5 was converted to the string '5'", "An error was raised", "The list became List[int]", "Nothing was added"]
+answers = ["The 5 was converted to the string '5'"]
+explanation = "PowerShell converts arguments to the declared type, so a type may be silently coercing."
+review = "Using .NET directly"
+
+[[question]]
+id = "net-dict"
+type = "choice"
+prompt = "On Dictionary[string,int] with key 'a', what does ContainsKey('A') return?"
+choices = ["False", "True", "An error", "Null"]
+answers = ["False"]
+explanation = "The generic dictionary is case-sensitive; a PowerShell hashtable is not."
+review = "Using .NET directly"
+
+[[question]]
+id = "net-void"
+type = "choice"
+prompt = "Why write [void]$sb.Append('a')?"
+choices = ["It discards the returned builder so it does not reach the output", "It makes Append faster", "It is required syntax", "It clears the builder"]
+answers = ["It discards the returned builder so it does not reach the output"]
+explanation = "Without it every Append writes an object to the pipeline."
+review = "Using .NET directly"
+
+[[question]]
+id = "net-addtype"
+type = "choice"
+prompt = "What happens when you Add-Type a different definition with an existing type name?"
+choices = ["Cannot add type. The type name already exists.", "It replaces the old type", "It renames the new type", "It is silently ignored"]
+answers = ["Cannot add type. The type name already exists."]
+explanation = "Types cannot be unloaded from a session. Adding an identical definition raised no error in my test."
+review = "Adding your own C#: `Add-Type`"
+
+[[question]]
+id = "net-addtype-risk"
+type = "choice"
+prompt = "Why should a script that uses Add-Type be read carefully?"
+choices = ["It compiles and loads C# at run time that you may not see", "It is deprecated", "It always needs a reboot", "It disables logging"]
+answers = ["It compiles and loads C# at run time that you may not see"]
+explanation = "P/Invoke into kernel32 or user32 is a common sign of low-level tricks."
+review = "Adding your own C#: `Add-Type`"
+
+[[question]]
+id = "net-nullcond"
+type = "choice"
+prompt = "Why does $u?.Length print 0 when $u is null?"
+choices = ["? is legal in a variable name, so it read the variable $u? and then .Length of null", "?. is not supported", "Null has a Length of 0 only on Linux", "$u was not null"]
+answers = ["? is legal in a variable name, so it read the variable $u? and then .Length of null"]
+explanation = "Write ${u}?.Length."
+review = "The null-conditional trap (PowerShell 7)"
+
+[[question]]
+id = "net-nullfix"
+type = "short"
+prompt = "Write the correct null-conditional expression for a variable u. (e.g. with braces)"
+answers = ["${u}?.Length", "${u}?."]
+explanation = "The variable name must be wrapped in braces for ?. and ?[]."
+review = "The null-conditional trap (PowerShell 7)"
+
+# ---- Performance ----
+
+[[question]]
+id = "pf-measure"
+type = "choice"
+prompt = "What is the first rule of PowerShell performance?"
+choices = ["Measure, do not guess", "Always use the pipeline", "Always avoid loops", "Always use jobs"]
+answers = ["Measure, do not guess"]
+explanation = "Use Measure-Command or Stopwatch."
+review = "Performance"
+
+[[question]]
+id = "pf-plus"
+type = "choice"
+prompt = "Why is $array += $x slow inside a loop?"
+choices = ["It copies the whole array on every addition", "+= is not supported on arrays", "It writes to disk", "It forces a garbage collection"]
+answers = ["It copies the whole array on every addition"]
+explanation = "It is quadratic. 20,000 additions took 11,365 ms in 5.1 against 43 ms with List.Add."
+review = "Performance"
+
+[[question]]
+id = "pf-fix"
+type = "multi"
+prompt = "Which are better ways to collect results than $a += $x?"
+choices = ["$r = foreach ($i in ...) { ... }", "A [System.Collections.Generic.List[T]] with .Add()", "Calling Clear-Host in the loop", "Using Start-Sleep"]
+answers = ["$r = foreach ($i in ...) { ... }", "A [System.Collections.Generic.List[T]] with .Add()"]
+explanation = "Both avoid copying the collection each time."
+review = "Performance"
+
+[[question]]
+id = "pf-version"
+type = "choice"
+prompt = "How did the array += pattern compare between 5.1 and 7 in my test?"
+choices = ["About ten times worse in 5.1", "Identical", "Better in 5.1", "Not available in 7"]
+answers = ["About ten times worse in 5.1"]
+explanation = "11,365 ms against 1,210 ms. One machine; the ratio is the point."
+review = "Performance"
+
+[[question]]
+id = "pf-foreach"
+type = "choice"
+prompt = "Which is usually faster for a collection already in memory?"
+choices = ["The foreach statement", "ForEach-Object in a pipeline", "They are always equal", "Neither can run in memory"]
+answers = ["The foreach statement"]
+explanation = "The pipeline pays per-object overhead; it wins on streaming and memory."
+review = "Performance"
+
+[[question]]
+id = "pf-pipewin"
+type = "choice"
+prompt = "When is the pipeline the better choice?"
+choices = ["Large or streaming data, or when you want an early stop like Select-Object -First", "Always", "Never", "Only in PowerShell 5.1"]
+answers = ["Large or streaming data, or when you want an early stop like Select-Object -First"]
+explanation = "Select-Object -First 1 over a million items took 1 to 13 ms."
+review = "Performance"
+
+[[question]]
+id = "pf-where"
+type = "choice"
+prompt = "How did the .Where() method compare with Where-Object on 200,000 in-memory items?"
+choices = ["Faster, but it needs the whole collection first", "Slower", "Identical", "Not usable on arrays"]
+answers = ["Faster, but it needs the whole collection first"]
+explanation = "For example 221 ms against 780 ms in 7 on Windows."
+review = "Performance"
+
+[[question]]
+id = "pf-string"
+type = "choice"
+prompt = "For 5,000 string appends, what did I measure for += against StringBuilder?"
+choices = ["No real difference at that size", "+= was ten times slower", "StringBuilder was ten times slower", "+= failed"]
+answers = ["No real difference at that size"]
+explanation = "The advice matters at much larger sizes, which I did not measure."
+review = "Performance"
+
+[[question]]
+id = "pf-parallel"
+type = "short"
+prompt = "Which ForEach-Object parameter runs the script block in separate runspaces (PowerShell 7 only)? (include the dash)"
+answers = ["-Parallel"]
+explanation = "Windows PowerShell 5.1 does not have it."
+review = "Parallel work in PowerShell 7"
+
+[[question]]
+id = "pf-using"
+type = "choice"
+prompt = "In ForEach-Object -Parallel, a block that refers to $outer without $using: sees what?"
+choices = ["An empty variable", "The caller's value", "An error", "The last pipeline value"]
+answers = ["An empty variable"]
+explanation = "Use $using:outer, as with jobs and remoting."
+review = "Parallel work in PowerShell 7"
+
+# ---- Logging and CLM ----
+
+[[question]]
+id = "sb-event"
+type = "short"
+prompt = "Which event ID does script block logging write to the Microsoft-Windows-PowerShell/Operational log? (number)"
+answers = ["4104"]
+explanation = "The event holds the script block text."
+review = "Script block logging"
+
+[[question]]
+id = "sb-enable"
+type = "choice"
+prompt = "How is script block logging enabled?"
+choices = ["By policy: Group Policy or the ScriptBlockLogging registry value EnableScriptBlockLogging = 1", "It is always on", "With Set-ExecutionPolicy", "With Start-Transcript"]
+answers = ["By policy: Group Policy or the ScriptBlockLogging registry value EnableScriptBlockLogging = 1"]
+explanation = "The policy is read when PowerShell starts, so test with a new process."
+review = "Script block logging"
+
+[[question]]
+id = "sb-secret"
+type = "choice"
+prompt = "What happens to a password typed as a literal in a script when script block logging is on?"
+choices = ["It appears in the log as typed", "It is masked", "It is encrypted in the log", "It is never logged"]
+answers = ["It appears in the log as typed"]
+explanation = "Anything in a script, command line or assignment can end up in the log."
+review = "Script block logging"
+
+[[question]]
+id = "sb-encoded"
+type = "choice"
+prompt = "A command was run with -EncodedCommand. What did the 4104 event contain?"
+choices = ["The decoded plain text", "The Base64 only", "Nothing", "A hash"]
+answers = ["The decoded plain text"]
+explanation = "Encoding hides code from a glance at the process list, not from this log."
+review = "Script block logging"
+
+[[question]]
+id = "sb-off"
+type = "choice"
+prompt = "After EnableScriptBlockLogging was set to 0, what did a new command produce?"
+choices = ["No 4104 event with its marker", "The same events as before", "An error", "A 4103 event"]
+answers = ["No 4104 event with its marker"]
+explanation = "The log is only useful while the policy is on, and only if someone keeps and reads it."
+review = "Script block logging"
+
+[[question]]
+id = "cm-show"
+type = "short"
+prompt = "Which expression shows the current language mode? (property path after $ExecutionContext)"
+answers = ["SessionState.LanguageMode", "$ExecutionContext.SessionState.LanguageMode"]
+explanation = "Normally FullLanguage; ConstrainedLanguage limits the language."
+review = "Constrained language mode (CLM)"
+
+[[question]]
+id = "cm-blocked"
+type = "multi"
+prompt = "Which were blocked in ConstrainedLanguage in my test?"
+choices = ["Add-Type -TypeDefinition", "[System.IO.File]::Exists(...)", "Creating an instance of your own class", "Get-Date"]
+answers = ["Add-Type -TypeDefinition", "[System.IO.File]::Exists(...)", "Creating an instance of your own class"]
+explanation = "Ordinary cmdlets such as Get-Date kept working."
+review = "Constrained language mode (CLM)"
+
+[[question]]
+id = "cm-back"
+type = "choice"
+prompt = "Can a session that lowered itself to ConstrainedLanguage set itself back to FullLanguage?"
+choices = ["No, the attempt was blocked", "Yes, with one assignment", "Only as administrator", "Only in PowerShell 7"]
+answers = ["No, the attempt was blocked"]
+explanation = "Real enforcement comes from application control, not from the user."
+review = "Constrained language mode (CLM)"
+
+[[question]]
+id = "cm-policy"
+type = "choice"
+prompt = "How do real systems normally get ConstrainedLanguage?"
+choices = ["From application control (App Control for Business or AppLocker)", "From Set-ExecutionPolicy", "From the PATH variable", "From the profile script"]
+answers = ["From application control (App Control for Business or AppLocker)"]
+explanation = "Execution policy is a different, weaker feature about script files."
+review = "Constrained language mode (CLM)"
+
+[[question]]
+id = "cm-author"
+type = "choice"
+prompt = "Why will a script that uses Add-Type or COM fail on a locked-down machine?"
+choices = ["Constrained language mode blocks them", "Add-Type is removed from Windows", "COM needs Linux", "They are too slow"]
+answers = ["Constrained language mode blocks them"]
+explanation = "If the script must run there, use cmdlets and test under CLM."
+review = "Constrained language mode (CLM)"
+
+# ---- 5.1 versus 7 ----
+
+[[question]]
+id = "v-exe"
+type = "multi"
+prompt = "Which program names start PowerShell 5.1 and PowerShell 7 on Windows?"
+choices = ["powershell.exe (5.1)", "pwsh.exe (7)", "pwsh.exe (5.1)", "powershell7.exe"]
+answers = ["powershell.exe (5.1)", "pwsh.exe (7)"]
+explanation = "They install side by side."
+review = "Windows PowerShell 5.1 versus PowerShell 7"
+
+[[question]]
+id = "v-edition"
+type = "short"
+prompt = "What is $PSVersionTable.PSEdition in Windows PowerShell 5.1? (one word)"
+answers = ["Desktop"]
+explanation = "PowerShell 7 reports Core."
+review = "Windows PowerShell 5.1 versus PowerShell 7"
+
+[[question]]
+id = "v-parse"
+type = "choice"
+prompt = "A script contains a ternary operator inside an if branch that never runs. What does 5.1 do?"
+choices = ["Fails to parse the whole file", "Skips the branch and runs the rest", "Runs the ternary as a string", "Only fails when the branch runs"]
+answers = ["Fails to parse the whole file"]
+explanation = "That is why I moved 7-only lines into strings for Invoke-Expression in my battery. (I did not run the 5.1 case itself; the 5.1 syntax comes from the documentation.)"
+review = "Windows PowerShell 5.1 versus PowerShell 7"
+
+[[question]]
+id = "v-requires"
+type = "short"
+prompt = "Which comment-style directive makes a script fail early with a clear message on the wrong PowerShell version? (e.g. #Requires ...)"
+answers = ["#Requires -Version", "#Requires"]
+explanation = "For example #Requires -Version 5.1 or #Requires -PSEdition Core."
+review = "Windows PowerShell 5.1 versus PowerShell 7"
+
+[[question]]
+id = "v-encoding"
+type = "choice"
+prompt = "What encoding did the > redirection write in my 5.1 test?"
+choices = ["UTF-16", "UTF-8 without BOM", "ASCII", "ANSI"]
+answers = ["UTF-16"]
+explanation = "PowerShell 7 defaults to UTF-8 without BOM."
+review = "Windows PowerShell 5.1 versus PowerShell 7"
+
+# ---- Reading unknown code ----
+
+[[question]]
+id = "rd-decode"
+type = "choice"
+prompt = "What is the safe way to examine a Base64 blob from an -EncodedCommand?"
+choices = ["Decode it to text and read it, without executing", "Run it in a hidden window", "Paste it into Invoke-Expression", "Ignore it"]
+answers = ["Decode it to text and read it, without executing"]
+explanation = "[Text.Encoding]::Unicode.GetString([Convert]::FromBase64String($blob))"
+review = "Reading unknown PowerShell: the advanced checklist"
+
+[[question]]
+id = "rd-unicode"
+type = "short"
+prompt = "Which .NET encoding decodes an -EncodedCommand string? (one word)"
+answers = ["Unicode", "UTF-16", "UTF16"]
+explanation = "-EncodedCommand uses UTF-16 little-endian, which .NET calls Unicode."
+review = "Reading unknown PowerShell: the advanced checklist"
+
+[[question]]
+id = "rd-policy"
+type = "choice"
+prompt = "Why does -ExecutionPolicy Bypass in an unknown script not prove it is malicious, and not prove it is safe?"
+choices = ["Execution policy is a safety belt, not a security boundary; the question is why it is combined with hiding", "It is illegal", "It is required for all scripts", "It disables logging"]
+answers = ["Execution policy is a safety belt, not a security boundary; the question is why it is combined with hiding"]
+explanation = "-w hidden plus -enc plus Bypass together should make you ask why it must be hidden."
+review = "Reading unknown PowerShell: the advanced checklist"
+
+[[question]]
+id = "rd-sample"
+type = "choice"
+prompt = "The sample blob in exercise 8 decodes to $c=New-Object Net.WebClient. What is it the start of?"
+choices = ["A download cradle", "A disk cleanup", "A scheduled task", "A registry backup"]
+answers = ["A download cradle"]
+explanation = "Net.WebClient is how a script fetches code from the network; read what comes next before anything runs."
+review = "Reading unknown PowerShell: the advanced checklist"
+
+[[question]]
+id = "rd-obf"
+type = "choice"
+prompt = "Where can you see the de-obfuscated text of an obfuscated PowerShell script after it ran in a throwaway VM?"
+choices = ["In the script block logging events (4104)", "In Task Manager", "In the registry Run key", "Nowhere"]
+answers = ["In the script block logging events (4104)"]
+explanation = "Run it only in a throwaway VM and read the log."
+review = "Reading unknown PowerShell: the advanced checklist"

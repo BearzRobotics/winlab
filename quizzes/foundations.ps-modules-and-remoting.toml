@@ -1,6 +1,6 @@
 schema_version = 1
 lesson = "foundations.ps-modules-and-remoting"
-# Draft for owner review. A bank of 51; each attempt asks 10, favouring questions missed last time.
+# Draft for owner review. A bank of 53; each attempt asks 10, favouring questions missed last time.
 draw = 10
 
 # ---- Modules ----
@@ -461,3 +461,20 @@ choices = ["PSComputerName", "RunspaceId", "A working Kill() method", "A local w
 answers = ["PSComputerName", "RunspaceId"]
 explanation = "The result is a serialized copy: data properties arrive, methods do not."
 review = "What I saw on a Windows Server 2022 VM"
+
+[[question]]
+id = "re-ssh-match"
+type = "choice"
+prompt = "In my SSH remoting test, 'subsystem request failed' happened because the Subsystem powershell line was added where in sshd_config?"
+choices = ["At the end, after a Match block, so it was not a global setting", "Before the sftp line", "In the user's home folder", "Nowhere; the file was empty"]
+answers = ["At the end, after a Match block, so it was not a global setting"]
+explanation = "Everything after a Match line belongs to that block. Moving the line next to the sftp Subsystem line, above the Match block, fixed it."
+review = "Remoting over SSH (verified on a Windows Server 2022 VM, PowerShell 7.6.10 on both ends)"
+
+[[question]]
+id = "re-ssh-effective"
+type = "short"
+prompt = "Which sshd option prints the effective configuration, so you can check what it really loaded? (include the dash)"
+answers = ["-T", "sshd -T"]
+explanation = "-t only checks the syntax; -T shows the effective settings (it listed only the sftp subsystem before the fix)."
+review = "Remoting over SSH (verified on a Windows Server 2022 VM, PowerShell 7.6.10 on both ends)"
