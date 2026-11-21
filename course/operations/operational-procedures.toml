@@ -1,0 +1,24 @@
+schema_version = 1
+id = "operations.operational-procedures"
+title = "Operational procedures: documentation, change and recovery"
+summary = "Problem records, change management, backups, communication and safety habits for IT support and administration."
+content = "operational-procedures.md"
+estimated_minutes = 30
+objectives = [
+  "Write a problem record with the problem, evidence, change and verification",
+  "Describe the steps of a change request including risk and a back-out plan",
+  "Explain the 3-2-1 backup rule and the terms RPO and RTO",
+  "Describe professional communication with users and when to escalate",
+]
+prerequisites = ["foundations.troubleshooting-method"]
+windows_features = []
+privilege = "standard"
+certifications = ["comptia-a-core2/operational-procedures", "comptia-network-plus/network-operations"]
+evaluation_criteria = [
+  "Learner turns a lab fix into a problem record another technician could follow",
+  "Learner writes a back-out plan for a given change",
+]
+
+[[references]]
+title = "ITIL change enablement (overview)"
+url = "https://www.axelos.com/certifications/itil-service-management"

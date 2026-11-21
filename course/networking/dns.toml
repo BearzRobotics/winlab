@@ -1,0 +1,87 @@
+schema_version = 1
+id = "networking.dns"
+title = "DNS: how names become addresses"
+summary = "The DNS hierarchy, resolvers, caching and TTL, the common record types, and how to query, read and troubleshoot name resolution with nslookup, Resolve-DnsName, resolvectl and getent."
+content = "dns.md"
+estimated_minutes = 55
+objectives = [
+  "Explain what a stub resolver, a recursive resolver and an authoritative server each do",
+  "Name the common record types (A, AAAA, CNAME, MX, NS, PTR, TXT, SOA) and what each holds",
+  "Explain TTL, caching and negative caching, and why a change is not seen everywhere at once",
+  "Query a specific server from the command line on Windows and Linux and read the answer",
+  "Show, set and clear the DNS settings and the cache on Windows and Linux",
+  "Separate a DNS fault from an address, route or port fault",
+]
+prerequisites = ["networking.addressing-and-names"]
+windows_features = ["Command Prompt", "Windows PowerShell"]
+privilege = "standard"
+certifications = ["comptia-network-plus/networking-concepts", "comptia-network-plus/network-troubleshooting", "comptia-a-core1/networking", "redhat-rhcsa/basic-networking"]
+evaluation_criteria = [
+  "Learner queries the same name against two different servers and explains any difference in the answers",
+  "Learner proves whether a failure is DNS by connecting to the address directly",
+  "Learner explains why a hosts-file line overrides DNS and where each OS keeps that file",
+]
+
+[[references]]
+title = "RFC 1034: Domain names, concepts and facilities"
+url = "https://www.rfc-editor.org/rfc/rfc1034"
+
+[[references]]
+title = "RFC 1035: Domain names, implementation and specification"
+url = "https://www.rfc-editor.org/rfc/rfc1035"
+
+[[references]]
+title = "RFC 2308: Negative caching of DNS queries"
+url = "https://www.rfc-editor.org/rfc/rfc2308"
+
+[[references]]
+title = "nslookup (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/nslookup"
+
+[[references]]
+title = "Resolve-DnsName (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/dnsclient/resolve-dnsname"
+
+[[references]]
+title = "Get-DnsClientCache (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/dnsclient/get-dnsclientcache"
+
+[[references]]
+title = "Clear-DnsClientCache (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/dnsclient/clear-dnsclientcache"
+
+[[references]]
+title = "Get-DnsClientServerAddress (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/dnsclient/get-dnsclientserveraddress"
+
+[[references]]
+title = "Set-DnsClientServerAddress (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/dnsclient/set-dnsclientserveraddress"
+
+[[references]]
+title = "ipconfig (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/ipconfig"
+
+[[references]]
+title = "resolvectl(1) manual page"
+url = "https://man7.org/linux/man-pages/man1/resolvectl.1.html"
+
+[[references]]
+title = "getent(1) manual page"
+url = "https://man7.org/linux/man-pages/man1/getent.1.html"
+
+[[references]]
+title = "hosts(5) manual page"
+url = "https://man7.org/linux/man-pages/man5/hosts.5.html"
+
+[[references]]
+title = "nsswitch.conf(5) manual page"
+url = "https://man7.org/linux/man-pages/man5/nsswitch.conf.5.html"
+
+[[references]]
+title = "resolv.conf(5) manual page"
+url = "https://man7.org/linux/man-pages/man5/resolv.conf.5.html"
+
+[[references]]
+title = "IANA root servers"
+url = "https://www.iana.org/domains/root/servers"

@@ -1,0 +1,1643 @@
+//! The WinLab window, drawn with DVUI on its Direct3D 11 backend (decision record 0002).
+//!
+//! One window: a lesson list with search beside the reader, a notes box and progress buttons
+//! under it, a Practice menu that opens real shells (the separate native terminal window) and
+//! lab scenarios (a floating panel; each step runs on a worker thread, so the window never
+//! freezes). Lesson text is rendered by `md_view.zig` straight from the Markdown tree.
+//!
+//! Everything here runs on the UI thread except `labWorker`, which only calls the `LabEngine`
+//! and then wakes the loop.
+const std = @import("std");
+const winlab = @import("winlab");
+const dvui = @import("dvui");
+const Dx11 = @import("dx11-backend");
+const win32 = Dx11.win32;
+const md_view = @import("md_view.zig");
+const terminal_win = @import("terminal_win.zig");
+
+// ---------------------------------------------------------------------------------------------
+// Types shared with main.zig
+// ---------------------------------------------------------------------------------------------
+
+/// One selectable lesson. All memory is borrowed and must outlive `run`.
+pub const Page = struct {
+    /// Stable lesson id (key for progress); empty for ad-hoc files.
+    id: []const u8 = "",
+    title: []const u8,
+    /// Searched along with the title; may be empty.
+    summary: []const u8 = "",
+    /// Raw Markdown, searched too.
+    body: []const u8 = "",
+    root: *winlab.md.Node,
+    /// The parsed document, for the plain-text view and "copy as text". Null when not kept.
+    doc: ?*const winlab.md.Document = null,
+};
+
+/// Progress tracking hooks. `save` persists `progress` and returns false on failure.
+pub const Tracking = struct {
+    progress: *winlab.progress.Progress,
+    save_ctx: ?*anyopaque,
+    save: *const fn (ctx: ?*anyopaque, p: *const winlab.progress.Progress) bool,
+};
+
+/// A shell the learner can open from a lesson.
+pub const ShellChoice = struct {
+    /// Menu and title text, for example "Command Prompt".
+    name: []const u8,
+    /// Command line, for example "cmd.exe" or "powershell.exe -NoLogo".
+    command: []const u8,
+};
+
+pub const Op = enum { start, check, reset, end };
+
+/// What one lab step reported. Fixed buffer: it crosses a thread boundary without allocation.
+pub const Outcome = struct {
+    ok: bool,
+    /// For `check`: the machine is in the expected state.
+    passed: bool = false,
+    message: [240]u8 = undefined,
+    len: usize = 0,
+
+    pub fn make(ok: bool, passed: bool, msg: []const u8) Outcome {
+        var o: Outcome = .{ .ok = ok, .passed = passed };
+        o.len = @min(msg.len, o.message.len);
+        @memcpy(o.message[0..o.len], msg[0..o.len]);
+        return o;
+    }
+    pub fn text(self: *const Outcome) []const u8 {
+        return self.message[0..self.len];
+    }
+};
+
+/// Implemented by main.zig. `run` blocks and is called on a worker thread; `fixed` is called on the
+/// UI thread after a passing check (to record it in the learner's progress).
+pub const LabEngine = struct {
+    ctx: *anyopaque,
+    run: *const fn (ctx: *anyopaque, lab_index: usize, op: Op) Outcome,
+    fixed: *const fn (ctx: *anyopaque, lab_index: usize) void,
+};
+
+pub const Lab = struct {
+    /// Id of the lesson this lab belongs to.
+    lesson: []const u8,
+    id: []const u8,
+    title: []const u8,
+    symptom: []const u8,
+    hints: []const []const u8,
+    /// A scripting lab: the text is a task, and the learner writes a script at `script_path`.
+    task: bool = false,
+    script_path: []const u8 = "",
+};
+
+pub const Options = struct {
+    io: std.Io,
+    /// Labs offered by the Practice menu (each belongs to a lesson).
+    labs: []const Lab = &.{},
+    lab_engine: ?LabEngine = null,
+    /// Quizzes (one per lesson at most); each attempt draws a subset of its bank.
+    quizzes: []const winlab.quiz.Quiz = &.{},
+    /// If set and no lab can run, shown when a lab is requested (for example "no training VM registered").
+    lab_note: []const u8 = "",
+    /// Shells offered by the Practice menu; empty hides the entry.
+    shells: []const ShellChoice = &.{},
+    /// Directory new shells start in (for example the user profile).
+    start_dir: ?[]const u8 = null,
+    /// Percent, 100..300 (validated by settings).
+    text_scale: u32 = 100,
+    /// When set, the window shows lesson status, a progress summary and a notes box.
+    tracking: ?Tracking = null,
+    dark: bool = false,
+    /// Where Segoe UI and Consolas live (`%SystemRoot%\Fonts`). Empty: DVUI's bundled font.
+    fonts_dir: []const u8 = "",
+};
+
+/// True when `theme` resolves to dark. `.system` follows the user's app-mode setting.
+pub fn isDark(theme: winlab.settings.Theme) bool {
+    return switch (theme) {
+        .light => false,
+        .dark => true,
+        .system => (Dx11.preferredColorScheme(undefined) orelse .light) == .dark,
+    };
+}
+
+// ---------------------------------------------------------------------------------------------
+// State
+// ---------------------------------------------------------------------------------------------
+
+const search_max = 200;
+const class_name = win32.L("WinLabWindow");
+const reader_width: f32 = 820;
+const debug_waits = false;
+
+const LabUi = struct {
+    open: bool = false,
+    index: usize = 0,
+    hints_shown: usize = 0,
+    running: bool = false,
+    busy: std.atomic.Value(bool) = .init(false),
+    done: std.atomic.Value(bool) = .init(false),
+    /// Worker -> UI: valid once `done` is set.
+    op: Op = .start,
+    outcome: Outcome = Outcome.make(false, false, ""),
+    status: [200]u8 = undefined,
+    status_len: usize = 0,
+    log: std.ArrayList(u8) = .empty,
+    scroll: dvui.ScrollInfo = .{},
+    scroll_to_end: bool = false,
+    /// The learner asked to close while the VM runs; ask whether to stop it.
+    confirm_close: bool = false,
+    close_after: bool = false,
+    /// The close request was for the lab panel only, not the whole app.
+    close_lab_only: bool = false,
+};
+
+const App = struct {
+    gpa: std.mem.Allocator,
+    win: *dvui.Window,
+    hwnd: ?win32.HWND,
+    o: Options,
+    pages: []const Page,
+    docs: []winlab.search.Doc,
+    fonts: []const dvui.Font.Source,
+    dark: bool,
+
+    current: usize = 0,
+    /// Show the lesson as one block of plain text, so a selection can span paragraphs.
+    text_view: bool = false,
+    plain: ?[]u8 = null,
+    plain_page: usize = std.math.maxInt(usize),
+    visible: std.ArrayList(usize) = .empty,
+    search_buf: [search_max + 1]u8 = @splat(0),
+    last_query: [search_max + 1]u8 = @splat(0),
+    focus_search: bool = false,
+    /// Row to move keyboard focus to on the next frame (after Up/Down in the list).
+    focus_row: ?usize = null,
+
+    reader_scroll: dvui.ScrollInfo = .{},
+    view: md_view.View = .{},
+
+    notes_buf: [winlab.progress.max_notes_bytes + 1]u8 = @splat(0),
+    notes_for: usize = std.math.maxInt(usize),
+    notes_focused: bool = false,
+
+    pending_url: ?[]const u8 = null,
+    show_about: bool = false,
+    show_keys: bool = false,
+    quit: bool = false,
+    split: f32 = 0.27,
+    notes_split: f32 = 0.8,
+    groups: [max_groups]GroupInfo = undefined,
+    group_count: usize = 0,
+    collapsed: [max_groups]bool = @splat(false),
+    lab: LabUi = .{},
+    qz: QuizUi = .{},
+    /// Frame-local message for a modal that needs only text.
+    info: ?[]const u8 = null,
+};
+
+var app_storage: App = undefined;
+
+// ---------------------------------------------------------------------------------------------
+// Entry point
+// ---------------------------------------------------------------------------------------------
+
+pub const Error = error{ WindowClass, OutOfMemory } || dvui.Backend.GenericError || std.Io.File.OpenError;
+
+/// Shows `pages` and runs the message loop until the window closes.
+pub fn run(gpa: std.mem.Allocator, title: [:0]const u8, pages: []const Page, o: Options) !void {
+    std.debug.assert(pages.len > 0);
+    dvui.io = o.io;
+    freeOwnConsole();
+
+    var fonts: std.ArrayList(dvui.Font.Source) = .empty;
+    defer fonts.deinit(gpa);
+    loadWindowsFonts(gpa, o, &fonts);
+
+    Dx11.RegisterClass(class_name, .{}) catch return error.WindowClass;
+    var window_state: Dx11.WindowState = undefined;
+    const backend = try Dx11.initWindow(&window_state, .{
+        .registered_class = class_name,
+        .dvui_gpa = gpa,
+        .allocator = gpa,
+        .size = .{ .w = 1280, .h = 820 },
+        .min_size = .{ .w = 640, .h = 420 },
+        .vsync = true,
+        .title = title,
+        .dvui_window_init_options = .{
+            .theme = makeTheme(o.dark, fonts.items),
+            // Ctrl+= / Ctrl+- / Ctrl+0 scale the whole UI.
+            .keybinds_zoom = true,
+        },
+    });
+    defer backend.deinit();
+    const win = backend.getWindow();
+    win.content_scale = @as(f32, @floatFromInt(o.text_scale)) / 100.0;
+
+    const docs = try gpa.alloc(winlab.search.Doc, pages.len);
+    defer gpa.free(docs);
+    for (pages, docs) |p, *d| d.* = .{ .title = p.title, .summary = p.summary, .body = p.body };
+
+    const a = &app_storage;
+    a.* = .{ .gpa = gpa, .win = win, .hwnd = Dx11.hwndFromContext(backend), .o = o, .pages = pages, .docs = docs, .fonts = fonts.items, .dark = o.dark };
+    defer a.visible.deinit(gpa);
+    defer if (a.plain) |p| gpa.free(p);
+    defer a.lab.log.deinit(gpa);
+    buildGroups(a);
+    rebuildList(a);
+    // Open on the first lesson in the list, not the first in directory order.
+    if (a.visible.items.len > 0) a.current = a.visible.items[0];
+    loadNotes(a);
+
+    while (!a.quit) switch (Dx11.serviceMessageQueue()) {
+        .queue_empty => {
+            const nstime = win.beginWait(backend.hasEvent());
+            try win.begin(nstime);
+
+            frame(a);
+
+            // Window close button. A lab step in flight, or a running lab VM, needs an answer first.
+            for (dvui.events()) |*e| {
+                if (!dvui.eventMatchSimple(e, win.data())) continue;
+                if ((e.evt == .window and e.evt.window.action == .close) or (e.evt == .app and e.evt.app.action == .quit)) {
+                    e.handle(@src(), win.data());
+                    requestQuit(a);
+                }
+            }
+
+            const end_micros = try win.end(.{});
+            backend.setCursor(win.cursorRequested());
+
+            // Sleep until an event arrives or DVUI needs another frame, instead of redrawing at vsync forever.
+            const wait = win.waitTime(end_micros);
+            if (debug_waits) std.debug.print("wait {?d} -> {d} win {d}x{d} px {d}x{d}\n", .{ end_micros, wait, win.data().rect.w, win.data().rect.h, backend.pixelSize().w, backend.pixelSize().h });
+            if (wait > 0) {
+                const ms: u32 = if (wait == std.math.maxInt(u32)) win32.INFINITE else @max(1, wait / 1000);
+                _ = win32.MsgWaitForMultipleObjects(0, null, win32.FALSE, ms, win32.QS_ALLINPUT);
+            }
+        },
+        .quit => break,
+    };
+    commitNotes(a);
+}
+
+/// Started by double-click, the console window would sit behind the GUI; drop it when we own it.
+fn freeOwnConsole() void {
+    var pids: [2]u32 = undefined;
+    if (win32.GetConsoleProcessList(&pids, pids.len) == 1) _ = win32.FreeConsole();
+}
+
+fn requestQuit(a: *App) void {
+    if (a.lab.busy.load(.acquire)) {
+        a.info = "A lab step is still running. Wait for it to finish, then close WinLab.";
+        return;
+    }
+    if (a.lab.running) {
+        a.lab.confirm_close = true;
+        a.lab.close_after = false;
+        return;
+    }
+    a.quit = true;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Theme and fonts
+// ---------------------------------------------------------------------------------------------
+
+fn readFont(gpa: std.mem.Allocator, o: Options, file: []const u8) ?[]const u8 {
+    const path = std.fs.path.join(gpa, &.{ o.fonts_dir, file }) catch return null;
+    defer gpa.free(path);
+    return std.Io.Dir.cwd().readFileAlloc(o.io, path, gpa, .limited(32 * 1024 * 1024)) catch null;
+}
+
+/// Segoe UI and Consolas ship with Windows. Loading them (instead of DVUI's bundled Vera) makes
+/// text look like the rest of the system and covers more characters. Any missing file just falls
+/// back to the bundled font.
+fn loadWindowsFonts(gpa: std.mem.Allocator, o: Options, out: *std.ArrayList(dvui.Font.Source)) void {
+    if (o.fonts_dir.len == 0) return;
+    const Spec = struct { family: []const u8, file: []const u8, weight: dvui.Font.Weight, style: dvui.Font.Style };
+    const specs = [_]Spec{
+        .{ .family = "Segoe UI", .file = "segoeui.ttf", .weight = .normal, .style = .normal },
+        .{ .family = "Segoe UI", .file = "segoeuib.ttf", .weight = .bold, .style = .normal },
+        .{ .family = "Segoe UI", .file = "segoeuii.ttf", .weight = .normal, .style = .italic },
+        .{ .family = "Segoe UI", .file = "segoeuiz.ttf", .weight = .bold, .style = .italic },
+        .{ .family = "Consolas", .file = "consola.ttf", .weight = .normal, .style = .normal },
+        .{ .family = "Consolas", .file = "consolab.ttf", .weight = .bold, .style = .normal },
+        .{ .family = "Consolas", .file = "consolai.ttf", .weight = .normal, .style = .italic },
+        .{ .family = "Consolas", .file = "consolaz.ttf", .weight = .bold, .style = .italic },
+    };
+    // Both families or neither: a half-loaded set would mix fonts.
+    var loaded: std.ArrayList(dvui.Font.Source) = .empty;
+    defer loaded.deinit(gpa);
+    for (specs) |s| {
+        const bytes = readFont(gpa, o, s.file) orelse {
+            for (loaded.items) |l| gpa.free(l.bytes);
+            return;
+        };
+        loaded.append(gpa, .{ .family = dvui.Font.array(s.family), .weight = s.weight, .style = s.style, .bytes = bytes, .allocator = gpa }) catch {
+            gpa.free(bytes);
+            return;
+        };
+    }
+    out.appendSlice(gpa, loaded.items) catch {};
+}
+
+fn makeTheme(dark: bool, fonts: []const dvui.Font.Source) dvui.Theme {
+    var t = if (dark) dvui.Theme.builtin.adwaita_dark else dvui.Theme.builtin.adwaita_light;
+    if (fonts.len > 0) {
+        const size: f32 = 10.5;
+        t.font_body = dvui.Font.find(.{ .family = "Segoe UI", .size = size, .line_height_factor = 1.3 });
+        t.font_heading = dvui.Font.find(.{ .family = "Segoe UI", .size = size, .weight = .bold });
+        t.font_title = dvui.Font.find(.{ .family = "Segoe UI", .size = size * 1.4, .weight = .bold });
+        t.font_mono = dvui.Font.find(.{ .family = "Consolas", .size = size, .line_height_factor = 1.25 });
+        t.embedded_fonts = fonts;
+    }
+    return t;
+}
+
+fn setTheme(a: *App, dark: bool) void {
+    a.dark = dark;
+    a.win.themeSet(makeTheme(dark, a.fonts));
+}
+
+// ---------------------------------------------------------------------------------------------
+// Lessons: list, search, selection
+// ---------------------------------------------------------------------------------------------
+
+fn searchText(a: *const App) []const u8 {
+    return std.mem.sliceTo(&a.search_buf, 0);
+}
+
+/// Rebuilds the visible lesson list. With a search: matching lessons, best first (flat). Without:
+/// every lesson grouped by area in course order, leaving out the areas the learner collapsed.
+fn rebuildList(a: *App) void {
+    @memcpy(&a.last_query, &a.search_buf);
+    if (searchText(a).len > 0) {
+        winlab.search.search(a.gpa, a.docs, searchText(a), &a.visible) catch return;
+        return;
+    }
+    a.visible.clearRetainingCapacity();
+    for (0..a.group_count) |g| {
+        if (!a.collapsed[g]) appendGroup(a, g);
+    }
+}
+
+fn statusOf(a: *const App, i: usize) winlab.progress.Status {
+    const t = a.o.tracking orelse return .not_started;
+    return t.progress.get(a.pages[i].id).status;
+}
+
+fn selectPage(a: *App, index: usize) void {
+    if (index >= a.pages.len or index == a.current) return;
+    commitNotes(a);
+    a.current = index;
+    a.reader_scroll.scrollToOffset(.vertical, 0);
+    loadNotes(a);
+    dvui.refresh(null, @src(), null);
+}
+
+fn nextStatus(s: winlab.progress.Status) winlab.progress.Status {
+    return switch (s) {
+        .not_started => .in_progress,
+        .in_progress => .completed,
+        .completed => .not_started,
+    };
+}
+
+fn setStatus(a: *App, status: winlab.progress.Status) void {
+    const t = a.o.tracking orelse return;
+    const id = a.pages[a.current].id;
+    t.progress.setStatus(id, status) catch {
+        a.info = "The status could not be stored.";
+        return;
+    };
+    if (!t.save(t.save_ctx, t.progress)) a.info = "Your progress could not be saved to disk.";
+}
+
+fn loadNotes(a: *App) void {
+    a.notes_for = a.current;
+    @memset(&a.notes_buf, 0);
+    const t = a.o.tracking orelse return;
+    const notes = t.progress.get(a.pages[a.current].id).notes;
+    const n = @min(notes.len, a.notes_buf.len - 1);
+    @memcpy(a.notes_buf[0..n], notes[0..n]);
+}
+
+/// Stores the notes box into the progress and saves if anything changed.
+fn commitNotes(a: *App) void {
+    const t = a.o.tracking orelse return;
+    if (a.notes_for >= a.pages.len) return;
+    const id = a.pages[a.notes_for].id;
+    const text = std.mem.sliceTo(&a.notes_buf, 0);
+    if (std.mem.eql(u8, text, t.progress.get(id).notes)) return;
+    t.progress.setNotes(id, text) catch {
+        a.info = "Your notes could not be stored.";
+        return;
+    };
+    if (!t.save(t.save_ctx, t.progress)) a.info = "Your notes could not be saved to disk.";
+}
+
+// ---------------------------------------------------------------------------------------------
+// Frame
+// ---------------------------------------------------------------------------------------------
+
+fn frame(a: *App) void {
+    pollLab(a);
+
+    var root = dvui.box(@src(), .{ .dir = .vertical }, .{ .expand = .both, .background = true, .style = .window });
+    defer root.deinit();
+
+    menuBar(a);
+
+    if (a.pages.len == 1) {
+        content(a); // a single file (winlab view): no lesson list
+    } else {
+        var paned = dvui.paned(@src(), .{ .direction = .horizontal, .collapsed_size = 560, .split_ratio = &a.split, .handle_size = 6 }, .{ .expand = .both });
+        defer paned.deinit();
+        if (paned.showFirst()) sidebar(a);
+        if (paned.showSecond()) content(a);
+    }
+
+    dialogs(a);
+    globalKeys(a);
+}
+
+fn menuBar(a: *App) void {
+    var m = dvui.menu(@src(), .horizontal, .{ .expand = .horizontal, .background = true, .style = .window });
+    defer m.deinit();
+
+    if (dvui.menuItemLabel(@src(), "Lesson", .{ .submenu = true }, .{})) |r| {
+        var fw = dvui.floatingMenu(@src(), .{ .from = r }, .{});
+        defer fw.deinit();
+        if (a.o.tracking != null) {
+            for ([_]winlab.progress.Status{ .not_started, .in_progress, .completed }, 0..) |s, i| {
+                var buf: [64]u8 = undefined;
+                const label = std.fmt.bufPrint(&buf, "Mark as {s}", .{s.label()}) catch "Mark";
+                if (dvui.menuItemLabel(@src(), label, .{}, .{ .expand = .horizontal, .id_extra = i }) != null) {
+                    setStatus(a, s);
+                    m.close();
+                }
+            }
+            _ = dvui.separator(@src(), .{ .expand = .horizontal });
+        }
+        if (dvui.menuItemLabel(@src(), "Previous lesson     Ctrl+PgUp", .{}, .{ .expand = .horizontal }) != null) {
+            stepLesson(a, -1);
+            m.close();
+        }
+        if (dvui.menuItemLabel(@src(), "Next lesson     Ctrl+PgDn", .{}, .{ .expand = .horizontal }) != null) {
+            stepLesson(a, 1);
+            m.close();
+        }
+        if (dvui.menuItemLabel(@src(), "Copy whole lesson (plain text)", .{}, .{ .expand = .horizontal }) != null) {
+            if (plainText(a)) |t| dvui.clipboardTextSet(t);
+            m.close();
+        }
+        if (dvui.menuItemLabel(@src(), "Copy whole lesson (Markdown)", .{}, .{ .expand = .horizontal }) != null) {
+            dvui.clipboardTextSet(a.pages[a.current].body);
+            m.close();
+        }
+        if (dvui.menuItemLabel(@src(), "Search lessons     Ctrl+F", .{}, .{ .expand = .horizontal }) != null) {
+            a.focus_search = true;
+            m.close();
+        }
+        _ = dvui.separator(@src(), .{ .expand = .horizontal });
+        if (dvui.menuItemLabel(@src(), "Exit", .{}, .{ .expand = .horizontal }) != null) {
+            m.close();
+            requestQuit(a);
+        }
+    }
+
+    if (a.o.shells.len > 0 or a.o.labs.len > 0 or a.o.lab_note.len > 0) practiceMenu(a, m);
+
+    if (dvui.menuItemLabel(@src(), "View", .{ .submenu = true }, .{})) |r| {
+        var fw = dvui.floatingMenu(@src(), .{ .from = r }, .{});
+        defer fw.deinit();
+        if (dvui.menuItemLabel(@src(), "Larger text     Ctrl+=", .{}, .{ .expand = .horizontal }) != null) a.win.content_scale += 0.1;
+        if (dvui.menuItemLabel(@src(), "Smaller text     Ctrl+-", .{}, .{ .expand = .horizontal }) != null) a.win.content_scale = @max(0.5, a.win.content_scale - 0.1);
+        if (dvui.menuItemLabel(@src(), "Reset text size", .{}, .{ .expand = .horizontal }) != null) a.win.content_scale = @as(f32, @floatFromInt(a.o.text_scale)) / 100.0;
+        if (dvui.menuItemLabel(@src(), if (a.text_view) "Formatted view" else "Plain-text view (select across paragraphs)", .{}, .{ .expand = .horizontal }) != null) {
+            a.text_view = !a.text_view;
+            m.close();
+        }
+        _ = dvui.separator(@src(), .{ .expand = .horizontal });
+        if (dvui.menuItemLabel(@src(), if (a.dark) "Light theme" else "Dark theme", .{}, .{ .expand = .horizontal }) != null) {
+            setTheme(a, !a.dark);
+            m.close();
+        }
+    }
+
+    if (dvui.menuItemLabel(@src(), "Help", .{ .submenu = true }, .{})) |r| {
+        var fw = dvui.floatingMenu(@src(), .{ .from = r }, .{});
+        defer fw.deinit();
+        if (dvui.menuItemLabel(@src(), "Keyboard shortcuts", .{}, .{ .expand = .horizontal }) != null) {
+            a.show_keys = true;
+            m.close();
+        }
+        if (dvui.menuItemLabel(@src(), "About WinLab", .{}, .{ .expand = .horizontal }) != null) {
+            a.show_about = true;
+            m.close();
+        }
+    }
+}
+
+/// Real shells and the labs of the current lesson.
+fn practiceMenu(a: *App, m: *dvui.MenuWidget) void {
+    const r = dvui.menuItemLabel(@src(), "Practice", .{ .submenu = true }, .{}) orelse return;
+    var fw = dvui.floatingMenu(@src(), .{ .from = r }, .{});
+    defer fw.deinit();
+
+    for (a.o.shells, 0..) |sh, i| {
+        var buf: [96]u8 = undefined;
+        const label = std.fmt.bufPrint(&buf, "Open {s}", .{sh.name}) catch sh.name;
+        if (dvui.menuItemLabel(@src(), label, .{}, .{ .expand = .horizontal, .id_extra = i }) != null) {
+            openShell(a, sh);
+            m.close();
+        }
+    }
+    if (a.o.shells.len > 0) _ = dvui.separator(@src(), .{ .expand = .horizontal });
+
+    var any = false;
+    const lesson = a.pages[a.current].id;
+    for (a.o.labs, 0..) |l, i| {
+        if (!std.mem.eql(u8, l.lesson, lesson)) continue;
+        any = true;
+        var buf: [300]u8 = undefined;
+        const label = std.fmt.bufPrint(&buf, "Lab: {s}", .{l.title}) catch l.title;
+        if (dvui.menuItemLabel(@src(), label, .{}, .{ .expand = .horizontal, .id_extra = 1000 + i }) != null) {
+            openLab(a, i);
+            m.close();
+        }
+    }
+    if (!any) {
+        dvui.labelNoFmt(@src(), "No lab for this lesson yet", .{}, .{ .padding = .{ .x = 8, .y = 4, .w = 8, .h = 4 }, .color_text = .{ .color = dvui.themeGet().text.opacity(0.6) } });
+    }
+}
+
+fn stepLesson(a: *App, delta: isize) void {
+    // Move within the visible (searched) list when the current lesson is in it, else within all lessons.
+    const vis = a.visible.items;
+    for (vis, 0..) |p, row| {
+        if (p != a.current) continue;
+        const target: isize = @as(isize, @intCast(row)) + delta;
+        if (target < 0 or target >= vis.len) return;
+        selectPage(a, vis[@intCast(target)]);
+        a.focus_row = null;
+        return;
+    }
+    const target: isize = @as(isize, @intCast(a.current)) + delta;
+    if (target < 0 or target >= a.pages.len) return;
+    selectPage(a, @intCast(target));
+}
+
+fn openShell(a: *App, sh: ShellChoice) void {
+    terminal_win.open(a.gpa, a.hwnd, .{
+        .command = sh.command,
+        .shell_name = sh.name,
+        .lesson_title = a.pages[a.current].title,
+        .start_dir = a.o.start_dir,
+        .text_scale = @intFromFloat(@round(a.win.content_scale * 100.0)),
+        .dark = a.dark,
+    }) catch {
+        a.info = "The terminal window could not be opened.";
+    };
+}
+
+// ---------------------------------------------------------------------------------------------
+// Sidebar
+// ---------------------------------------------------------------------------------------------
+
+fn sidebar(a: *App) void {
+    var col = dvui.box(@src(), .{}, .{ .expand = .both, .background = true, .style = .window, .padding = .{ .x = 10, .y = 10, .w = 6, .h = 6 } });
+    defer col.deinit();
+
+    dvui.labelNoFmt(@src(), "WinLab", .{}, .{ .font = dvui.Font.theme(.title) });
+    if (a.o.tracking != null) {
+        var done: usize = 0;
+        for (a.pages, 0..) |_, i| {
+            if (statusOf(a, i) == .completed) done += 1;
+        }
+        dvui.label(@src(), "{d} of {d} lessons completed", .{ done, a.pages.len }, .{ .color_text = .{ .color = dvui.themeGet().text.opacity(0.7) } });
+        dvui.progress(@src(), .{ .percent = @as(f32, @floatFromInt(done)) / @as(f32, @floatFromInt(a.pages.len)) }, .{ .expand = .horizontal, .margin = .{ .y = 4, .h = 8 } });
+    } else {
+        _ = dvui.spacer(@src(), .{ .min_size_content = .{ .h = 8 } });
+    }
+
+    if (a.pages.len > 1) {
+        var te = dvui.textEntry(@src(), .{ .text = .{ .buffer = &a.search_buf }, .placeholder = "Search lessons (Ctrl+F)" }, .{ .expand = .horizontal, .margin = .{ .h = 8 } });
+        if (a.focus_search) {
+            a.focus_search = false;
+            dvui.focusWidget(te.data().id, null, null);
+            te.textLayout.selection.selectAll();
+        }
+        const focused = te.data().id == dvui.focusedWidgetId();
+        te.deinit();
+        if (!std.mem.eql(u8, &a.last_query, &a.search_buf)) rebuildList(a);
+        // Escape in the search box clears it (and the list).
+        if (focused) for (dvui.events()) |*e| {
+            if (e.handled or e.evt != .key) continue;
+            if (e.evt.key.action == .down and e.evt.key.code == .escape and a.search_buf[0] != 0) {
+                @memset(&a.search_buf, 0);
+                rebuildList(a);
+                e.handle(@src(), te.data());
+            }
+        };
+    }
+
+    var scroll = dvui.scrollArea(@src(), .{}, .{ .expand = .both, .background = false });
+    defer scroll.deinit();
+
+    if (a.visible.items.len == 0) {
+        dvui.labelNoFmt(@src(), "No matching lessons", .{}, .{ .padding = .all(8), .color_text = .{ .color = dvui.themeGet().text.opacity(0.7) } });
+    }
+    if (searchText(a).len > 0) {
+        dvui.label(@src(), "{d} matching", .{a.visible.items.len}, .{ .padding = .{ .x = 4, .h = 4 }, .color_text = .{ .color = dvui.themeGet().text.opacity(0.7) } });
+        for (a.visible.items, 0..) |page_index, row| lessonRow(a, page_index, row);
+        return;
+    }
+    // Grouped by area. A collapsed area has a header and no rows (rebuildList left them out).
+    var row: usize = 0;
+    for (0..a.group_count) |g| {
+        groupHeader(a, g);
+        if (a.collapsed[g]) continue;
+        for (a.visible.items) |page_index| {
+            if (groupOf(a, page_index) != g) continue;
+            lessonRow(a, page_index, row);
+            row += 1;
+        }
+    }
+}
+
+fn groupHeader(a: *App, g: usize) void {
+    var total: usize = 0;
+    var done: usize = 0;
+    for (a.pages, 0..) |_, i| {
+        if (groupOf(a, i) != g) continue;
+        total += 1;
+        if (statusOf(a, i) == .completed) done += 1;
+    }
+    var bw: dvui.ButtonWidget = undefined;
+    bw.init(@src(), .{}, .{ .expand = .horizontal, .id_extra = g, .background = false, .padding = .{ .x = 4, .y = 8, .w = 4, .h = 4 }, .margin = .{ .w = 6 } });
+    bw.processEvents();
+    bw.drawBackground();
+    const clicked = bw.clicked();
+    {
+        var hb = dvui.box(@src(), .{ .dir = .horizontal }, .{ .expand = .horizontal, .id_extra = g });
+        defer hb.deinit();
+        dvui.icon(@src(), "area", if (a.collapsed[g]) dvui.entypo.triangle_right else dvui.entypo.triangle_down, .{}, .{ .min_size_content = .{ .w = 12, .h = 12 }, .gravity_y = 0.5, .margin = .{ .w = 6 }, .id_extra = g });
+        dvui.labelNoFmt(@src(), a.groups[g].title, .{}, .{ .font = dvui.Font.theme(.heading), .expand = .horizontal, .gravity_y = 0.5, .id_extra = g });
+        if (a.o.tracking != null) {
+            dvui.label(@src(), "{d}/{d}", .{ done, total }, .{ .gravity_y = 0.5, .color_text = .{ .color = dvui.themeGet().text.opacity(0.7) }, .id_extra = g });
+        } else {
+            dvui.label(@src(), "{d}", .{total}, .{ .gravity_y = 0.5, .color_text = .{ .color = dvui.themeGet().text.opacity(0.7) }, .id_extra = g });
+        }
+    }
+    bw.drawFocus();
+    bw.deinit();
+    if (clicked) {
+        a.collapsed[g] = !a.collapsed[g];
+        rebuildList(a);
+    }
+}
+
+fn lessonRow(a: *App, page_index: usize, row: usize) void {
+    const selected = page_index == a.current;
+    const theme = dvui.themeGet();
+    var bw: dvui.ButtonWidget = undefined;
+    bw.init(@src(), .{}, .{
+        .expand = .horizontal,
+        .id_extra = page_index,
+        .background = true,
+        .style = if (selected) .highlight else .window,
+        .corners = .all(5),
+        .margin = .{ .y = 1, .h = 1, .w = 6 },
+        .padding = .{ .x = 10, .y = 6, .w = 10, .h = 6 },
+    });
+    bw.processEvents();
+    bw.drawBackground();
+    const clicked = bw.clicked();
+    if (a.focus_row) |fr| if (fr == page_index) {
+        dvui.focusWidget(bw.data().id, null, null);
+        a.focus_row = null;
+    };
+    {
+        var vb = dvui.box(@src(), .{}, .{ .expand = .horizontal, .id_extra = page_index });
+        defer vb.deinit();
+        const text_style = bw.style();
+        dvui.labelNoFmt(@src(), a.pages[page_index].title, .{}, text_style.strip().override(.{ .expand = .horizontal, .id_extra = page_index, .font = dvui.Font.theme(.body).withWeight(if (selected) .bold else .normal) }));
+        const status = statusOf(a, page_index);
+        if (status != .not_started) {
+            // Words, not just colour, so the state reads without seeing it.
+            const tint: dvui.Color = if (selected) theme.highlight.text orelse theme.text else if (status == .completed) .{ .r = 0x2e, .g = 0x9e, .b = 0x5b } else theme.focus;
+            dvui.labelNoFmt(@src(), status.label(), .{}, .{ .font = dvui.Font.theme(.body).withSize(dvui.Font.theme(.body).size * 0.85), .color_text = .{ .color = tint }, .id_extra = page_index });
+        }
+    }
+    bw.drawFocus();
+    const focused = bw.focused();
+    if (focused) {
+        // Up/Down walk the list like a native list box; selection follows focus.
+        for (dvui.events()) |*e| {
+            if (e.handled or e.evt != .key or e.evt.key.action == .up) continue;
+            const code = e.evt.key.code;
+            const target: ?usize = switch (code) {
+                .down => if (row + 1 < a.visible.items.len) a.visible.items[row + 1] else null,
+                .up => if (row > 0) a.visible.items[row - 1] else null,
+                else => continue,
+            };
+            e.handle(@src(), bw.data());
+            if (target) |t| {
+                a.focus_row = t;
+                selectPage(a, t);
+            }
+        }
+    }
+    bw.deinit();
+    if (clicked) selectPage(a, page_index);
+}
+
+// ---------------------------------------------------------------------------------------------
+// Content: header, reader, notes
+// ---------------------------------------------------------------------------------------------
+
+fn content(a: *App) void {
+    var col = dvui.box(@src(), .{}, .{ .expand = .both, .background = true, .style = .content });
+    defer col.deinit();
+
+    header(a);
+    if (a.o.tracking == null) {
+        reader(a);
+        return;
+    }
+    // The divider is draggable, so the notes box can be as tall as the learner wants.
+    var split = dvui.paned(@src(), .{ .direction = .vertical, .collapsed_size = 0, .split_ratio = &a.notes_split, .handle_size = 6 }, .{ .expand = .both });
+    defer split.deinit();
+    if (split.showFirst()) reader(a);
+    if (split.showSecond()) notesPane(a);
+}
+
+fn header(a: *App) void {
+    var bar = dvui.box(@src(), .{ .dir = .horizontal }, .{ .expand = .horizontal, .background = true, .style = .window, .padding = .{ .x = 16, .y = 8, .w = 12, .h = 8 } });
+    defer bar.deinit();
+
+    dvui.labelNoFmt(@src(), a.pages[a.current].title, .{}, .{ .font = dvui.Font.theme(.heading).withSize(dvui.Font.theme(.body).size * 1.15), .expand = .horizontal, .gravity_y = 0.5 });
+
+    if (a.o.tracking != null) {
+        var buf: [96]u8 = undefined;
+        const s = statusOf(a, a.current);
+        const label = std.fmt.bufPrint(&buf, "Status: {s}", .{s.label()}) catch "Status";
+        if (dvui.button(@src(), label, .{}, .{ .gravity_y = 0.5 })) setStatus(a, nextStatus(s));
+    }
+    // A quiz button only for a lesson that has a quiz; it shows the best score so far.
+    if (quizFor(a, a.pages[a.current].id)) |qi| {
+        var qbuf: [96]u8 = undefined;
+        const best = if (a.o.tracking) |t| t.progress.get(a.pages[a.current].id) else winlab.progress.Entry{};
+        const label = if (best.quiz_attempts > 0)
+            (std.fmt.bufPrint(&qbuf, "Quiz (best {d}%)", .{best.quiz_best}) catch "Quiz")
+        else
+            "Take the quiz";
+        if (dvui.button(@src(), label, .{}, .{ .gravity_y = 0.5 })) startQuiz(a, qi);
+    }
+    // A lab button only for a lesson that has labs.
+    const lesson = a.pages[a.current].id;
+    var first_lab: ?usize = null;
+    var lab_count: usize = 0;
+    for (a.o.labs, 0..) |l, i| {
+        if (!std.mem.eql(u8, l.lesson, lesson)) continue;
+        if (first_lab == null) first_lab = i;
+        lab_count += 1;
+    }
+    if (first_lab) |fl| {
+        if (lab_count == 1) {
+            if (dvui.button(@src(), "Open lab", .{}, .{ .gravity_y = 0.5, .style = .highlight })) openLab(a, fl);
+        } else {
+            dvui.labelNoFmt(@src(), "Labs: see the Practice menu", .{}, .{ .gravity_y = 0.5, .color_text = .{ .color = dvui.themeGet().text.opacity(0.7) } });
+        }
+    }
+}
+
+fn reader(a: *App) void {
+    var scroll = dvui.scrollArea(@src(), .{ .scroll_info = &a.reader_scroll }, .{ .expand = .both, .background = false });
+    defer scroll.deinit();
+
+    var col = dvui.box(@src(), .{}, .{
+        .expand = .horizontal,
+        .gravity_x = 0.5,
+        .max_size_content = .{ .w = reader_width, .h = std.math.floatMax(f32) },
+        .padding = .{ .x = 28, .y = 14, .w = 28, .h = 28 },
+    });
+    defer col.deinit();
+
+    a.view.clicked = null;
+    a.view.page = a.current;
+    if (a.text_view and plainText(a) != null) {
+        var tl = dvui.textLayout(@src(), .{}, .{ .expand = .horizontal, .background = false, .padding = .all(0), .font = dvui.Font.theme(.mono) });
+        defer tl.deinit();
+        tl.addText(plainText(a).?, .{});
+    } else {
+        md_view.render(a.pages[a.current].root, &a.view);
+    }
+    if (a.view.clicked) |url| a.pending_url = url;
+
+    // Reading order: a clear way to the next lesson at the end of the page.
+    if (a.current + 1 < a.pages.len) {
+        _ = dvui.separator(@src(), .{ .expand = .horizontal, .margin = .{ .y = 16, .h = 12 } });
+        var buf: [300]u8 = undefined;
+        const label = std.fmt.bufPrint(&buf, "Next: {s}", .{a.pages[a.current + 1].title}) catch "Next lesson";
+        if (dvui.button(@src(), label, .{}, .{ .gravity_x = 1.0 })) selectPage(a, a.current + 1);
+    }
+}
+
+fn notesPane(a: *App) void {
+    if (a.notes_for != a.current) loadNotes(a);
+    var box = dvui.box(@src(), .{}, .{ .expand = .horizontal, .background = true, .style = .window, .padding = .{ .x = 16, .y = 8, .w = 16, .h = 10 } });
+    defer box.deinit();
+    dvui.labelNoFmt(@src(), "Notes (saved with your progress)", .{}, .{ .font = dvui.Font.theme(.heading), .margin = .{ .h = 4 } });
+    var te = dvui.textEntry(@src(), .{ .text = .{ .buffer = &a.notes_buf }, .multiline = true, .break_lines = true, .placeholder = "Your notes for this lesson..." }, .{ .expand = .horizontal, .min_size_content = .{ .h = 72 }, .max_size_content = .{ .w = std.math.floatMax(f32), .h = 110 } });
+    const focused = te.data().id == dvui.focusedWidgetId();
+    te.deinit();
+    // Save when the box loses focus (the page change and quit paths save too).
+    if (a.notes_focused and !focused) commitNotes(a);
+    a.notes_focused = focused;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Keys that no widget took
+// ---------------------------------------------------------------------------------------------
+
+fn globalKeys(a: *App) void {
+    for (dvui.events()) |*e| {
+        if (e.handled or e.evt != .key) continue;
+        const k = e.evt.key;
+        if (k.action == .up) continue;
+        const ctrl = k.mod.control();
+        if (ctrl and k.code == .f and k.action == .down) {
+            a.focus_search = true;
+            e.handle(@src(), a.win.data());
+        } else if (ctrl and k.code == .page_down and k.action == .down) {
+            stepLesson(a, 1);
+            e.handle(@src(), a.win.data());
+        } else if (ctrl and k.code == .page_up and k.action == .down) {
+            stepLesson(a, -1);
+            e.handle(@src(), a.win.data());
+        } else if (!ctrl) switch (k.code) {
+            // Nothing focused wants these, so they scroll the lesson.
+            .down => scrollReader(a, .line, 1),
+            .up => scrollReader(a, .line, -1),
+            .page_down => scrollReader(a, .page, 1),
+            .page_up => scrollReader(a, .page, -1),
+            .home => a.reader_scroll.scrollToOffset(.vertical, 0),
+            .end => a.reader_scroll.scrollToFraction(.vertical, 1.0),
+            else => continue,
+        } else continue;
+        e.handle(@src(), a.win.data());
+        dvui.refresh(null, @src(), null);
+    }
+}
+
+fn scrollReader(a: *App, unit: enum { line, page }, dir: f32) void {
+    switch (unit) {
+        .line => a.reader_scroll.scrollByOffset(.vertical, dir * 60),
+        .page => a.reader_scroll.scrollPage(.vertical, dir < 0),
+    }
+}
+
+// ---------------------------------------------------------------------------------------------
+// Dialogs
+// ---------------------------------------------------------------------------------------------
+
+fn dialogs(a: *App) void {
+    if (a.pending_url) |url| linkDialog(a, url);
+    if (a.info) |msg| infoDialog(a, msg);
+    if (a.show_about) aboutDialog(a);
+    if (a.show_keys) keysDialog(a);
+    if (a.lab.open) labWindow(a);
+    if (a.qz.open) quizWindow(a);
+    if (a.lab.confirm_close) closeLabDialog(a);
+}
+
+fn escapePressed() bool {
+    for (dvui.events()) |*e| {
+        if (e.handled or e.evt != .key) continue;
+        if (e.evt.key.action == .down and e.evt.key.code == .escape) {
+            e.handle(@src(), dvui.currentWindow().data());
+            return true;
+        }
+    }
+    return false;
+}
+
+fn linkDialog(a: *App, url: []const u8) void {
+    var open = true;
+    var fw = dvui.floatingWindow(@src(), .{ .modal = true, .open_flag = &open }, .{ .min_size_content = .{ .w = 460 }, .max_size_content = .{ .w = 640, .h = 400 } });
+    defer fw.deinit();
+    _ = dvui.windowHeader(.{ .title = "Open this link?", .open_flag = &open });
+
+    var body = dvui.box(@src(), .{}, .{ .expand = .horizontal, .padding = .all(14) });
+    defer body.deinit();
+    const ok = winlab.links.isLaunchable(url);
+    if (ok) {
+        dvui.labelNoFmt(@src(), "WinLab will open this address in your web browser:", .{}, .{ .margin = .{ .h = 8 } });
+    } else {
+        dvui.labelNoFmt(@src(), "This link type is not opened from lessons:", .{}, .{ .margin = .{ .h = 8 } });
+    }
+    var tl = dvui.textLayout(@src(), .{}, .{ .expand = .horizontal, .background = true, .style = .window, .padding = .all(8), .font = dvui.Font.theme(.mono) });
+    tl.addText(url, .{});
+    tl.deinit();
+
+    var row = dvui.box(@src(), .{ .dir = .horizontal }, .{ .expand = .horizontal, .margin = .{ .y = 12 }, .gravity_x = 1.0 });
+    defer row.deinit();
+    // The safe choice comes first and holds focus, so Enter cancels.
+    if (dvui.button(@src(), if (ok) "Cancel" else "Close", .{}, .{})) open = false;
+    if (dvui.firstFrame(fw.data().id)) dvui.focusWidget(dvui.lastFocusedIdInFrame(), null, null);
+    if (ok and dvui.button(@src(), "Open in browser", .{}, .{ .margin = .{ .x = 8 }, .style = .highlight })) {
+        _ = dvui.openURL(.{ .url = url });
+        open = false;
+    }
+    if (escapePressed()) open = false;
+    if (!open) a.pending_url = null;
+}
+
+fn infoDialog(a: *App, msg: []const u8) void {
+    var open = true;
+    var fw = dvui.floatingWindow(@src(), .{ .modal = true, .open_flag = &open }, .{ .min_size_content = .{ .w = 380 }, .max_size_content = .{ .w = 560, .h = 400 } });
+    defer fw.deinit();
+    _ = dvui.windowHeader(.{ .title = "WinLab", .open_flag = &open });
+    var body = dvui.box(@src(), .{}, .{ .expand = .horizontal, .padding = .all(14) });
+    defer body.deinit();
+    var tl = dvui.textLayout(@src(), .{}, .{ .expand = .horizontal, .background = false });
+    tl.addText(msg, .{});
+    tl.deinit();
+    if (dvui.button(@src(), "OK", .{}, .{ .gravity_x = 1.0, .margin = .{ .y = 12 } }) or escapePressed()) open = false;
+    if (!open) a.info = null;
+}
+
+fn aboutDialog(a: *App) void {
+    var open = true;
+    var fw = dvui.floatingWindow(@src(), .{ .modal = true, .open_flag = &open }, .{ .min_size_content = .{ .w = 380 } });
+    defer fw.deinit();
+    _ = dvui.windowHeader(.{ .title = "About WinLab", .open_flag = &open });
+    var body = dvui.box(@src(), .{}, .{ .expand = .horizontal, .padding = .all(16) });
+    defer body.deinit();
+    dvui.labelNoFmt(@src(), winlab.version.app_name, .{}, .{ .font = dvui.Font.theme(.title) });
+    dvui.label(@src(), "Version {s}", .{winlab.version.app_version}, .{});
+    dvui.labelNoFmt(@src(), "An offline Windows administration course with hands-on labs.", .{}, .{ .margin = .{ .y = 8, .h = 4 } });
+    dvui.label(@src(), "Built with Zig {s} and DVUI.", .{winlab.version.pinned_zig}, .{ .color_text = .{ .color = dvui.themeGet().text.opacity(0.7) } });
+    if (dvui.button(@src(), "Close", .{}, .{ .gravity_x = 1.0, .margin = .{ .y = 12 } }) or escapePressed()) open = false;
+    if (!open) a.show_about = false;
+}
+
+fn keysDialog(a: *App) void {
+    var open = true;
+    var fw = dvui.floatingWindow(@src(), .{ .modal = true, .open_flag = &open }, .{ .min_size_content = .{ .w = 420 } });
+    defer fw.deinit();
+    _ = dvui.windowHeader(.{ .title = "Keyboard shortcuts", .open_flag = &open });
+    var body = dvui.box(@src(), .{}, .{ .expand = .horizontal, .padding = .all(16) });
+    defer body.deinit();
+    const rows = [_][2][]const u8{
+        .{ "Ctrl+F", "Search lessons" },
+        .{ "Esc (in search)", "Clear the search" },
+        .{ "Up / Down (in list)", "Previous / next lesson" },
+        .{ "Ctrl+PgUp / Ctrl+PgDn", "Previous / next lesson" },
+        .{ "Up Down PgUp PgDn Home End", "Scroll the lesson" },
+        .{ "Tab / Shift+Tab", "Move between controls" },
+        .{ "Ctrl+= / Ctrl+- / Ctrl+0", "Larger / smaller / reset text" },
+    };
+    for (rows, 0..) |r, i| {
+        var line = dvui.box(@src(), .{ .dir = .horizontal }, .{ .expand = .horizontal, .id_extra = i });
+        defer line.deinit();
+        dvui.labelNoFmt(@src(), r[0], .{}, .{ .min_size_content = .{ .w = 210 }, .font = dvui.Font.theme(.heading), .id_extra = i });
+        dvui.labelNoFmt(@src(), r[1], .{}, .{ .id_extra = i });
+    }
+    if (dvui.button(@src(), "Close", .{}, .{ .gravity_x = 1.0, .margin = .{ .y = 12 } }) or escapePressed()) open = false;
+    if (!open) a.show_keys = false;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Labs
+// ---------------------------------------------------------------------------------------------
+
+fn setLabStatus(l: *LabUi, text: []const u8) void {
+    l.status_len = @min(text.len, l.status.len);
+    @memcpy(l.status[0..l.status_len], text[0..l.status_len]);
+}
+
+fn labLog(a: *App, line: []const u8) void {
+    a.lab.log.appendSlice(a.gpa, line) catch return;
+    a.lab.log.append(a.gpa, '\n') catch return;
+    a.lab.scroll_to_end = true;
+}
+
+fn openLab(a: *App, index: usize) void {
+    if (a.o.lab_engine == null) {
+        a.info = if (a.o.lab_note.len > 0) a.o.lab_note else "No labs are available.";
+        return;
+    }
+    // Reopening the lab that is already in progress keeps its state.
+    if (a.lab.open and a.lab.index == index) return;
+    if (a.lab.running or a.lab.busy.load(.acquire)) {
+        a.info = "Another lab is in progress. Stop its VM first.";
+        return;
+    }
+    const lab = a.o.labs[index];
+    a.lab.open = true;
+    a.lab.index = index;
+    a.lab.hints_shown = 0;
+    a.lab.log.clearRetainingCapacity();
+    setLabStatus(&a.lab, "Not started. Press Start to boot the lab VM.");
+    labLog(a, if (lab.task) "Press Start. The VM window opens; write your script in it (Notepad is fine), save it where the task says, then press Check." else "Press Start. The VM window opens; fix the problem inside it, then press Check.");
+}
+
+fn labWorker(a: *App, index: usize, op: Op) void {
+    const eng = a.o.lab_engine.?;
+    const out = eng.run(eng.ctx, index, op);
+    a.lab.outcome = out;
+    a.lab.op = op;
+    a.lab.done.store(true, .release);
+    dvui.refresh(a.win, @src(), null);
+}
+
+fn labBegin(a: *App, op: Op) void {
+    if (a.lab.busy.swap(true, .acquire)) return;
+    setLabStatus(&a.lab, switch (op) {
+        .start => "Starting... restoring the broken machine and booting it (this can take a minute or two).",
+        .check => "Checking...",
+        .reset => "Resetting to the starting problem...",
+        .end => "Stopping the VM...",
+    });
+    const t = std.Thread.spawn(.{}, labWorker, .{ a, a.lab.index, op }) catch {
+        a.lab.busy.store(false, .release);
+        setLabStatus(&a.lab, "Could not start a background task.");
+        return;
+    };
+    t.detach();
+}
+
+/// UI thread: take a finished step's result.
+fn pollLab(a: *App) void {
+    const l = &a.lab;
+    if (!l.done.load(.acquire)) return;
+    l.done.store(false, .release);
+    const out = &l.outcome;
+    const lab = a.o.labs[l.index];
+    switch (l.op) {
+        .start => {
+            l.running = out.ok;
+            setLabStatus(l, if (!out.ok) "Could not start." else if (lab.task) "Running. Write your script in the VM window, then press Check." else "Running. Fix the problem in the VM window, then press Check.");
+        },
+        .check => {
+            if (out.ok and out.passed) {
+                setLabStatus(l, "Fixed.");
+                a.o.lab_engine.?.fixed(a.o.lab_engine.?.ctx, l.index);
+            } else if (out.ok) setLabStatus(l, "Not fixed yet.") else setLabStatus(l, "The check could not run.");
+        },
+        .reset => {
+            l.running = false;
+            setLabStatus(l, if (out.ok) "Reset. The VM is stopped at the starting problem. Press Start." else "Reset failed.");
+        },
+        .end => {
+            if (out.ok) l.running = false;
+            setLabStatus(l, if (out.ok) "The VM is stopped." else "Could not stop the VM.");
+        },
+    }
+    if (out.len > 0) labLog(a, out.text());
+    l.busy.store(false, .release);
+    if (l.close_after and l.op == .end and out.ok) {
+        l.close_after = false;
+        a.quit = true;
+    }
+}
+
+fn labWindow(a: *App) void {
+    const l = &a.lab;
+    const lab = a.o.labs[l.index];
+    const busy = l.busy.load(.acquire);
+    var open = true;
+    var fw = dvui.floatingWindow(@src(), .{ .open_flag = &open }, .{ .rect = .{ .x = 120, .y = 90, .w = 720, .h = 620 }, .min_size_content = .{ .w = 480, .h = 380 } });
+    defer fw.deinit();
+    _ = dvui.windowHeader(.{ .title = lab.title, .open_flag = &open });
+
+    var body = dvui.box(@src(), .{}, .{ .expand = .both, .padding = .all(14) });
+    defer body.deinit();
+
+    dvui.labelNoFmt(@src(), if (lab.task) "Task" else "Reported problem", .{}, .{ .font = dvui.Font.theme(.heading) });
+    {
+        var sc = dvui.scrollArea(@src(), .{}, .{ .expand = .horizontal, .min_size_content = .{ .h = 90 }, .max_size_content = .{ .w = std.math.floatMax(f32), .h = 170 }, .background = true, .style = .window, .margin = .{ .y = 4, .h = 10 }, .border = .all(1) });
+        defer sc.deinit();
+        var tl = dvui.textLayout(@src(), .{}, .{ .expand = .horizontal, .background = false, .padding = .all(8) });
+        tl.addText(lab.symptom, .{});
+        tl.deinit();
+    }
+
+    var status_buf: [260]u8 = undefined;
+    const status = std.fmt.bufPrint(&status_buf, "Status: {s}", .{l.status[0..l.status_len]}) catch "Status";
+    {
+        var srow = dvui.box(@src(), .{ .dir = .horizontal }, .{ .expand = .horizontal });
+        defer srow.deinit();
+        if (busy) dvui.spinner(@src(), .{ .min_size_content = .{ .w = 22, .h = 22 }, .gravity_y = 0.5, .margin = .{ .w = 8 } });
+        dvui.labelNoFmt(@src(), status, .{}, .{ .font = dvui.Font.theme(.heading), .gravity_y = 0.5 });
+    }
+
+    {
+        var row = dvui.box(@src(), .{ .dir = .horizontal }, .{ .expand = .horizontal, .margin = .{ .y = 10, .h = 10 } });
+        defer row.deinit();
+        if (labButton(@src(), "Start", !busy and !l.running, .highlight)) labBegin(a, .start);
+        if (labButton(@src(), "Check", !busy and l.running, null)) labBegin(a, .check);
+        if (labButton(@src(), "Hint", l.hints_shown < lab.hints.len, null)) {
+            var buf: [400]u8 = undefined;
+            if (std.fmt.bufPrint(&buf, "Hint {d} of {d}: {s}", .{ l.hints_shown + 1, lab.hints.len, lab.hints[l.hints_shown] })) |s| labLog(a, s) else |_| {}
+            l.hints_shown += 1;
+        }
+        if (labButton(@src(), "Reset", !busy, null)) labBegin(a, .reset);
+        if (labButton(@src(), "Stop VM", !busy and l.running, null)) labBegin(a, .end);
+    }
+
+    dvui.labelNoFmt(@src(), "Progress and hints", .{}, .{ .font = dvui.Font.theme(.heading) });
+    var sc = dvui.scrollArea(@src(), .{ .scroll_info = &l.scroll }, .{ .expand = .both, .background = true, .style = .window, .border = .all(1), .margin = .{ .y = 4 } });
+    defer sc.deinit();
+    var tl = dvui.textLayout(@src(), .{}, .{ .expand = .horizontal, .background = false, .padding = .all(8) });
+    tl.addText(l.log.items, .{});
+    tl.deinit();
+    if (l.scroll_to_end) {
+        l.scroll_to_end = false;
+        l.scroll.scrollToFraction(.vertical, 1.0);
+        dvui.refresh(null, @src(), null);
+    }
+
+    if (!open or escapePressed()) {
+        if (busy) {
+            a.info = "A step is still running. Wait for it to finish, then close this window.";
+        } else if (l.running) {
+            l.confirm_close = true;
+            l.close_after = false;
+            l.close_lab_only = true;
+        } else {
+            l.open = false;
+        }
+    }
+}
+
+fn labButton(src: std.builtin.SourceLocation, label: []const u8, enabled: bool, style: ?dvui.Theme.Style.Name) bool {
+    const opts: dvui.Options = .{ .margin = .{ .w = 8 }, .style = style, .id_extra = @intFromPtr(label.ptr) };
+    if (!enabled) {
+        // A disabled button is drawn grayed and ignores clicks.
+        var bw: dvui.ButtonWidget = undefined;
+        bw.init(src, .{ .grayed = true }, opts);
+        bw.drawBackground();
+        dvui.labelNoFmt(@src(), label, .{ .align_x = 0.5, .align_y = 0.5 }, opts.strip().override(bw.style()).override(.{ .gravity_x = 0.5, .gravity_y = 0.5, .color_text = .{ .color = dvui.themeGet().text.opacity(0.4) } }));
+        bw.deinit();
+        return false;
+    }
+    return dvui.button(src, label, .{}, opts);
+}
+
+/// Closing while the lab VM runs: stop it too, leave it running, or keep working.
+fn closeLabDialog(a: *App) void {
+    const l = &a.lab;
+    var open = true;
+    var fw = dvui.floatingWindow(@src(), .{ .modal = true, .open_flag = &open }, .{ .min_size_content = .{ .w = 420 } });
+    defer fw.deinit();
+    _ = dvui.windowHeader(.{ .title = "The lab VM is still running", .open_flag = &open });
+    var body = dvui.box(@src(), .{}, .{ .expand = .horizontal, .padding = .all(14) });
+    defer body.deinit();
+    dvui.labelNoFmt(@src(), if (l.close_lab_only) "Stop the VM when you close the lab?" else "Stop the VM when you close WinLab?", .{}, .{ .margin = .{ .h = 12 } });
+    var row = dvui.box(@src(), .{ .dir = .horizontal }, .{ .expand = .horizontal, .gravity_x = 1.0 });
+    defer row.deinit();
+    if (dvui.button(@src(), "Keep working", .{}, .{ .margin = .{ .w = 8 } })) open = false;
+    if (dvui.button(@src(), "Leave it running", .{}, .{ .margin = .{ .w = 8 } })) {
+        l.confirm_close = false;
+        if (l.close_lab_only) {
+            l.open = false;
+            l.running = false;
+        } else {
+            a.quit = true;
+        }
+        l.close_lab_only = false;
+        return;
+    }
+    if (dvui.button(@src(), "Stop VM", .{}, .{ .style = .highlight })) {
+        l.confirm_close = false;
+        if (l.close_lab_only) {
+            l.open = false;
+            l.close_lab_only = false;
+            labBegin(a, .end);
+        } else {
+            l.close_after = true;
+            labBegin(a, .end);
+        }
+        return;
+    }
+    if (!open or escapePressed()) {
+        l.confirm_close = false;
+        l.close_lab_only = false;
+    }
+}
+
+// ---------------------------------------------------------------------------------------------
+// Areas (groups of lessons)
+// ---------------------------------------------------------------------------------------------
+
+const max_groups = 16;
+const GroupInfo = struct { key: []const u8, title: []const u8 };
+/// Display order and names of the course areas; an unknown area follows these under its own id.
+const known_groups = [_]GroupInfo{
+    .{ .key = "foundations", .title = "Foundations" },
+    .{ .key = "windows-admin", .title = "Windows administration" },
+    .{ .key = "endpoints", .title = "Endpoints and devices" },
+    .{ .key = "linux", .title = "Linux" },
+    .{ .key = "networking", .title = "Networking" },
+    .{ .key = "security", .title = "Security" },
+    .{ .key = "operations", .title = "Operations" },
+    .{ .key = "hardware", .title = "Hardware" },
+};
+
+/// A lesson's area is the part of its id before the first dot (the course folder it lives in).
+fn areaKey(id: []const u8) []const u8 {
+    return if (std.mem.indexOfScalar(u8, id, '.')) |i| id[0..i] else "";
+}
+
+/// Fills `page_group` / `groups` from the lesson ids, known areas first in course order.
+fn buildGroups(a: *App) void {
+    a.group_count = 0;
+    for (known_groups) |kg| {
+        for (a.pages) |p| {
+            if (std.mem.eql(u8, areaKey(p.id), kg.key)) {
+                a.groups[a.group_count] = kg;
+                a.group_count += 1;
+                break;
+            }
+        }
+    }
+    for (a.pages) |p| {
+        const key = areaKey(p.id);
+        var seen = false;
+        for (a.groups[0..a.group_count]) |g| {
+            if (std.mem.eql(u8, g.key, key)) seen = true;
+        }
+        if (seen or a.group_count == max_groups) continue;
+        a.groups[a.group_count] = .{ .key = key, .title = if (key.len == 0) "Lessons" else key };
+        a.group_count += 1;
+    }
+}
+
+fn groupOf(a: *const App, page_index: usize) usize {
+    const key = areaKey(a.pages[page_index].id);
+    for (a.groups[0..a.group_count], 0..) |g, i| {
+        if (std.mem.eql(u8, g.key, key)) return i;
+    }
+    return a.group_count -| 1;
+}
+
+/// Adds the lessons of group `g`, in course order.
+fn appendGroup(a: *App, g: usize) void {
+    for (a.pages, 0..) |_, i| {
+        if (groupOf(a, i) == g) a.visible.append(a.gpa, i) catch return;
+    }
+}
+
+// ---------------------------------------------------------------------------------------------
+// Quizzes
+// ---------------------------------------------------------------------------------------------
+
+const quiz_lib = winlab.quiz;
+
+const QuizPhase = enum { answering, feedback, done };
+
+const QuizUi = struct {
+    open: bool = false,
+    /// Index into `Options.quizzes`.
+    quiz: usize = 0,
+    /// Bank indices of this attempt's questions, in the order asked.
+    order: [quiz_lib.max_questions]usize = undefined,
+    count: usize = 0,
+    pos: usize = 0,
+    phase: QuizPhase = .answering,
+    /// Display order of the current question's choices (shuffled each time it is shown).
+    perm: [quiz_lib.max_choices]u8 = undefined,
+    picked: [quiz_lib.max_choices]bool = @splat(false),
+    typed: [160]u8 = @splat(0),
+    was_correct: bool = false,
+    correct: usize = 0,
+    missed: [quiz_lib.max_questions]usize = undefined,
+    missed_n: usize = 0,
+    prng: std.Random.DefaultPrng = std.Random.DefaultPrng.init(0),
+    focus_entry: bool = false,
+};
+
+fn quizFor(a: *const App, lesson_id: []const u8) ?usize {
+    for (a.o.quizzes, 0..) |q, i| {
+        if (std.mem.eql(u8, q.lesson, lesson_id)) return i;
+    }
+    return null;
+}
+
+fn startQuiz(a: *App, qi: usize) void {
+    const z = &a.qz;
+    const quiz = &a.o.quizzes[qi];
+    z.quiz = qi;
+    z.open = true;
+    // A fresh draw every attempt; seeded from the frame clock.
+    z.prng = std.Random.DefaultPrng.init(@truncate(@as(u128, @bitCast(a.win.frame_time_ns))));
+    const missed: []const u8 = if (a.o.tracking) |t| t.progress.get(quiz.lesson).quiz_missed else "";
+    z.count = quiz_lib.pick(quiz, missed, z.prng.random(), &z.order);
+    z.pos = 0;
+    z.correct = 0;
+    z.missed_n = 0;
+    z.phase = .answering;
+    startQuestion(a);
+}
+
+fn currentQuestion(a: *const App) quiz_lib.Question {
+    return a.o.quizzes[a.qz.quiz].questions[a.qz.order[a.qz.pos]];
+}
+
+fn startQuestion(a: *App) void {
+    const z = &a.qz;
+    const q = currentQuestion(a);
+    for (0..q.choices.len) |i| z.perm[i] = @intCast(i);
+    z.prng.random().shuffle(u8, z.perm[0..q.choices.len]);
+    z.picked = @splat(false);
+    @memset(&z.typed, 0);
+    z.phase = .answering;
+    z.focus_entry = q.kind == .short;
+}
+
+fn quizReady(a: *const App) bool {
+    const q = currentQuestion(a);
+    if (q.kind == .short) return std.mem.sliceTo(&a.qz.typed, 0).len > 0;
+    for (a.qz.picked[0..q.choices.len]) |p| if (p) return true;
+    return false;
+}
+
+fn quizSubmit(a: *App) void {
+    const z = &a.qz;
+    const q = currentQuestion(a);
+    if (!quizReady(a)) return;
+    if (q.kind == .short) {
+        z.was_correct = quiz_lib.gradeShort(q, std.mem.sliceTo(&z.typed, 0));
+    } else {
+        var texts: [quiz_lib.max_choices][]const u8 = undefined;
+        var n: usize = 0;
+        for (z.perm[0..q.choices.len], 0..) |orig, slot| {
+            if (z.picked[slot]) {
+                texts[n] = q.choices[orig];
+                n += 1;
+            }
+        }
+        z.was_correct = quiz_lib.gradeChoices(q, texts[0..n]);
+    }
+    if (z.was_correct) {
+        z.correct += 1;
+    } else {
+        z.missed[z.missed_n] = z.order[z.pos];
+        z.missed_n += 1;
+    }
+    z.phase = .feedback;
+}
+
+fn quizNext(a: *App) void {
+    const z = &a.qz;
+    z.pos += 1;
+    if (z.pos < z.count) {
+        startQuestion(a);
+        return;
+    }
+    z.phase = .done;
+    // Save the result against the lesson, with the ids to bring back next time.
+    const quiz = &a.o.quizzes[z.quiz];
+    const t = a.o.tracking orelse return;
+    var ids: [winlab.progress.max_missed_bytes]u8 = undefined;
+    var len: usize = 0;
+    for (z.missed[0..z.missed_n]) |bi| {
+        const id = quiz.questions[bi].id;
+        if (len + id.len + 1 > ids.len) break;
+        if (len > 0) {
+            ids[len] = ' ';
+            len += 1;
+        }
+        @memcpy(ids[len..][0..id.len], id);
+        len += id.len;
+    }
+    t.progress.setQuizResult(quiz.lesson, quiz_lib.percent(z.correct, z.count), ids[0..len]) catch {
+        a.info = "Your quiz result could not be stored.";
+        return;
+    };
+    if (!t.save(t.save_ctx, t.progress)) a.info = "Your quiz result could not be saved to disk.";
+}
+
+fn quizPick(z: *QuizUi, q: quiz_lib.Question, slot: usize) void {
+    if (q.kind == .multi) {
+        z.picked[slot] = !z.picked[slot];
+    } else {
+        z.picked = @splat(false);
+        z.picked[slot] = true;
+    }
+}
+
+/// Enter, and the number keys 1 to 8 for the answer in that position, when no widget wants them.
+fn quizKeys(a: *App) void {
+    const z = &a.qz;
+    for (dvui.events()) |*e| {
+        if (e.handled or e.evt != .key or e.evt.key.action != .down) continue;
+        const code = e.evt.key.code;
+        switch (z.phase) {
+            .answering => {
+                const q = currentQuestion(a);
+                if (code == .enter or code == .kp_enter) {
+                    if (quizReady(a)) {
+                        e.handle(@src(), a.win.data());
+                        quizSubmit(a);
+                    }
+                } else if (q.kind != .short) {
+                    const slot: ?usize = switch (code) {
+                        .one, .kp_1 => 0,
+                        .two, .kp_2 => 1,
+                        .three, .kp_3 => 2,
+                        .four, .kp_4 => 3,
+                        .five, .kp_5 => 4,
+                        .six, .kp_6 => 5,
+                        .seven, .kp_7 => 6,
+                        .eight, .kp_8 => 7,
+                        else => null,
+                    };
+                    if (slot) |s| {
+                        if (s < q.choices.len) {
+                            e.handle(@src(), a.win.data());
+                            quizPick(z, q, s);
+                        }
+                    }
+                }
+            },
+            .feedback => if (code == .enter or code == .kp_enter) {
+                e.handle(@src(), a.win.data());
+                quizNext(a);
+            },
+            .done => {},
+        }
+    }
+}
+
+fn quizTitle(a: *const App, lesson_id: []const u8) []const u8 {
+    for (a.pages) |p| if (std.mem.eql(u8, p.id, lesson_id)) return p.title;
+    return lesson_id;
+}
+
+fn quizWindow(a: *App) void {
+    const z = &a.qz;
+    const quiz = &a.o.quizzes[z.quiz];
+    var open = true;
+    var fw = dvui.floatingWindow(@src(), .{ .modal = true, .open_flag = &open }, .{ .rect = .{ .x = 140, .y = 60, .w = 760, .h = 600 }, .min_size_content = .{ .w = 520, .h = 400 } });
+    defer fw.deinit();
+    var title_buf: [200]u8 = undefined;
+    const title = std.fmt.bufPrint(&title_buf, "Quiz: {s}", .{quizTitle(a, quiz.lesson)}) catch "Quiz";
+    _ = dvui.windowHeader(.{ .title = title, .open_flag = &open });
+
+    var body = dvui.box(@src(), .{}, .{ .expand = .both, .padding = .all(16) });
+    defer body.deinit();
+
+    if (z.phase == .done) {
+        quizResults(a);
+    } else {
+        quizQuestion(a);
+        quizKeys(a);
+    }
+    if (!open or escapePressed()) z.open = false;
+}
+
+fn quizQuestion(a: *App) void {
+    const z = &a.qz;
+    const q = currentQuestion(a);
+    dvui.label(@src(), "Question {d} of {d}", .{ z.pos + 1, z.count }, .{ .font = dvui.Font.theme(.heading) });
+    dvui.progress(@src(), .{ .percent = @as(f32, @floatFromInt(z.pos)) / @as(f32, @floatFromInt(z.count)) }, .{ .expand = .horizontal, .margin = .{ .y = 4, .h = 12 } });
+
+    var tl = dvui.textLayout(@src(), .{}, .{ .expand = .horizontal, .background = false, .padding = .all(0), .margin = .{ .h = 10 } });
+    tl.addText(q.prompt, .{ .font = dvui.Font.theme(.body).withWeight(.bold) });
+    tl.deinit();
+
+    const locked = z.phase == .feedback;
+    {
+        var scroll = dvui.scrollArea(@src(), .{}, .{ .expand = .both, .background = false });
+        defer scroll.deinit();
+        quizAnswers(a, q, locked);
+    }
+
+    // The action row sits under the scroll area so it never scrolls away.
+    var row = dvui.box(@src(), .{ .dir = .horizontal }, .{ .expand = .horizontal, .margin = .{ .y = 8 } });
+    defer row.deinit();
+    dvui.labelNoFmt(@src(), "Enter checks and continues. 1 to 8 pick an answer. Esc closes.", .{}, .{ .expand = .horizontal, .gravity_y = 0.5, .color_text = .{ .color = dvui.themeGet().text.opacity(0.6) } });
+    if (locked) {
+        if (dvui.button(@src(), if (z.pos + 1 < z.count) "Next question" else "See results", .{}, .{ .style = .highlight })) quizNext(a);
+    } else if (quizReady(a)) {
+        if (dvui.button(@src(), "Check answer", .{}, .{ .style = .highlight })) quizSubmit(a);
+    } else {
+        dvui.labelNoFmt(@src(), "Choose an answer", .{}, .{ .color_text = .{ .color = dvui.themeGet().text.opacity(0.6) }, .gravity_y = 0.5 });
+    }
+}
+
+fn quizAnswers(a: *App, q: quiz_lib.Question, locked: bool) void {
+    const z = &a.qz;
+    switch (q.kind) {
+        .short => {
+            if (locked) {
+                // Checked: show what was typed as plain text so Enter moves on instead of editing.
+                dvui.label(@src(), "Your answer: {s}", .{std.mem.sliceTo(&z.typed, 0)}, .{ .font = dvui.Font.theme(.mono) });
+            } else {
+                var te = dvui.textEntry(@src(), .{ .text = .{ .buffer = &z.typed }, .placeholder = "Type your answer, then press Enter" }, .{ .expand = .horizontal });
+                if (z.focus_entry) {
+                    z.focus_entry = false;
+                    dvui.focusWidget(te.data().id, null, null);
+                }
+                // The text box takes the Enter key itself, so submit from its own signal.
+                const submit = te.enter_pressed;
+                te.deinit();
+                if (submit and quizReady(a)) quizSubmit(a);
+            }
+        },
+        .choice, .multi => {
+            if (q.kind == .multi) dvui.labelNoFmt(@src(), "Select all that apply.", .{}, .{ .color_text = .{ .color = dvui.themeGet().text.opacity(0.7) }, .margin = .{ .h = 6 } });
+            for (z.perm[0..q.choices.len], 0..) |orig, slot| {
+                const text = q.choices[orig];
+                var buf: [400]u8 = undefined;
+                const label = std.fmt.bufPrint(&buf, "{d}.  {s}", .{ slot + 1, text }) catch text;
+                // After checking, the right answers are marked, and a wrong pick is marked as such.
+                var is_answer = false;
+                for (q.answers) |ans| {
+                    if (std.mem.eql(u8, ans, text)) is_answer = true;
+                }
+                const style: ?dvui.Theme.Style.Name = if (locked and is_answer) .highlight else if (locked and z.picked[slot]) .err else if (z.picked[slot]) .highlight else null;
+                if (dvui.button(@src(), label, .{}, .{ .expand = .horizontal, .style = style, .id_extra = slot, .margin = .{ .y = 2, .h = 2 } }) and !locked) quizPick(z, q, slot);
+            }
+        },
+    }
+
+    if (!locked) return;
+    _ = dvui.separator(@src(), .{ .expand = .horizontal, .margin = .{ .y = 10, .h = 8 } });
+    const good: dvui.Color = .{ .r = 0x2e, .g = 0x9e, .b = 0x5b };
+    const bad: dvui.Color = .{ .r = 0xd9, .g = 0x4a, .b = 0x3d };
+    dvui.labelNoFmt(@src(), if (z.was_correct) "Correct" else "Not quite", .{}, .{ .font = dvui.Font.theme(.heading).withSize(dvui.Font.theme(.body).size * 1.2), .color_text = .{ .color = if (z.was_correct) good else bad } });
+    if (!z.was_correct) {
+        var ans_buf: [512]u8 = undefined;
+        var n: usize = 0;
+        for (q.answers, 0..) |ans, i| {
+            const part = std.fmt.bufPrint(ans_buf[n..], "{s}{s}", .{ if (i > 0) "; " else "", ans }) catch break;
+            n += part.len;
+        }
+        dvui.label(@src(), "{s}: {s}", .{ if (q.kind == .short) "Accepted answer" else "Right answer", ans_buf[0..n] }, .{ .margin = .{ .y = 4 } });
+    }
+    var ex = dvui.textLayout(@src(), .{}, .{ .expand = .horizontal, .background = false, .padding = .all(0), .margin = .{ .y = 6 } });
+    ex.addText(q.explanation, .{});
+    ex.deinit();
+    if (q.review.len > 0) dvui.label(@src(), "Review in the lesson: {s}", .{q.review}, .{ .color_text = .{ .color = dvui.themeGet().text.opacity(0.7) }, .margin = .{ .y = 4 } });
+}
+
+fn quizResults(a: *App) void {
+    const z = &a.qz;
+    const quiz = &a.o.quizzes[z.quiz];
+    const pct = quiz_lib.percent(z.correct, z.count);
+    // Score on the left, the buttons on the right, both at the top so they can never be squeezed out.
+    {
+        var top = dvui.box(@src(), .{ .dir = .horizontal }, .{ .expand = .horizontal });
+        defer top.deinit();
+        {
+            var left = dvui.box(@src(), .{}, .{ .expand = .horizontal });
+            defer left.deinit();
+            dvui.label(@src(), "{d}%", .{pct}, .{ .font = dvui.Font.theme(.title).withSize(dvui.Font.theme(.body).size * 3) });
+            dvui.label(@src(), "{d} of {d} correct", .{ z.correct, z.count }, .{ .font = dvui.Font.theme(.heading) });
+        }
+        var btns = dvui.box(@src(), .{ .dir = .horizontal }, .{ .gravity_y = 0.5 });
+        defer btns.deinit();
+        if (dvui.button(@src(), "Try another set", .{}, .{ .margin = .{ .w = 8 }, .style = .highlight })) startQuiz(a, z.quiz);
+        if (dvui.button(@src(), "Close", .{}, .{})) z.open = false;
+    }
+    if (a.o.tracking) |t| {
+        const e = t.progress.get(quiz.lesson);
+        dvui.label(@src(), "Best score {d}%, attempts {d}. The bank has {d} questions; each attempt draws {d}.", .{ e.quiz_best, e.quiz_attempts, quiz.questions.len, quiz.draw }, .{ .color_text = .{ .color = dvui.themeGet().text.opacity(0.7) }, .margin = .{ .y = 4 } });
+    }
+    if (z.missed_n > 0) {
+        dvui.labelNoFmt(@src(), "To review (these come back first next time):", .{}, .{ .font = dvui.Font.theme(.heading), .margin = .{ .y = 12, .h = 4 } });
+    } else {
+        dvui.labelNoFmt(@src(), "Nothing missed. A new attempt draws different questions.", .{}, .{ .margin = .{ .y = 12 } });
+    }
+    var scroll = dvui.scrollArea(@src(), .{}, .{ .expand = .both, .background = false });
+    defer scroll.deinit();
+    for (z.missed[0..z.missed_n], 0..) |bi, i| {
+        const q = quiz.questions[bi];
+        var tl = dvui.textLayout(@src(), .{}, .{ .expand = .horizontal, .background = true, .style = .window, .padding = .all(8), .margin = .{ .h = 6 }, .id_extra = i });
+        tl.addText(q.prompt, .{ .font = dvui.Font.theme(.body).withWeight(.bold) });
+        tl.addText("\n", .{});
+        tl.addText(q.explanation, .{});
+        if (q.review.len > 0) {
+            tl.addText("\nReview: ", .{ .font = dvui.Font.theme(.body).withStyle(.italic) });
+            tl.addText(q.review, .{ .font = dvui.Font.theme(.body).withStyle(.italic) });
+        }
+        tl.deinit();
+    }
+}
+/// The current lesson as plain text (md-zig's terminal renderer: wrapped, aligned tables, ASCII rules),
+/// cached per page. Null when the page has no parsed document or rendering failed.
+fn plainText(a: *App) ?[]const u8 {
+    if (a.plain_page == a.current) return a.plain;
+    if (a.plain) |p| a.gpa.free(p);
+    a.plain = null;
+    a.plain_page = a.current;
+    const doc = a.pages[a.current].doc orelse return null;
+    a.plain = doc.toTextAlloc(a.gpa, .{ .width = 96, .color = false, .unicode = false, .show_urls = true }) catch null;
+    return a.plain;
+}

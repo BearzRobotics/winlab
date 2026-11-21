@@ -1,0 +1,463 @@
+schema_version = 1
+lesson = "foundations.ps-modules-and-remoting"
+# Draft for owner review. A bank of 51; each attempt asks 10, favouring questions missed last time.
+draw = 10
+
+# ---- Modules ----
+
+[[question]]
+id = "mo-what"
+type = "choice"
+prompt = "What is a module?"
+choices = ["A package of functions, variables and commands loaded as a unit", "A single alias", "A scheduled task", "A script that runs once"]
+answers = ["A package of functions, variables and commands loaded as a unit"]
+explanation = "Most commands you use come from a module, such as Microsoft.PowerShell.Utility."
+review = "Modules"
+
+[[question]]
+id = "mo-path"
+type = "short"
+prompt = "Which environment variable lists the folders PowerShell searches for modules? (with $env:)"
+answers = ["$env:PSModulePath", "PSModulePath"]
+explanation = "Separated by ; on Windows and : on Linux."
+review = "Where modules are found: `PSModulePath`"
+
+[[question]]
+id = "mo-7sees51"
+type = "choice"
+prompt = "Which module folders does PowerShell 7 on Windows search?"
+choices = ["Its own PowerShell folders and also the Windows PowerShell ones", "Only its own", "Only the Windows PowerShell ones", "Only System32"]
+answers = ["Its own PowerShell folders and also the Windows PowerShell ones"]
+explanation = "Many Windows-only modules still need the compatibility layer."
+review = "Where modules are found: `PSModulePath`"
+
+[[question]]
+id = "mo-compat"
+type = "short"
+prompt = "Which Import-Module parameter loads a Windows PowerShell 5.1 module from PowerShell 7 through a compatibility layer? (include the dash)"
+answers = ["-UseWindowsPowerShell"]
+explanation = "It runs the module in a hidden 5.1 process and gives you proxy commands."
+review = "Where modules are found: `PSModulePath`"
+
+[[question]]
+id = "mo-auto"
+type = "choice"
+prompt = "What happens when you call a command from an installed but not loaded module?"
+choices = ["PowerShell auto-loads the module", "An error: import first", "Nothing", "It prompts to install"]
+answers = ["PowerShell auto-loads the module"]
+explanation = "Even Get-Command Name triggers the load. Explicit Import-Module in scripts fails early if the module is missing."
+review = "Discovery and auto-loading"
+
+[[question]]
+id = "mo-list"
+type = "short"
+prompt = "Which Get-Module parameter lists every installed module, not only the loaded ones? (include the dash)"
+answers = ["-ListAvailable"]
+explanation = "Get-Module alone shows loaded modules."
+review = "Discovery and auto-loading"
+
+[[question]]
+id = "mo-files"
+type = "multi"
+prompt = "Which files make up a minimal module? Select all that apply."
+choices = ["A .psm1 file with the code", "A .psd1 manifest", "A version folder on PSModulePath", "A .exe"]
+answers = ["A .psm1 file with the code", "A .psd1 manifest", "A version folder on PSModulePath"]
+explanation = "WlTools\\1.0.0\\WlTools.psm1 and WlTools.psd1."
+review = "Writing a module"
+
+[[question]]
+id = "mo-hidden"
+type = "choice"
+prompt = "A module defines Get-Hidden but does not list it in Export-ModuleMember. Can code outside the module call it?"
+choices = ["No; only exported commands are visible", "Yes", "Only in PowerShell 7", "Only as administrator"]
+answers = ["No; only exported commands are visible"]
+explanation = "Private helpers stay private."
+review = "Writing a module"
+
+[[question]]
+id = "mo-state"
+type = "choice"
+prompt = "Where does a module keep state such as $script:Greeting?"
+choices = ["Privately inside the module, shared by its commands", "In the global scope", "In the registry", "In each caller"]
+answers = ["Privately inside the module, shared by its commands"]
+explanation = "Set-Greeting changed it for the next Get-Greeting call."
+review = "Writing a module"
+
+[[question]]
+id = "mo-export"
+type = "choice"
+prompt = "Why list FunctionsToExport explicitly in the manifest, rather than using *?"
+choices = ["PowerShell can find your commands for auto-loading without loading the module", "* is a syntax error", "It makes the module signed", "It hides the commands"]
+answers = ["PowerShell can find your commands for auto-loading without loading the module"]
+explanation = "It is faster."
+review = "Writing a module"
+
+[[question]]
+id = "mo-versions"
+type = "short"
+prompt = "Which Import-Module parameter loads a specific installed version? (include the dash)"
+answers = ["-RequiredVersion"]
+explanation = "Without it, the newest loads."
+review = "Writing a module"
+
+[[question]]
+id = "mo-root"
+type = "short"
+prompt = "Which automatic variable lets a module find files beside it? (with the dollar sign)"
+answers = ["$PSScriptRoot"]
+explanation = "The same variable as in scripts."
+review = "Writing a module"
+
+# ---- Gallery ----
+
+[[question]]
+id = "ga-trust"
+type = "choice"
+prompt = "Why is Install-Module a trust decision?"
+choices = ["It runs someone else's code with your rights", "It needs a licence", "It slows PowerShell", "It uninstalls other modules"]
+answers = ["It runs someone else's code with your rights"]
+explanation = "More if you install as administrator."
+review = "The PowerShell Gallery: a trust decision"
+certifications = ["comptia-a-core2/security"]
+
+[[question]]
+id = "ga-scope"
+type = "short"
+prompt = "Which Install-Module parameter and value installs without administrator rights? (for example -Scope X)"
+answers = ["-Scope CurrentUser"]
+explanation = "AllUsers needs elevation and gives the code more power."
+review = "The PowerShell Gallery: a trust decision"
+
+[[question]]
+id = "ga-save"
+type = "short"
+prompt = "Which cmdlet downloads a module's files without installing them, so you can read them first? (cmdlet name)"
+answers = ["Save-Module"]
+explanation = "Look for downloads, Invoke-Expression, encoded commands and registry writes."
+review = "The PowerShell Gallery: a trust decision"
+
+[[question]]
+id = "ga-pin"
+type = "choice"
+prompt = "Why pin a module version in production?"
+choices = ["An update could change behaviour or introduce malicious code", "Pinned modules are faster", "Required by the Gallery", "To avoid signatures"]
+answers = ["An update could change behaviour or introduce malicious code"]
+explanation = "Mirror approved modules to an internal repository."
+review = "The PowerShell Gallery: a trust decision"
+
+[[question]]
+id = "ga-check"
+type = "multi"
+prompt = "What should you check before installing a Gallery module? Select all that apply."
+choices = ["The publisher and download count", "The version history and source link", "That the name is not a look-alike of a popular module", "That it has a nice icon"]
+answers = ["The publisher and download count", "The version history and source link", "That the name is not a look-alike of a popular module"]
+explanation = "Names can be squatted."
+review = "The PowerShell Gallery: a trust decision"
+
+[[question]]
+id = "ga-new"
+type = "short"
+prompt = "Which newer module, built into PowerShell 7.6, provides Install-PSResource? (one word)"
+answers = ["PSResourceGet", "Microsoft.PowerShell.PSResourceGet"]
+explanation = "PowerShellGet's Install-Module still works in 5.1 and 7."
+review = "The PowerShell Gallery: a trust decision"
+
+# ---- Signing ----
+
+[[question]]
+id = "sg-cmd"
+type = "short"
+prompt = "Which cmdlet checks a file's Authenticode signature? (cmdlet name)"
+answers = ["Get-AuthenticodeSignature"]
+explanation = "Status Valid means the signature checks out and chains to a trusted root."
+review = "Signing and trust"
+
+[[question]]
+id = "sg-valid"
+type = "choice"
+prompt = "A signature status is HashMismatch. What happened?"
+choices = ["The file changed after it was signed", "The file is not signed", "The certificate expired", "The signer is trusted"]
+answers = ["The file changed after it was signed"]
+explanation = "NotSigned is the unsigned case."
+review = "Signing and trust"
+
+[[question]]
+id = "sg-proves"
+type = "choice"
+prompt = "What does a valid signature NOT prove?"
+choices = ["That the script is correct or safe", "Who published it", "That it is unchanged", "That the publisher's certificate is trusted"]
+answers = ["That the script is correct or safe"]
+explanation = "It is attributable, not guaranteed good."
+review = "Signing and trust"
+
+[[question]]
+id = "sg-policy"
+type = "choice"
+prompt = "With the execution policy AllSigned, which scripts run?"
+choices = ["Only scripts signed by a trusted publisher", "All scripts", "No scripts", "Only downloaded scripts"]
+answers = ["Only scripts signed by a trusted publisher"]
+explanation = "RemoteSigned only requires signatures on downloaded scripts."
+review = "Signing and trust"
+
+# ---- Secrets ----
+
+[[question]]
+id = "se-plain"
+type = "choice"
+prompt = "Does a SecureString protect a password from code that is allowed to use it?"
+choices = ["No: GetNetworkCredential().Password returns the plain text", "Yes, completely", "Only on Linux", "Only in PowerShell 7"]
+answers = ["No: GetNetworkCredential().Password returns the plain text"]
+explanation = "It protects against printing and casual exposure, not misuse."
+review = "Credentials and secrets"
+
+[[question]]
+id = "se-linux"
+type = "choice"
+prompt = "How is a SecureString stored on Linux and macOS?"
+choices = ["Not encrypted at rest", "Encrypted with DPAPI", "Hashed", "Not at all"]
+answers = ["Not encrypted at rest"]
+explanation = "DPAPI is a Windows feature."
+review = "Credentials and secrets"
+
+[[question]]
+id = "se-getcred"
+type = "short"
+prompt = "Which cmdlet asks the user for a name and password at run time? (cmdlet name)"
+answers = ["Get-Credential"]
+explanation = "Best for interactive scripts."
+review = "Credentials and secrets"
+
+[[question]]
+id = "se-clixml"
+type = "choice"
+prompt = "Who can Import-Clixml a credential that was exported with Export-Clixml on Windows?"
+choices = ["Only the same user on the same machine", "Anyone", "Any user on the same machine", "Any machine in the domain"]
+answers = ["Only the same user on the same machine"]
+explanation = "DPAPI ties it to the user and machine, which is convenient and limited."
+review = "Credentials and secrets"
+
+[[question]]
+id = "se-store"
+type = "choice"
+prompt = "Which module gives one interface over vaults such as Credential Manager and Azure Key Vault?"
+choices = ["SecretManagement", "SecureString", "PSReadLine", "Pester"]
+answers = ["SecretManagement"]
+explanation = "Use it for shared or production secrets."
+review = "Credentials and secrets"
+
+[[question]]
+id = "se-log"
+type = "choice"
+prompt = "Where must a secret never be written?"
+choices = ["Logs, transcripts or error messages", "A vault", "Memory", "A prompt"]
+answers = ["Logs, transcripts or error messages"]
+explanation = "Rotate any that leaked."
+review = "Credentials and secrets"
+
+# ---- Jobs ----
+
+[[question]]
+id = "jb-proc"
+type = "choice"
+prompt = "Where does Start-Job run its script block?"
+choices = ["In a separate PowerShell process", "On a thread in the same process", "On a remote computer", "In the same scope"]
+answers = ["In a separate PowerShell process"]
+explanation = "Start-ThreadJob uses a thread in the same process."
+review = "Jobs: background work"
+
+[[question]]
+id = "jb-using"
+type = "short"
+prompt = "Which scope prefix passes a local variable into a job script block? (for example $x:name; give the prefix)"
+answers = ["$using:", "using:", "$using"]
+explanation = "Start-Job { $using:limit }. -ArgumentList also works."
+review = "Four things that surprise people"
+
+[[question]]
+id = "jb-novar"
+type = "choice"
+prompt = "A job script block prints [$limit] where $limit is 3 in your session. What does it print without $using:?"
+choices = ["[] because the job cannot see your variable", "[3]", "An error", "[0]"]
+answers = ["[] because the job cannot see your variable"]
+explanation = "It is another process."
+review = "Four things that surprise people"
+
+[[question]]
+id = "jb-serialize"
+type = "choice"
+prompt = "A process object returned from a job has no Kill() method. Why?"
+choices = ["Results are serialized copies: properties arrive, methods do not", "Kill was removed from PowerShell", "Jobs run without permission", "It is hidden"]
+answers = ["Results are serialized copies: properties arrive, methods do not"]
+explanation = "The same is true of remoting."
+review = "Four things that surprise people"
+
+[[question]]
+id = "jb-state"
+type = "choice"
+prompt = "A job throws an error. What is its State?"
+choices = ["Failed, and the error is raised when you Receive-Job", "Completed with no output", "Running", "Removed"]
+answers = ["Failed, and the error is raised when you Receive-Job"]
+explanation = "Always check State, or a failure looks like an empty result."
+review = "Four things that surprise people"
+
+[[question]]
+id = "jb-keep"
+type = "choice"
+prompt = "What does Receive-Job do to the output it returns, by default?"
+choices = ["Removes it from the job; -Keep keeps it", "Keeps it", "Encrypts it", "Sorts it"]
+answers = ["Removes it from the job; -Keep keeps it"]
+explanation = "So a second Receive-Job returns nothing."
+review = "Jobs: background work"
+
+[[question]]
+id = "jb-thread"
+type = "choice"
+prompt = "How does a thread job differ from a normal job?"
+choices = ["It runs in the same process, so it starts faster and shares the process's fate", "It runs on another computer", "It is signed", "It cannot return output"]
+answers = ["It runs in the same process, so it starts faster and shares the process's fate"]
+explanation = "The PIDs matched in the test."
+review = "Four things that surprise people"
+
+[[question]]
+id = "jb-51"
+type = "choice"
+prompt = "Is Start-ThreadJob built in to Windows PowerShell 5.1?"
+choices = ["No; it is built in to PowerShell 7 and a module for 5.1", "Yes", "Only on servers", "It does not exist"]
+answers = ["No; it is built in to PowerShell 7 and a module for 5.1"]
+explanation = "It was absent in my 5.1 test."
+review = "Four things that surprise people"
+
+# ---- Remoting ----
+
+[[question]]
+id = "rm-cmds"
+type = "short"
+prompt = "Which cmdlet runs a script block on one or many remote computers? (cmdlet name)"
+answers = ["Invoke-Command"]
+explanation = "Enter-PSSession gives an interactive prompt."
+review = "Remoting"
+
+[[question]]
+id = "rm-session"
+type = "choice"
+prompt = "What does a persistent PSSession give you?"
+choices = ["State kept between commands, such as variables", "Faster networks", "Signed commands", "Encrypted files"]
+answers = ["State kept between commands, such as variables"]
+explanation = "A $x set in one Invoke-Command is visible in the next on the same session."
+review = "Remoting"
+
+[[question]]
+id = "rm-ports"
+type = "multi"
+prompt = "Which are the default WinRM ports? Select all that apply."
+choices = ["5985 (HTTP)", "5986 (HTTPS)", "22 (SSH)", "3389 (RDP)"]
+answers = ["5985 (HTTP)", "5986 (HTTPS)"]
+explanation = "SSH remoting uses port 22."
+review = "Two transports"
+
+[[question]]
+id = "rm-ssh"
+type = "choice"
+prompt = "Which transport lets PowerShell 7 remote to Linux and macOS?"
+choices = ["SSH", "WinRM only", "RDP", "SMB"]
+answers = ["SSH"]
+explanation = "New-PSSession -HostName ... -UserName ..."
+review = "Two transports"
+
+[[question]]
+id = "rm-denied"
+type = "choice"
+prompt = "Invoke-Command -ComputerName localhost fails with 'Access is denied' from a normal prompt. What is the default rule?"
+choices = ["Only administrators may connect to the standard endpoint, and the session was not elevated", "WinRM is off", "The firewall is closed", "Remoting needs a domain"]
+answers = ["Only administrators may connect to the standard endpoint, and the session was not elevated"]
+explanation = "Get-PSSessionConfiguration also needs elevation."
+review = "What I saw on this machine"
+
+[[question]]
+id = "rm-enable"
+type = "choice"
+prompt = "What does Enable-PSRemoting do that you should consider?"
+choices = ["Opens a remote administration channel, starts WinRM and opens the firewall", "Only changes a registry value", "Disables the firewall", "Installs PowerShell 7"]
+answers = ["Opens a remote administration channel, starts WinRM and opens the firewall"]
+explanation = "Limit who may connect, and turn it off when a lab ends (Disable-PSRemoting)."
+review = "Enabling it, safely"
+
+[[question]]
+id = "rm-trusted"
+type = "choice"
+prompt = "Why is setting TrustedHosts to * dangerous?"
+choices = ["It disables mutual authentication for every host, so credentials can be intercepted", "It disables WinRM", "It deletes sessions", "It enables SSH"]
+answers = ["It disables mutual authentication for every host, so credentials can be intercepted"]
+explanation = "Use HTTPS or Kerberos instead."
+review = "Enabling it, safely"
+
+[[question]]
+id = "rm-jea"
+type = "choice"
+prompt = "What is Just Enough Administration (JEA)?"
+choices = ["A constrained endpoint that exposes only a short list of commands", "A kind of signature", "A job type", "A module repository"]
+answers = ["A constrained endpoint that exposes only a short list of commands"]
+explanation = "Use it when a person needs to run only a few commands."
+review = "Enabling it, safely"
+
+[[question]]
+id = "rm-order"
+type = "choice"
+prompt = "In what order does output from several computers come back?"
+choices = ["In completion order, so sort or group by PSComputerName", "In the order listed", "Alphabetical", "Random but fixed"]
+answers = ["In completion order, so sort or group by PSComputerName"]
+explanation = "-ThrottleLimit caps how many run at once; the default is 32."
+review = "Variables, serialization and the second hop"
+
+[[question]]
+id = "rm-hop"
+type = "choice"
+prompt = "What is the second-hop problem?"
+choices = ["From a remote session you cannot reach another server with your credentials, because they were not delegated", "A slow network", "A duplicate session", "A job that never ends"]
+answers = ["From a remote session you cannot reach another server with your credentials, because they were not delegated"]
+explanation = "Choose a delegation fix deliberately; CredSSP is risky."
+review = "Variables, serialization and the second hop"
+
+[[question]]
+id = "rm-asjob"
+type = "short"
+prompt = "Which Invoke-Command parameter runs the command as a job so you need not stay connected? (include the dash)"
+answers = ["-AsJob"]
+explanation = "Collect it later with Receive-Job."
+review = "Variables, serialization and the second hop"
+
+[[question]]
+id = "rs-answer"
+type = "choice"
+prompt = "In the Read-this-script exercise, why does the remote filter fail to use the threshold?"
+choices = ["$threshold is not visible in the remote script block; use $using:threshold", "Get-CimInstance cannot filter", "The password is wrong", "servers.txt is empty"]
+answers = ["$threshold is not visible in the remote script block; use $using:threshold"]
+explanation = "Remote script blocks have no access to local variables."
+review = "Read this script"
+
+[[question]]
+id = "rm-sshlogon"
+type = "choice"
+prompt = "On the Server VM, an elevated Administrator logged in through SSH still got Access is denied from Invoke-Command -ComputerName localhost. Why?"
+choices = ["An SSH login is a network logon whose credentials cannot be reused for a second connection, so it needs an explicit -Credential", "WinRM was stopped", "The firewall blocked loopback", "Administrator cannot use remoting"]
+answers = ["An SSH login is a network logon whose credentials cannot be reused for a second connection, so it needs an explicit -Credential"]
+explanation = "It is a second hop in miniature. With -Credential the same command worked."
+review = "What I saw on a Windows Server 2022 VM"
+
+[[question]]
+id = "rm-remoteexc"
+type = "choice"
+prompt = "A remote script block runs Get-Item on a missing path with -ErrorAction Stop. What does the caller's catch receive?"
+choices = ["A RemoteException carrying the original message", "A WebException", "Nothing; remote errors are hidden", "A job object"]
+answers = ["A RemoteException carrying the original message"]
+explanation = "A non-terminating remote error collected with -ErrorVariable names the computer in OriginInfo."
+review = "What I saw on a Windows Server 2022 VM"
+
+[[question]]
+id = "rm-extra-props"
+type = "multi"
+prompt = "Which extra properties did a process object returned over remoting carry? Select all that apply."
+choices = ["PSComputerName", "RunspaceId", "A working Kill() method", "A local window handle"]
+answers = ["PSComputerName", "RunspaceId"]
+explanation = "The result is a serialized copy: data properties arrive, methods do not."
+review = "What I saw on a Windows Server 2022 VM"

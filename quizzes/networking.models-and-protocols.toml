@@ -1,0 +1,398 @@
+schema_version = 1
+lesson = "networking.models-and-protocols"
+# Draft for owner review. A bank of 44; each attempt asks 10, favouring questions missed last time.
+draw = 10
+
+[[question]]
+id = "router-layer"
+type = "choice"
+prompt = "At which layer of the OSI model does a router make its forwarding decisions?"
+choices = ["Layer 1 (physical)", "Layer 2 (data link)", "Layer 3 (network)", "Layer 4 (transport)"]
+answers = ["Layer 3 (network)"]
+explanation = "A router forwards packets between networks using IP addresses, which are layer 3."
+review = "Two models"
+certifications = ["comptia-network-plus/networking-concepts"]
+
+[[question]]
+id = "switch-layer"
+type = "choice"
+prompt = "At which layer does an ordinary switch forward traffic?"
+choices = ["Layer 1 (physical)", "Layer 2 (data link)", "Layer 3 (network)", "Layer 7 (application)"]
+answers = ["Layer 2 (data link)"]
+explanation = "A switch forwards frames by MAC address, which belongs to the data link layer."
+review = "Two models"
+certifications = ["comptia-network-plus/networking-concepts"]
+
+[[question]]
+id = "hub-layer"
+type = "choice"
+prompt = "A hub simply repeats bits to every port. At which layer does it work?"
+choices = ["Layer 1 (physical)", "Layer 2 (data link)", "Layer 3 (network)", "Layer 4 (transport)"]
+answers = ["Layer 1 (physical)"]
+explanation = "A hub does not look at addresses at all; it only repeats the signal, so it is a layer 1 device."
+review = "Two models"
+
+[[question]]
+id = "pdu-tcp"
+type = "choice"
+prompt = "What is the unit of data at the transport layer when TCP is used?"
+choices = ["Frame", "Packet", "Segment", "Bit"]
+answers = ["Segment"]
+explanation = "TCP data is a segment; with UDP it is a datagram. Packet belongs to the network layer and frame to the data link layer."
+review = "Encapsulation"
+
+[[question]]
+id = "pdu-ip"
+type = "choice"
+prompt = "What is the unit of data at the network layer?"
+choices = ["Frame", "Packet", "Segment", "Datagram"]
+answers = ["Packet"]
+explanation = "The network layer's unit is the packet. A frame is the data link layer's unit."
+review = "Encapsulation"
+
+[[question]]
+id = "pdu-link"
+type = "choice"
+prompt = "What is the unit of data at the data link layer?"
+choices = ["Frame", "Packet", "Segment", "Datagram"]
+answers = ["Frame"]
+explanation = "At the data link layer data is wrapped in a frame with source and destination MAC addresses."
+review = "Encapsulation"
+
+[[question]]
+id = "pdu-udp"
+type = "short"
+prompt = "What is the unit of data at the transport layer when UDP is used? (one word)"
+answers = ["datagram"]
+explanation = "UDP sends datagrams. TCP sends segments."
+review = "Encapsulation"
+
+[[question]]
+id = "mac-hops"
+type = "choice"
+prompt = "You browse to a server on the internet. Which address in your traffic is rewritten at every router along the way?"
+choices = ["The destination IP address", "The source IP address", "The MAC address of the next hop", "The destination port"]
+answers = ["The MAC address of the next hop"]
+explanation = "The MAC address names only the next hop on the current local network, so it changes at each router. The IP addresses stay the same end to end (apart from NAT, which comes later)."
+review = "Encapsulation"
+certifications = ["comptia-network-plus/networking-concepts"]
+
+[[question]]
+id = "frame-dest-mac"
+type = "choice"
+prompt = "You send a packet to a server on another network. Whose MAC address is in the frame leaving your computer?"
+choices = ["The server's", "Your default gateway's", "The DNS server's", "The broadcast address"]
+answers = ["Your default gateway's"]
+explanation = "The frame is addressed to the next hop, which is your router. The packet inside carries the server's IP address."
+review = "Encapsulation"
+
+[[question]]
+id = "app-protocols"
+type = "multi"
+prompt = "Which of these work at the application layer?"
+choices = ["HTTP", "DNS", "ARP", "TCP"]
+answers = ["HTTP", "DNS"]
+explanation = "HTTP and DNS are application protocols. TCP is transport, and ARP works on the local link."
+review = "Two models"
+
+[[question]]
+id = "handshake-first"
+type = "short"
+prompt = "Which flag does the client send first in the TCP three-way handshake?"
+answers = ["SYN"]
+explanation = "The client sends SYN, the server answers SYN-ACK, and the client finishes with ACK."
+review = "TCP and UDP"
+
+[[question]]
+id = "handshake-second"
+type = "choice"
+prompt = "What does the server send in reply to the first message of the TCP handshake?"
+choices = ["ACK", "SYN-ACK", "FIN", "RST"]
+answers = ["SYN-ACK"]
+explanation = "SYN-ACK says it accepted the request and gives its own starting number."
+review = "TCP and UDP"
+
+[[question]]
+id = "refused"
+type = "choice"
+prompt = "A connection attempt is refused immediately. What most likely happened?"
+choices = ["No reply at all came back", "The host answered with a reset, so it was reached but nothing accepts that port", "The DNS name could not be resolved", "The cable is unplugged"]
+answers = ["The host answered with a reset, so it was reached but nothing accepts that port"]
+explanation = "A refusal means a reset came back: the host is reachable, but nothing is listening on that port (or a firewall actively rejected it)."
+review = "TCP and UDP"
+certifications = ["comptia-network-plus/network-troubleshooting"]
+
+[[question]]
+id = "timed-out"
+type = "choice"
+prompt = "A connection attempt just times out with no reply. Which is a likely cause?"
+choices = ["A firewall silently dropping the packets", "Nothing is listening on the port, and the host rejected the attempt", "The server returned an HTTP error page", "The DNS server returned NXDOMAIN"]
+answers = ["A firewall silently dropping the packets"]
+explanation = "A timeout means no answer came back at all: a firewall dropping traffic, a wrong address, or no route. A closed port normally gives an immediate refusal."
+review = "TCP and UDP"
+certifications = ["comptia-network-plus/network-troubleshooting"]
+
+[[question]]
+id = "udp-users"
+type = "multi"
+prompt = "Which of these normally use UDP?"
+choices = ["DNS queries", "DHCP", "NTP time requests", "SSH", "HTTPS"]
+answers = ["DNS queries", "DHCP", "NTP time requests"]
+explanation = "DNS queries, DHCP and NTP are small request and reply exchanges that suit UDP. SSH and HTTPS need TCP's reliability."
+review = "TCP and UDP"
+
+[[question]]
+id = "why-udp"
+type = "choice"
+prompt = "Why do voice and video streaming usually prefer UDP?"
+choices = ["It guarantees delivery of every packet", "A late packet is worse than a lost one, and UDP has less overhead", "It encrypts the data", "It works only on local networks"]
+answers = ["A late packet is worse than a lost one, and UDP has less overhead"]
+explanation = "Waiting to resend lost data would make the stream stutter. UDP trades guaranteed delivery for speed."
+review = "TCP and UDP"
+
+[[question]]
+id = "tcp-reliable"
+type = "multi"
+prompt = "Which of these does TCP do that UDP does not?"
+choices = ["Acknowledge received data", "Resend lost data", "Deliver data in order", "Use port numbers"]
+answers = ["Acknowledge received data", "Resend lost data", "Deliver data in order"]
+explanation = "Both TCP and UDP use ports. Acknowledgement, resending and ordering are what make TCP reliable."
+review = "TCP and UDP"
+
+[[question]]
+id = "port-ssh"
+type = "short"
+prompt = "Which port does SSH use by default?"
+answers = ["22", "tcp 22"]
+explanation = "SSH uses TCP port 22."
+review = "Ports: which program"
+
+[[question]]
+id = "port-https"
+type = "short"
+prompt = "Which port does HTTPS use by default?"
+answers = ["443", "tcp 443"]
+explanation = "HTTPS uses TCP port 443. Plain HTTP uses 80."
+review = "Ports: which program"
+
+[[question]]
+id = "port-rdp"
+type = "short"
+prompt = "Which TCP port does Windows Remote Desktop (RDP) use by default?"
+answers = ["3389", "tcp 3389"]
+explanation = "RDP listens on TCP port 3389."
+review = "Ports: which program"
+
+[[question]]
+id = "port-smb"
+type = "short"
+prompt = "Which TCP port does SMB (Windows file sharing) use?"
+answers = ["445", "tcp 445"]
+explanation = "SMB uses TCP port 445."
+review = "Ports: which program"
+
+[[question]]
+id = "port-ntp"
+type = "short"
+prompt = "Which UDP port does NTP (time synchronisation) use?"
+answers = ["123", "udp 123"]
+explanation = "NTP uses UDP port 123."
+review = "Ports: which program"
+
+[[question]]
+id = "port-telnet"
+type = "choice"
+prompt = "Which service uses TCP port 23, sends everything in cleartext, and should be avoided?"
+choices = ["SSH", "Telnet", "SMTP", "RDP"]
+answers = ["Telnet"]
+explanation = "Telnet is a remote shell in cleartext on port 23. SSH replaces it with an encrypted equivalent."
+review = "Ports: which program"
+
+[[question]]
+id = "port-dhcp"
+type = "choice"
+prompt = "Which pair of UDP ports does DHCP use?"
+choices = ["Server 67, client 68", "Server 68, client 67", "Server 53, client 53", "Server 80, client 443"]
+answers = ["Server 67, client 68"]
+explanation = "DHCP uses UDP: the server listens on 67 and the client on 68."
+review = "Ports: which program"
+
+[[question]]
+id = "dns-transport"
+type = "choice"
+prompt = "Which transport does DNS use?"
+choices = ["TCP only", "UDP only", "UDP for normal queries and TCP for large answers and zone transfers", "ICMP"]
+answers = ["UDP for normal queries and TCP for large answers and zone transfers"]
+explanation = "A small question and answer fit in one UDP datagram. Large answers and zone transfers need TCP."
+review = "Ports: which program"
+
+[[question]]
+id = "port-ranges"
+type = "choice"
+prompt = "Which range are the well-known ports?"
+choices = ["0 to 1023", "1024 to 49151", "49152 to 65535", "1 to 255"]
+answers = ["0 to 1023"]
+explanation = "Well-known ports are 0 to 1023, registered ports 1024 to 49151, and dynamic (ephemeral) ports 49152 up."
+review = "Ports: which program"
+
+[[question]]
+id = "connection-identity"
+type = "multi"
+prompt = "Which four values identify one TCP connection?"
+choices = ["Source IP address", "Source port", "Destination IP address", "Destination port", "Source MAC address"]
+answers = ["Source IP address", "Source port", "Destination IP address", "Destination port"]
+explanation = "A connection is identified by both IP addresses and both ports. A MAC address only matters on the local link."
+review = "Ports: which program"
+
+[[question]]
+id = "icmp-ports"
+type = "choice"
+prompt = "Which statement about ICMP (used by ping and tracert) is true?"
+choices = ["It uses TCP port 7", "It has no ports", "It uses UDP port 53", "It only works on IPv6"]
+answers = ["It has no ports"]
+explanation = "ICMP is a layer 3 helper protocol that carries error and test messages. It has no port numbers."
+review = "ICMP"
+
+[[question]]
+id = "ping-ok-tcp-fail"
+type = "choice"
+prompt = "Test-NetConnection shows PingSucceeded True and TcpTestSucceeded False. What does that tell you?"
+choices = ["The host is unreachable", "The host is reachable at layer 3, but nothing is accepting connections on that TCP port, or it is blocked", "DNS is broken", "The network cable is faulty"]
+answers = ["The host is reachable at layer 3, but nothing is accepting connections on that TCP port, or it is blocked"]
+explanation = "A working ping proves layer 3 only. The failing TCP test points at layer 4: the port is closed or filtered."
+review = "ICMP"
+certifications = ["comptia-network-plus/network-troubleshooting"]
+
+[[question]]
+id = "ping-blocked"
+type = "choice"
+prompt = "A host does not answer ping. Which conclusion is justified?"
+choices = ["The host is definitely down", "Nothing yet: many firewalls block ICMP on purpose", "The host has no IP address", "DNS is broken"]
+answers = ["Nothing yet: many firewalls block ICMP on purpose"]
+explanation = "A failing ping does not always mean the host is down. Test the actual service port as well."
+review = "ICMP"
+
+[[question]]
+id = "arp-maps"
+type = "choice"
+prompt = "What does ARP do?"
+choices = ["Turns a name into an IP address", "Finds the MAC address that goes with an IP address on the local network", "Assigns IP addresses", "Encrypts traffic"]
+answers = ["Finds the MAC address that goes with an IP address on the local network"]
+explanation = "ARP asks the local network who has a given IP address and remembers the MAC address in the ARP cache. DNS turns names into addresses; DHCP assigns them."
+review = "Local delivery"
+
+[[question]]
+id = "arp-broadcast"
+type = "short"
+prompt = "A broadcast frame is sent to which destination MAC address? (hex, with dashes)"
+answers = ["ff-ff-ff-ff-ff-ff", "ff:ff:ff:ff:ff:ff"]
+explanation = "The broadcast MAC address is all ones: ff-ff-ff-ff-ff-ff. Every device on the broadcast domain receives it."
+review = "Local delivery"
+
+[[question]]
+id = "broadcast-domain"
+type = "choice"
+prompt = "What separates one broadcast domain from another?"
+choices = ["A switch", "A hub", "A router", "A cable"]
+answers = ["A router"]
+explanation = "A switch forwards broadcasts out of every port, but a router does not forward them, so it divides broadcast domains."
+review = "Local delivery"
+
+[[question]]
+id = "switch-learning"
+type = "choice"
+prompt = "How does a switch learn which device is on which port?"
+choices = ["By reading the source MAC address of frames it receives", "By asking the DHCP server", "By querying DNS", "By reading the IP routing table"]
+answers = ["By reading the source MAC address of frames it receives"]
+explanation = "The switch notes the source address of each frame and the port it came in on, then forwards later frames only out of that port."
+review = "Local delivery"
+
+[[question]]
+id = "arp-command"
+type = "choice"
+prompt = "Which built-in Windows command shows the ARP cache?"
+choices = ["arp -a", "ipconfig /all", "netstat -r", "tracert"]
+answers = ["arp -a"]
+explanation = "arp -a lists IP-to-MAC entries. Get-NetNeighbor shows the same table in PowerShell, and ip neigh on Linux."
+review = "Local delivery"
+
+[[question]]
+id = "mac-size"
+type = "short"
+prompt = "How many bits long is a MAC address? (number only)"
+answers = ["48"]
+explanation = "A MAC address is 48 bits, written as six pairs of hex digits."
+review = "Local delivery"
+
+[[question]]
+id = "ss-command"
+type = "short"
+prompt = "Type the Linux command, with its flags, that lists listening TCP sockets with numeric ports and their processes."
+answers = ["ss -tlnp", "ss -ltnp", "ss -lntp", "ss -tnlp", "ss -ntlp", "ss -nltp"]
+explanation = "ss -tlnp: -t TCP, -l listening, -n numbers, -p process. Any order of the flags is fine. Seeing other users' processes needs sudo."
+review = "Reading what is open"
+
+[[question]]
+id = "loopback-listener"
+type = "choice"
+prompt = "A service shows as listening on 127.0.0.1:8080. Can another computer on the network connect to it?"
+choices = ["Yes, from anywhere", "No, it accepts only connections from the machine itself", "Only over IPv6", "Only if ping works"]
+answers = ["No, it accepts only connections from the machine itself"]
+explanation = "127.0.0.1 is the loopback address. This is a very common reason a service works locally but not from the network."
+review = "Reading what is open"
+
+[[question]]
+id = "all-addresses"
+type = "choice"
+prompt = "What does a listening address of 0.0.0.0 mean?"
+choices = ["The service is stopped", "It listens on every address of this machine", "It listens only on the loopback address", "It listens only on IPv6"]
+answers = ["It listens on every address of this machine"]
+explanation = "0.0.0.0 means all of the machine's IPv4 addresses, so remote clients can reach it (if the firewall allows)."
+review = "Reading what is open"
+
+[[question]]
+id = "port-to-process"
+type = "choice"
+prompt = "Which PowerShell cmdlet shows listening TCP ports together with the process id that owns each one?"
+choices = ["Get-NetTCPConnection", "Get-NetNeighbor", "Resolve-DnsName", "Get-NetIPAddress"]
+answers = ["Get-NetTCPConnection"]
+explanation = "Get-NetTCPConnection -State Listen shows LocalPort and OwningProcess; Get-Process -Id then names the program."
+review = "Reading what is open"
+
+[[question]]
+id = "ping-not-name"
+type = "choice"
+prompt = "You can ping a website by its IP address but not by its name. Which layer is the likely problem?"
+choices = ["Physical", "Data link", "Application (DNS)", "Transport"]
+answers = ["Application (DNS)"]
+explanation = "The network path works, so the fault is turning the name into an address, which is DNS at the application layer."
+review = "Putting the layers to work"
+certifications = ["comptia-network-plus/network-troubleshooting"]
+
+[[question]]
+id = "cannot-leave-network"
+type = "choice"
+prompt = "A machine reaches others on its own network but nothing beyond it. Which layer first?"
+choices = ["Layer 1", "Layer 2", "Layer 3: the default gateway and routing", "Layer 7"]
+answers = ["Layer 3: the default gateway and routing"]
+explanation = "Reaching local machines but not other networks points at the gateway or routing, which is the network layer."
+review = "Putting the layers to work"
+certifications = ["comptia-network-plus/network-troubleshooting"]
+
+[[question]]
+id = "firewall-layers"
+type = "choice"
+prompt = "A traditional firewall filters mainly by which two things?"
+choices = ["MAC address and cable type", "IP address and port (layers 3 and 4)", "Username and password", "Font and colour"]
+answers = ["IP address and port (layers 3 and 4)"]
+explanation = "Traditional firewalls filter on addresses and ports. Application-aware ones also inspect layer 7."
+review = "Two models"
+
+[[question]]
+id = "test-direction"
+type = "choice"
+prompt = "In what order should you test a network problem?"
+choices = ["Top down, starting with the application", "Bottom up, stopping at the first layer that fails", "Randomly", "Only with ping"]
+answers = ["Bottom up, stopping at the first layer that fails"]
+explanation = "Each layer you prove working narrows the problem. The first layer that fails is where to look."
+review = "Putting the layers to work"

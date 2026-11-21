@@ -1,0 +1,24 @@
+schema_version = 1
+id = "hardware.mobile-devices"
+title = "Mobile devices: types, connectivity, management and troubleshooting"
+summary = "Laptops, tablets and phones, wireless connectivity, mobile device management and a troubleshooting routine."
+content = "mobile-devices.md"
+estimated_minutes = 25
+objectives = [
+  "Name the device types and what distinguishes each",
+  "Compare Wi-Fi, Bluetooth, cellular and NFC and the first checks for each",
+  "Explain mobile device management and corporate versus personal ownership",
+  "Apply the troubleshooting routine to a mobile device, protecting user data before a reset",
+]
+prerequisites = ["foundations.troubleshooting-method"]
+windows_features = []
+privilege = "standard"
+certifications = ["comptia-a-core1/mobile-devices", "comptia-a-core1/networking", "microsoft-md-102/protect-devices"]
+evaluation_criteria = [
+  "Learner explains why full Wi-Fi bars do not guarantee a working connection",
+  "Learner lists what to do before resetting a user's device",
+]
+
+[[references]]
+title = "CompTIA A+ certification information"
+url = "https://www.comptia.org/en-us/certifications/a/"

@@ -1,0 +1,88 @@
+schema_version = 1
+id = "foundations.architecture"
+title = "How Windows is organized"
+summary = "Kernel mode and user mode, processes, services, sessions, users, SIDs and where things live on disk, each observed from both the graphical tools and the command line, plus a terminal-first working setup."
+content = "architecture.md"
+estimated_minutes = 50
+objectives = [
+  "Explain the difference between kernel mode and user mode and why it matters when troubleshooting",
+  "Distinguish a program, a process, a thread and a service",
+  "Look up a running process, its owner, session, parent and the path it was started from, with Task Manager, tasklist, Get-Process and Get-CimInstance",
+  "Describe what a logon session and a user profile are, and why services run in session 0",
+  "Read a SID, name the common well-known SIDs, and explain why permissions follow the SID rather than the name",
+  "Name the main folders of a Windows installation and what each holds, and use %SystemRoot% instead of assuming C:",
+  "Find the edition, version and build of a Windows system from the command line",
+  "Name a terminal editor to use on a remote or locked-down machine, including Microsoft Edit",
+]
+windows_features = ["Task Manager", "Command Prompt", "Windows PowerShell", "Windows Terminal"]
+privilege = "standard"
+certifications = ["comptia-a-core2/operating-systems", "comptia-a-core1/virtualization-cloud"]
+evaluation_criteria = [
+  "Learner can state, in their own words, what runs in kernel mode and what runs in user mode",
+  "Learner can find a named process in Task Manager and on the command line and report its PID, path, session and the user it runs as",
+  "Learner reads a SID and says what its last number and the S-1-5-18 and S-1-5-32-544 values mean",
+]
+
+[[references]]
+title = "User mode and kernel mode (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-hardware/drivers/gettingstarted/user-mode-and-kernel-mode"
+
+[[references]]
+title = "About processes and threads (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/win32/procthread/processes-and-threads"
+
+[[references]]
+title = "Services (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/win32/services/services"
+
+[[references]]
+title = "Service user accounts (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/win32/services/service-user-accounts"
+
+[[references]]
+title = "Interactive services and session 0 (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/win32/services/interactive-services"
+
+[[references]]
+title = "Security identifiers (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/win32/secauthz/security-identifiers"
+
+[[references]]
+title = "Well-known SIDs (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/win32/secauthz/well-known-sids"
+
+[[references]]
+title = "tasklist (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/tasklist"
+
+[[references]]
+title = "whoami (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/whoami"
+
+[[references]]
+title = "driverquery (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/driverquery"
+
+[[references]]
+title = "Get-CimInstance (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/cimcmdlets/get-ciminstance"
+
+[[references]]
+title = "Get-ComputerInfo (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.management/get-computerinfo"
+
+[[references]]
+title = "Get-LocalUser (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.localaccounts/get-localuser"
+
+[[references]]
+title = "Known Folders (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/win32/shell/knownfolderid"
+
+[[references]]
+title = "Windows Terminal documentation (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/terminal/"
+
+[[references]]
+title = "Microsoft Edit (GitHub)"
+url = "https://github.com/microsoft/edit"

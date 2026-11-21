@@ -1,0 +1,401 @@
+schema_version = 1
+lesson = "windows-admin.services-and-startup"
+# Draft for owner review. A bank of 44; each attempt asks 10, favouring questions missed last time.
+draw = 10
+
+# ---- What a service is ----
+
+[[question]]
+id = "svc-what"
+type = "choice"
+prompt = "What manages Windows services?"
+choices = ["The Service Control Manager", "The Task Scheduler", "Explorer", "The registry editor"]
+answers = ["The Service Control Manager"]
+explanation = "The SCM (services.exe) starts, stops and monitors services."
+review = "What a service is"
+certifications = ["comptia-a-core2/operating-systems"]
+
+[[question]]
+id = "svc-name-vs-display"
+type = "choice"
+prompt = "Which name do you use in scripts, for example Spooler?"
+choices = ["The service name", "The display name", "The file name", "The account name"]
+answers = ["The service name"]
+explanation = "The display name (Print Spooler) is for people."
+review = "What a service is"
+
+[[question]]
+id = "svc-startup-types"
+type = "multi"
+prompt = "Which are service startup types? Select all that apply."
+choices = ["Automatic", "Automatic (Delayed Start)", "Manual", "Disabled", "Suspended"]
+answers = ["Automatic", "Automatic (Delayed Start)", "Manual", "Disabled"]
+explanation = "There is no Suspended startup type."
+review = "What a service is"
+
+[[question]]
+id = "svc-delayed"
+type = "choice"
+prompt = "What does Automatic (Delayed Start) do?"
+choices = ["Starts the service shortly after boot to keep boot fast", "Starts it only on Fridays", "Prevents it from starting", "Starts it before the kernel"]
+answers = ["Starts the service shortly after boot to keep boot fast"]
+explanation = "It staggers start-up work."
+review = "What a service is"
+
+[[question]]
+id = "svc-disabled"
+type = "choice"
+prompt = "What does the startup type Disabled mean?"
+choices = ["The service cannot start, even if asked", "It starts at boot", "It starts when needed", "It restarts every hour"]
+answers = ["The service cannot start, even if asked"]
+explanation = "A Disabled service ignores start requests until you change its type."
+review = "What a service is"
+
+[[question]]
+id = "svc-status-vs-type"
+type = "choice"
+prompt = "A service is Running but its startup type is Disabled. What happens after a restart?"
+choices = ["It does not start", "It starts as normal", "It starts in safe mode only", "It starts twice"]
+answers = ["It does not start"]
+explanation = "Status is true now; startup type decides what happens after a restart. Always check both."
+review = "What a service is"
+certifications = ["comptia-a-core2/software-troubleshooting"]
+
+# ---- Looking at services ----
+
+[[question]]
+id = "look-ps"
+type = "short"
+prompt = "Which PowerShell cmdlet lists services and their status?"
+answers = ["Get-Service"]
+explanation = "Format with Name, DisplayName, Status and StartType."
+review = "PowerShell"
+
+[[question]]
+id = "look-starttype-prop"
+type = "short"
+prompt = "Which Get-Service property shows the startup type?"
+answers = ["StartType"]
+explanation = "Status is the state now; StartType is what happens after a restart."
+review = "PowerShell"
+
+[[question]]
+id = "look-stopped-auto"
+type = "choice"
+prompt = "What does 'Get-Service | Where-Object Status -eq Stopped | Where-Object StartType -eq Automatic' find?"
+choices = ["Automatic services that are stopped, candidates for what failed at boot", "Services that are disabled", "Services that run as SYSTEM", "Services with no dependencies"]
+answers = ["Automatic services that are stopped, candidates for what failed at boot"]
+explanation = "Some are designed to stop after finishing, so read before acting."
+review = "PowerShell"
+
+[[question]]
+id = "look-account"
+type = "choice"
+prompt = "Which command shows the account a service runs as, using its StartName property?"
+choices = ["Get-CimInstance Win32_Service", "Get-Process", "Get-Acl", "ipconfig /all"]
+answers = ["Get-CimInstance Win32_Service"]
+explanation = "sc.exe qc shows the same as SERVICE_START_NAME."
+review = "PowerShell"
+
+[[question]]
+id = "look-deps"
+type = "choice"
+prompt = "Which parameter of Get-Service lists the services a service depends on?"
+choices = ["-RequiredServices", "-DependentServices", "-Include", "-Dependencies"]
+answers = ["-RequiredServices"]
+explanation = "-DependentServices lists the services that depend on it."
+review = "PowerShell"
+
+[[question]]
+id = "look-sc-alias"
+type = "choice"
+prompt = "Why must you type sc.exe rather than sc in PowerShell?"
+choices = ["In PowerShell, sc is an alias for Set-Content", "sc.exe is faster", "sc is only for Linux", "PowerShell blocks sc"]
+answers = ["In PowerShell, sc is an alias for Set-Content"]
+explanation = "'sc query' in PowerShell does not do what you expect."
+review = "Command Prompt: `sc.exe`"
+
+[[question]]
+id = "look-sc-qc"
+type = "short"
+prompt = "Write the sc.exe command that shows a service's configuration (binary path, account, dependencies) for Spooler."
+answers = ["sc.exe qc Spooler", "sc qc Spooler"]
+explanation = "sc.exe query Spooler shows the status instead."
+review = "Command Prompt: `sc.exe`"
+
+[[question]]
+id = "look-sc-starttype"
+type = "choice"
+prompt = "In 'sc.exe qc' output, START_TYPE 2 means:"
+choices = ["Automatic", "Manual", "Disabled", "Boot"]
+answers = ["Automatic"]
+explanation = "2 is automatic, 3 manual, 4 disabled."
+review = "Command Prompt: `sc.exe`"
+
+[[question]]
+id = "look-sc-disabled"
+type = "short"
+prompt = "In 'sc.exe qc' output, which START_TYPE number means Disabled? (number only)"
+answers = ["4"]
+explanation = "2 automatic, 3 manual, 4 disabled."
+review = "Command Prompt: `sc.exe`"
+
+[[question]]
+id = "look-exitcode"
+type = "choice"
+prompt = "A stopped service shows a non-zero WIN32_EXIT_CODE. What does it tell you?"
+choices = ["The reason it stopped, to look up", "That it is running", "That it is disabled", "That the disk is full"]
+answers = ["The reason it stopped, to look up"]
+explanation = "Zero means no error."
+review = "Command Prompt: `sc.exe`"
+
+[[question]]
+id = "look-path"
+type = "choice"
+prompt = "A service's program path is in a temporary folder. What should you do?"
+choices = ["Take a close look; it is unusual for a legitimate service", "Ignore it", "Restart it", "Disable the Service Control Manager"]
+answers = ["Take a close look; it is unusual for a legitimate service"]
+explanation = "Legitimate services normally run from system or program folders."
+review = "PowerShell"
+
+# ---- Changing ----
+
+[[question]]
+id = "chg-set-service"
+type = "short"
+prompt = "Write the PowerShell command that sets the Spooler service to start automatically."
+answers = ["Set-Service Spooler -StartupType Automatic", "Set-Service -Name Spooler -StartupType Automatic"]
+explanation = "Set-Service changes the startup type; Start-Service starts it now."
+review = "Changing services"
+
+[[question]]
+id = "chg-sc-space"
+type = "choice"
+prompt = "What is easy to get wrong in 'sc.exe config Spooler start= auto'?"
+choices = ["The space after the equals sign is required", "The word auto must be capitalised", "It must be run twice", "It needs a reboot first"]
+answers = ["The space after the equals sign is required"]
+explanation = "'start=auto' without the space gives a confusing error."
+review = "Changing services"
+
+[[question]]
+id = "chg-sc-manual"
+type = "choice"
+prompt = "Which sc.exe start value means Manual?"
+choices = ["demand", "auto", "disabled", "delayed-auto"]
+answers = ["demand"]
+explanation = "auto, delayed-auto, demand and disabled are the values."
+review = "Changing services"
+
+[[question]]
+id = "chg-start-now"
+type = "choice"
+prompt = "You changed a service's startup type to Automatic. Is it running now?"
+choices = ["Not necessarily; the startup type applies at the next start, so start it too", "Yes, immediately", "Only after a reboot", "It starts when you log off"]
+answers = ["Not necessarily; the startup type applies at the next start, so start it too"]
+explanation = "Set-Service changes configuration; Start-Service changes the state."
+review = "Changing services"
+
+[[question]]
+id = "chg-deps"
+type = "choice"
+prompt = "A service will not start. One it depends on is stopped. Why?"
+choices = ["A service will not start if one it requires is stopped or disabled", "Dependencies are only advisory", "The disk is full", "The firewall blocks it"]
+answers = ["A service will not start if one it requires is stopped or disabled"]
+explanation = "Check the dependency chain."
+review = "Changing services"
+
+[[question]]
+id = "chg-disable-unknown"
+type = "choice"
+prompt = "What should you do before disabling a service you do not understand?"
+choices = ["Look it up, and write down what you change", "Disable it and see what breaks", "Delete its file", "Nothing"]
+answers = ["Look it up, and write down what you change"]
+explanation = "Disabling can break services that depend on it."
+review = "Changing services"
+
+[[question]]
+id = "chg-recovery"
+type = "short"
+prompt = "Which sc.exe command shows a service's recovery (failure) actions for Spooler?"
+answers = ["sc.exe qfailure Spooler", "sc qfailure Spooler"]
+explanation = "It shows the restart actions and delays."
+review = "Recovery: what happens when a service crashes"
+
+[[question]]
+id = "chg-comes-back"
+type = "choice"
+prompt = "A service keeps coming back after you stop it. What might restart it?"
+choices = ["Its recovery actions, another service that depends on it, or a scheduled task", "The monitor", "The DNS cache", "Nothing can"]
+answers = ["Its recovery actions, another service that depends on it, or a scheduled task"]
+explanation = "Check the recovery configuration before concluding something else starts it."
+review = "Recovery: what happens when a service crashes"
+
+# ---- Will not start ----
+
+[[question]]
+id = "ns-event-source"
+type = "choice"
+prompt = "Which event provider logs service start failures in the System log?"
+choices = ["Service Control Manager", "Task Scheduler", "Windows Update", "Group Policy"]
+answers = ["Service Control Manager"]
+explanation = "Look for the 7000-series event IDs."
+review = "When a service will not start"
+
+[[question]]
+id = "ns-7034"
+type = "choice"
+prompt = "Which event ID means a service terminated unexpectedly?"
+choices = ["7034", "7045", "7001", "4624"]
+answers = ["7034"]
+explanation = "7000 failed to start, 7001 dependency failure, 7023 ended with an error, 7034 ended unexpectedly, 7045 a service was installed."
+review = "When a service will not start"
+
+[[question]]
+id = "ns-7045"
+type = "choice"
+prompt = "Which event ID records that a new service was installed?"
+choices = ["7045", "7034", "7023", "7000"]
+answers = ["7045"]
+explanation = "Useful when investigating something that appeared recently."
+review = "When a service will not start"
+
+[[question]]
+id = "ns-account"
+type = "choice"
+prompt = "A service that ran for months suddenly will not start. Which account-related cause is common?"
+choices = ["An expired or changed password for the service account", "A new wallpaper", "A different monitor", "A longer cable"]
+answers = ["An expired or changed password for the service account"]
+explanation = "Also check that the account kept its 'log on as a service' right."
+review = "When a service will not start"
+
+[[question]]
+id = "ns-port"
+type = "choice"
+prompt = "A network service will not start and its own log says 'address already in use'. What is the cause?"
+choices = ["Another program already holds its port", "The password expired", "The binary is missing", "UAC blocked it"]
+answers = ["Another program already holds its port"]
+explanation = "Check which process listens on the port."
+review = "When a service will not start"
+
+[[question]]
+id = "ns-dont-restart"
+type = "choice"
+prompt = "Why not just start a stopped service to see if that fixes it?"
+choices = ["It hides why it stopped; read the event first", "Starting services is forbidden", "It uses too much memory", "It needs a licence"]
+answers = ["It hides why it stopped; read the event first"]
+explanation = "The cause stays, and the failure returns."
+review = "When a service will not start"
+
+# ---- Scheduled tasks ----
+
+[[question]]
+id = "task-what"
+type = "choice"
+prompt = "What does a scheduled task do?"
+choices = ["Runs a program on a trigger such as a time, boot, sign-in or event", "Restarts services", "Edits the registry", "Manages DNS"]
+answers = ["Runs a program on a trigger such as a time, boot, sign-in or event"]
+explanation = "It has an account, a trigger, an action and conditions."
+review = "Scheduled tasks"
+
+[[question]]
+id = "task-info"
+type = "short"
+prompt = "Which cmdlet shows a task's LastRunTime and LastTaskResult? (cmdlet name)"
+answers = ["Get-ScheduledTaskInfo"]
+explanation = "Pipe Get-ScheduledTask into it."
+review = "Reading tasks"
+
+[[question]]
+id = "task-zero"
+type = "choice"
+prompt = "LastTaskResult is 0. What does that prove?"
+choices = ["The program exited successfully, not that it did the right work", "The job completed all its work", "The task is disabled", "The task never ran"]
+answers = ["The program exited successfully, not that it did the right work"]
+explanation = "A task can exit cleanly and still do nothing."
+review = "Reading tasks"
+
+[[question]]
+id = "task-267009"
+type = "choice"
+prompt = "LastTaskResult shows 267009 (0x41301). What kind of value is it?"
+choices = ["A status meaning the task is currently running, not an error", "A failure", "A disabled task", "A missing file"]
+answers = ["A status meaning the task is currently running, not an error"]
+explanation = "Convert to hex and look it up in the Task Scheduler constants."
+review = "Reading tasks"
+
+[[question]]
+id = "task-hex"
+type = "choice"
+prompt = "How do you convert a decimal task result to hex to look it up?"
+choices = ["'{0:X}' -f 267009", "Get-Hex 267009", "hex.exe 267009", "It cannot be done"]
+answers = ["'{0:X}' -f 267009"]
+explanation = "The format operator -f with {0:X} prints hex."
+review = "Reading tasks"
+
+[[question]]
+id = "task-enable"
+type = "short"
+prompt = "Which cmdlet turns a disabled scheduled task back on?"
+answers = ["Enable-ScheduledTask"]
+explanation = "A disabled task never runs, silently."
+review = "Changing and running tasks"
+
+[[question]]
+id = "task-run"
+type = "short"
+prompt = "Which cmdlet runs a scheduled task now?"
+answers = ["Start-ScheduledTask"]
+explanation = "Useful to test a task without waiting for its trigger."
+review = "Changing and running tasks"
+
+[[question]]
+id = "task-create"
+type = "short"
+prompt = "Which PowerShell cmdlet registers (creates) a scheduled task from an action and a trigger?"
+answers = ["Register-ScheduledTask"]
+explanation = "Build the pieces with New-ScheduledTaskAction and New-ScheduledTaskTrigger."
+review = "Creating a task"
+
+[[question]]
+id = "task-system"
+type = "choice"
+prompt = "Why not run every task as SYSTEM?"
+choices = ["A task that runs as SYSTEM can do anything on the machine, so use the least privilege that works", "SYSTEM cannot run scripts", "SYSTEM is slower", "Windows forbids it"]
+answers = ["A task that runs as SYSTEM can do anything on the machine, so use the least privilege that works"]
+explanation = "A bug or compromise in the script then has full power."
+review = "Creating a task"
+
+[[question]]
+id = "task-paths"
+type = "choice"
+prompt = "Why use full paths in a task's action?"
+choices = ["A task does not start in the folder you expect", "Paths are shorter", "Windows requires it for logging", "Relative paths are slower"]
+answers = ["A task does not start in the folder you expect"]
+explanation = "Relative paths are a common cause of a task that does nothing."
+review = "A task that \"does nothing\""
+
+[[question]]
+id = "task-nothing-first"
+type = "choice"
+prompt = "A task reports 0 but did nothing. What is the first thing to try?"
+choices = ["Run it by hand as the same account, from the same folder, with the same arguments", "Reinstall Windows", "Disable the task", "Delete the log"]
+answers = ["Run it by hand as the same account, from the same folder, with the same arguments"]
+explanation = "Differences between your session and the task's cause most of these."
+review = "A task that \"does nothing\""
+
+[[question]]
+id = "task-conditions"
+type = "choice"
+prompt = "Which task setting can silently prevent a run on a laptop?"
+choices = ["A condition such as 'start only if on AC power'", "The task name", "The icon", "The author"]
+answers = ["A condition such as 'start only if on AC power'"]
+explanation = "Check the conditions tab or the task's Conditions."
+review = "A task that \"does nothing\""
+
+[[question]]
+id = "task-schtasks"
+type = "short"
+prompt = "Which Command Prompt tool creates and queries scheduled tasks? (command name)"
+answers = ["schtasks"]
+explanation = "schtasks /create and schtasks /query."
+review = "Creating a task"

@@ -1,0 +1,36 @@
+schema_version = 1
+id = "labs.linux-cron-file-ignored"
+target = "linux"
+distro = "ubuntu" # cron is the service name on Debian-family systems (AlmaLinux has its own version of this lab)
+title = "Linux: the nightly job stopped running"
+summary = "A scheduled job's file was renamed so cron no longer reads it."
+lesson = "foundations.troubleshooting-method"
+symptom = "The nightly cleanup job on this Linux server has stopped running. Its file is still in /etc/cron.d and the cron service is running."
+hints = [
+  "If cron is running and the file is there, something about the file itself is wrong.",
+  "Look at the names of the files in /etc/cron.d. cron is picky about them.",
+  "Files in /etc/cron.d are only read if their names use letters, digits, underscores and hyphens, with no dots. Fix the name.",
+]
+expected_changes = [
+  "Creates /etc/cron.d/nightly-cleanup, a daily job",
+  "Renames it to /etc/cron.d/nightly.cleanup, which cron ignores",
+]
+hazards = ["The cleanup job in the lab VM does not run until the file is renamed back"]
+scope = "single guest (the registered Linux training VM only)"
+privilege = "administrator"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["comptia-linux-plus/system-management", "comptia-linux-plus/troubleshooting", "redhat-rhcsa/running-systems"]
+setup = '''
+printf '0 2 * * * root /usr/bin/touch /var/tmp/winlab-cleanup.stamp\n' > /etc/cron.d/nightly-cleanup
+chmod 644 /etc/cron.d/nightly-cleanup
+systemctl enable --now cron
+'''
+fault = "mv /etc/cron.d/nightly-cleanup /etc/cron.d/nightly.cleanup"
+solution = "mv /etc/cron.d/nightly.cleanup /etc/cron.d/nightly-cleanup"
+
+[validate]
+script = '''
+if ls /etc/cron.d | grep -E '^[A-Za-z0-9_-]+$' | grep -q '^nightly'; then echo "job file will be loaded"; else echo "job file will be ignored"; fi
+'''
+expect_output_contains = "job file will be loaded"

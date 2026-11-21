@@ -1,0 +1,45 @@
+schema_version = 1
+id = "networking.subnetting"
+title = "IP addressing and subnetting"
+summary = "Read an IPv4 address and prefix, find the network, broadcast and usable range, decide whether two hosts share a network, plus the special ranges and the basics of IPv6."
+content = "subnetting.md"
+estimated_minutes = 60
+objectives = [
+  "Convert between dotted decimal, binary and prefix length",
+  "Work out the network address, broadcast address and usable host range of any IPv4 address and prefix",
+  "Decide whether two addresses can talk directly or need a router",
+  "Recognise private, loopback and link-local ranges",
+  "Read an IPv6 address and name its common types",
+]
+prerequisites = ["networking.models-and-protocols"]
+windows_features = ["Command Prompt", "Windows PowerShell"]
+privilege = "standard"
+certifications = ["comptia-network-plus/networking-concepts", "comptia-a-core1/networking", "redhat-rhcsa/basic-networking"]
+evaluation_criteria = [
+  "Learner solves the five practice problems without a calculator and states each answer in network, broadcast and range form",
+  "Learner explains why two hosts with the same address and different masks may disagree about who is local",
+]
+
+[[references]]
+title = "IPv4 address space (IANA special-purpose registry)"
+url = "https://www.iana.org/assignments/iana-ipv4-special-registry/iana-ipv4-special-registry.xhtml"
+
+[[references]]
+title = "IPv6 addressing architecture (RFC 4291)"
+url = "https://www.rfc-editor.org/rfc/rfc4291"
+
+[[references]]
+title = "RFC 1918: Address allocation for private internets"
+url = "https://www.rfc-editor.org/rfc/rfc1918"
+
+[[references]]
+title = "RFC 4632: Classless Inter-domain Routing (CIDR)"
+url = "https://www.rfc-editor.org/rfc/rfc4632"
+
+[[references]]
+title = "Get-NetIPAddress (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/nettcpip/get-netipaddress"
+
+[[references]]
+title = "ip-address(8) manual page"
+url = "https://man7.org/linux/man-pages/man8/ip-address.8.html"

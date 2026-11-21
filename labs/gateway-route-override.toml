@@ -1,0 +1,42 @@
+schema_version = 1
+id = "labs.gateway-route-override"
+target = "windows"
+title = "The server cannot reach other networks"
+summary = "A static address was typed in with the wrong default gateway."
+lesson = "networking.addressing-and-names"
+symptom = "The server was moved to a fixed address last week. It can still reach machines on its own network, but nothing beyond it: web requests and updates time out. The adapter shows connected and has the right address and subnet."
+hints = [
+  "Work bottom-up: the adapter has a sensible address, so check the next layer, the route to other networks. Get-NetRoute (or route print) lists the routing table; Get-NetIPConfiguration shows the gateway.",
+  "The default route is the 0.0.0.0/0 entry. Its next hop must be a router that exists on this subnet. Test-Connection (ping) the gateway to see whether it answers.",
+  "On this lab network the router is the first address of the subnet, the .2 address on the same network as the server.",
+  "Either replace the gateway with the correct address, or return the adapter to automatic (DHCP) configuration, which supplies the right one.",
+]
+expected_changes = [
+  "Switches the lab VM's active adapter from DHCP to a static address (the same address it already had) with default gateway 10.0.2.99, an address that does not exist",
+]
+hazards = ["Traffic from the lab VM to other networks is dropped until the gateway is corrected"]
+scope = "single guest (the registered training VM only)"
+privilege = "administrator"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["comptia-network-plus/network-troubleshooting", "comptia-network-plus/network-implementation", "comptia-a-core1/networking"]
+fault = '''
+$a = Get-NetAdapter | Where-Object Status -eq 'Up' | Select-Object -First 1
+Set-NetIPInterface -InterfaceIndex $a.ifIndex -Dhcp Disabled
+Get-NetRoute -InterfaceIndex $a.ifIndex -DestinationPrefix '0.0.0.0/0' -ErrorAction SilentlyContinue | Remove-NetRoute -Confirm:$false
+New-NetRoute -InterfaceIndex $a.ifIndex -DestinationPrefix '0.0.0.0/0' -NextHop '10.0.2.99' | Out-Null
+Set-DnsClientServerAddress -InterfaceIndex $a.ifIndex -ServerAddresses '10.0.2.3'
+'''
+solution = '''
+$a = Get-NetAdapter | Where-Object Status -eq 'Up' | Select-Object -First 1
+Get-NetRoute -InterfaceIndex $a.ifIndex -DestinationPrefix '0.0.0.0/0' -ErrorAction SilentlyContinue | Remove-NetRoute -Confirm:$false
+New-NetRoute -InterfaceIndex $a.ifIndex -DestinationPrefix '0.0.0.0/0' -NextHop '10.0.2.2' | Out-Null
+'''
+
+[validate]
+script = '''
+$best = Get-NetRoute -DestinationPrefix '0.0.0.0/0' |
+    Sort-Object { $_.RouteMetric + $_.InterfaceMetric } | Select-Object -First 1
+"gateway=$($best.NextHop)"
+'''
+expect_output_contains = "gateway=10.0.2.2"

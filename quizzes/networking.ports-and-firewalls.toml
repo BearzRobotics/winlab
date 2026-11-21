@@ -1,0 +1,437 @@
+schema_version = 1
+lesson = "networking.ports-and-firewalls"
+# Draft for owner review. A bank of 48; each attempt asks 10, favouring questions missed last time.
+draw = 10
+
+# ---- Ports and transports ----
+
+[[question]]
+id = "port-purpose"
+type = "choice"
+prompt = "What does a port identify?"
+choices = ["A program or service on a machine", "A machine on the network", "A network", "A cable"]
+answers = ["A program or service on a machine"]
+explanation = "The IP address finds the machine; the port finds the program on it."
+review = "What a port is"
+certifications = ["comptia-network-plus/networking-concepts"]
+
+[[question]]
+id = "port-range"
+type = "short"
+prompt = "What is the highest valid TCP or UDP port number? (number only)"
+answers = ["65535"]
+explanation = "Ports are 16-bit numbers, 0 to 65535."
+review = "What a port is"
+
+[[question]]
+id = "conn-tuple"
+type = "multi"
+prompt = "Which of these four values identify a TCP connection? Select all four that apply."
+choices = ["Source address", "Source port", "Destination address", "Destination port", "The MAC address of the gateway"]
+answers = ["Source address", "Source port", "Destination address", "Destination port"]
+explanation = "A connection is the source and destination address and port. The gateway's MAC address plays no part."
+review = "What a port is"
+
+[[question]]
+id = "tcp-handshake"
+type = "choice"
+prompt = "What is the TCP three-way handshake?"
+choices = ["SYN, SYN-ACK, ACK", "Discover, Offer, Request", "Hello, Key, Done", "Query, Answer, Close"]
+answers = ["SYN, SYN-ACK, ACK"]
+explanation = "TCP sets up a connection with SYN, SYN-ACK and ACK before data flows."
+review = "What a port is"
+
+[[question]]
+id = "tcp-vs-udp"
+type = "choice"
+prompt = "Which statement is true of UDP, compared with TCP?"
+choices = ["No connection set-up, no ordering and no retransmission", "It guarantees ordered delivery", "It always uses port 80", "It cannot cross routers"]
+answers = ["No connection set-up, no ordering and no retransmission"]
+explanation = "UDP is best-effort; that suits DNS queries, streaming and VoIP."
+review = "What a port is"
+
+[[question]]
+id = "tcp-vs-udp-2"
+type = "multi"
+prompt = "Which of these normally use UDP? Select all that apply."
+choices = ["DNS queries", "DHCP", "HTTPS", "SSH"]
+answers = ["DNS queries", "DHCP"]
+explanation = "HTTPS and SSH run over TCP. DNS usually uses UDP, DHCP always does."
+review = "What a port is"
+
+[[question]]
+id = "same-number"
+type = "choice"
+prompt = "Are TCP port 53 and UDP port 53 the same thing?"
+choices = ["No, they are separate ports; a rule must name the protocol", "Yes, a rule for one covers both", "Only on Windows", "Only for DNS"]
+answers = ["No, they are separate ports; a rule must name the protocol"]
+explanation = "A rule for 53/tcp does not allow 53/udp."
+review = "What a port is"
+
+[[question]]
+id = "wk-range"
+type = "choice"
+prompt = "Which port range is called 'well known'?"
+choices = ["0 to 1023", "1024 to 49151", "49152 to 65535", "1 to 100"]
+answers = ["0 to 1023"]
+explanation = "Registered ports are 1024 to 49151, dynamic ports 49152 upward."
+review = "Well-known ports"
+
+[[question]]
+id = "wk-ssh"
+type = "short"
+prompt = "Which TCP port does SSH use? (number only)"
+answers = ["22"]
+explanation = "SSH is 22/tcp."
+review = "Well-known ports"
+
+[[question]]
+id = "wk-https"
+type = "short"
+prompt = "Which TCP port does HTTPS use? (number only)"
+answers = ["443"]
+explanation = "HTTPS is 443/tcp; HTTP is 80."
+review = "Well-known ports"
+
+[[question]]
+id = "wk-rdp"
+type = "short"
+prompt = "Which TCP port does Remote Desktop (RDP) use? (number only)"
+answers = ["3389"]
+explanation = "RDP is 3389/tcp."
+review = "Well-known ports"
+
+[[question]]
+id = "wk-smb"
+type = "short"
+prompt = "Which TCP port carries SMB file sharing on modern Windows? (number only)"
+answers = ["445"]
+explanation = "SMB is 445/tcp."
+review = "Well-known ports"
+
+[[question]]
+id = "wk-dns"
+type = "choice"
+prompt = "On which port(s) does DNS normally run?"
+choices = ["53, UDP first and TCP for large answers", "443 over TCP only", "67 and 68 over UDP", "25 over TCP"]
+answers = ["53, UDP first and TCP for large answers"]
+explanation = "A firewall that passes only UDP 53 breaks large answers."
+review = "Well-known ports"
+
+[[question]]
+id = "wk-registry"
+type = "choice"
+prompt = "Where is the official list of port number assignments kept?"
+choices = ["The IANA registry", "The Windows registry", "RFC 768 only", "The router's manual"]
+answers = ["The IANA registry"]
+explanation = "IANA maintains the service name and transport protocol port number registry."
+review = "Well-known ports"
+
+# ---- Listening ----
+
+[[question]]
+id = "listen-what"
+type = "choice"
+prompt = "What does it mean for a program to 'listen' on a port?"
+choices = ["It has opened a socket and is waiting for incoming connections", "It is sending data out", "It is blocked by the firewall", "It has crashed"]
+answers = ["It has opened a socket and is waiting for incoming connections"]
+explanation = "Servers listen; clients connect."
+review = "Listening and connecting"
+
+[[question]]
+id = "listen-win"
+type = "short"
+prompt = "Write the PowerShell cmdlet and parameter that lists listening TCP sockets on Windows (Get-NetTCPConnection plus its state parameter)."
+answers = ["Get-NetTCPConnection -State Listen"]
+explanation = "The state filter is -State Listen."
+review = "What is listening here"
+
+[[question]]
+id = "listen-netstat"
+type = "short"
+prompt = "Which netstat switches show all connections, numeric addresses and the owning process ID? (for example -xyz)"
+answers = ["-ano", "netstat -ano"]
+explanation = "-a all, -n numeric, -o owning process."
+review = "What is listening here"
+
+[[question]]
+id = "listen-ss"
+type = "short"
+prompt = "Write the ss command (flags together) that lists listening TCP sockets with numeric ports and the process, on Linux."
+answers = ["ss -tlnp", "ss -ltnp", "ss -tnlp", "ss -lntp", "ss -nltp", "ss -pltn", "sudo ss -tlnp"]
+explanation = "-t TCP, -l listening, -n numeric, -p process."
+review = "What is listening here"
+
+[[question]]
+id = "pid-name"
+type = "choice"
+prompt = "netstat shows a listener owned by PID 1924. How do you find the program?"
+choices = ["Get-Process -Id 1924 or tasklist /fi \"pid eq 1924\"", "ipconfig /all", "nslookup 1924", "route print"]
+answers = ["Get-Process -Id 1924 or tasklist /fi \"pid eq 1924\""]
+explanation = "The PID maps to a process name with Get-Process or tasklist."
+review = "What is listening here"
+
+[[question]]
+id = "bind-all"
+type = "choice"
+prompt = "A service's local address is 0.0.0.0:443. What does that mean?"
+choices = ["It listens on all IPv4 addresses of the machine", "It listens only on this machine", "It is not listening", "It is bound to the default gateway"]
+answers = ["It listens on all IPv4 addresses of the machine"]
+explanation = "0.0.0.0 (and :: for IPv6) means every address."
+review = "Read the local address"
+
+[[question]]
+id = "bind-loop"
+type = "choice"
+prompt = "ss shows a service on 127.0.0.1:8080. Who can reach it?"
+choices = ["Only programs on the same machine", "Anyone on the network", "Anyone if the firewall is off", "Only the default gateway"]
+answers = ["Only programs on the same machine"]
+explanation = "Loopback is never reachable from outside. The service's own configuration must change."
+review = "Read the local address"
+
+[[question]]
+id = "bind-fw-blame"
+type = "choice"
+prompt = "A web service works on the server itself but not from other machines, and ss shows it listening only on 127.0.0.1. What is the fix?"
+choices = ["Change the service to listen on an external address", "Disable the firewall", "Flush the DNS cache", "Add a default route"]
+answers = ["Change the service to listen on an external address"]
+explanation = "No firewall rule can expose a socket bound to loopback."
+review = "Read the local address"
+
+[[question]]
+id = "tnc-true"
+type = "choice"
+prompt = "Test-NetConnection reports TcpTestSucceeded : True. What does that prove?"
+choices = ["The TCP handshake completed: reachable, listening and not blocked", "The service's login works", "DNS is correct", "The firewall is disabled"]
+answers = ["The TCP handshake completed: reachable, listening and not blocked"]
+explanation = "It proves the path and the port, nothing about what the service does next."
+review = "Test a connection from a client"
+
+[[question]]
+id = "tnc-cmd"
+type = "short"
+prompt = "Write the PowerShell command that tests TCP port 443 on server01."
+answers = ["Test-NetConnection server01 -Port 443", "Test-NetConnection -ComputerName server01 -Port 443", "tnc server01 -port 443"]
+explanation = "Test-NetConnection takes the host and -Port."
+review = "Test a connection from a client"
+
+# ---- Refused vs timed out ----
+
+[[question]]
+id = "refused-means"
+type = "choice"
+prompt = "A connection is refused immediately. What does that normally mean?"
+choices = ["The host is reachable but nothing is listening on that port (or a rule rejects it)", "The host is down", "Packets were silently dropped by a firewall", "DNS failed"]
+answers = ["The host is reachable but nothing is listening on that port (or a rule rejects it)"]
+explanation = "Refused means a reset came back, so something answered."
+review = "Refused or timed out"
+certifications = ["comptia-network-plus/network-troubleshooting"]
+
+[[question]]
+id = "timeout-means"
+type = "choice"
+prompt = "A connection hangs and finally times out. What does that most likely mean?"
+choices = ["Something dropped the packets: a firewall set to drop, a bad route, a wrong address, or the host is down", "Nothing is listening on the port", "The service crashed", "The password is wrong"]
+answers = ["Something dropped the packets: a firewall set to drop, a bad route, a wrong address, or the host is down"]
+explanation = "A timeout means no answer at all, so look along the path."
+review = "Refused or timed out"
+
+[[question]]
+id = "refused-next"
+type = "choice"
+prompt = "After a refusal, what should you check first?"
+choices = ["Whether the service is running and listening on the right address and port", "The routing table", "The TTL", "The DNS suffix"]
+answers = ["Whether the service is running and listening on the right address and port"]
+explanation = "Refusal says the machine is reachable, so the question is the service."
+review = "Refused or timed out"
+
+[[question]]
+id = "timeout-next"
+type = "choice"
+prompt = "After a timeout, what should you check first?"
+choices = ["The path: routing, then firewalls including the host's own", "The service's configuration file", "The user's password", "The hosts file"]
+answers = ["The path: routing, then firewalls including the host's own"]
+explanation = "Nothing came back, so something on the way is dropping it."
+review = "Refused or timed out"
+
+[[question]]
+id = "ping-ok-port-fail"
+type = "choice"
+prompt = "Ping succeeds but the port test fails. What do you know?"
+choices = ["The host is up; the problem is specific to that port", "The host is down", "DNS is broken", "The cable is faulty"]
+answers = ["The host is up; the problem is specific to that port"]
+explanation = "ICMP echo has no port, so it does not prove a service is reachable."
+review = "Refused or timed out"
+
+# ---- Firewalls ----
+
+[[question]]
+id = "fw-default"
+type = "choice"
+prompt = "What is the default stance of a modern host firewall?"
+choices = ["Block inbound connections not explicitly allowed; allow outbound", "Allow everything", "Block everything", "Allow inbound, block outbound"]
+answers = ["Block inbound connections not explicitly allowed; allow outbound"]
+explanation = "Inbound services must be opened deliberately."
+review = "Firewalls"
+certifications = ["comptia-network-plus/network-security"]
+
+[[question]]
+id = "fw-every"
+type = "choice"
+prompt = "A host firewall allows port 8080, yet clients still time out. What else might be blocking it?"
+choices = ["A network firewall, or a missing route, between client and server", "The DNS TTL", "The hosts file", "Nothing; the firewall rule is enough"]
+answers = ["A network firewall, or a missing route, between client and server"]
+explanation = "Every firewall on the path must allow the traffic."
+review = "Firewalls"
+
+[[question]]
+id = "fw-profiles"
+type = "multi"
+prompt = "Which are Windows Defender Firewall profiles? Select all that apply."
+choices = ["Domain", "Private", "Public", "Guest"]
+answers = ["Domain", "Private", "Public"]
+explanation = "Windows applies the Domain, Private or Public profile to match the network."
+review = "Windows Defender Firewall"
+
+[[question]]
+id = "fw-public"
+type = "choice"
+prompt = "Which Windows firewall profile is the strictest and meant for untrusted networks?"
+choices = ["Public", "Private", "Domain", "Home"]
+answers = ["Public"]
+explanation = "Public is for cafes, airports and other untrusted networks."
+review = "Windows Defender Firewall"
+
+[[question]]
+id = "fw-profile-cmd"
+type = "short"
+prompt = "Which PowerShell cmdlet shows whether each Windows firewall profile is enabled?"
+answers = ["Get-NetFirewallProfile"]
+explanation = "netsh advfirewall show allprofiles shows the same."
+review = "Windows Defender Firewall"
+
+[[question]]
+id = "fw-new-rule"
+type = "choice"
+prompt = "Which cmdlet creates a Windows firewall rule?"
+choices = ["New-NetFirewallRule", "Add-FirewallPort", "Set-NetPort", "New-NetRoute"]
+answers = ["New-NetFirewallRule"]
+explanation = "New-NetFirewallRule takes -DisplayName, -Direction, -Protocol, -LocalPort and -Action."
+review = "Windows Defender Firewall"
+
+[[question]]
+id = "fw-netsh"
+type = "short"
+prompt = "Which netsh context holds the firewall commands? (one word, as typed after 'netsh')"
+answers = ["advfirewall"]
+explanation = "For example: netsh advfirewall show allprofiles."
+review = "Windows Defender Firewall"
+
+[[question]]
+id = "fw-off"
+type = "choice"
+prompt = "Why is turning the firewall off 'to see if it is the problem' a poor habit?"
+choices = ["It tells you less than a narrow allow rule and people forget to turn it back on", "It is not possible on Windows", "It resets the network adapter", "It deletes all rules"]
+answers = ["It tells you less than a narrow allow rule and people forget to turn it back on"]
+explanation = "Add a narrow rule, test, and remove it."
+review = "Windows Defender Firewall"
+
+[[question]]
+id = "fw-profile-scope"
+type = "choice"
+prompt = "You opened a port only on the Private profile. The service works at the desk but not on cafe Wi-Fi. Why?"
+choices = ["Cafe Wi-Fi is the Public profile, where the rule does not apply", "The port number changed", "DNS is blocked", "The TTL expired"]
+answers = ["Cafe Wi-Fi is the Public profile, where the rule does not apply"]
+explanation = "Rules apply per profile."
+review = "Common mistakes"
+
+# ---- Linux firewalls ----
+
+[[question]]
+id = "firewalld-two-sets"
+type = "choice"
+prompt = "In firewalld, what is the difference between runtime and permanent rules?"
+choices = ["Runtime rules apply now but are lost at reload or reboot; permanent rules are saved", "Runtime rules are saved; permanent rules are temporary", "There is no difference", "Permanent rules apply only to IPv6"]
+answers = ["Runtime rules apply now but are lost at reload or reboot; permanent rules are saved"]
+explanation = "Use --permanent, then --reload to apply the saved rules."
+review = "Linux: firewalld (Red Hat family)"
+certifications = ["redhat-rhcsa/basic-networking"]
+
+[[question]]
+id = "firewalld-add"
+type = "short"
+prompt = "Write the firewall-cmd command (with sudo) that saves a rule allowing the http service permanently."
+answers = ["sudo firewall-cmd --permanent --add-service=http", "firewall-cmd --permanent --add-service=http"]
+explanation = "Follow it with --reload to apply."
+review = "Linux: firewalld (Red Hat family)"
+
+[[question]]
+id = "firewalld-reload"
+type = "short"
+prompt = "Which firewall-cmd option applies the saved permanent rules to the running firewall? (include the dashes)"
+answers = ["--reload"]
+explanation = "A permanent rule is not active until a reload (or restart)."
+review = "Linux: firewalld (Red Hat family)"
+
+[[question]]
+id = "firewalld-lost"
+type = "choice"
+prompt = "You ran 'firewall-cmd --add-service=http', it worked, and after a reboot it stopped. Why?"
+choices = ["The rule was runtime only", "The service was uninstalled", "DNS changed", "ufw overrode it"]
+answers = ["The rule was runtime only"]
+explanation = "Without --permanent the rule is never saved."
+review = "Linux: firewalld (Red Hat family)"
+
+[[question]]
+id = "firewalld-zones"
+type = "choice"
+prompt = "What does firewalld group together to apply rules?"
+choices = ["Interfaces and sources into zones", "Users into groups", "Ports into VLANs", "Routes into metrics"]
+answers = ["Interfaces and sources into zones"]
+explanation = "Each zone has its own allowed services and ports."
+review = "Linux: firewalld (Red Hat family)"
+
+[[question]]
+id = "ufw-ssh-first"
+type = "choice"
+prompt = "Why allow SSH before running 'ufw enable' on a remote server?"
+choices = ["Enabling applies deny-inbound at once and would block your own session", "ufw refuses to start otherwise", "SSH is always blocked by default on Windows", "It makes the firewall faster"]
+answers = ["Enabling applies deny-inbound at once and would block your own session"]
+explanation = "You would lose the connection you are using to administer it."
+review = "Linux: ufw (Debian and Ubuntu)"
+
+[[question]]
+id = "ufw-allow"
+type = "short"
+prompt = "Write the ufw command (with sudo) that allows incoming TCP port 22."
+answers = ["sudo ufw allow 22/tcp", "ufw allow 22/tcp"]
+explanation = "ufw allow <port>/<protocol>."
+review = "Linux: ufw (Debian and Ubuntu)"
+
+[[question]]
+id = "ufw-status"
+type = "short"
+prompt = "Write the ufw command (with sudo) that shows rules in detail."
+answers = ["sudo ufw status verbose", "ufw status verbose"]
+explanation = "ufw status verbose also shows the default policies."
+review = "Linux: ufw (Debian and Ubuntu)"
+
+# ---- Routine ----
+
+[[question]]
+id = "routine-first"
+type = "choice"
+prompt = "A service does not work. What is the first step of the port-check routine?"
+choices = ["Check on the server that it is listening, on the right port and address", "Reboot the client", "Flush the DNS cache", "Disable the firewall"]
+answers = ["Check on the server that it is listening, on the right port and address"]
+explanation = "If nothing listens, nothing else matters."
+review = "A bottom-up port check"
+
+[[question]]
+id = "routine-local"
+type = "choice"
+prompt = "Why test from the server to 127.0.0.1 before testing from a client?"
+choices = ["If it fails locally the service itself is the problem, not the network", "Loopback is faster", "It also tests DNS", "It opens the firewall"]
+answers = ["If it fails locally the service itself is the problem, not the network"]
+explanation = "It separates service faults from path faults."
+review = "A bottom-up port check"

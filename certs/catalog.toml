@@ -1,0 +1,141 @@
+schema_version = 1
+
+# Certifications WinLab's material is mapped to. Only domain TITLES are listed, as the vendors publish them;
+# the objective wording is not copied. The `url` is the vendor's page for the current objectives, which is
+# the authority (exams are revised, so check it). A tag on a lesson or lab means "supports this domain",
+# never "passes this exam". Verify each entry against the vendor's current outline before relying on it.
+
+[[exam]]
+id = "comptia-a-core1"
+name = "CompTIA A+ Core 1"
+vendor = "CompTIA"
+code = "220-1201"
+url = "https://www.comptia.org/en-us/certifications/a/"
+[[exam.domain]]
+id = "mobile-devices"
+title = "Mobile Devices"
+[[exam.domain]]
+id = "networking"
+title = "Networking"
+[[exam.domain]]
+id = "hardware"
+title = "Hardware"
+[[exam.domain]]
+id = "virtualization-cloud"
+title = "Virtualization and Cloud Computing"
+[[exam.domain]]
+id = "hardware-network-troubleshooting"
+title = "Hardware and Network Troubleshooting"
+
+[[exam]]
+id = "comptia-a-core2"
+name = "CompTIA A+ Core 2"
+vendor = "CompTIA"
+code = "220-1202"
+url = "https://www.comptia.org/en-us/certifications/a/"
+[[exam.domain]]
+id = "operating-systems"
+title = "Operating Systems"
+[[exam.domain]]
+id = "security"
+title = "Security"
+[[exam.domain]]
+id = "software-troubleshooting"
+title = "Software Troubleshooting"
+[[exam.domain]]
+id = "operational-procedures"
+title = "Operational Procedures"
+
+[[exam]]
+id = "comptia-network-plus"
+name = "CompTIA Network+"
+vendor = "CompTIA"
+code = "N10-009"
+url = "https://www.comptia.org/en-us/certifications/network/"
+[[exam.domain]]
+id = "networking-concepts"
+title = "Networking Concepts"
+[[exam.domain]]
+id = "network-implementation"
+title = "Network Implementation"
+[[exam.domain]]
+id = "network-operations"
+title = "Network Operations"
+[[exam.domain]]
+id = "network-security"
+title = "Network Security"
+[[exam.domain]]
+id = "network-troubleshooting"
+title = "Network Troubleshooting"
+
+[[exam]]
+id = "microsoft-md-102"
+name = "Microsoft Endpoint Administrator"
+vendor = "Microsoft"
+code = "MD-102"
+url = "https://learn.microsoft.com/credentials/certifications/resources/study-guides/md-102"
+[[exam.domain]]
+id = "prepare-infrastructure"
+title = "Prepare infrastructure for devices"
+[[exam.domain]]
+id = "manage-maintain-devices"
+title = "Manage and maintain devices"
+[[exam.domain]]
+id = "manage-applications"
+title = "Manage applications"
+[[exam.domain]]
+id = "protect-devices"
+title = "Protect devices"
+
+[[exam]]
+id = "redhat-rhcsa"
+name = "Red Hat Certified System Administrator"
+vendor = "Red Hat"
+code = "EX200"
+url = "https://www.redhat.com/training/courses/ex200/examobjective"
+[[exam.domain]]
+id = "essential-tools"
+title = "Understand and use essential tools"
+[[exam.domain]]
+id = "running-systems"
+title = "Operate running systems"
+[[exam.domain]]
+id = "local-storage"
+title = "Configure local storage"
+[[exam.domain]]
+id = "file-systems"
+title = "Create and configure file systems"
+[[exam.domain]]
+id = "deploy-maintain"
+title = "Deploy, configure and maintain systems"
+[[exam.domain]]
+id = "basic-networking"
+title = "Manage basic networking"
+[[exam.domain]]
+id = "users-groups"
+title = "Manage users and groups"
+[[exam.domain]]
+id = "security"
+title = "Manage security"
+[[exam.domain]]
+id = "containers"
+title = "Manage containers"
+
+[[exam]]
+id = "comptia-linux-plus"
+name = "CompTIA Linux+"
+vendor = "CompTIA"
+code = "XK0-005"
+url = "https://www.comptia.org/en-us/certifications/linux/"
+[[exam.domain]]
+id = "system-management"
+title = "System Management"
+[[exam.domain]]
+id = "security"
+title = "Security"
+[[exam.domain]]
+id = "scripting-containers-automation"
+title = "Scripting, Containers and Automation"
+[[exam.domain]]
+id = "troubleshooting"
+title = "Troubleshooting"

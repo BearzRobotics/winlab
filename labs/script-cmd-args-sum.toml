@@ -1,0 +1,61 @@
+schema_version = 1
+kind = "script"
+id = "labs.script-cmd-args-sum"
+title = "Script (CMD): add two numbers from the command line"
+summary = "Read arguments in a batch file and do arithmetic."
+lesson = "foundations.cmd-basics"
+symptom = '''
+Write a batch file and save it as C:\Labs\add.cmd.
+
+It is run with two whole numbers as arguments, for example:
+
+    add.cmd 3 4
+
+It must print their sum on a single line (here: 7) and nothing else. Turn off command echoing so only the answer is printed.
+
+It will be tried with several different pairs of numbers.
+'''
+hints = [
+  "Batch files print every command as it runs unless you start with @echo off.",
+  "Inside a batch file, %1 is the first argument and %2 the second.",
+  "set /a evaluates arithmetic: set /a total=%1+%2 stores the sum in a variable, and echo %total% prints it.",
+]
+expected_changes = ["Creates C:\\Labs with a starter batch file"]
+hazards = ["None: the batch file only does arithmetic"]
+scope = "single guest (the registered training VM only)"
+privilege = "standard"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["comptia-a-core2/operating-systems"]
+language = "cmd"
+script_path = 'C:\Labs\add.cmd'
+starter = '''
+@echo off
+rem add.cmd
+rem Print the sum of the two numbers given as arguments (%1 and %2)
+'''
+solution = '''
+@echo off
+set /a total=%1+%2
+echo %total%
+'''
+
+[[tests]]
+setup = "$null = 1"
+args = "3 4"
+expect = "7"
+
+[[tests]]
+setup = "$null = 1"
+args = "10 25"
+expect = "35"
+
+[[tests]]
+setup = "$null = 1"
+args = "100 0"
+expect = "100"
+
+[[tests]]
+setup = "$null = 1"
+args = "250 750"
+expect = "1000"

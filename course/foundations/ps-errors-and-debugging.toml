@@ -1,0 +1,96 @@
+schema_version = 1
+id = "foundations.ps-errors-and-debugging"
+title = "PowerShell errors, debugging and testing"
+summary = "Terminating versus non-terminating errors and why catch misses some, ErrorAction and preference variables, try/catch/finally and the ErrorRecord, throw and Write-Error, native exit codes, output streams, exit codes, StrictMode, debugging, logging, static analysis and Pester testing."
+content = "ps-errors-and-debugging.md"
+estimated_minutes = 110
+objectives = [
+  "Explain terminating and non-terminating errors, and why try/catch misses the second kind",
+  "Use -ErrorAction and $ErrorActionPreference, and state the difference between SilentlyContinue and Ignore",
+  "Write try, catch (typed and general) and finally blocks and read the ErrorRecord in $_",
+  "Collect errors with -ErrorVariable and report them together",
+  "Choose between throw and Write-Error, and make a function honour the caller's -ErrorAction",
+  "Detect native program failure with $LASTEXITCODE and $?, and use PowerShell 7.3+ native error preference",
+  "Use the six output streams and redirections appropriately",
+  "Give a script meaningful exit codes, and use Set-StrictMode and idempotent design defensively",
+  "Debug with trace, breakpoints, verbose output, transcripts and timing, and write a log function",
+  "Check an unknown script with PSScriptAnalyzer and a safe reading routine, and write Pester tests",
+]
+prerequisites = ["foundations.ps-functions-and-scripts"]
+windows_features = ["Windows PowerShell"]
+privilege = "standard"
+certifications = ["comptia-a-core2/operating-systems", "comptia-a-core2/software-troubleshooting"]
+evaluation_criteria = [
+  "Learner finds, by reading, why a catch block never runs and fixes it",
+  "Learner writes a script that processes a list, collects failures, and exits non-zero with a summary",
+  "Learner checks a native program's failure and handles it on both 5.1 and 7",
+  "Learner reads an unknown script for risky constructs before running it",
+]
+
+[[references]]
+title = "about_Try_Catch_Finally (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_try_catch_finally"
+
+[[references]]
+title = "about_Throw (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_throw"
+
+[[references]]
+title = "about_Trap (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_trap"
+
+[[references]]
+title = "about_Preference_Variables (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_preference_variables"
+
+[[references]]
+title = "about_Output_Streams (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_output_streams"
+
+[[references]]
+title = "about_Redirection (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_redirection"
+
+[[references]]
+title = "about_Debuggers (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_debuggers"
+
+[[references]]
+title = "Everything you wanted to know about exceptions (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/scripting/learn/deep-dives/everything-about-exceptions"
+
+[[references]]
+title = "Set-StrictMode (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/set-strictmode"
+
+[[references]]
+title = "Set-PSDebug (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/set-psdebug"
+
+[[references]]
+title = "Set-PSBreakpoint (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/set-psbreakpoint"
+
+[[references]]
+title = "Write-Error (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/write-error"
+
+[[references]]
+title = "Write-Warning (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/write-warning"
+
+[[references]]
+title = "Write-Information (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/write-information"
+
+[[references]]
+title = "Measure-Command (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/measure-command"
+
+[[references]]
+title = "PSScriptAnalyzer overview (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/utility-modules/psscriptanalyzer/overview"
+
+[[references]]
+title = "Pester quick start (pester.dev)"
+url = "https://pester.dev/docs/quick-start"

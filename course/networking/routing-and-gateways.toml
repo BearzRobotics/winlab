@@ -1,0 +1,83 @@
+schema_version = 1
+id = "networking.routing-and-gateways"
+title = "Routing: how packets find their way"
+summary = "How a host decides where to send a packet: the routing table, longest-prefix match, the default gateway, metrics, TTL and traceroute, with the Windows and Linux commands to read and change routes safely."
+content = "routing-and-gateways.md"
+estimated_minutes = 55
+objectives = [
+  "Explain what a router does and how a host chooses between on-link delivery and its gateway",
+  "Read a routing table on Windows and Linux and pick the route a destination will use",
+  "Apply longest-prefix match and metrics to decide between competing routes",
+  "Explain what TTL does and how traceroute uses it",
+  "Add and remove a static route on Windows and Linux, and know whether it survives a reboot",
+  "Diagnose a wrong or missing gateway from a pattern of symptoms",
+]
+prerequisites = ["networking.subnetting", "networking.addressing-and-names"]
+windows_features = ["Command Prompt", "Windows PowerShell"]
+privilege = "standard"
+certifications = ["comptia-network-plus/networking-concepts", "comptia-network-plus/network-troubleshooting", "comptia-a-core1/networking", "redhat-rhcsa/basic-networking"]
+evaluation_criteria = [
+  "Learner reads a pasted routing table and states which route and next hop a given destination uses",
+  "Learner explains why a machine can reach its own subnet but nothing beyond it when the gateway is wrong",
+  "Learner adds a temporary static route, proves it with a trace, and removes it",
+]
+
+[[references]]
+title = "RFC 1122: Requirements for Internet hosts, communication layers"
+url = "https://www.rfc-editor.org/rfc/rfc1122"
+
+[[references]]
+title = "RFC 1812: Requirements for IP version 4 routers"
+url = "https://www.rfc-editor.org/rfc/rfc1812"
+
+[[references]]
+title = "RFC 792: Internet Control Message Protocol"
+url = "https://www.rfc-editor.org/rfc/rfc792"
+
+[[references]]
+title = "RFC 1918: Address allocation for private internets"
+url = "https://www.rfc-editor.org/rfc/rfc1918"
+
+[[references]]
+title = "RFC 3022: Traditional IP Network Address Translator"
+url = "https://www.rfc-editor.org/rfc/rfc3022"
+
+[[references]]
+title = "route (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/route_ws2008"
+
+[[references]]
+title = "tracert (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/tracert"
+
+[[references]]
+title = "pathping (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/pathping"
+
+[[references]]
+title = "Get-NetRoute (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/nettcpip/get-netroute"
+
+[[references]]
+title = "New-NetRoute (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/nettcpip/new-netroute"
+
+[[references]]
+title = "Remove-NetRoute (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/nettcpip/remove-netroute"
+
+[[references]]
+title = "Test-NetConnection (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/nettcpip/test-netconnection"
+
+[[references]]
+title = "ip(8) manual page"
+url = "https://man7.org/linux/man-pages/man8/ip.8.html"
+
+[[references]]
+title = "ip-route(8) manual page"
+url = "https://man7.org/linux/man-pages/man8/ip-route.8.html"
+
+[[references]]
+title = "traceroute(8) manual page"
+url = "https://man7.org/linux/man-pages/man8/traceroute.8.html"

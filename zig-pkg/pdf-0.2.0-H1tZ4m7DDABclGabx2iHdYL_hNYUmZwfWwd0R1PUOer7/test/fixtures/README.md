@@ -1,0 +1,23 @@
+# Test fixtures
+
+`plain.pdf` is a one-page PDF whose page shows "Hello encrypted world" in Helvetica
+and whose Info dictionary has the title "Secret Title". The `enc_*.pdf` files are the
+same file encrypted with qpdf (through pikepdf 10, `static_id=True`):
+
+| File | Handler | Password |
+|---|---|---|
+| `enc_rc4_40` | RC4 40 bit, R2 | empty |
+| `enc_rc4_128` | RC4 128 bit, R3 | empty |
+| `enc_aes_128` | AES-128, R4 | empty |
+| `enc_aes_256` | AES-256, R6 | empty |
+| `enc_aes_256_pw` | AES-256, R6 | `pw` |
+| `enc_rc4_128_pw` | RC4 128 bit, R3 | `pw` |
+
+The owner password of all of them is `o`.
+
+## CCITT fax
+
+`fax_g3_1d.pdf`, `fax_g3_2d.pdf` and `fax_g4.pdf` (1728x300, K = 0, 4, -1) are the strips of
+Ghostscript `-sDEVICE=tiffg3 / tiffg32d / tiffg4` output wrapped by `scripts/tiff2pdf-ccitt.py`.
+`fax_ref.pbm` is Ghostscript's `pbmraw` render of the same PostScript page; the decoder must
+reproduce it exactly (all three, verified 0 of 518,400 pixels differ).

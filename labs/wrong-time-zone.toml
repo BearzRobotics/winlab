@@ -1,0 +1,25 @@
+schema_version = 1
+id = "labs.wrong-time-zone"
+title = "Reports run at the wrong hour"
+summary = "The clock is right but the time zone is not."
+lesson = "foundations.troubleshooting-method"
+symptom = "Scheduled reports on this server run at the wrong hour and log timestamps do not match the clock on the wall. The server's time source is fine."
+hints = [
+  "The time itself is correct. What else decides how that time is shown and used?",
+  "Look at the server's time zone setting.",
+  "This server should be on UTC.",
+]
+expected_changes = ["Sets the lab VM's time zone to Tokyo Standard Time"]
+hazards = ["Local time shown in the lab VM is wrong until the time zone is restored"]
+scope = "single guest (the registered training VM only)"
+privilege = "administrator"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["comptia-a-core2/operating-systems"]
+setup = "Set-TimeZone -Id 'UTC'"
+fault = "Set-TimeZone -Id 'Tokyo Standard Time'"
+solution = "Set-TimeZone -Id 'UTC'"
+
+[validate]
+script = "(Get-TimeZone).Id"
+expect_output_contains = "UTC"

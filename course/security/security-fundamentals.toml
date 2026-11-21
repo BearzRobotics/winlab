@@ -1,0 +1,29 @@
+schema_version = 1
+id = "security.security-fundamentals"
+title = "Security fundamentals for administrators"
+summary = "Least privilege, permissions, accounts, firewalls, patching and SELinux, with the built-in tools on Windows and Linux."
+content = "security-fundamentals.md"
+estimated_minutes = 45
+objectives = [
+  "Explain least privilege and apply it to accounts and groups",
+  "Read file permissions on Windows (icacls) and Linux (ls -l, chmod)",
+  "Disable or lock an account instead of deleting it, and say why",
+  "List open ports and firewall rules and decide whether each is needed",
+  "Recognise an SELinux denial and correct the label rather than disabling SELinux",
+]
+prerequisites = ["foundations.troubleshooting-method"]
+windows_features = ["Windows Defender Firewall", "Event Viewer"]
+privilege = "standard"
+certifications = ["comptia-a-core2/security", "comptia-network-plus/network-security", "comptia-linux-plus/security", "redhat-rhcsa/security", "redhat-rhcsa/users-groups"]
+evaluation_criteria = [
+  "Learner repairs a folder permission and an account problem in the labs and states the principle behind each fix",
+  "Learner explains why disabling SELinux is not a fix",
+]
+
+[[references]]
+title = "icacls (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/icacls"
+
+[[references]]
+title = "Using SELinux (Red Hat documentation)"
+url = "https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/9/html/using_selinux/index"

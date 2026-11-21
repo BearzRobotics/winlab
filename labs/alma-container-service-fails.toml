@@ -1,0 +1,67 @@
+schema_version = 1
+id = "labs.alma-container-service-fails"
+target = "linux"
+distro = "almalinux"
+title = "AlmaLinux: the containerised service will not start"
+summary = "A Podman container managed by systemd fails because of a mistake in its definition."
+lesson = "linux.containers-podman"
+symptom = "The 'winlab-web' container service is supposed to be running on this server, managed by systemd through Podman. It is not running and does not stay up after a start. Find out why and get it running, so it also comes back after a restart."
+hints = [
+  "A container started by systemd is an ordinary service. systemctl status winlab-web and journalctl -u winlab-web show why it stopped.",
+  "podman ps -a lists containers, running or not. podman logs winlab-web shows what the container printed.",
+  "The definition of this service is a Quadlet file in /etc/containers/systemd. Read it: the command the container runs is on the Exec line.",
+  "After editing a Quadlet file, run systemctl daemon-reload so systemd regenerates the service, then start it.",
+]
+expected_changes = [
+  "Installs Podman, pulls the quay.io/almalinux/almalinux:9 image, and creates the Quadlet file /etc/containers/systemd/winlab-web.container which runs a container that sleeps",
+  "Then introduces a typo in the container's command so the service fails, in the AlmaLinux lab VM",
+]
+hazards = ["The winlab-web service in the lab VM stays failed until its definition is corrected"]
+scope = "single guest (the registered AlmaLinux training VM only)"
+privilege = "administrator"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["redhat-rhcsa/containers", "comptia-linux-plus/scripting-containers-automation", "comptia-linux-plus/troubleshooting"]
+setup = '''
+set -e
+dnf -y install podman >/dev/null
+podman pull -q quay.io/almalinux/almalinux:9 >/dev/null
+mkdir -p /etc/containers/systemd
+cat > /etc/containers/systemd/winlab-web.container <<'Q'
+[Unit]
+Description=WinLab demo container
+
+[Container]
+Image=quay.io/almalinux/almalinux:9
+ContainerName=winlab-web
+Exec=sleep infinity
+
+[Service]
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+Q
+systemctl daemon-reload
+systemctl start winlab-web.service
+'''
+fault = '''
+sed -i 's|^Exec=sleep infinity|Exec=slep infinity|' /etc/containers/systemd/winlab-web.container
+systemctl daemon-reload
+systemctl stop winlab-web.service || true
+systemctl reset-failed winlab-web.service || true
+'''
+solution = '''
+sed -i 's|^Exec=slep infinity|Exec=sleep infinity|' /etc/containers/systemd/winlab-web.container
+systemctl daemon-reload
+systemctl restart winlab-web.service
+'''
+
+[validate]
+script = '''
+a=$(systemctl is-active winlab-web.service 2>&1)
+c=$(podman ps --filter name=winlab-web --filter status=running --format '{{.Names}}' 2>&1)
+w=no; grep -q '^WantedBy=multi-user.target' /etc/containers/systemd/winlab-web.container && w=yes
+echo "service=$a;container=$c;wanted=$w"
+'''
+expect_output_contains = "service=active;container=winlab-web;wanted=yes"

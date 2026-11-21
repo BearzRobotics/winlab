@@ -1,0 +1,42 @@
+schema_version = 1
+id = "labs.alma-service-config-error"
+target = "linux"
+distro = "almalinux"
+title = "AlmaLinux: the web service will not start"
+summary = "A configuration change stops a service from starting."
+lesson = "foundations.troubleshooting-method"
+symptom = "The web server (httpd) on this AlmaLinux machine is down and will not start. It was working before someone added some configuration this morning."
+hints = [
+  "systemctl status httpd tells you it failed. The reason is usually in the logs.",
+  "journalctl -xeu httpd shows the service's own messages. Look for the line that names a file and a problem.",
+  "apachectl configtest checks the configuration without starting anything. Fix or remove the broken file, then start the service.",
+]
+expected_changes = [
+  "Installs and starts Apache (httpd)",
+  "Adds a configuration file with an invalid directive and restarts httpd, which then fails",
+]
+hazards = ["httpd in the lab VM stays down until the configuration is fixed"]
+scope = "single guest (the registered AlmaLinux training VM only)"
+privilege = "administrator"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["redhat-rhcsa/running-systems", "comptia-linux-plus/troubleshooting"]
+setup = '''
+set -e
+dnf -y install httpd >/dev/null
+systemctl enable --now httpd
+'''
+fault = '''
+echo 'ListenXYZ 8080' > /etc/httpd/conf.d/winlab-extra.conf
+systemctl restart httpd || true
+'''
+solution = '''
+rm -f /etc/httpd/conf.d/winlab-extra.conf
+systemctl restart httpd
+'''
+
+[validate]
+script = '''
+echo "httpd=$(systemctl is-active httpd)"
+'''
+expect_output_contains = "httpd=active"

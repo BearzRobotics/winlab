@@ -1,0 +1,32 @@
+schema_version = 1
+id = "labs.alma-dnf-repo-disabled"
+target = "linux"
+distro = "almalinux"
+title = "AlmaLinux: software cannot be installed"
+summary = "Package installs fail because a repository is turned off."
+lesson = "foundations.troubleshooting-method"
+symptom = "Installing or updating software on this AlmaLinux server fails with 'no match for argument' errors, although the machine has internet access."
+hints = [
+  "dnf gets software from repositories. Which ones does it currently know about and use?",
+  "dnf repolist --all shows every configured repository, including disabled ones.",
+  "Repository definitions are files in /etc/yum.repos.d. One of the main AlmaLinux repositories (baseos) is switched off.",
+]
+expected_changes = ["Sets enabled=0 in the BaseOS repository definition in /etc/yum.repos.d"]
+hazards = ["Package installs and updates in the lab VM fail until the repository is enabled"]
+scope = "single guest (the registered AlmaLinux training VM only)"
+privilege = "administrator"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["redhat-rhcsa/deploy-maintain", "comptia-linux-plus/system-management"]
+fault = '''
+sed -i 's/^enabled=1/enabled=0/' /etc/yum.repos.d/almalinux-baseos.repo
+'''
+solution = '''
+sed -i 's/^enabled=0/enabled=1/' /etc/yum.repos.d/almalinux-baseos.repo
+'''
+
+[validate]
+script = '''
+if dnf repolist --enabled 2>/dev/null | grep -q '^baseos'; then echo "baseos enabled"; else echo "baseos disabled"; fi
+'''
+expect_output_contains = "baseos enabled"

@@ -1,0 +1,12 @@
+schema_version = 1
+id = "foundations.reader-spike"
+title = "Reader spike (not course content)"
+summary = "Exercises the Markdown to RichEdit path."
+content = "reader-spike.md"
+estimated_minutes = 5
+objectives = ["Confirm that headings, lists, code, tables and links render"]
+evaluation_criteria = ["Visual inspection by the developer"]
+
+[[references]]
+title = "Windows commands (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/windows-commands"

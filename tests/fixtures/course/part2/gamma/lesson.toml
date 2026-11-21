@@ -1,0 +1,13 @@
+schema_version = 1
+id = "fixture.gamma"
+title = "Gamma (fixture)"
+summary = "Fixture lesson, not course content."
+content = "lesson.md"
+estimated_minutes = 15
+objectives = ["Fixture objective for Gamma (fixture)"]
+prerequisites = ["fixture.alpha", "fixture.beta"]
+privilege = "administrator"
+
+[[references]]
+title = "Microsoft Learn"
+url = "https://learn.microsoft.com/windows/"

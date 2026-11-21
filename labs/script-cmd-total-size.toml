@@ -1,0 +1,68 @@
+schema_version = 1
+kind = "script"
+id = "labs.script-cmd-total-size"
+title = "Script (CMD): add up file sizes in a loop"
+summary = "Loop over files and keep a running total."
+lesson = "foundations.cmd-control-flow"
+symptom = '''
+Write a batch file and save it as C:\Labs\total-size.cmd.
+
+The folder C:\Labs\data contains some files. Your batch file must print one line in exactly this form:
+
+    Total bytes: 1234
+
+where the number is the combined size in bytes of all the files directly in that folder. Print nothing else.
+
+The files change every time your batch file is checked, and the folder can be empty (then the total is 0).
+'''
+hints = [
+  "A for loop visits each file: for %%f in (C:\\Labs\\data\\*) do ...",
+  "In a loop, %%~zf is the size in bytes of the file %%f.",
+  "set /a total+=%%~zf adds to a running total. Start with set total=0 so an empty folder prints 0.",
+  "for %%f in (folder\\*) only matches files, not sub-folders.",
+]
+expected_changes = ["Creates C:\\Labs with a starter batch file and a folder of generated files"]
+hazards = ["None: the batch file only reads file sizes"]
+scope = "single guest (the registered training VM only)"
+privilege = "standard"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["comptia-a-core2/operating-systems"]
+language = "cmd"
+script_path = 'C:\Labs\total-size.cmd'
+starter = '''
+@echo off
+rem total-size.cmd
+rem Print "Total bytes: N" for the files in C:\Labs\data
+'''
+solution = '''
+@echo off
+set total=0
+for %%f in (C:\Labs\data\*) do set /a total+=%%~zf
+echo Total bytes: %total%
+'''
+
+[[tests]]
+setup = '''
+$d = 'C:\Labs\data'
+if (Test-Path $d) { Remove-Item $d -Recurse -Force }
+New-Item -ItemType Directory -Path $d | Out-Null
+1..(Get-Random -Minimum 2 -Maximum 9) | ForEach-Object {
+    [IO.File]::WriteAllBytes((Join-Path $d "file$_.bin"), (New-Object byte[] (Get-Random -Minimum 1 -Maximum 5000)))
+}
+New-Item -ItemType Directory -Path (Join-Path $d 'sub') | Out-Null
+[IO.File]::WriteAllBytes((Join-Path $d 'sub\hidden-size.bin'), (New-Object byte[] 999))
+'''
+expect = '''
+"Total bytes: $((Get-ChildItem -Path 'C:\Labs\data' -File | Measure-Object -Property Length -Sum).Sum)"
+'''
+
+[[tests]]
+setup = '''
+$d = 'C:\Labs\data'
+if (Test-Path $d) { Remove-Item $d -Recurse -Force }
+New-Item -ItemType Directory -Path $d | Out-Null
+'''
+expect = '''
+"Total bytes: 0"
+'''

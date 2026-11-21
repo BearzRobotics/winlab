@@ -1,0 +1,90 @@
+schema_version = 1
+kind = "script"
+id = "labs.script-ps-error-handling"
+title = "Script (PowerShell): handle missing files without crashing"
+summary = "Process a list, catch the failures, summarise, and set the exit code."
+lesson = "foundations.ps-errors-and-debugging"
+symptom = '''
+Write a PowerShell script and save it as C:\Labs\process-list.ps1.
+
+The file C:\Labs\data\files.txt lists file paths, one per line. For each path, in order:
+
+  - if the file exists, print  ok: <path>: <first line of the file>
+  - if it does not exist, print  missing: <path>
+
+A missing file must not stop the script. After the last path, print  processed N, failed M  (N paths in total, M of them missing).
+
+Exit with code 0 if every file existed, or code 1 if any were missing. Skip blank lines in the list.
+'''
+hints = [
+  "Get-Content reads the list. A foreach loop visits each path.",
+  "Get-Content on a file that does not exist raises an error. Use -ErrorAction Stop inside try { } catch { } to handle it, or test first with Test-Path.",
+  "Keep two counters, and print the summary after the loop.",
+  "exit 1 sets the exit code. Check the counter to choose 0 or 1.",
+]
+expected_changes = ["Creates C:\\Labs with a starter script, some data files, and a list of paths"]
+hazards = ["None: the script only reads files"]
+scope = "single guest (the registered training VM only)"
+privilege = "standard"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["comptia-a-core2/operating-systems"]
+language = "powershell"
+script_path = 'C:\Labs\process-list.ps1'
+starter = '''
+# process-list.ps1
+# For each path in C:\Labs\data\files.txt print "ok: <path>: <first line>" or "missing: <path>",
+# then "processed N, failed M". Exit 1 if any were missing, otherwise 0.
+'''
+solution = '''
+$n = 0
+$failed = 0
+foreach ($p in Get-Content -Path 'C:\Labs\data\files.txt') {
+    if (-not $p.Trim()) { continue }
+    $n++
+    try {
+        $first = Get-Content -LiteralPath $p -ErrorAction Stop | Select-Object -First 1
+        "ok: ${p}: $first"
+    } catch {
+        "missing: $p"
+        $failed++
+    }
+}
+"processed $n, failed $failed"
+if ($failed -gt 0) { exit 1 } else { exit 0 }
+'''
+
+[[tests]]
+setup = '''
+$d = 'C:\Labs\data'
+if (Test-Path $d) { Remove-Item $d -Recurse -Force }
+New-Item -ItemType Directory -Path "$d\items" | Out-Null
+$paths = foreach ($i in 1..(Get-Random -Minimum 2 -Maximum 5)) {
+    $f = "$d\items\item$i.txt"
+    Set-Content -Path $f -Value @("first line $(Get-Random)", 'second line')
+    $f
+}
+Set-Content -Path "$d\files.txt" -Value $paths
+'''
+expect = '''
+$lines = Get-Content 'C:\Labs\data\files.txt'
+foreach ($p in $lines) { "ok: ${p}: $((Get-Content -LiteralPath $p)[0])" }
+"processed $(@($lines).Count), failed 0"
+'''
+expect_exit = 0
+
+[[tests]]
+setup = '''
+$d = 'C:\Labs\data'
+if (Test-Path $d) { Remove-Item $d -Recurse -Force }
+New-Item -ItemType Directory -Path "$d\items" | Out-Null
+Set-Content -Path "$d\items\real.txt" -Value @('only real file', 'x')
+Set-Content -Path "$d\files.txt" -Value @("$d\items\gone1.txt", "$d\items\real.txt", '', "$d\items\gone2.txt")
+'''
+expect = '''
+"missing: C:\Labs\data\items\gone1.txt"
+"ok: C:\Labs\data\items\real.txt: only real file"
+"missing: C:\Labs\data\items\gone2.txt"
+"processed 3, failed 2"
+'''
+expect_exit = 1

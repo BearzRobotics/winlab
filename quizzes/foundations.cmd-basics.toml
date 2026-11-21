@@ -1,0 +1,466 @@
+schema_version = 1
+lesson = "foundations.cmd-basics"
+# Draft for owner review. A bank of 51; each attempt asks 10, favouring questions missed last time.
+draw = 10
+
+# ---- Getting around ----
+
+[[question]]
+id = "open-explorer"
+type = "choice"
+prompt = "How do you open a Command Prompt directly in the folder shown in File Explorer?"
+choices = ["Type cmd in the Explorer address bar and press Enter", "Press F5", "Right-click the taskbar", "Press Win+L"]
+answers = ["Type cmd in the Explorer address bar and press Enter"]
+explanation = "The prompt opens in that folder."
+review = "Opening it and getting oriented"
+certifications = ["comptia-a-core2/operating-systems"]
+
+[[question]]
+id = "cd-print"
+type = "choice"
+prompt = "What does 'cd' with no arguments do in Command Prompt?"
+choices = ["Prints the current directory", "Goes to the root", "Goes to your profile", "Does nothing"]
+answers = ["Prints the current directory"]
+explanation = "%CD% holds the same value."
+review = "Opening it and getting oriented"
+
+[[question]]
+id = "cd-d"
+type = "short"
+prompt = "Which switch makes 'cd' change the current drive as well as the folder? (include the slash)"
+answers = ["/d"]
+explanation = "cd /d D:\\data. Without it, cd only changes the remembered folder on that drive."
+review = "Opening it and getting oriented"
+
+[[question]]
+id = "drive-switch"
+type = "short"
+prompt = "How do you switch to drive D: by itself? (what do you type)"
+answers = ["D:", "d:"]
+explanation = "Type the drive letter and a colon."
+review = "Opening it and getting oriented"
+
+[[question]]
+id = "ver-cmd"
+type = "short"
+prompt = "Which command prints the Windows version? (command name)"
+answers = ["ver"]
+explanation = "ver prints, for example, Microsoft Windows [Version 10.0.26300.9974]."
+review = "Opening it and getting oriented"
+
+[[question]]
+id = "help-cmd"
+type = "choice"
+prompt = "How do you get help on the dir command?"
+choices = ["dir /?", "dir -help", "man dir", "help --dir"]
+answers = ["dir /?"]
+explanation = "'help dir' also works."
+review = "Opening it and getting oriented"
+
+# ---- How cmd runs a line ----
+
+[[question]]
+id = "order-first"
+type = "choice"
+prompt = "When you type a command name, what does cmd check first?"
+choices = ["Whether it is a built-in command", "The PATH folders", "The registry", "The Start menu"]
+answers = ["Whether it is a built-in command"]
+explanation = "Built-ins first, then the current directory, then each PATH folder."
+review = "How cmd runs what you type"
+
+[[question]]
+id = "order-cwd"
+type = "choice"
+prompt = "For an external program, which location does cmd search before the PATH folders?"
+choices = ["The current directory", "System32", "The desktop", "The Recycle Bin"]
+answers = ["The current directory"]
+explanation = "That is why running commands from an untrusted folder is risky."
+review = "How cmd runs what you type"
+
+[[question]]
+id = "pathext-what"
+type = "choice"
+prompt = "What does PATHEXT hold?"
+choices = ["The extensions cmd tries when you type a name without one", "The list of folders to search", "The user's profile path", "File associations"]
+answers = ["The extensions cmd tries when you type a name without one"]
+explanation = "That is why 'notepad' finds notepad.exe."
+review = "How cmd runs what you type"
+
+[[question]]
+id = "pathext-default"
+type = "multi"
+prompt = "Which are in the default PATHEXT? Select all that apply."
+choices = [".EXE", ".BAT", ".CMD", ".TXT"]
+answers = [".EXE", ".BAT", ".CMD"]
+explanation = ".COM;.EXE;.BAT;.CMD and several script extensions are listed; .TXT is not."
+review = "How cmd runs what you type"
+
+[[question]]
+id = "where-cmd"
+type = "short"
+prompt = "Which command shows which program a name resolves to? (command name)"
+answers = ["where"]
+explanation = "The first line printed is the one that runs."
+review = "How cmd runs what you type"
+
+[[question]]
+id = "where-dir"
+type = "choice"
+prompt = "'where dir' finds nothing. Why?"
+choices = ["dir is a built-in command, not a program file", "dir is hidden", "The PATH is empty", "where cannot find folders"]
+answers = ["dir is a built-in command, not a program file"]
+explanation = "where searches for files, and built-ins are inside cmd.exe itself."
+review = "How cmd runs what you type"
+
+[[question]]
+id = "ping-planted"
+type = "choice"
+prompt = "Why is running commands from an untrusted folder risky?"
+choices = ["A planted program with a command's name in the current directory would run before the real one", "The folder may be full", "cmd refuses to start", "It slows the prompt"]
+answers = ["A planted program with a command's name in the current directory would run before the real one"]
+explanation = "cmd searches the current directory before PATH for external programs."
+review = "How cmd runs what you type"
+
+# ---- Special characters ----
+
+[[question]]
+id = "amp-meaning"
+type = "choice"
+prompt = "What does 'a & b' do?"
+choices = ["Runs both, always", "Runs b only if a succeeds", "Runs b only if a fails", "Pipes a into b"]
+answers = ["Runs both, always"]
+explanation = "&& is the conditional one."
+review = "Special characters"
+
+[[question]]
+id = "andand"
+type = "choice"
+prompt = "What does 'a && b' do?"
+choices = ["Runs b only if a succeeded", "Runs both always", "Runs b only if a failed", "Runs them at once"]
+answers = ["Runs b only if a succeeded"]
+explanation = "Success means exit code 0."
+review = "Combining commands"
+
+[[question]]
+id = "oror"
+type = "choice"
+prompt = "What does 'a || b' do?"
+choices = ["Runs b only if a failed", "Runs b only if a succeeded", "Pipes a to b", "Runs both at once"]
+answers = ["Runs b only if a failed"]
+explanation = "Failure means a non-zero exit code."
+review = "Combining commands"
+
+[[question]]
+id = "escape-char"
+type = "short"
+prompt = "Which character escapes the next special character in cmd? (one character)"
+answers = ["^"]
+explanation = "echo 1 ^& 2 prints 1 & 2."
+review = "Special characters"
+
+[[question]]
+id = "echo-trailing"
+type = "choice"
+prompt = "What does 'echo a & echo b' print for the first line?"
+choices = ["a followed by a trailing space", "a with no trailing space", "a & echo b", "Nothing"]
+answers = ["a followed by a trailing space"]
+explanation = "cmd passes the space before & to echo."
+review = "Special characters"
+
+[[question]]
+id = "echo-2to1"
+type = "choice"
+prompt = "Why does 'echo done 2>&1' not print '2>&1'?"
+choices = ["cmd takes 2>&1 as a redirection of the echo command itself", "echo cannot print digits", "The ampersand ends the line", "It prints it on stderr"]
+answers = ["cmd takes 2>&1 as a redirection of the echo command itself"]
+explanation = "Redirections are parsed before the command runs."
+review = "Special characters"
+
+[[question]]
+id = "echo-1gt"
+type = "choice"
+prompt = "'echo 1> file.txt' writes the text 'ECHO is off.' to the file rather than the character 1. Why?"
+choices = ["1> is parsed as a redirection of handle 1", "echo ignores digits", "file.txt is read-only", "The space is missing"]
+answers = ["1> is parsed as a redirection of handle 1"]
+explanation = "Put a space before the digit's >, or use (echo 1)> file.txt."
+review = "Special characters"
+
+[[question]]
+id = "pct-batch"
+type = "short"
+prompt = "In a batch file, how do you write a literal percent sign? (what you type)"
+answers = ["%%"]
+explanation = "%% in a batch file prints one %."
+review = "Special characters"
+
+# ---- Quoting ----
+
+[[question]]
+id = "quote-why"
+type = "choice"
+prompt = "Why must a path that contains a space be quoted?"
+choices = ["A space separates arguments", "Quotes make it run faster", "Windows requires it for folders on C:", "Spaces are illegal in paths"]
+answers = ["A space separates arguments"]
+explanation = "Unquoted, the path is split into two arguments."
+review = "Quoting paths with spaces"
+
+[[question]]
+id = "cd-lenient"
+type = "choice"
+prompt = "'cd C:\\Program Files' works without quotes, but 'dir C:\\Program Files' fails. Why?"
+choices = ["cd treats the rest of the line as one path; dir sees two arguments", "cd is a different program", "Program Files is special", "dir needs a drive letter"]
+answers = ["cd treats the rest of the line as one path; dir sees two arguments"]
+explanation = "The leniency is no reason to skip quoting: it works with cd and then fails with the next command."
+review = "Quoting paths with spaces"
+
+# ---- Files and folders ----
+
+[[question]]
+id = "mkdir-cmd"
+type = "short"
+prompt = "Which command creates a folder? (full command name)"
+answers = ["mkdir", "md"]
+explanation = "md is the short alias."
+review = "Working with files and folders"
+
+[[question]]
+id = "ren-cmd"
+type = "short"
+prompt = "Which command renames a file? (full command name)"
+answers = ["ren", "rename"]
+explanation = "ren old new."
+review = "Working with files and folders"
+
+[[question]]
+id = "dir-b"
+type = "choice"
+prompt = "What does 'dir /b' print?"
+choices = ["Bare names only, one per line", "Hidden files", "Both files and folders in a table", "Backup copies"]
+answers = ["Bare names only, one per line"]
+explanation = "/b is best for scripts."
+review = "Working with files and folders"
+
+[[question]]
+id = "dir-s"
+type = "choice"
+prompt = "What does 'dir /s' add?"
+choices = ["It includes subfolders", "It sorts by size", "It shows short names", "It shows streams"]
+answers = ["It includes subfolders"]
+explanation = "It lists matching files in all subfolders."
+review = "Working with files and folders"
+
+[[question]]
+id = "wildcard-star"
+type = "short"
+prompt = "Write the command that lists, bare, all .txt files in the sub folder 'sub'."
+answers = ["dir /b sub\\*.txt", "dir sub\\*.txt /b"]
+explanation = "* matches any run of characters."
+review = "Working with files and folders"
+
+[[question]]
+id = "del-permanent"
+type = "choice"
+prompt = "Where do files deleted with the del command go?"
+choices = ["Nowhere: del does not use the Recycle Bin", "The Recycle Bin", "A hidden backup folder", "The Temp folder"]
+answers = ["Nowhere: del does not use the Recycle Bin"]
+explanation = "Deletion is permanent. Run dir with the same pattern first."
+review = "Working with files and folders"
+
+[[question]]
+id = "rd-sq"
+type = "choice"
+prompt = "What does 'rd /s /q folder' do?"
+choices = ["Deletes the folder and everything in it without asking", "Renames the folder quietly", "Shows the folder size", "Moves it to the Recycle Bin"]
+answers = ["Deletes the folder and everything in it without asking"]
+explanation = "Never run it from a variable that might be empty."
+review = "Working with files and folders"
+
+[[question]]
+id = "robocopy-why"
+type = "choice"
+prompt = "Why use robocopy instead of copy for serious copying?"
+choices = ["It retries, preserves attributes and security, and can mirror folders", "It is the only command that copies", "It is shorter to type", "It does not need a path"]
+answers = ["It retries, preserves attributes and security, and can mirror folders"]
+explanation = "xcopy is its older cousin."
+review = "Working with files and folders"
+
+[[question]]
+id = "tree-a"
+type = "choice"
+prompt = "Why add /a to 'tree /f'?"
+choices = ["It draws the tree in plain ASCII, avoiding garbled box characters", "It shows hidden files", "It sorts by date", "It shows file sizes"]
+answers = ["It draws the tree in plain ASCII, avoiding garbled box characters"]
+explanation = "Some code pages garble the line-drawing characters."
+review = "Working with files and folders"
+
+# ---- Variables, redirection, pipes ----
+
+[[question]]
+id = "env-scope"
+type = "choice"
+prompt = "'set NAME=value' in a prompt changes the variable:"
+choices = ["Only for that window and the programs it starts", "For every program on the machine permanently", "For the next reboot only", "For all users"]
+answers = ["Only for that window and the programs it starts"]
+explanation = "Permanent changes use setx or the Environment Variables dialog."
+review = "Environment variables"
+
+[[question]]
+id = "env-list"
+type = "choice"
+prompt = "What does 'set U' (with no equals sign) do?"
+choices = ["Lists variables whose names start with U", "Sets U to empty", "Deletes U", "Shows the user name"]
+answers = ["Lists variables whose names start with U"]
+explanation = "'set' alone lists them all."
+review = "Environment variables"
+
+[[question]]
+id = "redir-overwrite"
+type = "choice"
+prompt = "What does '>' do if the target file already exists?"
+choices = ["Replaces it without asking", "Appends to it", "Fails", "Asks first"]
+answers = ["Replaces it without asking"]
+explanation = ">> appends."
+review = "Redirection"
+
+[[question]]
+id = "redir-both"
+type = "short"
+prompt = "Write the redirection that sends both stdout and stderr to out.txt (after the command, using out.txt)."
+answers = ["> out.txt 2>&1", ">out.txt 2>&1"]
+explanation = "Send stdout to the file, then point stderr at stdout."
+review = "Redirection"
+
+[[question]]
+id = "redir-order"
+type = "choice"
+prompt = "'cmd 2>&1 > f' differs from 'cmd > f 2>&1'. How?"
+choices = ["In the first, errors still go to the screen", "In the first, nothing is written", "There is no difference", "In the second, output goes to the screen"]
+answers = ["In the first, errors still go to the screen"]
+explanation = "2>&1 was evaluated while stdout still pointed at the screen."
+review = "Redirection"
+
+[[question]]
+id = "redir-nul"
+type = "choice"
+prompt = "What is 'nul'?"
+choices = ["A device that discards anything written to it", "An empty file in the current folder", "A null pointer", "A hidden drive"]
+answers = ["A device that discards anything written to it"]
+explanation = "cmd >nul 2>nul discards everything."
+review = "Redirection"
+
+[[question]]
+id = "stream-numbers"
+type = "multi"
+prompt = "Which standard stream numbers are correct? Select all that apply."
+choices = ["0 is input", "1 is output", "2 is errors", "3 is the log"]
+answers = ["0 is input", "1 is output", "2 is errors"]
+explanation = "There is no stream 3 by default."
+review = "Redirection"
+
+[[question]]
+id = "pipe-text"
+type = "choice"
+prompt = "What does a pipe pass between commands in CMD?"
+choices = ["Text", "Objects", "Binary handles", "Variables"]
+answers = ["Text"]
+explanation = "PowerShell passes objects."
+review = "Pipes"
+
+[[question]]
+id = "pipe-var"
+type = "choice"
+prompt = "Why is a variable set on one side of a pipe not visible afterwards?"
+choices = ["Each side runs in its own cmd process", "Pipes block variables", "cmd clears variables at the end of a line", "Variables are read-only"]
+answers = ["Each side runs in its own cmd process"]
+explanation = "The processes end when the pipe does."
+review = "Pipes"
+
+# ---- Exit codes ----
+
+[[question]]
+id = "ec-zero"
+type = "choice"
+prompt = "What does an exit code of 0 normally mean?"
+choices = ["Success", "Failure", "The program was not found", "The program is still running"]
+answers = ["Success"]
+explanation = "Anything else normally means failure."
+review = "Exit codes"
+
+[[question]]
+id = "ec-read"
+type = "short"
+prompt = "Which variable holds the last exit code? (with percent signs)"
+answers = ["%ERRORLEVEL%"]
+explanation = "echo %ERRORLEVEL% prints it."
+review = "Exit codes"
+
+[[question]]
+id = "ec-cmdc"
+type = "choice"
+prompt = "What does 'cmd /c exit 3' followed by 'echo %ERRORLEVEL%' print?"
+choices = ["3", "0", "1", "exit"]
+answers = ["3"]
+explanation = "cmd /c runs the command in a new cmd and returns its exit code."
+review = "Exit codes"
+
+[[question]]
+id = "ec-iferr"
+type = "choice"
+prompt = "What does 'if errorlevel 1' test?"
+choices = ["The exit code is 1 or greater", "The exit code is exactly 1", "The exit code is zero", "An error was printed"]
+answers = ["The exit code is 1 or greater"]
+explanation = "It is a historical quirk; the control-flow lesson covers it."
+review = "Exit codes"
+
+[[question]]
+id = "ec-exitb"
+type = "short"
+prompt = "Which command ends a batch file or subroutine with a given exit code, for example 3? (write it)"
+answers = ["exit /b 3"]
+explanation = "/b ends the script, not the whole cmd window."
+review = "Exit codes"
+
+# ---- Batch files and limits ----
+
+[[question]]
+id = "bat-echooff"
+type = "choice"
+prompt = "What does '@echo off' do at the top of a batch file?"
+choices = ["Stops each command being printed before it runs", "Turns off the sound", "Disables redirection", "Stops errors"]
+answers = ["Stops each command being printed before it runs"]
+explanation = "The @ hides the 'echo off' line itself."
+review = "From commands to batch files"
+
+[[question]]
+id = "bat-ext"
+type = "choice"
+prompt = "Which extension is recommended for new batch files?"
+choices = [".cmd", ".exe", ".txt", ".ps1"]
+answers = [".cmd"]
+explanation = ".bat and .cmd behave almost identically; .cmd avoids an old difference in how some commands set the exit code."
+review = "From commands to batch files"
+
+[[question]]
+id = "limit-line"
+type = "short"
+prompt = "What is the maximum length of a single command line in cmd, in characters? (number only)"
+answers = ["8191"]
+explanation = "Longer lines fail or are truncated."
+review = "Limits"
+
+[[question]]
+id = "limit-date"
+type = "choice"
+prompt = "Why shouldn't you parse %DATE% without checking the locale?"
+choices = ["Its format follows the regional settings and differs between machines", "It is always in UTC", "It is read-only", "It only exists in PowerShell"]
+answers = ["Its format follows the regional settings and differs between machines"]
+explanation = "Use a locale-independent method for scripts."
+review = "Housekeeping commands"
+
+[[question]]
+id = "start-cmd"
+type = "short"
+prompt = "Write the command that starts Notepad without waiting for it, with an empty window title."
+answers = ["start \"\" notepad"]
+explanation = "Without the empty quotes a quoted first argument is taken as the title."
+review = "Housekeeping commands"

@@ -1,0 +1,642 @@
+schema_version = 1
+lesson = "foundations.powershell-basics"
+# Draft for owner review. A bank of 71; each attempt asks 10, favouring questions missed last time.
+draw = 10
+
+# ---- Two PowerShells ----
+
+[[question]]
+id = "ed-5"
+type = "choice"
+prompt = "Which program is Windows PowerShell 5.1?"
+choices = ["powershell.exe", "pwsh.exe", "ps.exe", "wsh.exe"]
+answers = ["powershell.exe"]
+explanation = "pwsh.exe is PowerShell 7."
+review = "Two PowerShells"
+certifications = ["comptia-a-core2/operating-systems"]
+
+[[question]]
+id = "ed-7"
+type = "choice"
+prompt = "Which statement about PowerShell 7 is true?"
+choices = ["It is a separate install, cross-platform, and actively developed", "It ships with every Windows install", "It replaced powershell.exe", "It runs only on Windows 11"]
+answers = ["It is a separate install, cross-platform, and actively developed"]
+explanation = "Windows PowerShell 5.1 ships with Windows and only gets security fixes."
+review = "Two PowerShells"
+
+[[question]]
+id = "ed-edition"
+type = "short"
+prompt = "What does $PSVersionTable.PSEdition report for Windows PowerShell 5.1? (one word)"
+answers = ["Desktop"]
+explanation = "PowerShell 7 reports Core."
+review = "Two PowerShells"
+
+[[question]]
+id = "ed-target"
+type = "choice"
+prompt = "Which version should you target for a script that must run on any Windows machine without installing anything?"
+choices = ["Windows PowerShell 5.1", "PowerShell 7", "PowerShell 3", "Either; they are identical"]
+answers = ["Windows PowerShell 5.1"]
+explanation = "It is present on every supported Windows."
+review = "Two PowerShells"
+
+[[question]]
+id = "ed-ise"
+type = "choice"
+prompt = "Which editor is recommended for writing PowerShell scripts today?"
+choices = ["Visual Studio Code with the PowerShell extension", "PowerShell ISE", "Notepad", "WordPad"]
+answers = ["Visual Studio Code with the PowerShell extension"]
+explanation = "ISE is no longer developed and does not support PowerShell 7."
+review = "Starting it"
+
+# ---- Naming and aliases ----
+
+[[question]]
+id = "nm-pattern"
+type = "choice"
+prompt = "What naming pattern do cmdlets follow?"
+choices = ["Verb-Noun", "Noun.Verb", "verbnoun", "Noun-Verb"]
+answers = ["Verb-Noun"]
+explanation = "Get-Process, Set-Location, New-Item."
+review = "Commands are named Verb-Noun"
+
+[[question]]
+id = "nm-verbs"
+type = "short"
+prompt = "Which cmdlet lists the approved verbs? (cmdlet name)"
+answers = ["Get-Verb"]
+explanation = "Standardised verbs make cmdlets guessable."
+review = "Commands are named Verb-Noun"
+
+[[question]]
+id = "nm-find"
+type = "short"
+prompt = "Write the command that lists every command whose name contains 'service'."
+answers = ["Get-Command *service*"]
+explanation = "Get-Command finds commands by name, verb, noun or module."
+review = "Commands are named Verb-Noun"
+
+[[question]]
+id = "al-gci"
+type = "short"
+prompt = "Which cmdlet do the aliases ls, dir and gci all point to?"
+answers = ["Get-ChildItem"]
+explanation = "That is why ls -l does not work."
+review = "Aliases"
+
+[[question]]
+id = "al-ls"
+type = "choice"
+prompt = "Why does 'ls -l' not behave like the Linux command?"
+choices = ["ls is an alias of Get-ChildItem and takes PowerShell parameters", "ls is disabled", "-l needs administrator", "ls only works in PowerShell 7"]
+answers = ["ls is an alias of Get-ChildItem and takes PowerShell parameters"]
+explanation = "Aliases mimic names, not behaviour."
+review = "Aliases"
+
+[[question]]
+id = "al-scripts"
+type = "choice"
+prompt = "In scripts, what should you write instead of aliases?"
+choices = ["Full cmdlet names", "Shorter aliases", "Function names", "Variable names"]
+answers = ["Full cmdlet names"]
+explanation = "Aliases hurt readability and can be redefined."
+review = "Aliases"
+
+[[question]]
+id = "al-find"
+type = "short"
+prompt = "Which command shows every alias for Get-ChildItem? (write it, using -Definition)"
+answers = ["Get-Alias -Definition Get-ChildItem"]
+explanation = "Get-Alias lists aliases."
+review = "Aliases"
+
+# ---- Parameters ----
+
+[[question]]
+id = "pa-switch"
+type = "choice"
+prompt = "What is a switch parameter?"
+choices = ["A parameter that takes no value; its presence turns it on", "A parameter that takes a list", "A positional parameter", "A hidden parameter"]
+answers = ["A parameter that takes no value; its presence turns it on"]
+explanation = "-Force and -WhatIf are switches."
+review = "Parameters"
+
+[[question]]
+id = "pa-positional"
+type = "choice"
+prompt = "Why avoid positional parameters in scripts?"
+choices = ["They are fine at the prompt but make scripts harder to read", "They are slower", "They are removed in 7", "They need -Force"]
+answers = ["They are fine at the prompt but make scripts harder to read"]
+explanation = "Name your parameters in scripts."
+review = "Parameters"
+
+[[question]]
+id = "cp-whatif"
+type = "choice"
+prompt = "What does -WhatIf do?"
+choices = ["Shows what the command would do, without doing it", "Asks before each action", "Shows more detail", "Ignores errors"]
+answers = ["Shows what the command would do, without doing it"]
+explanation = "Build the habit of rehearsing changes."
+review = "Common parameters"
+certifications = ["comptia-a-core2/operating-systems"]
+
+[[question]]
+id = "cp-confirm"
+type = "choice"
+prompt = "What does -Confirm do?"
+choices = ["Prompts before each action", "Confirms the cmdlet exists", "Shows the script", "Logs the action"]
+answers = ["Prompts before each action"]
+explanation = "-WhatIf only reports."
+review = "Common parameters"
+
+[[question]]
+id = "cp-erroraction"
+type = "multi"
+prompt = "Which are valid -ErrorAction values? Select all that apply."
+choices = ["Stop", "Continue", "SilentlyContinue", "Explode"]
+answers = ["Stop", "Continue", "SilentlyContinue"]
+explanation = "Inquire is also valid."
+review = "Common parameters"
+
+# ---- Help ----
+
+[[question]]
+id = "he-examples"
+type = "short"
+prompt = "Which Get-Help parameter shows usage examples? (include the dash)"
+answers = ["-Examples"]
+explanation = "Get-Help Get-Process -Examples."
+review = "Help is built in"
+
+[[question]]
+id = "he-update"
+type = "choice"
+prompt = "What does Update-Help need?"
+choices = ["Network access and an elevated prompt", "Nothing", "Only a profile", "A domain account"]
+answers = ["Network access and an elevated prompt"]
+explanation = "Until you run it you see abbreviated help."
+review = "Help is built in"
+
+[[question]]
+id = "he-about"
+type = "choice"
+prompt = "What do the about_* help topics explain?"
+choices = ["Concepts and language features", "Only cmdlets", "Installed hotfixes", "Event logs"]
+answers = ["Concepts and language features"]
+explanation = "For example: Get-Help about_Pipelines."
+review = "Help is built in"
+
+[[question]]
+id = "he-syntax"
+type = "choice"
+prompt = "In a SYNTAX block, what does a parameter in square brackets mean?"
+choices = ["It is optional", "It is required", "It is a switch only", "It is deprecated"]
+answers = ["It is optional"]
+explanation = "Reading the syntax block is the key PowerShell skill."
+review = "Help is built in"
+
+# ---- Objects and pipeline ----
+
+[[question]]
+id = "ob-member"
+type = "short"
+prompt = "Which cmdlet lists the properties and methods of objects in the pipeline?"
+answers = ["Get-Member"]
+explanation = "Get-Process | Get-Member."
+review = "Objects, not text"
+
+[[question]]
+id = "ob-vs-text"
+type = "choice"
+prompt = "How does PowerShell's pipeline differ from cmd's?"
+choices = ["It passes objects with properties, not text", "It is faster text", "It passes files", "It passes variables"]
+answers = ["It passes objects with properties, not text"]
+explanation = "You ask for a property by name instead of cutting text."
+review = "Objects, not text"
+
+[[question]]
+id = "pl-current"
+type = "short"
+prompt = "Which automatic variable holds the current object in a Where-Object script block? (with the dollar sign)"
+answers = ["$_"]
+explanation = "Also written $PSItem."
+review = "The pipeline"
+
+[[question]]
+id = "pl-wherecmd"
+type = "short"
+prompt = "Write the pipeline that keeps processes with a working set over 200MB (Get-Process | Where-Object ...)."
+answers = ["Get-Process | Where-Object { $_.WorkingSet -gt 200MB }"]
+explanation = "MB is a built-in numeric suffix."
+review = "The pipeline"
+
+[[question]]
+id = "pl-top5"
+type = "short"
+prompt = "Which cmdlet and parameter pick the first five objects? (for example Cmdlet -Param 5)"
+answers = ["Select-Object -First 5"]
+explanation = "-Last takes from the end."
+review = "The pipeline"
+
+[[question]]
+id = "pl-group"
+type = "choice"
+prompt = "Which cmdlet groups objects by a property and counts them?"
+choices = ["Group-Object", "Measure-Object", "Count-Object", "Sort-Object"]
+answers = ["Group-Object"]
+explanation = "Measure-Object adds up numeric properties."
+review = "The pipeline"
+
+[[question]]
+id = "pl-measure"
+type = "short"
+prompt = "Which cmdlet returns the count, sum, average, minimum and maximum of a property?"
+answers = ["Measure-Object"]
+explanation = "For example: Measure-Object Length -Sum."
+review = "The pipeline"
+
+[[question]]
+id = "pl-early"
+type = "choice"
+prompt = "Why use Get-ChildItem -Filter instead of Where-Object later in the pipeline?"
+choices = ["The provider removes items before they are created, which is much faster", "-Filter is easier to type", "Where-Object is deprecated", "It prevents errors"]
+answers = ["The provider removes items before they are created, which is much faster"]
+explanation = "Filter left, early."
+review = "The pipeline"
+
+# ---- Formatting ----
+
+[[question]]
+id = "fo-last"
+type = "choice"
+prompt = "Why must Format-Table come last in a pipeline?"
+choices = ["After it the pipeline holds formatting instructions, not the original objects", "It is slow", "It sorts the data", "It removes columns"]
+answers = ["After it the pipeline holds formatting instructions, not the original objects"]
+explanation = "Use Export-Csv, ConvertTo-Json or Out-File to save data."
+review = "Formatting versus data"
+
+[[question]]
+id = "fo-save"
+type = "multi"
+prompt = "Which cmdlets are suitable for saving data? Select all that apply."
+choices = ["Export-Csv", "ConvertTo-Json", "Out-File", "Format-Table"]
+answers = ["Export-Csv", "ConvertTo-Json", "Out-File"]
+explanation = "Format-* is for people."
+review = "Formatting versus data"
+
+# ---- Providers ----
+
+[[question]]
+id = "pr-registry"
+type = "short"
+prompt = "Write the command that lists the child keys under HKCU:\\Software."
+answers = ["Get-ChildItem HKCU:\\Software", "gci HKCU:\\Software", "ls HKCU:\\Software", "dir HKCU:\\Software"]
+explanation = "The registry provider exposes keys like folders."
+review = "Providers and drives"
+
+[[question]]
+id = "pr-why"
+type = "choice"
+prompt = "Why does Get-ChildItem work on the registry?"
+choices = ["Providers expose different data stores through one set of cmdlets", "The registry is a folder", "Get-ChildItem has registry code", "It does not"]
+answers = ["Providers expose different data stores through one set of cmdlets"]
+explanation = "One set of verbs works across all of them."
+review = "Providers and drives"
+
+[[question]]
+id = "pr-env"
+type = "short"
+prompt = "Write the expression that reads the USERPROFILE environment variable in PowerShell."
+answers = ["$env:USERPROFILE", "$env:userprofile"]
+explanation = "The Env: drive exposes environment variables."
+review = "Providers and drives"
+
+[[question]]
+id = "pr-drive"
+type = "choice"
+prompt = "Which drive holds certificate stores?"
+choices = ["Cert:", "HKLM:", "Env:", "Function:"]
+answers = ["Cert:"]
+explanation = "Get-ChildItem Cert:\\CurrentUser\\My."
+review = "Providers and drives"
+
+# ---- Scripts and policy ----
+
+[[question]]
+id = "sc-dot"
+type = "choice"
+prompt = "How do you run script.ps1 from the current folder?"
+choices = [".\\script.ps1", "script.ps1", "run script.ps1", "./script (no extension)"]
+answers = [".\\script.ps1"]
+explanation = "PowerShell does not run from the current folder by name."
+review = "Running scripts"
+
+[[question]]
+id = "sc-call"
+type = "short"
+prompt = "Which operator runs a command stored in a string or variable? (one character)"
+answers = ["&"]
+explanation = "The call operator: & \"C:\\path\\app.exe\"."
+review = "Running scripts"
+
+[[question]]
+id = "ep-boundary"
+type = "choice"
+prompt = "Is the execution policy a security boundary?"
+choices = ["No; it only prevents accidental script runs", "Yes, a strong one", "Only on servers", "Only in PowerShell 7"]
+answers = ["No; it only prevents accidental script runs"]
+explanation = "A user can paste the same commands into a console."
+review = "The execution policy"
+certifications = ["comptia-a-core2/security"]
+
+[[question]]
+id = "ep-remote"
+type = "choice"
+prompt = "What does RemoteSigned require?"
+choices = ["Local scripts run; downloaded scripts must be signed", "All scripts signed", "No scripts run", "Only remote scripts"]
+answers = ["Local scripts run; downloaded scripts must be signed"]
+explanation = "A mark of the web identifies downloaded files."
+review = "The execution policy"
+
+[[question]]
+id = "ep-scope"
+type = "short"
+prompt = "Write the command that sets RemoteSigned for the current user only."
+answers = ["Set-ExecutionPolicy RemoteSigned -Scope CurrentUser", "Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser"]
+explanation = "The smallest change is for one scope."
+review = "The execution policy"
+
+[[question]]
+id = "ep-unblock"
+type = "short"
+prompt = "Which cmdlet removes the mark of the web from a downloaded script you have inspected? (cmdlet name)"
+answers = ["Unblock-File"]
+explanation = "Only after you have read the script."
+review = "The execution policy"
+
+[[question]]
+id = "ep-oneoff"
+type = "choice"
+prompt = "How do you run one script bypassing the policy without changing it?"
+choices = ["powershell -ExecutionPolicy Bypass -File .\\script.ps1", "Delete the policy", "Rename the script", "Use cmd /c"]
+answers = ["powershell -ExecutionPolicy Bypass -File .\\script.ps1"]
+explanation = "It applies to that process only."
+review = "The execution policy"
+
+[[question]]
+id = "pf-var"
+type = "short"
+prompt = "Which automatic variable holds your profile path? (with the dollar sign)"
+answers = ["$PROFILE"]
+explanation = "The 5.1 and 7 paths differ."
+review = "Profiles"
+
+[[question]]
+id = "pf-noprofile"
+type = "choice"
+prompt = "Why use -NoProfile in scripts and scheduled tasks?"
+choices = ["So your customisations do not change the script's behaviour", "It is required", "It is faster only", "It disables errors"]
+answers = ["So your customisations do not change the script's behaviour"]
+explanation = "It also avoids slowing every start."
+review = "Profiles"
+
+[[question]]
+id = "tr-transcript"
+type = "short"
+prompt = "Which cmdlet records everything you type and see to a file?"
+answers = ["Start-Transcript"]
+explanation = "Stop-Transcript ends it."
+review = "Recording what you did"
+
+# ---- Added: scripts, Linux and the editor ----
+
+[[question]]
+id = "al-never"
+type = "choice"
+prompt = "What is the rule about aliases in scripts?"
+choices = ["Never use them: write full cmdlet and parameter names", "Always use them to save space", "Use them only for Get-ChildItem", "Use them only in PowerShell 7"]
+answers = ["Never use them: write full cmdlet and parameter names"]
+explanation = "Aliases are for typing at the prompt. They hurt readability, can be redefined, and differ by platform."
+review = "Aliases"
+
+[[question]]
+id = "al-reasons"
+type = "multi"
+prompt = "Which are reasons not to use aliases in scripts? Select all that apply."
+choices = ["They are harder to read and search for", "They can be redefined and they beat functions and cmdlets of the same name", "They differ between Windows and Linux", "They are slower to type"]
+answers = ["They are harder to read and search for", "They can be redefined and they beat functions and cmdlets of the same name", "They differ between Windows and Linux"]
+explanation = "Typing speed is the only point in their favour, and it does not matter in a saved script."
+review = "Aliases"
+
+[[question]]
+id = "al-linux"
+type = "choice"
+prompt = "On Linux, what happens when you type ls in PowerShell 7?"
+choices = ["The native /usr/bin/ls runs: there is no ls alias", "It runs Get-ChildItem", "It is an error", "It runs dir"]
+answers = ["The native /usr/bin/ls runs: there is no ls alias"]
+explanation = "PowerShell on Linux ships no alias for ls, cat, cp, mv, rm, mkdir, ps, kill, sleep, sort, curl, wget, man or clear."
+review = "PowerShell on Linux and macOS"
+
+[[question]]
+id = "al-curl"
+type = "choice"
+prompt = "In Windows PowerShell 5.1, what is curl?"
+choices = ["An alias of Invoke-WebRequest, not the curl program", "The real curl.exe", "Not defined", "An alias of Get-Content"]
+answers = ["An alias of Invoke-WebRequest, not the curl program"]
+explanation = "PowerShell 7 removed the alias, so curl there runs the real curl.exe."
+review = "PowerShell on Linux and macOS"
+
+[[question]]
+id = "lx-var"
+type = "short"
+prompt = "Which automatic variable is True when PowerShell 7 runs on Linux? (with the dollar sign)"
+answers = ["$IsLinux"]
+explanation = "$IsWindows and $IsMacOS are the others; none exist in Windows PowerShell 5.1."
+review = "PowerShell on Linux and macOS"
+
+[[question]]
+id = "lx-case"
+type = "choice"
+prompt = "On Linux, can A.txt and a.txt exist in the same folder?"
+choices = ["Yes: file names are case-sensitive", "No", "Only in /tmp", "Only for .txt"]
+answers = ["Yes: file names are case-sensitive"]
+explanation = "On Windows they are the same name."
+review = "PowerShell on Linux and macOS"
+
+[[question]]
+id = "lx-missing"
+type = "multi"
+prompt = "Which cmdlets were absent in PowerShell 7 on Linux? Select all that apply."
+choices = ["Get-Service", "Get-WinEvent", "Get-CimInstance", "Get-Process"]
+answers = ["Get-Service", "Get-WinEvent", "Get-CimInstance"]
+explanation = "Get-Process and Get-ChildItem work on Linux."
+review = "PowerShell on Linux and macOS"
+
+[[question]]
+id = "lx-policy"
+type = "choice"
+prompt = "What does Get-ExecutionPolicy return on Linux?"
+choices = ["Unrestricted, and it is not enforced", "Restricted", "RemoteSigned", "It is an error"]
+answers = ["Unrestricted, and it is not enforced"]
+explanation = "Execution policy is a Windows feature."
+review = "PowerShell on Linux and macOS"
+
+[[question]]
+id = "lx-shebang"
+type = "short"
+prompt = "Write the first line that makes a PowerShell script directly executable on Linux."
+answers = ["#!/usr/bin/env pwsh"]
+explanation = "Then chmod +x and run ./script.ps1."
+review = "PowerShell on Linux and macOS"
+
+[[question]]
+id = "lx-joinpath"
+type = "choice"
+prompt = "Why use Join-Path instead of building paths with backslashes?"
+choices = ["It uses the right separator on every platform", "It is shorter", "It checks the path exists", "It is faster"]
+answers = ["It uses the right separator on every platform"]
+explanation = "Join-Path 'a' 'b' gave a/b on Linux."
+review = "PowerShell on Linux and macOS"
+
+[[question]]
+id = "vs-code"
+type = "choice"
+prompt = "Which editor setup does Microsoft recommend for writing PowerShell scripts?"
+choices = ["Visual Studio Code with the PowerShell extension", "Notepad", "WordPad", "The ISE only"]
+answers = ["Visual Studio Code with the PowerShell extension"]
+explanation = "It is optional, but adds completion, PSScriptAnalyzer checking, snippets, a console and a debugger."
+review = "Starting it"
+
+[[question]]
+id = "vs-features"
+type = "multi"
+prompt = "Which does the VS Code PowerShell extension add? Select all that apply."
+choices = ["Completion for cmdlets, parameters and variables", "Error and style checking while you type", "A graphical debugger", "Automatic fixing of every bug"]
+answers = ["Completion for cmdlets, parameters and variables", "Error and style checking while you type", "A graphical debugger"]
+explanation = "It helps, but does not write or fix your logic."
+review = "Starting it"
+
+# ---- Added: calling external programs safely ----
+
+[[question]]
+id = "ex-bare"
+type = "choice"
+prompt = "In PowerShell, what does the bare name 'where notepad' run?"
+choices = ["The alias Where-Object, not where.exe", "where.exe", "Get-Command", "Nothing; it is an error"]
+answers = ["The alias Where-Object, not where.exe"]
+explanation = "Aliases are resolved before external programs, so it silently prints nothing."
+review = "Calling external programs safely"
+
+[[question]]
+id = "ex-order"
+type = "choice"
+prompt = "In what order does PowerShell resolve a bare command name?"
+choices = ["Alias, function, cmdlet, external program", "External program first", "Cmdlet, alias, function, program", "Function, program, alias, cmdlet"]
+answers = ["Alias, function, cmdlet, external program"]
+explanation = "That is why a name ending in .exe, which no alias or function can match, is the safe way to reach a program."
+review = "Calling external programs safely"
+
+[[question]]
+id = "ex-rule"
+type = "choice"
+prompt = "What is the rule when a PowerShell script on Windows needs an external program such as sort or a coreutils tool?"
+choices = ["Write the name with .exe (sort.exe) and make sure its folder is on PATH", "Write the bare name", "Define an alias for it", "Use Invoke-Expression"]
+answers = ["Write the name with .exe (sort.exe) and make sure its folder is on PATH"]
+explanation = "An alias or function cannot match a name that ends in .exe, so the program you meant is the one that runs."
+review = "Calling external programs safely"
+
+[[question]]
+id = "ex-all"
+type = "short"
+prompt = "Which cmdlet and parameter list every command a name could resolve to, in order? (for example Get-Command name -X)"
+answers = ["Get-Command name -All", "Get-Command -All name"]
+explanation = "It shows aliases, functions, cmdlets and applications together."
+review = "Calling external programs safely"
+
+[[question]]
+id = "ex-hijack"
+type = "choice"
+prompt = "A function named find is defined in the session. How do you still run the Windows find program from a script?"
+choices = ["find.exe", "find", "Find-Item", "cmd find"]
+answers = ["find.exe"]
+explanation = "The function hijacks the bare name; the .exe form reaches the program."
+review = "Calling external programs safely"
+
+[[question]]
+id = "ex-full"
+type = "short"
+prompt = "Which operator runs a program given by a full path stored in a string, for example & 'C:\\tools\\ls.exe'? (one character)"
+answers = ["&"]
+explanation = "The call operator. A full path means even a wrong PATH cannot substitute another program."
+review = "Calling external programs safely"
+
+[[question]]
+id = "ex-check"
+type = "choice"
+prompt = "How should a script check that a tool it needs is available?"
+choices = ["Get-Command tool.exe -ErrorAction SilentlyContinue at the top, and throw a clear message if it is missing", "Run it and ignore errors", "Assume it exists", "Search the whole disk"]
+answers = ["Get-Command tool.exe -ErrorAction SilentlyContinue at the top, and throw a clear message if it is missing"]
+explanation = "Fail early with a clear message instead of halfway through."
+review = "Calling external programs safely"
+
+[[question]]
+id = "ex-elevated"
+type = "choice"
+prompt = "Why prefer a fixed, trusted location over PATH in a script that runs elevated?"
+choices = ["A writable folder early on PATH lets someone plant a program with a common name", "PATH is slower", "PATH is empty when elevated", "Windows forbids PATH in scripts"]
+answers = ["A writable folder early on PATH lets someone plant a program with a common name"]
+explanation = "The same reasoning as the current-directory search rule."
+review = "Calling external programs safely"
+
+[[question]]
+id = "ex-linux"
+type = "choice"
+prompt = "Does the .exe rule apply on Linux?"
+choices = ["No: programs have no extension, so check with Get-Command name -CommandType Application or use the full path", "Yes, write ls.exe", "Only for scripts", "Only for sudo"]
+answers = ["No: programs have no extension, so check with Get-Command name -CommandType Application or use the full path"]
+explanation = "A function named ls could still shadow /usr/bin/ls there."
+review = "PowerShell on Linux and macOS"
+
+[[question]]
+id = "ex-exit"
+type = "short"
+prompt = "Where does PowerShell store the exit code of an external program? (automatic variable, with dollar sign)"
+answers = ["$LASTEXITCODE"]
+explanation = "Programs report failure through exit codes, not exceptions."
+review = "Calling external programs safely"
+
+[[question]]
+id = "cu-51"
+type = "choice"
+prompt = "In Windows PowerShell 5.1, what does the bare command curl http://localhost/ run?"
+choices = ["Invoke-WebRequest (curl is an alias), which returns a response object", "The curl.exe program", "Invoke-RestMethod", "Nothing; curl is not defined"]
+answers = ["Invoke-WebRequest (curl is an alias), which returns a response object"]
+explanation = "And without -UseBasicParsing it can fail in 5.1 because it tries to use the Internet Explorer parsing engine."
+review = "The `curl` trap"
+
+[[question]]
+id = "cu-7"
+type = "choice"
+prompt = "In PowerShell 7 on Windows, what does the bare command curl http://localhost/ run?"
+choices = ["The real curl.exe, which prints the body and a progress meter on stderr", "Invoke-WebRequest", "Invoke-RestMethod", "A function"]
+answers = ["The real curl.exe, which prints the body and a progress meter on stderr"]
+explanation = "PowerShell 7 has no curl alias, so the program is found on PATH."
+review = "The `curl` trap"
+
+[[question]]
+id = "cu-pick"
+type = "choice"
+prompt = "A script must download a JSON API response and use it as objects. Which command should it use?"
+choices = ["Invoke-RestMethod", "curl", "wget", "Invoke-Expression"]
+answers = ["Invoke-RestMethod"]
+explanation = "It converts JSON or XML to objects. Use curl.exe only when you specifically want the program."
+review = "The `curl` trap"
+
+[[question]]
+id = "cu-basic"
+type = "short"
+prompt = "Which Invoke-WebRequest switch avoids the Internet Explorer engine in Windows PowerShell 5.1? (include the dash)"
+answers = ["-UseBasicParsing"]
+explanation = "PowerShell 7 does not need it."
+review = "The `curl` trap"

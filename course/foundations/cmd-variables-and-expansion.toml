@@ -1,0 +1,48 @@
+schema_version = 1
+id = "foundations.cmd-variables-and-expansion"
+title = "CMD variables, arithmetic and expansion"
+summary = "Setting and reading variables safely, set /a arithmetic and its traps, string substitution and slicing, immediate versus delayed expansion, setlocal scope, parameters and their modifiers, and the variables Windows provides."
+content = "cmd-variables-and-expansion.md"
+estimated_minutes = 75
+objectives = [
+  "Set variables with the quoted form and explain the hidden-space trap of set x = 1",
+  "Do integer arithmetic with set /a, including bitwise operators, octal and hex literals, and 32-bit overflow",
+  "Replace, slice and trim a variable's text with the %v:old=new% and %v:~n,len% forms",
+  "Explain when %var% is expanded, why loops and blocks need delayed expansion, and the cost of !",
+  "Use setlocal and endlocal for scope, and return a value from a subroutine with endlocal & set",
+  "Use %0 to %9, %*, shift and the %~ modifiers, especially %~dp0",
+  "Name the variables Windows provides and make a variable permanent from the GUI and with setx",
+]
+prerequisites = ["foundations.cmd-basics"]
+windows_features = ["Command Prompt", "System Properties"]
+privilege = "standard"
+certifications = ["comptia-a-core2/operating-systems"]
+evaluation_criteria = [
+  "Learner explains, from a printed result, why a counting loop printed the same number three times and fixes it",
+  "Learner writes a subroutine that returns a value without leaking its working variables",
+  "Learner uses %~dp0 to find a file beside a script regardless of the starting folder",
+]
+
+[[references]]
+title = "set (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/set_1"
+
+[[references]]
+title = "setlocal (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/setlocal"
+
+[[references]]
+title = "setx (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/setx"
+
+[[references]]
+title = "call (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/call"
+
+[[references]]
+title = "cmd (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/cmd"
+
+[[references]]
+title = "echo (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/echo"

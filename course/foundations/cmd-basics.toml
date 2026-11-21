@@ -1,0 +1,90 @@
+schema_version = 1
+id = "foundations.cmd-basics"
+title = "Command Prompt fundamentals"
+summary = "How cmd reads and runs a line, finding programs (PATH and PATHEXT), special characters and escaping, files and folders from the GUI and the shell, redirection and pipes, exit codes, and the limits that make batch files tricky."
+content = "cmd-basics.md"
+estimated_minutes = 75
+objectives = [
+  "Open Command Prompt by several routes and navigate the file system with cd (including /d) and dir",
+  "Explain the order in which cmd decides what a command name means, using PATH and PATHEXT, and find a program with where",
+  "Use the special characters & && || | < > ( ) ^ and escape them correctly",
+  "Quote paths that contain spaces, and know that cd is the lenient exception",
+  "Create, copy, move, rename, delete and inspect files and folders from the shell, and say what each GUI action maps to",
+  "Redirect stdout and stderr to files and to each other, and explain why the order matters",
+  "Read a command's exit code from ERRORLEVEL and combine commands with && and ||",
+  "Write and run a minimal batch file, and name the limits of cmd (line length, code page, no real data types)",
+]
+prerequisites = ["foundations.architecture"]
+windows_features = ["Command Prompt", "File Explorer", "Windows Terminal"]
+privilege = "standard"
+certifications = ["comptia-a-core2/operating-systems"]
+evaluation_criteria = [
+  "Learner writes a command that saves a directory listing to a file in a scratch folder, and shows the file",
+  "Learner shows a command that succeeds and one that fails, with the exit code of each",
+  "Learner explains the difference between cmd > f 2>&1 and cmd 2>&1 > f by running both",
+  "Learner uses where to explain which program runs for a name",
+]
+
+[[references]]
+title = "Windows commands index (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/windows-commands"
+
+[[references]]
+title = "cmd (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/cmd"
+
+[[references]]
+title = "where (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/where"
+
+[[references]]
+title = "dir (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/dir"
+
+[[references]]
+title = "copy (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/copy"
+
+[[references]]
+title = "move (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/move"
+
+[[references]]
+title = "rename (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/rename"
+
+[[references]]
+title = "del (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/del"
+
+[[references]]
+title = "rmdir (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/rmdir"
+
+[[references]]
+title = "attrib (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/attrib"
+
+[[references]]
+title = "tree (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/tree"
+
+[[references]]
+title = "set (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/set_1"
+
+[[references]]
+title = "robocopy (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/robocopy"
+
+[[references]]
+title = "doskey (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/doskey"
+
+[[references]]
+title = "Command-line string limitation (Microsoft Learn)"
+url = "https://learn.microsoft.com/troubleshoot/windows-client/shell-experience/command-line-string-limitation"
+
+[[references]]
+title = "NeedCurrentDirectoryForExePathW (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/win32/api/processenv/nf-processenv-needcurrentdirectoryforexepathw"

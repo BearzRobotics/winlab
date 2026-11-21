@@ -1,0 +1,385 @@
+schema_version = 1
+lesson = "foundations.troubleshooting-method"
+# Draft for owner review. A bank of 42; each attempt asks 10, favouring questions missed last time.
+draw = 10
+
+# ---- The steps ----
+
+[[question]]
+id = "step-first"
+type = "choice"
+prompt = "Which is the first step of the method?"
+choices = ["Reproduce", "Repair", "Hypothesize", "Document"]
+answers = ["Reproduce"]
+explanation = "You cannot know a fix worked unless you can make the problem happen first."
+review = "The eight steps"
+certifications = ["comptia-a-core2/software-troubleshooting"]
+
+[[question]]
+id = "step-order"
+type = "choice"
+prompt = "Which is the correct order of the eight steps?"
+choices = ["Reproduce, scope, observe, hypothesize, test, repair, verify, document", "Observe, reproduce, repair, test, scope, verify, hypothesize, document", "Scope, repair, observe, reproduce, test, hypothesize, document, verify", "Reproduce, hypothesize, repair, scope, observe, test, verify, document"]
+answers = ["Reproduce, scope, observe, hypothesize, test, repair, verify, document"]
+explanation = "Reproduce, scope, observe, hypothesize, test, repair, verify, document."
+review = "The eight steps"
+
+[[question]]
+id = "step-last"
+type = "short"
+prompt = "What is the last step of the method? (one word)"
+answers = ["Document", "Documenting", "Documentation"]
+explanation = "A record lets you or someone else solve the next occurrence faster."
+review = "The eight steps"
+
+[[question]]
+id = "step-before-repair"
+type = "choice"
+prompt = "What must you know before you repair anything?"
+choices = ["How you would undo the change", "The user's password", "Which vendor made the PC", "How long the repair will take"]
+answers = ["How you would undo the change"]
+explanation = "Know the way back, and take a backup or restore point when the change is hard to reverse."
+review = "The eight steps"
+
+[[question]]
+id = "skip-reproduce"
+type = "choice"
+prompt = "What goes wrong if you skip the Reproduce step?"
+choices = ["You cannot know whether your fix worked", "The event log stops recording", "The service starts by itself", "The user is locked out"]
+answers = ["You cannot know whether your fix worked"]
+explanation = "Verification means repeating the reproduction."
+review = "Why each step matters"
+
+[[question]]
+id = "skip-scope"
+type = "choice"
+prompt = "What goes wrong if you skip Scope?"
+choices = ["You may fix one machine when the cause is a shared one", "You will not find any events", "The fix will be too slow", "You will break the user's profile"]
+answers = ["You may fix one machine when the cause is a shared one"]
+explanation = "Scope shows how far the problem reaches."
+review = "Why each step matters"
+
+[[question]]
+id = "skip-observe"
+type = "choice"
+prompt = "Skipping Observe turns troubleshooting into:"
+choices = ["Guessing", "Documentation", "Verification", "Reproduction"]
+answers = ["Guessing"]
+explanation = "Without evidence there is nothing to base a hypothesis on."
+review = "Why each step matters"
+
+[[question]]
+id = "skip-verify"
+type = "choice"
+prompt = "Which step skipped is 'how a problem returns the next morning'?"
+choices = ["Verify", "Scope", "Observe", "Hypothesize"]
+answers = ["Verify"]
+explanation = "A fix you did not confirm may not have worked, or may have broken something nearby."
+review = "Why each step matters"
+
+[[question]]
+id = "one-change"
+type = "choice"
+prompt = "Why change only one thing at a time while testing or repairing?"
+choices = ["So you can tell which change mattered and cleanly undo it", "Because Windows allows only one change per session", "To save disk space", "Because logs hold only one entry at a time"]
+answers = ["So you can tell which change mattered and cleanly undo it"]
+explanation = "Several simultaneous changes hide the cause and make undoing messy."
+review = "Why each step matters"
+
+[[question]]
+id = "readonly"
+type = "choice"
+prompt = "Why is a read-only test preferred?"
+choices = ["It cannot damage the system or destroy the evidence", "It is always faster", "It needs no permissions", "It fixes the problem as a side effect"]
+answers = ["It cannot damage the system or destroy the evidence"]
+explanation = "Evidence you are still examining must not be altered."
+review = "Step 5: test"
+
+# ---- Reproduce and scope ----
+
+[[question]]
+id = "q-when-worked"
+type = "choice"
+prompt = "Which question best finds the time window to examine?"
+choices = ["When did it last work, and what changed since?", "What is your job title?", "How old is the computer?", "Which browser do you prefer?"]
+answers = ["When did it last work, and what changed since?"]
+explanation = "The change just before the problem began is the first suspect."
+review = "Step 1 and 2: reproduce and scope"
+
+[[question]]
+id = "q-exact-error"
+type = "choice"
+prompt = "Why ask for the exact error text rather than a description?"
+choices = ["It is evidence you can search for", "It is easier to type", "Users never remember symptoms", "It stops the problem recurring"]
+answers = ["It is evidence you can search for"]
+explanation = "Copy messages exactly; they identify the fault."
+review = "Step 1 and 2: reproduce and scope"
+
+[[question]]
+id = "scope-1"
+type = "choice"
+prompt = "A problem affects one user on every machine they use. Where do you look first?"
+choices = ["The account: permissions, profile, group membership", "The server room", "The network cable", "The monitor"]
+answers = ["The account: permissions, profile, group membership"]
+explanation = "If it follows the user, it is about the user's account."
+review = "Step 1 and 2: reproduce and scope"
+
+[[question]]
+id = "scope-2"
+type = "choice"
+prompt = "A problem affects every user on one machine only. Where do you look first?"
+choices = ["The machine: a service, a driver, the disk, or its local network", "The users' accounts", "The domain controller", "The internet provider"]
+answers = ["The machine: a service, a driver, the disk, or its local network"]
+explanation = "If it stays with the machine, the cause is on the machine."
+review = "Step 1 and 2: reproduce and scope"
+
+[[question]]
+id = "scope-3"
+type = "choice"
+prompt = "A problem affects every user on every machine. What does that suggest?"
+choices = ["Something shared: a server, the network, a certificate or a policy", "Each user made the same mistake", "A single faulty keyboard", "Nothing; it is a coincidence"]
+answers = ["Something shared: a server, the network, a certificate or a policy"]
+explanation = "A wide scope points at a shared dependency."
+review = "Step 1 and 2: reproduce and scope"
+
+[[question]]
+id = "scope-4"
+type = "choice"
+prompt = "A colleague prints fine but one user's prints fail on both of their devices. Which is more likely?"
+choices = ["Something specific to the user's account", "The printer is broken", "The building's power", "The router"]
+answers = ["Something specific to the user's account"]
+explanation = "The printer works for another user, and the failure follows the user across devices."
+review = "Access denied on a shared printer"
+
+[[question]]
+id = "cannot-reproduce"
+type = "choice"
+prompt = "You cannot reproduce a problem. What does the method say to do?"
+choices = ["Say so; that is itself a finding", "Pretend it is fixed", "Reinstall Windows", "Close the ticket without a note"]
+answers = ["Say so; that is itself a finding"]
+explanation = "Record that it could not be reproduced and what you tried."
+review = "The eight steps"
+
+[[question]]
+id = "user-cause"
+type = "choice"
+prompt = "A user says 'the server is broken'. How do you treat that statement?"
+choices = ["As a symptom to investigate, not as the cause", "As the confirmed cause", "As irrelevant", "As an order"]
+answers = ["As a symptom to investigate, not as the cause"]
+explanation = "Take the symptom from the user and find the cause yourself."
+review = "Common mistakes"
+
+# ---- Observe ----
+
+[[question]]
+id = "obs-errors-win"
+type = "short"
+prompt = "Which PowerShell cmdlet reads Windows event logs?"
+answers = ["Get-WinEvent"]
+explanation = "Get-WinEvent with -FilterHashtable filters by log, level and time."
+review = "Windows event logs"
+
+[[question]]
+id = "obs-level"
+type = "choice"
+prompt = "In Windows event logs, which Level number is an Error?"
+choices = ["2", "1", "3", "4"]
+answers = ["2"]
+explanation = "1 critical, 2 error, 3 warning, 4 information."
+review = "Windows event logs"
+
+[[question]]
+id = "obs-id-provider"
+type = "choice"
+prompt = "Which two fields together identify an event for searching?"
+choices = ["The Id and the ProviderName", "The TimeCreated and the user", "The size and the date", "The color and the level"]
+answers = ["The Id and the ProviderName"]
+explanation = "Search for the event Id together with its provider."
+review = "Windows event logs"
+
+[[question]]
+id = "obs-noise"
+type = "choice"
+prompt = "A warning appears every ten minutes and has for months. The problem began on Monday. How much weight does that warning get?"
+choices = ["Little; it predates the problem", "A lot; it is the cause", "It proves a virus", "It must be deleted"]
+answers = ["Little; it predates the problem"]
+explanation = "Look for what changed on Monday instead."
+review = "Windows event logs"
+
+[[question]]
+id = "obs-wevtutil"
+type = "short"
+prompt = "Which Command Prompt tool queries event logs and prints them as text? (command name)"
+answers = ["wevtutil"]
+explanation = "For example: wevtutil qe System /c:3 /rd:true /f:text."
+review = "Windows event logs"
+
+[[question]]
+id = "obs-service"
+type = "short"
+prompt = "Which PowerShell cmdlet shows whether a service is running?"
+answers = ["Get-Service"]
+explanation = "Get-Service lists services and their state."
+review = "Services and processes"
+
+[[question]]
+id = "obs-stopped"
+type = "choice"
+prompt = "A service shows Stopped. What should you check before calling it a fault?"
+choices = ["Its startup type; some start only when needed", "The monitor", "The user's name", "The DNS cache"]
+answers = ["Its startup type; some start only when needed"]
+explanation = "Not every stopped service is broken."
+review = "Services and processes"
+
+[[question]]
+id = "obs-start-hides"
+type = "choice"
+prompt = "Why shouldn't you just start a stopped service and move on?"
+choices = ["Starting it hides why it stopped", "Starting services is forbidden", "It deletes the logs", "It needs a reboot"]
+answers = ["Starting it hides why it stopped"]
+explanation = "Read the event that explains the stop first, or the failure will recur."
+review = "A service that will not start"
+
+[[question]]
+id = "obs-hotfix"
+type = "short"
+prompt = "Which PowerShell cmdlet lists installed Windows updates?"
+answers = ["Get-HotFix"]
+explanation = "A problem that began after an update is a lead, not proof."
+review = "Recent changes"
+
+[[question]]
+id = "obs-linux-errors"
+type = "short"
+prompt = "Write the Linux command that shows only error-priority log entries since this boot."
+answers = ["journalctl -p err -b", "journalctl -b -p err"]
+explanation = "-p err filters by priority and -b limits to the current boot."
+review = "Linux"
+
+[[question]]
+id = "obs-linux-status"
+type = "choice"
+prompt = "Which command shows a Linux service's state, exit code and last log lines together?"
+choices = ["systemctl status <name>", "ls /etc", "df -h", "ip addr"]
+answers = ["systemctl status <name>"]
+explanation = "Often it is all you need."
+review = "Linux"
+
+[[question]]
+id = "obs-readonly-tools"
+type = "multi"
+prompt = "Which of these are read-only observation tools? Select all that apply."
+choices = ["Get-WinEvent", "journalctl", "Get-Service", "Restart-Service"]
+answers = ["Get-WinEvent", "journalctl", "Get-Service"]
+explanation = "Restart-Service changes the system, so it is not observation."
+review = "Step 3: observe, with built-in tools"
+
+[[question]]
+id = "keep-notes"
+type = "choice"
+prompt = "Why write down each command you ran and what it showed?"
+choices = ["You need it for the record and to avoid repeating a check", "Windows requires it", "It speeds up the CPU", "It satisfies the firewall"]
+answers = ["You need it for the record and to avoid repeating a check"]
+explanation = "Notes become the step 8 record."
+review = "Keep notes as you go"
+
+# ---- Hypothesis and test ----
+
+[[question]]
+id = "hyp-testable"
+type = "choice"
+prompt = "Which is a good hypothesis?"
+choices = ["The user is no longer in the Printing group", "Something is wrong with permissions", "The computer is unhappy", "It is probably Windows"]
+answers = ["The user is no longer in the Printing group"]
+explanation = "A hypothesis must be something a test could prove wrong."
+review = "Step 4: hypothesize"
+
+[[question]]
+id = "hyp-fit"
+type = "choice"
+prompt = "Two causes are possible. One explains only half the symptoms. How do you treat it?"
+choices = ["It is probably not the cause", "It is certainly the cause", "Ignore the other symptoms", "Test it last"]
+answers = ["It is probably not the cause"]
+explanation = "A cause should explain all the evidence."
+review = "Step 4: hypothesize"
+
+[[question]]
+id = "test-separates"
+type = "choice"
+prompt = "What makes a test good?"
+choices = ["Its result differs depending on which hypothesis is true", "It changes many settings", "It takes a long time", "It needs a reboot"]
+answers = ["Its result differs depending on which hypothesis is true"]
+explanation = "A test that comes out the same either way separates nothing."
+review = "Step 5: test"
+
+[[question]]
+id = "test-account"
+type = "choice"
+prompt = "Hypothesis A: the account lacks a permission. Hypothesis B: the printer is down. Which test separates them?"
+choices = ["Print from a second account", "Reinstall the driver", "Reboot the printer", "Reset the router"]
+answers = ["Print from a second account"]
+explanation = "If a second account prints, the printer is fine and the first account is the issue."
+review = "Step 5: test"
+
+# ---- Safety nets, verify, document ----
+
+[[question]]
+id = "net-restore"
+type = "short"
+prompt = "Which PowerShell cmdlet creates a System Restore point?"
+answers = ["Checkpoint-Computer"]
+explanation = "Check with Get-ComputerRestorePoint that it was actually created."
+review = "Step 6: repair, and keep a way back"
+
+[[question]]
+id = "net-restore-scope"
+type = "choice"
+prompt = "A System Restore point protects:"
+choices = ["System files and settings, not your documents", "Your documents and photos", "Every file on every drive", "Network passwords"]
+answers = ["System files and settings, not your documents"]
+explanation = "It is a safety net for the change, not a backup."
+review = "Step 6: repair, and keep a way back"
+
+[[question]]
+id = "net-vm"
+type = "choice"
+prompt = "What is the best safety net for a risky change on a virtual machine?"
+choices = ["A snapshot", "A sticky note", "A reboot", "Nothing"]
+answers = ["A snapshot"]
+explanation = "The labs take one for you."
+review = "Step 6: repair, and keep a way back"
+
+[[question]]
+id = "net-registry"
+type = "short"
+prompt = "Which command exports a registry key before you change it? (command name)"
+answers = ["reg export", "reg.exe export"]
+explanation = "Export the key to a file so you can import it back."
+review = "Step 6: repair, and keep a way back"
+
+[[question]]
+id = "verify-how"
+type = "choice"
+prompt = "How do you verify a fix?"
+choices = ["Repeat exactly the reproduction from step 1 and check something nearby", "Ask the user if they feel better", "Restart and hope", "Close the ticket"]
+answers = ["Repeat exactly the reproduction from step 1 and check something nearby"]
+explanation = "'It worked once' is not verification for an intermittent fault."
+review = "Step 7: verify"
+
+[[question]]
+id = "doc-symptom"
+type = "choice"
+prompt = "Why record the symptom in the user's own words?"
+choices = ["The next person will search for those words, not your diagnosis", "It is polite", "It is required by Windows", "It shortens the log"]
+answers = ["The next person will search for those words, not your diagnosis"]
+explanation = "A good record names symptom, cause, fix and verification."
+review = "Step 8: document"
+
+[[question]]
+id = "restart-diag"
+type = "choice"
+prompt = "Why is 'restart it' not a diagnosis?"
+choices = ["It can hide a fault and destroy evidence", "Restarting is not allowed", "It always fixes everything", "It takes too long"]
+answers = ["It can hide a fault and destroy evidence"]
+explanation = "Note what you saw before restarting."
+review = "Common mistakes"

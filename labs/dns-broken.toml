@@ -1,0 +1,41 @@
+schema_version = 1
+id = "labs.dns-broken"
+title = "Websites will not open by name"
+summary = "Name lookups fail while the network itself is fine."
+lesson = "networking.addressing-and-names"
+symptom = "Nobody on this server can open websites by name. Reaching a site by its IP address still works."
+hints = [
+  "Separate the two problems: is the network down, or is turning names into addresses failing?",
+  "Name lookups go to the DNS servers configured on the network adapter.",
+  "Check which DNS server the active adapter is using, and whether it answers. The built-in lookup tools can ask a specific server.",
+]
+expected_changes = ["Points the lab VM's active network adapter at a DNS server address that does not answer"]
+hazards = ["Name lookups from the lab VM fail until the DNS setting is restored"]
+scope = "single guest (the registered training VM only)"
+privilege = "administrator"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["comptia-network-plus/network-troubleshooting", "comptia-a-core1/networking", "comptia-a-core2/software-troubleshooting"]
+fault = '''
+Get-NetAdapter | Where-Object Status -eq 'Up' | ForEach-Object {
+    Set-DnsClientServerAddress -InterfaceIndex $_.ifIndex -ServerAddresses '192.0.2.53'
+}
+Clear-DnsClientCache
+'''
+solution = '''
+Get-NetAdapter | Where-Object Status -eq 'Up' | ForEach-Object {
+    Set-DnsClientServerAddress -InterfaceIndex $_.ifIndex -ResetServerAddresses
+}
+Clear-DnsClientCache
+'''
+
+[validate]
+script = '''
+try {
+    $r = Resolve-DnsName -Name 'example.com' -Type A -DnsOnly -QuickTimeout -ErrorAction Stop
+    "resolved: $(($r | Where-Object Type -eq 'A' | Select-Object -First 1).Name)"
+} catch {
+    'lookup failed'
+}
+'''
+expect_output_contains = "resolved: example.com"

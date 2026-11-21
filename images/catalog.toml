@@ -1,0 +1,51 @@
+schema_version = 1
+
+# Installation media WinLab can download on the learner's request (never in the background).
+# Only entries whose URL has been checked belong here. The size and URL of the Server 2022
+# entry were checked on 2026-11-07 with a HEAD request (redirects to
+# software-static.download.prss.microsoft.com, Content-Length 5044094976, last modified
+# 2022-03-16). Microsoft does not publish a SHA-256 next to the download, so it is left
+# blank: WinLab computes and records the hash after downloading.
+#
+# Not listed on purpose: Windows 10/11 Home and Pro. Microsoft's consumer download page
+# hands out time-limited links, so there is no stable URL; supply your own ISO instead.
+# Windows Server 2025 and Windows 11 Enterprise evaluation links still need checking.
+
+[[image]]
+id = "windows-server-2022-eval"
+name = "Windows Server 2022 (evaluation, English, x64)"
+os = "windows-server"
+edition = "Standard / Datacenter, with or without Desktop Experience"
+url = "https://go.microsoft.com/fwlink/p/?LinkID=2195280"
+file = "SERVER_EVAL_x64FRE_en-us.iso"
+size_bytes = 5044094976
+note = "Microsoft evaluation software: installs without a key and runs for 180 days, after which it must be activated or rebuilt. Lab VMs here are short-lived. This is the original 2022 build; apply updates inside the VM if a lab needs them."
+unattend = "server"
+image_index = 2 # Windows Server 2022 SERVERSTANDARD (Desktop Experience), confirmed from the ISO's install.wim metadata
+
+[[image]]
+id = "ubuntu-2404-cloud"
+name = "Ubuntu Server 24.04 LTS cloud image (amd64)"
+os = "linux"
+edition = "Ubuntu 24.04 LTS (noble), cloud image for first-boot configuration"
+url = "https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img"
+sums_url = "https://cloud-images.ubuntu.com/noble/current/SHA256SUMS"
+file = "noble-server-cloudimg-amd64.img"
+size_bytes = 0 # the "current" image is replaced by new builds, so only the published SHA256SUMS is checked
+cloud_image = true
+distro = "ubuntu"
+note = "Canonical's official cloud image (free software; no key or sign-up). It is configured at first boot by a small seed disk WinLab builds. The download is checked against Canonical's published SHA256SUMS."
+
+[[image]]
+id = "almalinux-9-cloud"
+name = "AlmaLinux 9 GenericCloud image (x86_64)"
+os = "linux"
+edition = "AlmaLinux 9 (RHEL-compatible), cloud image for first-boot configuration"
+url = "https://repo.almalinux.org/almalinux/9/cloud/x86_64/images/AlmaLinux-9-GenericCloud-latest.x86_64.qcow2"
+sums_url = "https://repo.almalinux.org/almalinux/9/cloud/x86_64/images/CHECKSUM"
+file = "AlmaLinux-9-GenericCloud-latest.x86_64.qcow2"
+size_bytes = 0 # "latest" is replaced by new builds, so only the published CHECKSUM file is checked
+cloud_image = true
+cpu = "max" # RHEL 9 and its rebuilds need x86-64-v2 (SSE4.2, POPCNT); QEMU's default qemu64 model lacks it
+distro = "almalinux"
+note = "AlmaLinux OS Foundation's official cloud image (free software; no key or sign-up). RHEL-compatible: dnf, firewalld, SELinux. The download is checked against AlmaLinux's published CHECKSUM file."

@@ -1,0 +1,35 @@
+schema_version = 1
+id = "labs.user-account-disabled"
+title = "A user cannot sign in"
+summary = "An account exists with the right password but cannot be used."
+lesson = "windows-admin.accounts-and-permissions"
+symptom = "Jordan Smith (account jsmith) cannot sign in this morning. They are sure the password is right and it worked on Friday."
+hints = [
+  "A correct password is not the only thing that decides whether an account can sign in.",
+  "Local accounts can be disabled. Which tool lists local users and their state?",
+  "Check the account's enabled state, then restore it. Do not reset the password: it is not the problem.",
+]
+expected_changes = [
+  "Creates a local account named jsmith",
+  "Disables that account in the lab VM",
+]
+hazards = ["The jsmith account in the lab VM cannot sign in until it is enabled"]
+scope = "single guest (the registered training VM only)"
+privilege = "administrator"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["comptia-a-core2/security", "comptia-a-core2/operating-systems"]
+setup = '''
+if (-not (Get-LocalUser -Name 'jsmith' -ErrorAction SilentlyContinue)) {
+    New-LocalUser -Name 'jsmith' -FullName 'Jordan Smith' -Password (ConvertTo-SecureString 'Lab-Only-Pass-456!' -AsPlainText -Force) -PasswordNeverExpires | Out-Null
+}
+Enable-LocalUser -Name 'jsmith'
+'''
+fault = "Disable-LocalUser -Name 'jsmith'"
+solution = "Enable-LocalUser -Name 'jsmith'"
+
+[validate]
+script = '''
+if ((Get-LocalUser -Name 'jsmith').Enabled) { 'account enabled' } else { 'account disabled' }
+'''
+expect_output_contains = "account enabled"

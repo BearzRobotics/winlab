@@ -1,0 +1,8 @@
+schema_version = 1
+id = "fixture.beta"
+title = "Beta (fixture)"
+summary = "Fixture lesson, not course content."
+content = "lesson.md"
+estimated_minutes = 10
+objectives = ["Fixture objective for Beta (fixture)"]
+prerequisites = ["fixture.alpha"]

@@ -1,0 +1,341 @@
+schema_version = 1
+lesson = "networking.dhcp"
+# Draft for owner review. A bank of 36; each attempt asks 10, favouring questions missed last time.
+draw = 10
+
+# ---- The exchange ----
+
+[[question]]
+id = "dora-expand"
+type = "choice"
+prompt = "What does DORA stand for in DHCP?"
+choices = ["Discover, Offer, Request, Acknowledge", "Detect, Offer, Receive, Accept", "Discover, Obtain, Renew, Acknowledge", "Deliver, Offer, Release, Accept"]
+answers = ["Discover, Offer, Request, Acknowledge"]
+explanation = "The client Discovers, the server Offers, the client Requests the offered address, and the server Acknowledges."
+review = "The four-step exchange"
+certifications = ["comptia-network-plus/networking-concepts"]
+
+[[question]]
+id = "dora-first"
+type = "short"
+prompt = "Which of the four DORA messages does a client send first? (one word)"
+answers = ["Discover"]
+explanation = "The client has no address and knows no server, so it broadcasts a Discover."
+review = "The four-step exchange"
+
+[[question]]
+id = "dora-order"
+type = "choice"
+prompt = "Which is the correct order of messages?"
+choices = ["Discover, Offer, Request, Acknowledge", "Offer, Discover, Request, Acknowledge", "Discover, Request, Offer, Acknowledge", "Request, Offer, Discover, Acknowledge"]
+answers = ["Discover, Offer, Request, Acknowledge"]
+explanation = "Discover (client), Offer (server), Request (client), Acknowledge (server)."
+review = "The four-step exchange"
+
+[[question]]
+id = "dhcp-ports"
+type = "choice"
+prompt = "Which transport and ports does DHCP use?"
+choices = ["UDP, server 67 and client 68", "TCP, server 67 and client 68", "UDP, server 53 and client 53", "TCP, server 80 and client 443"]
+answers = ["UDP, server 67 and client 68"]
+explanation = "DHCP uses UDP: the server listens on port 67 and the client on port 68."
+review = "The four-step exchange"
+
+[[question]]
+id = "discover-broadcast"
+type = "choice"
+prompt = "Why is the first message sent as a broadcast from 0.0.0.0?"
+choices = ["Because the client has no address yet and does not know where a server is", "Because DHCP servers only accept broadcasts", "To avoid using DNS", "Because UDP cannot send unicast"]
+answers = ["Because the client has no address yet and does not know where a server is"]
+explanation = "A client with no address cannot send unicast, and does not know a server's address, so it broadcasts. 0.0.0.0 is the only source address it can use."
+review = "The four-step exchange"
+
+[[question]]
+id = "request-broadcast"
+type = "choice"
+prompt = "Why is the Request message broadcast, not sent only to the chosen server?"
+choices = ["So any other server that made an offer learns that its offer was not chosen", "Because the server has no address", "To speed up DNS", "It is not broadcast"]
+answers = ["So any other server that made an offer learns that its offer was not chosen"]
+explanation = "Several servers may offer. Broadcasting the Request tells all of them which offer the client accepted."
+review = "The four-step exchange"
+
+[[question]]
+id = "dhcp-router-boundary"
+type = "choice"
+prompt = "The client's Discover is a broadcast. What does that mean for where the DHCP server must be?"
+choices = ["On the client's own network, or a router must forward the request", "Anywhere on the internet", "On the same computer", "It does not matter"]
+answers = ["On the client's own network, or a router must forward the request"]
+explanation = "Broadcasts stop at a router. A relay agent (IP helper) is how one server can serve several subnets."
+review = "The four-step exchange"
+
+[[question]]
+id = "dhcp-gives"
+type = "multi"
+prompt = "Which settings can a DHCP server hand out?"
+choices = ["IP address and subnet mask", "Default gateway", "DNS servers", "Lease time", "The user's password"]
+answers = ["IP address and subnet mask", "Default gateway", "DNS servers", "Lease time"]
+explanation = "DHCP configures a machine's network settings. It has nothing to do with user passwords."
+review = "What DHCP does"
+
+# ---- Leases ----
+
+[[question]]
+id = "lease-meaning"
+type = "choice"
+prompt = "What is a DHCP lease?"
+choices = ["The address is lent to the client for a limited time", "A permanent assignment", "A DNS record", "A firewall rule"]
+answers = ["The address is lent to the client for a limited time"]
+explanation = "The address is leased, not owned. The client must renew it before the lease ends or give it up."
+review = "Leases and renewal"
+
+[[question]]
+id = "renew-time"
+type = "short"
+prompt = "By default a client first tries to renew at about what percentage of the lease time? (number only)"
+answers = ["50", "50%"]
+explanation = "T1 is 50 percent of the lease. The client asks its own server directly to renew."
+review = "Leases and renewal"
+
+[[question]]
+id = "rebind-time"
+type = "short"
+prompt = "If renewal fails, at about what percentage of the lease time does the client broadcast to any server (rebinding)? (number only)"
+answers = ["87.5", "87.5%", "87,5"]
+explanation = "T2 is 87.5 percent of the lease. The client then asks any server to extend it."
+review = "Leases and renewal"
+
+[[question]]
+id = "renew-when-9-17"
+type = "choice"
+prompt = "A lease was obtained at 09:00 and expires at 17:00. About when does the client first try to renew?"
+choices = ["13:00", "09:30", "16:00", "17:00"]
+answers = ["13:00"]
+explanation = "The lease is 8 hours long, and 50 percent of that is 4 hours, so the first renewal attempt is at about 13:00."
+review = "Leases and renewal"
+
+[[question]]
+id = "server-down-effect"
+type = "choice"
+prompt = "A DHCP server goes down for an hour. What is the usual effect?"
+choices = ["Machines already running keep working; new or restarted machines fail to get addresses", "Every machine loses its address immediately", "DNS stops working", "Nothing at all, ever"]
+answers = ["Machines already running keep working; new or restarted machines fail to get addresses"]
+explanation = "Running machines hold leases and renew later, so the failures appear for machines that start up or whose lease runs out."
+review = "Leases and renewal"
+certifications = ["comptia-network-plus/network-troubleshooting"]
+
+# ---- Reading a lease ----
+
+[[question]]
+id = "ipconfig-dhcp-enabled"
+type = "choice"
+prompt = "ipconfig /all shows 'DHCP Enabled . . . : No' for an adapter. What does that mean?"
+choices = ["The address was typed in by someone (static)", "The DHCP server is down", "The lease expired", "The adapter is disconnected"]
+answers = ["The address was typed in by someone (static)"]
+explanation = "DHCP Enabled: No means the adapter is configured statically, so DHCP fault-finding does not apply."
+review = "Reading a lease on Windows"
+
+[[question]]
+id = "ipconfig-server-field"
+type = "choice"
+prompt = "Which ipconfig /all line tells you which machine gave the lease?"
+choices = ["DHCP Server", "Default Gateway", "Physical Address", "Connection-specific DNS Suffix"]
+answers = ["DHCP Server"]
+explanation = "The DHCP Server field names the machine that answered. An address you do not recognise there suggests a rogue server."
+review = "Reading a lease on Windows"
+
+[[question]]
+id = "lease-times-fields"
+type = "multi"
+prompt = "Which two ipconfig /all lines give the lease window?"
+choices = ["Lease Obtained", "Lease Expires", "Physical Address", "DHCPv6 IAID"]
+answers = ["Lease Obtained", "Lease Expires"]
+explanation = "Lease Obtained and Lease Expires bracket the lease."
+review = "Reading a lease on Windows"
+
+[[question]]
+id = "ps-ipconfig"
+type = "choice"
+prompt = "Which PowerShell cmdlet gives a tidy summary of address, gateway and DNS servers per interface?"
+choices = ["Get-NetIPConfiguration", "Get-NetRoute", "Get-DnsClientCache", "Test-NetConnection"]
+answers = ["Get-NetIPConfiguration"]
+explanation = "Get-NetIPConfiguration shows InterfaceAlias, IPv4Address, IPv4DefaultGateway and DNSServer."
+review = "Reading a lease on Windows"
+
+[[question]]
+id = "linux-dynamic"
+type = "choice"
+prompt = "On Linux, how does ip addr show that an address came from DHCP?"
+choices = ["It is marked dynamic and shows a valid_lft countdown", "It shows valid_lft forever", "It shows no address", "It is marked static"]
+answers = ["It is marked dynamic and shows a valid_lft countdown"]
+explanation = "A DHCP address is flagged dynamic and shows the seconds left on the lease. A static address shows valid_lft forever."
+review = "Reading a lease on Linux"
+
+[[question]]
+id = "nmcli-tool"
+type = "short"
+prompt = "Which command-line tool, used with NetworkManager, can show the options the DHCP server sent? (one word)"
+answers = ["nmcli"]
+explanation = "nmcli device show lists IP4 settings and DHCP4.OPTION lines for an interface."
+review = "Reading a lease on Linux"
+
+# ---- Scopes and relays ----
+
+[[question]]
+id = "scope-def"
+type = "choice"
+prompt = "What is a DHCP scope?"
+choices = ["The range of addresses a server may give out for one subnet, with its options", "A single leased address", "A firewall zone", "A DNS zone"]
+answers = ["The range of addresses a server may give out for one subnet, with its options"]
+explanation = "A scope is the pool for one subnet plus the options (gateway, DNS) given with it."
+review = "Scopes, exclusions, reservations and relays"
+
+[[question]]
+id = "exclusion-def"
+type = "choice"
+prompt = "A printer has a static address inside the DHCP range. What should the administrator add so the server never hands that address out?"
+choices = ["An exclusion", "A relay agent", "A larger lease time", "A second scope"]
+answers = ["An exclusion"]
+explanation = "An exclusion removes addresses from the pool. Forgetting it is how two devices end up with the same address."
+review = "Scopes, exclusions, reservations and relays"
+
+[[question]]
+id = "reservation-def"
+type = "choice"
+prompt = "What does a DHCP reservation do?"
+choices = ["Always gives one specific device (identified by MAC address) the same address", "Reserves bandwidth", "Blocks a device from the network", "Reserves a DNS name"]
+answers = ["Always gives one specific device (identified by MAC address) the same address"]
+explanation = "It is better than a static address on the device because the setting lives in one place."
+review = "Scopes, exclusions, reservations and relays"
+
+[[question]]
+id = "relay-def"
+type = "choice"
+prompt = "What does a relay agent (IP helper) do?"
+choices = ["Forwards a client's broadcast to a DHCP server on another network, so one server can serve many subnets", "Renews leases for clients", "Encrypts DHCP", "Blocks rogue servers"]
+answers = ["Forwards a client's broadcast to a DHCP server on another network, so one server can serve many subnets"]
+explanation = "Without a relay, clients on a subnet with no DHCP server of its own would get no answer."
+review = "Scopes, exclusions, reservations and relays"
+
+[[question]]
+id = "relay-adds"
+type = "choice"
+prompt = "What does the relay agent add to the forwarded request, and why?"
+choices = ["The address of the client's subnet, so the server picks the right scope", "The user's name", "A DNS record", "A new lease time"]
+answers = ["The address of the client's subnet, so the server picks the right scope"]
+explanation = "The server needs to know which subnet the client is on to return an address valid there."
+review = "Scopes, exclusions, reservations and relays"
+
+# ---- When DHCP fails ----
+
+[[question]]
+id = "apipa-range"
+type = "short"
+prompt = "A client that gets no DHCP answer gives itself an address in which range? (CIDR notation)"
+answers = ["169.254.0.0/16"]
+explanation = "The link-local range 169.254.0.0/16 (APIPA on Windows) is what a machine uses when DHCP does not answer."
+review = "When DHCP fails"
+certifications = ["comptia-network-plus/network-troubleshooting", "comptia-a-core1/networking"]
+
+[[question]]
+id = "apipa-many"
+type = "choice"
+prompt = "Three machines in the same office suddenly all show 169.254.x.x addresses. What is the most likely common cause?"
+choices = ["The DHCP server, or the link to it, is down", "Three bad cables at once", "DNS is misconfigured", "The firewall blocked ICMP"]
+answers = ["The DHCP server, or the link to it, is down"]
+explanation = "A shared fault points at something shared: the server or the network path to it. One machine alone points at its own link or adapter."
+review = "When DHCP fails"
+certifications = ["comptia-network-plus/network-troubleshooting"]
+
+[[question]]
+id = "apipa-one"
+type = "choice"
+prompt = "Only one machine shows a 169.254.x.x address while the others are fine. What do you check first?"
+choices = ["That machine's cable, Wi-Fi, switch port or adapter", "The DHCP scope size", "The DNS server", "The router's NAT table"]
+answers = ["That machine's cable, Wi-Fi, switch port or adapter"]
+explanation = "Others are getting addresses, so the server works. The problem is that machine's link or adapter."
+review = "When DHCP fails"
+
+[[question]]
+id = "rogue-server"
+type = "choice"
+prompt = "A laptop gets an address in 10.0.0.0/24 but your network is 192.168.1.0/24. What do you suspect?"
+choices = ["A rogue DHCP server, often a home router plugged into the wall", "A broken DNS server", "A bad cable", "A full scope"]
+answers = ["A rogue DHCP server, often a home router plugged into the wall"]
+explanation = "An address in the wrong range means a different server answered first. The DHCP Server field in ipconfig /all names it."
+review = "When DHCP fails"
+certifications = ["comptia-network-plus/network-security"]
+
+[[question]]
+id = "scope-exhausted"
+type = "choice"
+prompt = "New machines get no address, but machines already on the network work. What is a likely cause?"
+choices = ["The scope is exhausted, full of stale leases", "The default gateway is wrong", "The DNS cache is stale", "The cable is cut"]
+answers = ["The scope is exhausted, full of stale leases"]
+explanation = "Existing leases keep working. With no free addresses left, new clients get nothing. A very long lease time on a busy guest network often causes it."
+review = "When DHCP fails"
+
+[[question]]
+id = "wrong-options"
+type = "choice"
+prompt = "A machine has a valid address in the right range, but cannot reach the internet. What might the DHCP server have given it wrongly?"
+choices = ["The default gateway or DNS servers", "The MAC address", "The lease time only", "The port number"]
+answers = ["The default gateway or DNS servers"]
+explanation = "The address is fine, so compare the Default Gateway and DNS Servers lines with what they should be."
+review = "When DHCP fails"
+
+[[question]]
+id = "duplicate-address"
+type = "choice"
+prompt = "Which mistake commonly causes two devices to have the same address?"
+choices = ["A static address inside the DHCP range with no exclusion", "A short lease time", "Using a relay agent", "Using a reservation"]
+answers = ["A static address inside the DHCP range with no exclusion"]
+explanation = "The server does not know the address is taken, so it hands it to someone else. Use an exclusion or a reservation."
+review = "Common mistakes"
+
+# ---- Releasing and renewing ----
+
+[[question]]
+id = "release-remote"
+type = "choice"
+prompt = "Why should you not run ipconfig /release over a Remote Desktop or SSH session?"
+choices = ["The session runs over that address, so releasing it cuts you off, and if renewal fails you cannot repair it", "It deletes the DHCP server", "It changes the DNS cache", "It is not allowed by Windows"]
+answers = ["The session runs over that address, so releasing it cuts you off, and if renewal fails you cannot repair it"]
+explanation = "Use /release and /renew at the console, or avoid releasing first."
+review = "Releasing and renewing the lease"
+
+[[question]]
+id = "renew-command"
+type = "short"
+prompt = "Type the Windows command that asks for a new lease."
+answers = ["ipconfig /renew"]
+explanation = "ipconfig /renew asks the DHCP server again. ipconfig /release gives the address up first."
+review = "Releasing and renewing the lease"
+
+[[question]]
+id = "flushdns-not-dhcp"
+type = "choice"
+prompt = "Does ipconfig /flushdns have anything to do with DHCP?"
+choices = ["No, it clears the DNS cache", "Yes, it renews the lease", "Yes, it releases the lease", "Yes, it resets the scope"]
+answers = ["No, it clears the DNS cache"]
+explanation = "/flushdns clears cached name lookups and does not touch the lease."
+review = "Releasing and renewing the lease"
+
+# ---- Static or DHCP ----
+
+[[question]]
+id = "servers-reservation"
+type = "choice"
+prompt = "Which is generally best for servers and printers that must keep the same address?"
+choices = ["A DHCP reservation", "A very short lease", "A random address", "A 169.254 address"]
+answers = ["A DHCP reservation"]
+explanation = "A reservation keeps the address stable while the setting stays in one place."
+review = "Static or DHCP?"
+
+[[question]]
+id = "write-it-down"
+type = "choice"
+prompt = "What prevents most address conflicts, whichever method you use?"
+choices = ["Writing down an address plan: which ranges are DHCP, reserved and static", "Using only IPv6", "Turning off DHCP", "Using longer lease times"]
+answers = ["Writing down an address plan: which ranges are DHCP, reserved and static"]
+explanation = "A documented plan stops static addresses drifting into the DHCP range."
+review = "Static or DHCP?"

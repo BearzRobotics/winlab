@@ -1,0 +1,97 @@
+schema_version = 1
+kind = "script"
+id = "labs.script-bash-case-count"
+target = "linux"
+title = "Script (bash): count items by type with case and an array"
+summary = "Classify file names with case patterns and keep counts."
+lesson = "foundations.bash-control-flow"
+symptom = '''
+Write a bash script and save it as /home/labadmin/labs/by-type.sh.
+
+Look at the files directly in /home/labadmin/labdata (ignore sub-folders). Classify each by its name:
+
+    ends in .log                 log
+    ends in .txt or .md          text
+    ends in .csv                 data
+    anything else                other
+
+Print the number of files of each type, in this exact form and order:
+
+    log: 3
+    text: 2
+    data: 1
+    other: 4
+
+A type with no files still gets a line with 0. Print nothing else. The files change every time your script is checked.
+'''
+hints = [
+  "case \"$name\" in *.log) ... ;; *.txt|*.md) ... ;; esac matches a name against patterns. * matches anything, and | means or.",
+  "Keep counts in variables (log=0 ... log=$((log + 1))) or in an associative array (declare -A count).",
+  "Loop with for f in /home/labadmin/labdata/*; do and skip directories with [ -f \"$f\" ] || continue.",
+  "The catch-all pattern *) handles names that match nothing else, so put it last.",
+]
+expected_changes = ["Creates /home/labadmin/labs with a starter script and a folder of generated files"]
+hazards = ["None: the script only reads file names"]
+scope = "single guest (the registered Linux training VM only)"
+privilege = "standard"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["comptia-linux-plus/scripting-containers-automation", "redhat-rhcsa/essential-tools"]
+language = "bash"
+script_path = '/home/labadmin/labs/by-type.sh'
+starter = '''
+#!/bin/bash
+# by-type.sh
+# Count the files in /home/labadmin/labdata by type and print:
+#   log: N / text: N / data: N / other: N   (one per line, in that order)
+'''
+solution = '''
+#!/bin/bash
+log=0; text=0; data=0; other=0
+for f in /home/labadmin/labdata/*; do
+    [ -f "$f" ] || continue
+    case "$f" in
+        *.log)       log=$((log + 1)) ;;
+        *.txt|*.md)  text=$((text + 1)) ;;
+        *.csv)       data=$((data + 1)) ;;
+        *)           other=$((other + 1)) ;;
+    esac
+done
+echo "log: $log"
+echo "text: $text"
+echo "data: $data"
+echo "other: $other"
+'''
+
+[[tests]]
+setup = '''
+d=/home/labadmin/labdata
+rm -rf "$d"; mkdir -p "$d/subdir"
+touch "$d/subdir/not-counted.log"
+for i in $(seq 1 $((RANDOM % 4))); do touch "$d/app$i.log"; done
+for i in $(seq 1 $((RANDOM % 3))); do touch "$d/note$i.txt"; done
+touch "$d/readme.md"
+for i in $(seq 1 $((RANDOM % 3))); do touch "$d/table$i.csv"; done
+for i in $(seq 1 $((RANDOM % 4))); do touch "$d/blob$i.bin"; done
+touch "$d/Makefile" "$d/archive.tar.gz"
+'''
+expect = '''
+d=/home/labadmin/labdata
+echo "log: $(find $d -maxdepth 1 -type f -name '*.log' | wc -l)"
+echo "text: $(find $d -maxdepth 1 -type f \( -name '*.txt' -o -name '*.md' \) | wc -l)"
+echo "data: $(find $d -maxdepth 1 -type f -name '*.csv' | wc -l)"
+echo "other: $(find $d -maxdepth 1 -type f ! -name '*.log' ! -name '*.txt' ! -name '*.md' ! -name '*.csv' | wc -l)"
+'''
+
+[[tests]]
+setup = '''
+d=/home/labadmin/labdata
+rm -rf "$d"; mkdir -p "$d"
+touch "$d/only.csv"
+'''
+expect = '''
+echo "log: 0"
+echo "text: 0"
+echo "data: 1"
+echo "other: 0"
+'''

@@ -1,0 +1,477 @@
+schema_version = 1
+lesson = "foundations.ps-working-with-data"
+# Draft for owner review. A bank of 53; each attempt asks 10, favouring questions missed last time.
+draw = 10
+
+# ---- Paths ----
+
+[[question]]
+id = "pa-join"
+type = "short"
+prompt = "Which cmdlet builds a path with the right separator on every platform? (cmdlet name)"
+answers = ["Join-Path"]
+explanation = "Join-Path 'a' 'b' gives a\\b on Windows and a/b on Linux."
+review = "Paths and files"
+
+[[question]]
+id = "pa-literal"
+type = "choice"
+prompt = "Why use -LiteralPath for file names that come from data?"
+choices = ["-Path treats [ ], * and ? as wildcards, so a name like data[1].txt is not found", "-LiteralPath is faster", "-Path is deprecated", "-LiteralPath follows symbolic links"]
+answers = ["-Path treats [ ], * and ? as wildcards, so a name like data[1].txt is not found"]
+explanation = "Use -Path only when you want wildcards."
+review = "`-Path` versus `-LiteralPath`"
+
+[[question]]
+id = "pa-split"
+type = "short"
+prompt = "Write the Split-Path parameter that returns the file name part of a path. (include the dash)"
+answers = ["-Leaf"]
+explanation = "-Parent returns the folder."
+review = "Paths and files"
+
+[[question]]
+id = "pa-test"
+type = "short"
+prompt = "Which cmdlet tells you whether a path exists? (cmdlet name)"
+answers = ["Test-Path"]
+explanation = "It returns True or False."
+review = "Paths and files"
+
+# ---- Reading ----
+
+[[question]]
+id = "rd-array"
+type = "choice"
+prompt = "What does Get-Content return for a file with five lines?"
+choices = ["An array of five strings", "One string", "A stream object", "A hashtable"]
+answers = ["An array of five strings"]
+explanation = "-Raw returns one string."
+review = "Reading text"
+
+[[question]]
+id = "rd-raw"
+type = "choice"
+prompt = "What does Get-Content -Raw return?"
+choices = ["One string containing the whole text", "An array of lines", "Only the first line", "The file size"]
+answers = ["One string containing the whole text"]
+explanation = "Use it for multi-line regular expressions or for ConvertFrom-Json."
+review = "Reading text"
+
+[[question]]
+id = "rd-oneline"
+type = "choice"
+prompt = "A file has one line, hello. What is (Get-Content f)[0]?"
+choices = ["h, the first character", "hello", "An error", "The line number"]
+answers = ["h, the first character"]
+explanation = "A one-line file comes back as a string, not an array. Wrap it in @() to get an array of lines."
+review = "Reading text"
+
+[[question]]
+id = "rd-wrap"
+type = "short"
+prompt = "Write the expression that guarantees an array of lines from Get-Content f."
+answers = ["@(Get-Content f)", "@(Get-Content $f)"]
+explanation = "@() forces an array."
+review = "Reading text"
+
+[[question]]
+id = "rd-tail"
+type = "short"
+prompt = "Which Get-Content parameter returns the last 3 lines? (for example -X 3)"
+answers = ["-Tail 3"]
+explanation = "-TotalCount returns the first lines."
+review = "Reading text"
+
+[[question]]
+id = "rd-big"
+type = "choice"
+prompt = "Why is foreach ($l in Get-Content big.log) risky for huge files?"
+choices = ["It first loads every line into memory", "Get-Content cannot read big files", "foreach cannot read lines", "It is too fast"]
+answers = ["It first loads every line into memory"]
+explanation = "Stream with Get-Content | ForEach-Object, -ReadCount, or Select-String."
+review = "Reading text"
+
+# ---- Writing and encodings ----
+
+[[question]]
+id = "en-outfile51"
+type = "choice"
+prompt = "In Windows PowerShell 5.1, what encoding does 'hi' | Out-File (or >) write by default?"
+choices = ["UTF-16 LE with a BOM", "UTF-8 without a BOM", "ASCII", "UTF-8 with a BOM"]
+answers = ["UTF-16 LE with a BOM"]
+explanation = "The file starts FF FE and is 10 bytes for 'hi' plus a line break."
+review = "Writing text, and the encoding trap"
+
+[[question]]
+id = "en-setcontent51"
+type = "choice"
+prompt = "In Windows PowerShell 5.1, what does Set-Content write by default?"
+choices = ["ANSI (the system code page), no BOM", "UTF-16", "UTF-8 with a BOM", "UTF-32"]
+answers = ["ANSI (the system code page), no BOM"]
+explanation = "Characters outside the code page are lost."
+review = "Writing text, and the encoding trap"
+
+[[question]]
+id = "en-ps7"
+type = "choice"
+prompt = "What do the file writers produce by default in PowerShell 7?"
+choices = ["UTF-8 without a BOM", "UTF-16", "ANSI", "UTF-8 with a BOM"]
+answers = ["UTF-8 without a BOM"]
+explanation = "That is what you usually want."
+review = "Writing text, and the encoding trap"
+
+[[question]]
+id = "en-utf8-51"
+type = "choice"
+prompt = "In 5.1, what does -Encoding UTF8 write?"
+choices = ["UTF-8 with a BOM", "UTF-8 without a BOM", "UTF-16", "ASCII"]
+answers = ["UTF-8 with a BOM"]
+explanation = "For UTF-8 without a BOM in both editions, write bytes with [IO.File]::WriteAllText and a UTF8Encoding($false)."
+review = "Writing text, and the encoding trap"
+
+[[question]]
+id = "en-explicit"
+type = "choice"
+prompt = "When should you set -Encoding explicitly?"
+choices = ["Whenever another program or machine will read the file, and when reading it", "Never", "Only on Linux", "Only for CSV"]
+answers = ["Whenever another program or machine will read the file, and when reading it"]
+explanation = "Defaults differ between editions."
+review = "Writing text, and the encoding trap"
+
+[[question]]
+id = "en-linux"
+type = "choice"
+prompt = "What line ending does PowerShell on Linux write by default?"
+choices = ["LF", "CR+LF", "CR", "None"]
+answers = ["LF"]
+explanation = "On Windows it is CR+LF."
+review = "Writing text, and the encoding trap"
+
+[[question]]
+id = "en-outfile-vs"
+type = "choice"
+prompt = "What is the difference between Out-File and Set-Content for objects?"
+choices = ["Out-File writes them formatted as the screen shows; Set-Content converts each to a string", "None", "Set-Content formats as a table", "Out-File is for binary"]
+answers = ["Out-File writes them formatted as the screen shows; Set-Content converts each to a string"]
+explanation = "Use Export-Csv or ConvertTo-Json for data."
+review = "Writing text, and the encoding trap"
+
+[[question]]
+id = "en-nonewline"
+type = "short"
+prompt = "Which Set-Content parameter omits the trailing line break? (include the dash)"
+answers = ["-NoNewline"]
+explanation = "Useful for a one-line token file."
+review = "Writing text, and the encoding trap"
+
+[[question]]
+id = "en-atomic"
+type = "choice"
+prompt = "How can you write a file so a crash cannot leave it half written?"
+choices = ["Write a temporary file in the same folder, then rename it over the target", "Write twice", "Use Out-File", "Use -Force"]
+answers = ["Write a temporary file in the same folder, then rename it over the target"]
+explanation = "The rename is atomic."
+review = "Writing text, and the encoding trap"
+
+# ---- Select-String ----
+
+[[question]]
+id = "ss-obj"
+type = "choice"
+prompt = "What does Select-String output?"
+choices = ["Objects with the line, line number, file and match groups", "Plain text lines", "A count", "A file"]
+answers = ["Objects with the line, line number, file and match groups"]
+explanation = "So the pipeline carries on."
+review = "Searching text with `Select-String`"
+
+[[question]]
+id = "ss-groups"
+type = "short"
+prompt = "Which property chain gives the first capture group of the first match of $m[0]? (for example $m[0].X[0].Y[1].Value; give the two names X and Y separated by a space)"
+answers = ["Matches Groups", "Matches, Groups"]
+explanation = "$m[0].Matches[0].Groups[1].Value."
+review = "Searching text with `Select-String`"
+
+[[question]]
+id = "ss-not"
+type = "short"
+prompt = "Which Select-String parameter returns lines that do NOT match? (include the dash)"
+answers = ["-NotMatch"]
+explanation = "Like grep -v."
+review = "Searching text with `Select-String`"
+
+[[question]]
+id = "ss-context"
+type = "choice"
+prompt = "What does -Context 0,1 do?"
+choices = ["Shows 0 lines before and 1 after each match", "Shows 1 match", "Shows 0 matches", "Limits to line 1"]
+answers = ["Shows 0 lines before and 1 after each match"]
+explanation = "Read them through $_.Context.PostContext."
+review = "Searching text with `Select-String`"
+
+[[question]]
+id = "ss-simple"
+type = "short"
+prompt = "Which parameter makes Select-String treat the pattern as literal text? (include the dash)"
+answers = ["-SimpleMatch"]
+explanation = "Otherwise it is a regular expression."
+review = "Searching text with `Select-String`"
+
+# ---- CSV ----
+
+[[question]]
+id = "cs-strings"
+type = "choice"
+prompt = "What type are the values Import-Csv returns?"
+choices = ["Strings", "Integers when they look like numbers", "Doubles", "Objects with types guessed"]
+answers = ["Strings"]
+explanation = "5000 + 6100 from CSV text gives 50006100."
+review = "Everything is a string"
+
+[[question]]
+id = "cs-concat"
+type = "short"
+prompt = "$emp[0].Salary is '5000' and $emp[2].Salary is '6100'. What does $emp[0].Salary + $emp[2].Salary evaluate to?"
+answers = ["50006100"]
+explanation = "String plus string concatenates."
+review = "Everything is a string"
+
+[[question]]
+id = "cs-calc"
+type = "short"
+prompt = "What is the name of a property you define with @{ Name='x'; Expression={...} } in Select-Object?"
+answers = ["calculated property", "a calculated property"]
+explanation = "n and e are accepted abbreviations."
+review = "Everything is a string"
+
+[[question]]
+id = "cs-type51"
+type = "choice"
+prompt = "What does Export-Csv write as the first line by default in Windows PowerShell 5.1?"
+choices = ["#TYPE System.Management.Automation.PSCustomObject", "The header row", "A BOM", "A blank line"]
+answers = ["#TYPE System.Management.Automation.PSCustomObject"]
+explanation = "Add -NoTypeInformation. PowerShell 7 writes the header directly."
+review = "Writing CSV"
+
+[[question]]
+id = "cs-header"
+type = "short"
+prompt = "Which Import-Csv parameter supplies column names for a file with no header row? (include the dash)"
+answers = ["-Header"]
+explanation = "Import-Csv f.csv -Header 'First','Second'."
+review = "Writing CSV"
+
+[[question]]
+id = "cs-delim"
+type = "short"
+prompt = "Which parameter sets a semicolon delimiter for Import-Csv? (include the dash)"
+answers = ["-Delimiter"]
+explanation = "Many European exports use ;."
+review = "Writing CSV"
+
+[[question]]
+id = "cs-join"
+type = "choice"
+prompt = "What is the efficient way to join two data sets?"
+choices = ["Build a hashtable lookup once, then look rows up in it", "A nested loop over both", "Sort both and compare", "Use Out-File"]
+answers = ["Build a hashtable lookup once, then look rows up in it"]
+explanation = "A nested loop is quadratic."
+review = "Joining two data sets"
+
+# ---- JSON ----
+
+[[question]]
+id = "js-depth"
+type = "choice"
+prompt = "What does ConvertTo-Json do with objects nested deeper than the default depth?"
+choices = ["Replaces them with their string form, such as \"@{c=1}\", without failing", "Raises an error", "Expands everything", "Drops them"]
+answers = ["Replaces them with their string form, such as \"@{c=1}\", without failing"]
+explanation = "Always pass -Depth."
+review = "The depth trap"
+
+[[question]]
+id = "js-depth-num"
+type = "short"
+prompt = "What is the default -Depth of ConvertTo-Json? (number)"
+answers = ["2"]
+explanation = "Pass a generous value such as 10."
+review = "The depth trap"
+
+[[question]]
+id = "js-array"
+type = "choice"
+prompt = "What does @(7) | ConvertTo-Json -Compress give?"
+choices = ["7", "[7]", "{\"7\"}", "An error"]
+answers = ["7"]
+explanation = "Piping unrolls the array. ConvertTo-Json -InputObject @(7) gives [7]."
+review = "The one-element array trap"
+
+[[question]]
+id = "js-raw"
+type = "short"
+prompt = "Which Get-Content parameter gives ConvertFrom-Json the whole text? (include the dash)"
+answers = ["-Raw"]
+explanation = "Get-Content .\\settings.json -Raw | ConvertFrom-Json."
+review = "JSON"
+
+[[question]]
+id = "js-date"
+type = "choice"
+prompt = "ConvertFrom-Json on a date-like string yields what in 7, and in 5.1?"
+choices = ["DateTime in 7, String in 5.1", "String in both", "DateTime in both", "String in 7, DateTime in 5.1"]
+answers = ["DateTime in 7, String in 5.1"]
+explanation = "Parse dates deliberately."
+review = "JSON"
+
+[[question]]
+id = "js-hash"
+type = "short"
+prompt = "Which ConvertFrom-Json switch (PowerShell 7) returns hashtables instead of objects? (include the dash)"
+answers = ["-AsHashtable"]
+explanation = "It preserves key case and handles awkward key names."
+review = "JSON"
+
+# ---- XML and Clixml ----
+
+[[question]]
+id = "xm-acc"
+type = "short"
+prompt = "Which accelerator parses text into an XML document? (for example [____]'<a/>')"
+answers = ["xml", "[xml]"]
+explanation = "Then navigate with dots."
+review = "XML"
+
+[[question]]
+id = "xm-xpath"
+type = "short"
+prompt = "Which cmdlet runs an XPath query over an XML document? (cmdlet name)"
+answers = ["Select-Xml"]
+explanation = "(Select-Xml -Xml $x -XPath '//server').Node."
+review = "XML"
+
+[[question]]
+id = "xm-clixml"
+type = "choice"
+prompt = "What is Export-Clixml good for?"
+choices = ["Saving and restoring PowerShell objects exactly, between runs", "Sharing data with other languages", "Writing web pages", "Compressing files"]
+answers = ["Saving and restoring PowerShell objects exactly, between runs"]
+explanation = "It is not an interchange format."
+review = "XML"
+
+# ---- Compare and web ----
+
+[[question]]
+id = "cm-sides"
+type = "choice"
+prompt = "In Compare-Object output, what does the indicator => mean?"
+choices = ["The item is only in the second (difference) set", "Only in the first set", "In both", "Changed"]
+answers = ["The item is only in the second (difference) set"]
+explanation = "<= is only in the reference set."
+review = "Comparing and checking data"
+
+[[question]]
+id = "cm-hash"
+type = "short"
+prompt = "Which cmdlet returns a checksum of a file? (cmdlet name)"
+answers = ["Get-FileHash"]
+explanation = "-Algorithm SHA256 gives 64 hex characters."
+review = "Comparing and checking data"
+
+[[question]]
+id = "wb-irm"
+type = "choice"
+prompt = "What does Invoke-RestMethod return for a JSON response?"
+choices = ["The parsed body as objects", "A response object with StatusCode", "A raw string only", "A file"]
+answers = ["The parsed body as objects"]
+explanation = "Invoke-WebRequest returns the response object."
+review = "The web: `Invoke-RestMethod` and `Invoke-WebRequest`"
+
+[[question]]
+id = "wb-iwr"
+type = "choice"
+prompt = "Which cmdlet do you use when you need the HTTP status code and headers?"
+choices = ["Invoke-WebRequest", "Invoke-RestMethod", "Get-Content", "curl alias"]
+answers = ["Invoke-WebRequest"]
+explanation = "It returns StatusCode, Headers and Content."
+review = "The web: `Invoke-RestMethod` and `Invoke-WebRequest`"
+
+[[question]]
+id = "wb-404"
+type = "choice"
+prompt = "What does a 404 do in Invoke-WebRequest?"
+choices = ["Raises an exception (WebException in 5.1, HttpResponseException in 7)", "Returns a response with StatusCode 404 by default", "Returns null", "Retries"]
+answers = ["Raises an exception (WebException in 5.1, HttpResponseException in 7)"]
+explanation = "Catch it and read [int]$_.Exception.Response.StatusCode."
+review = "HTTP errors"
+
+[[question]]
+id = "wb-skip"
+type = "short"
+prompt = "Which PowerShell 7 switch returns the response object even for an error status? (include the dash)"
+answers = ["-SkipHttpErrorCheck"]
+explanation = "5.1 has no equivalent."
+review = "HTTP errors"
+
+[[question]]
+id = "wb-token"
+type = "choice"
+prompt = "Where should an API token come from in a script?"
+choices = ["A secret store, protected file or environment variable, never the script text", "Hard-coded in the URL", "A comment in the script", "A public file"]
+answers = ["A secret store, protected file or environment variable, never the script text"]
+explanation = "Never log it either."
+review = "The web: `Invoke-RestMethod` and `Invoke-WebRequest`"
+
+[[question]]
+id = "wb-curl"
+type = "choice"
+prompt = "Why is bare curl unsafe in a script?"
+choices = ["In 5.1 it is an alias of Invoke-WebRequest and in 7 it runs curl.exe, so the same line means different things", "curl is removed from Windows", "curl needs administrator", "curl is slower"]
+answers = ["In 5.1 it is an alias of Invoke-WebRequest and in 7 it runs curl.exe, so the same line means different things"]
+explanation = "Write curl.exe or the PowerShell cmdlet."
+review = "Platform notes"
+
+[[question]]
+id = "wb-untrusted"
+type = "choice"
+prompt = "How should data from the network be treated?"
+choices = ["As untrusted input: validate and parse it, never pass it to Invoke-Expression", "As trusted if the URL is HTTPS", "As safe if it is JSON", "As already validated"]
+answers = ["As untrusted input: validate and parse it, never pass it to Invoke-Expression"]
+explanation = "HTTPS protects the transport, not the content."
+review = "Platform notes"
+
+# ---- Idioms and exercise ----
+
+[[question]]
+id = "id-expand"
+type = "short"
+prompt = "Which Select-Object parameter returns the values of a property instead of objects holding it? (include the dash)"
+answers = ["-ExpandProperty"]
+explanation = "Select-Object -ExpandProperty Name."
+review = "Idioms that make data code short"
+
+[[question]]
+id = "id-tee"
+type = "short"
+prompt = "Which cmdlet saves pipeline output to a file and also passes it on? (cmdlet name)"
+answers = ["Tee-Object"]
+explanation = "Tee-Object -FilePath out.txt."
+review = "Idioms that make data code short"
+
+[[question]]
+id = "rs-outfile"
+type = "choice"
+prompt = "In the Read-this-script exercise, why is Out-File .\\report.json a problem on 5.1?"
+choices = ["It writes UTF-16 with a BOM, which other tools misread", "It cannot write JSON", "It needs -Depth", "It appends"]
+answers = ["It writes UTF-16 with a BOM, which other tools misread"]
+explanation = "Use Set-Content with an explicit -Encoding."
+review = "Read this script"
+
+[[question]]
+id = "rs-unique"
+type = "choice"
+prompt = "What does Select-Object Region -Unique return?"
+choices = ["Objects with a Region property, not strings", "A list of strings", "A count", "A hashtable"]
+answers = ["Objects with a Region property, not strings"]
+explanation = "Add -ExpandProperty to get the values."
+review = "Read this script"

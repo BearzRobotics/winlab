@@ -1,0 +1,83 @@
+schema_version = 1
+kind = "script"
+id = "labs.script-bash-backup-rotate"
+target = "linux"
+title = "Script (bash): make a backup and keep only the newest three"
+summary = "Create an archive, then delete the oldest ones. The result on disk is checked."
+lesson = "foundations.bash-control-flow"
+symptom = '''
+Write a bash script and save it as /home/labadmin/labs/backup.sh.
+
+It is run with one argument, a label such as v7:
+
+    backup.sh v7
+
+It must:
+
+  1. Create the archive /home/labadmin/labdata/backups/backup-v7.tar.gz (using the label it was given) containing the folder /home/labadmin/labdata/data.
+  2. Then look at every file named backup-*.tar.gz in /home/labadmin/labdata/backups and delete all but the three most recently modified (the new archive counts as one of the three).
+
+It does not need to print anything. The folder already contains older backups with different modification times, and they change every time your script is checked.
+'''
+hints = [
+  "tar -czf ARCHIVE -C PARENT NAME creates a compressed archive of NAME (relative to PARENT).",
+  "ls -t lists files newest first. tail -n +4 starts from the 4th line, so it shows everything except the newest three.",
+  "xargs -r rm -f deletes whatever names it is given (the -r avoids running rm with nothing).",
+  "Do the cleanup AFTER creating the new archive, so the new one is counted among the three you keep.",
+]
+expected_changes = ["Creates /home/labadmin/labs with a starter script, a data folder, and several old backup files"]
+hazards = ["None: the script only creates and deletes files inside /home/labadmin/labdata/backups"]
+scope = "single guest (the registered Linux training VM only)"
+privilege = "standard"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["comptia-linux-plus/scripting-containers-automation", "redhat-rhcsa/essential-tools"]
+language = "bash"
+script_path = '/home/labadmin/labs/backup.sh'
+starter = '''
+#!/bin/bash
+# backup.sh LABEL
+# Create /home/labadmin/labdata/backups/backup-LABEL.tar.gz from /home/labadmin/labdata/data,
+# then keep only the 3 most recently modified backup-*.tar.gz files in that folder.
+'''
+solution = '''
+#!/bin/bash
+d=/home/labadmin/labdata
+tar -czf "$d/backups/backup-$1.tar.gz" -C "$d" data
+ls -t "$d"/backups/backup-*.tar.gz | tail -n +4 | xargs -r rm -f
+'''
+
+[[tests]]
+setup = '''
+d=/home/labadmin/labdata
+rm -rf "$d"; mkdir -p "$d/backups" "$d/data"
+echo a > "$d/data/a.txt"; echo b > "$d/data/b.txt"
+: > "$d/expected.txt"
+for i in 1 2 3 4 5; do
+  f="backup-old$i-$((RANDOM % 900 + 100)).tar.gz"
+  echo old > "$d/backups/$f"
+  touch -d "$((i + 1)) days ago" "$d/backups/$f"
+  if [ "$i" -le 2 ]; then echo "$f" >> "$d/expected.txt"; fi
+done
+echo "backup-v7.tar.gz" >> "$d/expected.txt"
+'''
+args = "v7"
+expect_exit = 0
+check = '''
+d=/home/labadmin/labdata
+if [ "$(ls "$d/backups" | sort)" = "$(sort "$d/expected.txt")" ] && tar -tzf "$d/backups/backup-v7.tar.gz" 2>/dev/null | grep -q 'data/a.txt'; then echo OK; else echo "backups present: $(ls "$d/backups" | tr '\n' ' ')"; fi
+'''
+
+[[tests]]
+setup = '''
+d=/home/labadmin/labdata
+rm -rf "$d"; mkdir -p "$d/backups" "$d/data"
+echo only > "$d/data/only.txt"
+echo "backup-first.tar.gz" > "$d/expected.txt"
+'''
+args = "first"
+expect_exit = 0
+check = '''
+d=/home/labadmin/labdata
+if [ "$(ls "$d/backups")" = "backup-first.tar.gz" ]; then echo OK; else echo "backups present: $(ls "$d/backups" | tr '\n' ' ')"; fi
+'''

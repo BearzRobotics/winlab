@@ -1,0 +1,89 @@
+schema_version = 1
+kind = "script"
+id = "labs.script-bash-arguments"
+target = "linux"
+title = "Script (bash): work with command-line arguments"
+summary = "Count the arguments and print each with a number."
+lesson = "foundations.bash-control-flow"
+symptom = '''
+Write a bash script and save it as /home/labadmin/labs/args.sh.
+
+It is run with any number of words as arguments, for example:
+
+    args.sh red green blue
+
+It must first print how many arguments it received, then each argument on its own line, numbered from 1, like this:
+
+    3
+    1: red
+    2: green
+    3: blue
+
+Print nothing else. With no arguments it prints 0 and nothing more.
+'''
+hints = [
+  "$# holds the number of arguments. \"$@\" expands to all of them, each as its own word.",
+  "for a in \"$@\"; do ... done visits each argument in turn.",
+  "A counter that grows by one each loop: n=$((n + 1)).",
+  "Quote \"$@\" and \"$a\" so arguments with unusual characters survive.",
+]
+expected_changes = ["Creates /home/labadmin/labs with a starter script"]
+hazards = ["None: the script only prints text"]
+scope = "single guest (the registered Linux training VM only)"
+privilege = "standard"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["comptia-linux-plus/scripting-containers-automation", "redhat-rhcsa/essential-tools"]
+language = "bash"
+script_path = '/home/labadmin/labs/args.sh'
+starter = '''
+#!/bin/bash
+# args.sh
+# Print the number of arguments, then each argument as "<n>: <argument>" starting from 1
+'''
+solution = '''
+#!/bin/bash
+echo "$#"
+n=0
+for a in "$@"; do
+    n=$((n + 1))
+    echo "$n: $a"
+done
+'''
+
+[[tests]]
+setup = ":"
+args = "red green blue"
+expect = '''
+echo 3
+echo "1: red"
+echo "2: green"
+echo "3: blue"
+'''
+
+[[tests]]
+setup = ":"
+args = "solo"
+expect = '''
+echo 1
+echo "1: solo"
+'''
+
+[[tests]]
+setup = ":"
+args = ""
+expect = '''
+echo 0
+'''
+
+[[tests]]
+setup = ":"
+args = "a b c d e"
+expect = '''
+echo 5
+echo "1: a"
+echo "2: b"
+echo "3: c"
+echo "4: d"
+echo "5: e"
+'''

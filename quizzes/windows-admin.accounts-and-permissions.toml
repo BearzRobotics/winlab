@@ -1,0 +1,418 @@
+schema_version = 1
+lesson = "windows-admin.accounts-and-permissions"
+# Draft for owner review. A bank of 46; each attempt asks 10, favouring questions missed last time.
+draw = 10
+
+# ---- Accounts ----
+
+[[question]]
+id = "acct-types"
+type = "choice"
+prompt = "Which account type lives in this machine's own account database?"
+choices = ["Local account", "Domain account", "Work or school account", "Microsoft account"]
+answers = ["Local account"]
+explanation = "Domain accounts live in Active Directory, work accounts in Entra ID, and Microsoft accounts in the cloud."
+review = "Account types"
+certifications = ["comptia-a-core2/security"]
+
+[[question]]
+id = "acct-builtin-admin"
+type = "choice"
+prompt = "What is the recommended state of the built-in Administrator account on a normal installation?"
+choices = ["Disabled", "Enabled with a blank password", "Renamed to Guest", "Member of Everyone only"]
+answers = ["Disabled"]
+explanation = "It has a known name; leave it disabled and use named administrator accounts."
+review = "Account types"
+
+[[question]]
+id = "acct-list-ps"
+type = "short"
+prompt = "Which PowerShell cmdlet lists local user accounts?"
+answers = ["Get-LocalUser"]
+explanation = "Select Name, Enabled, LastLogon and PasswordExpires for a quick overview."
+review = "Local accounts from the command line"
+
+[[question]]
+id = "acct-create-ps"
+type = "short"
+prompt = "Which PowerShell cmdlet creates a local user?"
+answers = ["New-LocalUser"]
+explanation = "Pass the password as a SecureString, for example from Read-Host -AsSecureString."
+review = "Local accounts from the command line"
+
+[[question]]
+id = "acct-disable-ps"
+type = "short"
+prompt = "Which PowerShell cmdlet disables a local account?"
+answers = ["Disable-LocalUser"]
+explanation = "Enable-LocalUser reverses it."
+review = "Local accounts from the command line"
+
+[[question]]
+id = "acct-net-disable"
+type = "short"
+prompt = "Write the Command Prompt command that disables the account jsmith."
+answers = ["net user jsmith /active:no"]
+explanation = "/active:yes re-enables it."
+review = "Local accounts from the command line"
+
+[[question]]
+id = "acct-net-show"
+type = "choice"
+prompt = "What does 'net user jsmith' show?"
+choices = ["The account's state, password dates and group memberships on one screen", "Only the password", "Every file the user owns", "The user's network share list"]
+answers = ["The account's state, password dates and group memberships on one screen"]
+explanation = "It is the quickest single check of an account."
+review = "Local accounts from the command line"
+
+[[question]]
+id = "acct-password-safe"
+type = "choice"
+prompt = "How should you supply a password to New-LocalUser?"
+choices = ["Read it with Read-Host -AsSecureString", "Hard-code it in the script", "Type it in the command history", "Put it in the account description"]
+answers = ["Read it with Read-Host -AsSecureString"]
+explanation = "Never leave passwords in scripts or history."
+review = "Common mistakes"
+
+[[question]]
+id = "acct-home-lusrmgr"
+type = "choice"
+prompt = "Why is it useful to know the commands, not only lusrmgr.msc?"
+choices = ["The Local Users and Groups console is not available on Home editions", "lusrmgr.msc was removed from every edition", "Commands are always graphical", "The console cannot add users"]
+answers = ["The Local Users and Groups console is not available on Home editions"]
+explanation = "The PowerShell cmdlets work on every edition."
+review = "Local accounts from the command line"
+
+# ---- Groups ----
+
+[[question]]
+id = "grp-why"
+type = "choice"
+prompt = "Why give access through groups rather than to individual accounts?"
+choices = ["One membership change updates every permission the group holds, and the list stays readable", "Groups are faster to type", "Windows forbids user entries", "Groups never expire"]
+answers = ["One membership change updates every permission the group holds, and the list stays readable"]
+explanation = "A person joins the group once and all its permissions follow."
+review = "Groups"
+
+[[question]]
+id = "grp-add-ps"
+type = "short"
+prompt = "Which PowerShell cmdlet adds a user to a local group?"
+answers = ["Add-LocalGroupMember"]
+explanation = "For example: Add-LocalGroupMember -Group 'Remote Desktop Users' -Member 'jsmith'."
+review = "Groups"
+
+[[question]]
+id = "grp-net-add"
+type = "short"
+prompt = "Write the Command Prompt command that adds jsmith to the group Remote Desktop Users."
+answers = ["net localgroup \"Remote Desktop Users\" jsmith /add"]
+explanation = "net localgroup <group> <user> /add."
+review = "Groups"
+
+[[question]]
+id = "grp-rdp"
+type = "choice"
+prompt = "Which group allows a user to sign in with Remote Desktop?"
+choices = ["Remote Desktop Users", "Backup Operators", "Guests", "Users"]
+answers = ["Remote Desktop Users"]
+explanation = "Administrators can also sign in remotely."
+review = "Groups"
+
+[[question]]
+id = "grp-backup"
+type = "choice"
+prompt = "What may members of Backup Operators do?"
+choices = ["Read and restore files regardless of their permissions, for backup software", "Install drivers only", "Change other users' passwords", "Nothing special"]
+answers = ["Read and restore files regardless of their permissions, for backup software"]
+explanation = "That power makes the group sensitive."
+review = "Groups"
+
+[[question]]
+id = "grp-admin-short"
+type = "choice"
+prompt = "Why keep the Administrators group short?"
+choices = ["Everyone in it can do anything, and so can any program they run elevated", "Large groups are slow", "Windows allows at most five members", "It costs a licence per member"]
+answers = ["Everyone in it can do anything, and so can any program they run elevated"]
+explanation = "Least privilege limits the damage of a mistake or a compromise."
+review = "Groups"
+
+# ---- Sign-in problems ----
+
+[[question]]
+id = "signin-cause"
+type = "multi"
+prompt = "Which of these can stop a user from signing in? Select all that apply."
+choices = ["The account is disabled", "The account is locked out", "The password has expired", "The wallpaper is too large"]
+answers = ["The account is disabled", "The account is locked out", "The password has expired"]
+explanation = "A short list of account-state causes comes before anything exotic."
+review = "Why can a user not sign in?"
+
+[[question]]
+id = "signin-first"
+type = "choice"
+prompt = "A user cannot sign in. What do you check first?"
+choices = ["Whether the account is disabled", "The monitor cable", "The firewall", "The DNS cache"]
+answers = ["Whether the account is disabled"]
+explanation = "The cheapest read-only check comes first."
+review = "Why can a user not sign in?"
+
+[[question]]
+id = "signin-rdp"
+type = "choice"
+prompt = "A user can sign in at the console but not with Remote Desktop. What is a likely cause?"
+choices = ["They are not in Remote Desktop Users or Administrators", "Their password is too long", "Their account is disabled", "Their profile is full"]
+answers = ["They are not in Remote Desktop Users or Administrators"]
+explanation = "Remote sign-in needs membership in one of those groups."
+review = "Why can a user not sign in?"
+
+# ---- Token and UAC ----
+
+[[question]]
+id = "tok-holds"
+type = "choice"
+prompt = "What does an access token hold?"
+choices = ["The user's SID, the SIDs of their groups and their privileges", "The user's password", "The user's files", "The list of installed programs"]
+answers = ["The user's SID, the SIDs of their groups and their privileges"]
+explanation = "Every process the user starts carries a copy."
+review = "The access token"
+
+[[question]]
+id = "tok-when"
+type = "choice"
+prompt = "You add a user to a group. When does it take effect for their open session?"
+choices = ["At their next sign-in", "Immediately", "After one hour", "After a firewall reload"]
+answers = ["At their next sign-in"]
+explanation = "The token is built at sign-in."
+review = "The access token"
+certifications = ["comptia-a-core2/security"]
+
+[[question]]
+id = "tok-whoami"
+type = "short"
+prompt = "Which command lists your groups and their SIDs? (include the switch)"
+answers = ["whoami /groups"]
+explanation = "whoami /priv lists privileges."
+review = "The access token"
+
+[[question]]
+id = "tok-priv"
+type = "short"
+prompt = "Which command lists the privileges in your token? (include the switch)"
+answers = ["whoami /priv"]
+explanation = "Many privileges show as Disabled until a process enables them."
+review = "The access token"
+
+[[question]]
+id = "uac-two"
+type = "choice"
+prompt = "How many tokens does an administrator normally have under UAC?"
+choices = ["Two: a filtered one and a full one used after elevation", "One", "Three", "None until they elevate"]
+answers = ["Two: a filtered one and a full one used after elevation"]
+explanation = "The filtered token has Administrators as 'deny only'."
+review = "Administrators and UAC"
+
+[[question]]
+id = "uac-denyonly"
+type = "choice"
+prompt = "From a non-elevated prompt, whoami /groups shows Administrators as 'Group used for deny only'. What does that mean?"
+choices = ["The prompt is not elevated and uses the filtered token", "The account is disabled", "The user was removed from Administrators", "The firewall blocks the group"]
+answers = ["The prompt is not elevated and uses the filtered token"]
+explanation = "Elevating gives the full token, where the group shows as Enabled."
+review = "Administrators and UAC"
+
+[[question]]
+id = "uac-script"
+type = "choice"
+prompt = "A script works in an admin console but fails with access denied from a normal one. What is the right fix?"
+choices = ["Start the shell elevated", "Turn UAC off", "Give Everyone Full control", "Delete the script"]
+answers = ["Start the shell elevated"]
+explanation = "Turning UAC off weakens the system; elevating is the correct step."
+review = "Administrators and UAC"
+
+[[question]]
+id = "uac-runas"
+type = "short"
+prompt = "Which PowerShell Start-Process verb starts a program elevated? (one word)"
+answers = ["RunAs", "runas"]
+explanation = "Start-Process powershell -Verb RunAs."
+review = "Administrators and UAC"
+
+# ---- NTFS ----
+
+[[question]]
+id = "ntfs-acl"
+type = "choice"
+prompt = "What is an ACL?"
+choices = ["A list of entries naming who may do what to a file or folder", "A type of virus", "A network cable standard", "A list of installed updates"]
+answers = ["A list of entries naming who may do what to a file or folder"]
+explanation = "Each entry names a user or group, allow or deny, and a right."
+review = "NTFS permissions"
+
+[[question]]
+id = "ntfs-owner"
+type = "choice"
+prompt = "Who can always change a file's permissions, even with no entry for them?"
+choices = ["The owner", "Everyone", "The guest", "Nobody"]
+answers = ["The owner"]
+explanation = "That is why takeown works: owning the object lets you change its ACL."
+review = "The rules that decide access"
+
+[[question]]
+id = "ntfs-m"
+type = "choice"
+prompt = "In an icacls entry, what does the right M mean?"
+choices = ["Modify", "Move", "Mandatory", "Manage ownership"]
+answers = ["Modify"]
+explanation = "M is read, write and delete, but not changing permissions or ownership."
+review = "Reading permissions"
+
+[[question]]
+id = "ntfs-f"
+type = "choice"
+prompt = "In an icacls entry, which right is Full control?"
+choices = ["F", "M", "RX", "W"]
+answers = ["F"]
+explanation = "F also covers changing permissions."
+review = "Reading permissions"
+
+[[question]]
+id = "ntfs-rx"
+type = "choice"
+prompt = "In an icacls entry, what does RX mean?"
+choices = ["Read and execute", "Remove and execute", "Reset and extract", "Restricted"]
+answers = ["Read and execute"]
+explanation = "It lets a user read files and run programs, but not change them."
+review = "Reading permissions"
+
+[[question]]
+id = "ntfs-oici"
+type = "choice"
+prompt = "What does (OI)(CI) mean on an entry?"
+choices = ["Inherited by files (object) and by sub-folders (container)", "Owner inherit and creator inherit only", "Only inherited by sub-folders", "Not inherited at all"]
+answers = ["Inherited by files (object) and by sub-folders (container)"]
+explanation = "OI is object inherit; CI is container inherit."
+review = "Reading permissions"
+
+[[question]]
+id = "ntfs-i"
+type = "choice"
+prompt = "What does (I) on an entry show?"
+choices = ["The entry was inherited from the parent", "The entry is inactive", "The entry is for an interactive user", "The entry is immutable"]
+answers = ["The entry was inherited from the parent"]
+explanation = "It appears on children whose permissions come from above."
+review = "Reading permissions"
+
+[[question]]
+id = "ntfs-grant"
+type = "short"
+prompt = "Write the icacls command that gives the group Finance Modify on C:\\Data\\Reports, inherited by files and sub-folders."
+answers = ["icacls C:\\Data\\Reports /grant \"Finance:(OI)(CI)M\"", "icacls C:\\Data\\Reports /grant Finance:(OI)(CI)M"]
+explanation = "/grant adds an entry; the flags make it inherit downward."
+review = "Changing permissions"
+
+[[question]]
+id = "ntfs-grantr"
+type = "choice"
+prompt = "What does /grant:r do differently from /grant?"
+choices = ["It replaces the group's existing entries instead of adding to them", "It removes the folder", "It grants read-only", "It resets all permissions"]
+answers = ["It replaces the group's existing entries instead of adding to them"]
+explanation = "Plain /grant adds to what is there."
+review = "Changing permissions"
+
+[[question]]
+id = "ntfs-inherit-off"
+type = "short"
+prompt = "Write the icacls switch that turns inheritance off and copies what was inherited. (for example /xyz:q)"
+answers = ["/inheritance:d"]
+explanation = "/inheritance:e turns it back on; :r removes the inherited entries."
+review = "Changing permissions"
+
+[[question]]
+id = "ntfs-save"
+type = "choice"
+prompt = "Before a bulk permission change, what should you do?"
+choices = ["Save the ACLs with icacls /save so you can restore them", "Disable the firewall", "Reboot", "Delete the folder"]
+answers = ["Save the ACLs with icacls /save so you can restore them"]
+explanation = "icacls /restore puts them back."
+review = "Changing permissions"
+
+[[question]]
+id = "ntfs-takeown"
+type = "short"
+prompt = "Which command changes the owner of files that nobody has permission to? (command name)"
+answers = ["takeown"]
+explanation = "After taking ownership you can grant yourself rights with icacls."
+review = "Changing permissions"
+
+[[question]]
+id = "ntfs-deny"
+type = "choice"
+prompt = "Why use Deny entries sparingly?"
+choices = ["Deny overrides allow and is hard to read later", "Windows ignores them", "They slow the disk", "They expire after a day"]
+answers = ["Deny overrides allow and is hard to read later"]
+explanation = "A deny on a broad group can even lock out administrators."
+review = "The rules that decide access"
+
+[[question]]
+id = "ntfs-effective"
+type = "choice"
+prompt = "How is a user's effective access decided?"
+choices = ["By combining every entry that matches the user and all of their groups", "Only by the user's own entry", "Only by the first entry in the list", "By the file's age"]
+answers = ["By combining every entry that matches the user and all of their groups"]
+explanation = "Rights add up across groups unless a deny applies."
+review = "The rules that decide access"
+
+[[question]]
+id = "ntfs-getacl"
+type = "short"
+prompt = "Which PowerShell cmdlet returns a file's ACL as an object?"
+answers = ["Get-Acl"]
+explanation = "Set-Acl writes it back."
+review = "Reading permissions"
+
+# ---- Shares and procedure ----
+
+[[question]]
+id = "share-stricter"
+type = "choice"
+prompt = "A folder is accessed over the network. Which permission result applies?"
+choices = ["The stricter of the share and NTFS permissions", "Only the share permissions", "Only the NTFS permissions", "The more generous of the two"]
+answers = ["The stricter of the share and NTFS permissions"]
+explanation = "Both apply over the network, and the stricter wins."
+review = "Shares and NTFS together"
+
+[[question]]
+id = "share-design"
+type = "choice"
+prompt = "What is a tidy design for a shared folder?"
+choices = ["Broad share permissions, with the real control in the NTFS permissions", "Different rules in both places", "No NTFS permissions at all", "Share permissions only for administrators"]
+answers = ["Broad share permissions, with the real control in the NTFS permissions"]
+explanation = "One place to look when someone asks who can open it."
+review = "Shares and NTFS together"
+
+[[question]]
+id = "share-create"
+type = "short"
+prompt = "Which PowerShell cmdlet creates an SMB share?"
+answers = ["New-SmbShare"]
+explanation = "Get-SmbShareAccess shows who may use it."
+review = "Shares and NTFS together"
+
+[[question]]
+id = "proc-test"
+type = "choice"
+prompt = "After fixing an access problem, how should you test it?"
+choices = ["As the affected user, after they sign in again", "Only as an administrator", "Without signing in again", "By granting Everyone Full control"]
+answers = ["As the affected user, after they sign in again"]
+explanation = "An administrator's token can hide the problem."
+review = "Fixing an access problem"
+
+[[question]]
+id = "proc-everyone"
+type = "choice"
+prompt = "Which is the right fix when a team lost access to a folder?"
+choices = ["Correct the team's group entry on the folder", "Give Everyone Full control", "Disable UAC", "Give the folder to a new owner every time"]
+answers = ["Correct the team's group entry on the folder"]
+explanation = "Change the group's entry, not Everyone and not the individual user."
+review = "Fixing an access problem"

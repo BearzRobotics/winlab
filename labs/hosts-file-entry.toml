@@ -1,0 +1,31 @@
+schema_version = 1
+id = "labs.hosts-file-entry"
+title = "One website fails only on this server"
+summary = "A local override sends a name to the wrong place."
+lesson = "networking.addressing-and-names"
+symptom = "example.com will not load on this server, but it works from other computers on the same network. Other websites are fine."
+hints = [
+  "If only one name fails and only on one machine, something local is answering for that name before DNS does.",
+  "Windows checks a plain text file of name-to-address overrides first.",
+  "Look at the hosts file under C:\\Windows\\System32\\drivers\\etc and remove the entry that should not be there.",
+]
+expected_changes = ["Adds a line to the hosts file that points example.com at the server itself"]
+hazards = ["example.com resolves to the lab VM itself until the entry is removed"]
+scope = "single guest (the registered training VM only)"
+privilege = "administrator"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["comptia-network-plus/network-troubleshooting", "comptia-a-core1/networking", "comptia-a-core2/software-troubleshooting"]
+fault = '''
+Add-Content -Path 'C:\Windows\System32\drivers\etc\hosts' -Value '127.0.0.1 example.com'
+'''
+solution = '''
+$hosts = 'C:\Windows\System32\drivers\etc\hosts'
+(Get-Content -Path $hosts) | Where-Object { $_ -notmatch 'example\.com' } | Set-Content -Path $hosts
+'''
+
+[validate]
+script = '''
+if (Select-String -Path 'C:\Windows\System32\drivers\etc\hosts' -Pattern '^\s*[^#\s].*example\.com' -Quiet) { 'hosts entry present' } else { 'hosts file clean' }
+'''
+expect_output_contains = "hosts file clean"

@@ -1,0 +1,589 @@
+schema_version = 1
+lesson = "networking.subnetting"
+# Draft for owner review. A bank of 67; each attempt asks 12, favouring questions missed last time.
+draw = 12
+
+# ---- Masks and prefixes ----
+
+[[question]]
+id = "mask-24"
+type = "short"
+prompt = "Write the dotted-decimal subnet mask for a /24 prefix."
+answers = ["255.255.255.0"]
+explanation = "24 one-bits are three full octets of 255, followed by 0."
+review = "An address and a mask"
+certifications = ["comptia-network-plus/networking-concepts"]
+
+[[question]]
+id = "mask-25"
+type = "short"
+prompt = "Write the dotted-decimal subnet mask for a /25 prefix."
+answers = ["255.255.255.128"]
+explanation = "25 ones is three full octets plus one more bit, which makes the last octet 128."
+review = "An address and a mask"
+
+[[question]]
+id = "mask-26"
+type = "short"
+prompt = "Write the dotted-decimal subnet mask for a /26 prefix."
+answers = ["255.255.255.192"]
+explanation = "Two extra bits in the last octet make 128 + 64 = 192."
+review = "An address and a mask"
+
+[[question]]
+id = "mask-27"
+type = "short"
+prompt = "Write the dotted-decimal subnet mask for a /27 prefix."
+answers = ["255.255.255.224"]
+explanation = "Three extra bits in the last octet make 128 + 64 + 32 = 224."
+review = "An address and a mask"
+
+[[question]]
+id = "mask-28"
+type = "short"
+prompt = "Write the dotted-decimal subnet mask for a /28 prefix."
+answers = ["255.255.255.240"]
+explanation = "Four extra bits in the last octet make 128 + 64 + 32 + 16 = 240."
+review = "An address and a mask"
+
+[[question]]
+id = "mask-30"
+type = "short"
+prompt = "Write the dotted-decimal subnet mask for a /30 prefix."
+answers = ["255.255.255.252"]
+explanation = "Six extra bits in the last octet leave only 2 host bits: 256 - 4 = 252."
+review = "An address and a mask"
+
+[[question]]
+id = "prefix-248"
+type = "short"
+prompt = "What prefix length is the mask 255.255.248.0? (for example /24)"
+answers = ["/21", "21"]
+explanation = "255.255 is 16 bits, and 248 in the third octet is 5 more ones (11111000), so 16 + 5 = 21."
+review = "An address and a mask"
+
+[[question]]
+id = "prefix-240"
+type = "short"
+prompt = "What prefix length is the mask 255.255.255.240? (for example /24)"
+answers = ["/28", "28"]
+explanation = "Three full octets are 24 bits, and 240 is four more ones (11110000), so 28."
+review = "An address and a mask"
+
+[[question]]
+id = "mask-valid"
+type = "choice"
+prompt = "Which of these is NOT a valid subnet mask?"
+choices = ["255.255.255.0", "255.255.254.0", "255.255.253.0", "255.255.240.0"]
+answers = ["255.255.253.0"]
+explanation = "A mask is a run of ones followed by zeros. 253 is 11111101, which has a zero before a one, so it cannot be a mask octet."
+review = "An address and a mask"
+
+[[question]]
+id = "interesting-octet"
+type = "choice"
+prompt = "In the block-size method, which octet do you work in?"
+choices = ["Always the last octet", "The one where the mask is neither 255 nor 0", "The first octet", "The octet with the largest address value"]
+answers = ["The one where the mask is neither 255 nor 0"]
+explanation = "That is the interesting octet, where the network and host parts split. For /21 it is the third octet, for /26 the fourth."
+review = "The block-size method"
+
+# ---- Host counts ----
+
+[[question]]
+id = "hosts-24"
+type = "short"
+prompt = "How many usable host addresses are in a /24? (number only)"
+answers = ["254"]
+explanation = "2 to the 8th is 256, minus the network and broadcast addresses."
+review = "An address and a mask"
+
+[[question]]
+id = "hosts-25"
+type = "short"
+prompt = "How many usable host addresses are in a /25? (number only)"
+answers = ["126"]
+explanation = "2 to the 7th is 128, minus 2."
+review = "An address and a mask"
+
+[[question]]
+id = "hosts-26"
+type = "short"
+prompt = "How many usable host addresses are in a /26? (number only)"
+answers = ["62"]
+explanation = "2 to the 6th is 64, minus 2."
+review = "An address and a mask"
+
+[[question]]
+id = "hosts-27"
+type = "short"
+prompt = "How many usable host addresses are in a /27? (number only)"
+answers = ["30"]
+explanation = "2 to the 5th is 32, minus 2."
+review = "An address and a mask"
+
+[[question]]
+id = "hosts-28"
+type = "short"
+prompt = "How many usable host addresses are in a /28? (number only)"
+answers = ["14"]
+explanation = "2 to the 4th is 16, minus 2."
+review = "An address and a mask"
+
+[[question]]
+id = "hosts-29"
+type = "short"
+prompt = "How many usable host addresses are in a /29? (number only)"
+answers = ["6"]
+explanation = "2 to the 3rd is 8, minus 2."
+review = "An address and a mask"
+
+[[question]]
+id = "hosts-30"
+type = "short"
+prompt = "How many usable host addresses are in a /30? (number only)"
+answers = ["2"]
+explanation = "2 to the 2nd is 4, minus 2. A /30 is the classic size for a link between two routers."
+review = "An address and a mask"
+
+[[question]]
+id = "hosts-22"
+type = "short"
+prompt = "How many usable host addresses are in a /22? (number only, no comma)"
+answers = ["1022"]
+explanation = "2 to the 10th is 1024, minus 2 = 1022."
+review = "Worked example 2"
+
+[[question]]
+id = "reserved-two"
+type = "multi"
+prompt = "Which two addresses in every ordinary subnet cannot be given to a host?"
+choices = ["The network address (all host bits 0)", "The broadcast address (all host bits 1)", "The first usable address", "The default gateway address"]
+answers = ["The network address (all host bits 0)", "The broadcast address (all host bits 1)"]
+explanation = "The network address names the subnet and the broadcast address reaches everyone on it. The first usable address and the gateway can be assigned."
+review = "An address and a mask"
+
+# ---- Network, broadcast and range ----
+
+[[question]]
+id = "net-130-26"
+type = "short"
+prompt = "What is the network address of 192.168.1.130/26?"
+answers = ["192.168.1.128"]
+explanation = "/26 has block size 64, so subnets start at 0, 64, 128, 192. 130 sits in the block starting at 128."
+review = "Worked example 1"
+certifications = ["comptia-network-plus/networking-concepts"]
+
+[[question]]
+id = "bc-130-26"
+type = "short"
+prompt = "What is the broadcast address of 192.168.1.130/26?"
+answers = ["192.168.1.191"]
+explanation = "The broadcast address is the next block start (192) minus 1 = 191."
+review = "Worked example 1"
+
+[[question]]
+id = "range-130-26"
+type = "choice"
+prompt = "What is the usable host range of 192.168.1.130/26?"
+choices = ["192.168.1.128 to 192.168.1.191", "192.168.1.129 to 192.168.1.190", "192.168.1.130 to 192.168.1.189", "192.168.1.129 to 192.168.1.191"]
+answers = ["192.168.1.129 to 192.168.1.190"]
+explanation = "Skip the network address (.128) and the broadcast address (.191)."
+review = "Worked example 1"
+
+[[question]]
+id = "bc-10-24"
+type = "short"
+prompt = "What is the broadcast address of 10.20.30.40/24?"
+answers = ["10.20.30.255"]
+explanation = "In a /24 the host part is the last octet, so the broadcast address ends in 255."
+review = "An address and a mask"
+
+[[question]]
+id = "net-5-27"
+type = "short"
+prompt = "What is the network address of 192.168.5.77/27?"
+answers = ["192.168.5.64"]
+explanation = "/27 has block size 32: 0, 32, 64, 96. 77 is in the block starting at 64."
+review = "The block-size method"
+
+[[question]]
+id = "bc-5-27"
+type = "short"
+prompt = "What is the broadcast address of 192.168.5.77/27?"
+answers = ["192.168.5.95"]
+explanation = "The next block starts at 96, so the broadcast address is 95."
+review = "The block-size method"
+
+[[question]]
+id = "net-9-25"
+type = "short"
+prompt = "What is the network address of 172.31.9.130/25?"
+answers = ["172.31.9.128"]
+explanation = "/25 has block size 128, so subnets start at 0 and 128. 130 is in the block starting at 128."
+review = "The block-size method"
+
+[[question]]
+id = "bc-9-25"
+type = "short"
+prompt = "What is the broadcast address of 172.31.9.130/25?"
+answers = ["172.31.9.255"]
+explanation = "The block 128 to 255 ends at 255, so that is the broadcast address."
+review = "The block-size method"
+
+[[question]]
+id = "net-45-21"
+type = "short"
+prompt = "What is the network address of 172.16.45.200/21?"
+answers = ["172.16.40.0"]
+explanation = "/21 is mask 255.255.248.0, block size 8 in the third octet. 45 is in the block starting at 40, and the host octet is all zeros."
+review = "Worked example 2"
+
+[[question]]
+id = "bc-45-21"
+type = "short"
+prompt = "What is the broadcast address of 172.16.45.200/21?"
+answers = ["172.16.47.255"]
+explanation = "The block runs 40 to 47 in the third octet, and the fourth octet becomes 255."
+review = "Worked example 2"
+
+[[question]]
+id = "net-12-22"
+type = "short"
+prompt = "What is the network address of 10.0.12.201/22?"
+answers = ["10.0.12.0"]
+explanation = "/22 is mask 255.255.252.0, block size 4 in the third octet. 12 is a multiple of 4, so the block starts at 12 and the last octet is 0."
+review = "The block-size method"
+
+[[question]]
+id = "bc-12-22"
+type = "short"
+prompt = "What is the broadcast address of 10.0.12.201/22?"
+answers = ["10.0.15.255"]
+explanation = "The block covers third-octet values 12 to 15, so the broadcast address is 10.0.15.255."
+review = "The block-size method"
+
+[[question]]
+id = "net-70-28"
+type = "short"
+prompt = "What is the network address of 192.168.100.70/28?"
+answers = ["192.168.100.64"]
+explanation = "/28 has block size 16: 0, 16, 32, 48, 64, 80. 70 is in the block starting at 64."
+review = "The block-size method"
+
+[[question]]
+id = "bc-70-28"
+type = "short"
+prompt = "What is the broadcast address of 192.168.100.70/28?"
+answers = ["192.168.100.79"]
+explanation = "The next block starts at 80, so the broadcast address is 79."
+review = "The block-size method"
+
+[[question]]
+id = "net-address-host"
+type = "choice"
+prompt = "Can the address 192.168.50.200/29 be assigned to a host?"
+choices = ["Yes, it is a normal host address", "No, it is the network address of its subnet", "No, it is the broadcast address of its subnet", "No, it is a private address"]
+answers = ["No, it is the network address of its subnet"]
+explanation = "/29 has block size 8 and 200 is a multiple of 8, so 192.168.50.200 starts the block 200 to 207. It names the subnet, so it is not usable by a host."
+review = "The block-size method"
+
+[[question]]
+id = "bc-address-host"
+type = "choice"
+prompt = "Can the address 192.168.50.207/29 be assigned to a host?"
+choices = ["Yes, it is a normal host address", "No, it is the network address of its subnet", "No, it is the broadcast address of its subnet", "No, it is a loopback address"]
+answers = ["No, it is the broadcast address of its subnet"]
+explanation = "The /29 block 200 to 207 ends at 207, the broadcast address."
+review = "The block-size method"
+
+[[question]]
+id = "hosts-30-link"
+type = "short"
+prompt = "A /30 network is 10.1.1.0/30. What are its two usable host addresses? (comma separated, lowest first)"
+answers = ["10.1.1.1, 10.1.1.2", "10.1.1.1,10.1.1.2"]
+explanation = "Block 10.1.1.0 to 10.1.1.3: .0 is the network address and .3 the broadcast address, leaving .1 and .2."
+review = "An address and a mask"
+
+# ---- Same network or not ----
+
+[[question]]
+id = "same-24"
+type = "choice"
+prompt = "Are 192.168.1.20/24 and 192.168.1.200/24 on the same network?"
+choices = ["Yes", "No"]
+answers = ["Yes"]
+explanation = "In a /24 the first three octets name the network, and both start 192.168.1, so they share it."
+review = "Same network or not?"
+
+[[question]]
+id = "same-26"
+type = "choice"
+prompt = "Can 192.168.10.62/26 talk directly to 192.168.10.65/26, with no router?"
+choices = ["Yes", "No, they are in different subnets"]
+answers = ["No, they are in different subnets"]
+explanation = "/26 blocks are 0 to 63 and 64 to 127. 62 and 65 are on opposite sides of the boundary, so traffic needs a router."
+review = "Same network or not?"
+certifications = ["comptia-network-plus/networking-concepts"]
+
+[[question]]
+id = "same-23"
+type = "choice"
+prompt = "Are 10.0.5.10/23 and 10.0.4.200/23 on the same network?"
+choices = ["Yes", "No"]
+answers = ["Yes"]
+explanation = "/23 is mask 255.255.254.0, so the third octet blocks are 4 to 5. Both addresses are in 10.0.4.0/23 (10.0.4.0 to 10.0.5.255)."
+review = "Same network or not?"
+
+[[question]]
+id = "same-24-neighbours"
+type = "choice"
+prompt = "Are 10.0.5.10/24 and 10.0.4.200/24 on the same network?"
+choices = ["Yes", "No"]
+answers = ["No"]
+explanation = "In a /24 the third octet is part of the network, and 5 differs from 4, so they are different networks."
+review = "Same network or not?"
+
+[[question]]
+id = "mask-mismatch"
+type = "choice"
+prompt = "Host A is 192.168.1.20 with mask 255.255.255.0 and host B is 192.168.1.200 with mask 255.255.255.128. What happens?"
+choices = ["Nothing, they work normally", "A thinks B is local; B thinks A is not local and sends replies to its gateway, so traffic may flow one way only", "Both refuse to start networking", "DHCP corrects the masks automatically"]
+answers = ["A thinks B is local; B thinks A is not local and sends replies to its gateway, so traffic may flow one way only"]
+explanation = "Each host decides what is local using its own mask. B's network is 192.168.1.128/25, which does not contain .20. When two hosts disagree, compare their masks first."
+review = "Same network or not?"
+certifications = ["comptia-network-plus/network-troubleshooting"]
+
+[[question]]
+id = "gateway-subnet"
+type = "choice"
+prompt = "A host is 192.168.1.20/24. Which default gateway can it actually use?"
+choices = ["192.168.2.1", "192.168.1.1", "10.0.0.1", "169.254.0.1"]
+answers = ["192.168.1.1"]
+explanation = "A gateway must be inside the host's own subnet, or the host cannot even reach it."
+review = "Common mistakes"
+
+[[question]]
+id = "decide-local"
+type = "choice"
+prompt = "How does a host decide whether a destination is local?"
+choices = ["It ANDs the destination with its own mask and compares the result to its own network address", "It pings the destination first", "It asks DNS", "It checks whether the destination is a private address"]
+answers = ["It ANDs the destination with its own mask and compares the result to its own network address"]
+explanation = "Same network: send directly (using ARP). Different network: send to the default gateway."
+review = "Same network or not?"
+
+[[question]]
+id = "and-operation"
+type = "choice"
+prompt = "Which bitwise operation on an address and a mask gives the network address?"
+choices = ["AND", "OR", "XOR", "NOT"]
+answers = ["AND"]
+explanation = "ANDing keeps the network bits and zeroes the host bits. The PowerShell example in the lesson uses -band."
+review = "Check your answer with the system"
+
+# ---- Splitting ----
+
+[[question]]
+id = "borrow-bits"
+type = "short"
+prompt = "How many host bits must you borrow to split a network into 4 equal subnets? (number only)"
+answers = ["2"]
+explanation = "Each borrowed bit doubles the number of subnets, and 2 to the 2nd is 4."
+review = "Splitting a network"
+
+[[question]]
+id = "split-24-into-4"
+type = "short"
+prompt = "You split 192.168.1.0/24 into 4 equal subnets. What prefix does each subnet have? (for example /24)"
+answers = ["/26", "26"]
+explanation = "Two borrowed bits turn /24 into /26, with block size 64: .0, .64, .128, .192."
+review = "Splitting a network"
+
+[[question]]
+id = "need-100"
+type = "short"
+prompt = "What is the smallest prefix (longest mask) that holds 100 hosts? (for example /24)"
+answers = ["/25", "25"]
+explanation = "100 plus 2 reserved needs 102 addresses, so a block of 128: a /25, with 126 usable. A /26 has only 62."
+review = "Splitting a network"
+
+[[question]]
+id = "need-50"
+type = "short"
+prompt = "What is the smallest prefix (longest mask) that holds 50 hosts? (for example /24)"
+answers = ["/26", "26"]
+explanation = "50 hosts need at least 52 addresses, so a block of 64: a /26 with 62 usable. A /27 has only 30."
+review = "Splitting a network"
+
+[[question]]
+id = "need-30"
+type = "short"
+prompt = "What is the smallest prefix (longest mask) that holds exactly 30 hosts? (for example /24)"
+answers = ["/27", "27"]
+explanation = "A /27 has 32 addresses and 30 usable, which fits exactly. A /28 has only 14."
+review = "Splitting a network"
+
+[[question]]
+id = "count-27"
+type = "short"
+prompt = "How many /27 subnets fit in one /24? (number only)"
+answers = ["8"]
+explanation = "A /24 has 256 addresses and each /27 has 32, so 256 / 32 = 8."
+review = "Splitting a network"
+
+# ---- Special ranges ----
+
+[[question]]
+id = "private-ranges"
+type = "multi"
+prompt = "Which of these addresses are in the private (RFC 1918) ranges?"
+choices = ["10.5.5.5", "172.16.0.1", "172.32.0.1", "192.168.200.1", "169.254.1.1"]
+answers = ["10.5.5.5", "172.16.0.1", "192.168.200.1"]
+explanation = "The private ranges are 10.0.0.0/8, 172.16.0.0/12 (172.16 to 172.31) and 192.168.0.0/16. 172.32 is outside the /12, and 169.254 is link-local."
+review = "Special ranges"
+certifications = ["comptia-network-plus/networking-concepts"]
+
+[[question]]
+id = "apipa"
+type = "choice"
+prompt = "A machine has the address 169.254.18.7. What most likely happened?"
+choices = ["It is on a guest network", "It asked a DHCP server for an address and got no answer", "It is using NAT", "It is a loopback address"]
+answers = ["It asked a DHCP server for an address and got no answer"]
+explanation = "169.254.0.0/16 is the link-local range a machine gives itself when DHCP does not answer. It is a clue to investigate the DHCP server, the link, or the relay."
+review = "Special ranges"
+certifications = ["comptia-network-plus/network-troubleshooting", "comptia-a-core1/networking"]
+
+[[question]]
+id = "loopback-range"
+type = "choice"
+prompt = "Which range is reserved for a machine talking to itself?"
+choices = ["127.0.0.0/8", "10.0.0.0/8", "169.254.0.0/16", "224.0.0.0/4"]
+answers = ["127.0.0.0/8"]
+explanation = "127.0.0.0/8 is loopback, commonly 127.0.0.1. 224.0.0.0/4 is multicast."
+review = "Special ranges"
+
+[[question]]
+id = "doc-ranges"
+type = "multi"
+prompt = "Which of these are reserved for documentation and examples?"
+choices = ["192.0.2.0/24", "198.51.100.0/24", "203.0.113.0/24", "10.0.0.0/8"]
+answers = ["192.0.2.0/24", "198.51.100.0/24", "203.0.113.0/24"]
+explanation = "These three /24 blocks are for examples. 10.0.0.0/8 is a private range that real networks use."
+review = "Special ranges"
+
+[[question]]
+id = "nat-purpose"
+type = "choice"
+prompt = "What does NAT let a network of private addresses do?"
+choices = ["Reach the internet by having a router rewrite the private addresses to its own public address", "Avoid using DNS", "Skip the default gateway", "Use IPv6"]
+answers = ["Reach the internet by having a router rewrite the private addresses to its own public address"]
+explanation = "NAT translates private addresses at the edge. Two private networks that join, for example over a VPN, must not use overlapping ranges."
+review = "Special ranges"
+
+[[question]]
+id = "slash-31"
+type = "choice"
+prompt = "What is a /31 prefix allowed for?"
+choices = ["Point-to-point links, using both addresses", "Large office networks", "Broadcast traffic", "Multicast groups"]
+answers = ["Point-to-point links, using both addresses"]
+explanation = "RFC 3021 allows /31 on point-to-point links, so both addresses are usable. A /32 is a single host."
+review = "An address and a mask"
+
+# ---- IPv6 ----
+
+[[question]]
+id = "v6-bits"
+type = "short"
+prompt = "How many bits is an IPv6 address? (number only)"
+answers = ["128"]
+explanation = "IPv6 addresses are 128 bits, written as eight groups of four hexadecimal digits."
+review = "IPv6 in one page"
+
+[[question]]
+id = "v6-shorten"
+type = "short"
+prompt = "Shorten 2001:0db8:0000:0000:0000:0000:0000:0001 using the two IPv6 shortening rules."
+answers = ["2001:db8::1"]
+explanation = "Drop leading zeros in each group, then replace one run of all-zero groups with a double colon: 2001:db8::1."
+review = "IPv6 in one page"
+
+[[question]]
+id = "v6-linklocal"
+type = "choice"
+prompt = "Which IPv6 prefix is link-local, present on every interface and never routed?"
+choices = ["fe80::/10", "2000::/3", "fc00::/7", "ff00::/8"]
+answers = ["fe80::/10"]
+explanation = "fe80::/10 is link-local. 2000::/3 is global unicast, fc00::/7 is unique local, and ff00::/8 is multicast."
+review = "IPv6 in one page"
+
+[[question]]
+id = "v6-loopback"
+type = "short"
+prompt = "What is the IPv6 loopback address?"
+answers = ["::1", "::1/128"]
+explanation = "::1 is the IPv6 loopback, the counterpart of 127.0.0.1."
+review = "IPv6 in one page"
+
+[[question]]
+id = "v6-broadcast"
+type = "choice"
+prompt = "What does IPv6 use instead of broadcast?"
+choices = ["Multicast", "Anycast only", "ARP", "Nothing; it cannot reach several hosts"]
+answers = ["Multicast"]
+explanation = "IPv6 has no broadcast. Multicast groups cover what broadcast did, and Neighbor Discovery replaces ARP."
+review = "IPv6 in one page"
+
+[[question]]
+id = "v6-zone"
+type = "choice"
+prompt = "In fe80::8076:7428:c04a:3a1f%15 what does the %15 mean?"
+choices = ["A prefix length", "The interface index the address belongs to", "A port number", "The hop limit"]
+answers = ["The interface index the address belongs to"]
+explanation = "Every interface has an fe80:: address, so the address alone is ambiguous. The number after % says which interface."
+review = "IPv6 in one page"
+
+[[question]]
+id = "v6-slaac"
+type = "choice"
+prompt = "What is SLAAC?"
+choices = ["Hosts building their own IPv6 address from the prefix a router announces", "A DNS record type", "A DHCP message", "A firewall rule"]
+answers = ["Hosts building their own IPv6 address from the prefix a router announces"]
+explanation = "Stateless address autoconfiguration lets IPv6 hosts configure themselves, so addresses are rarely typed by hand."
+review = "IPv6 in one page"
+
+[[question]]
+id = "v6-ula"
+type = "choice"
+prompt = "Which IPv6 prefix is the counterpart of private IPv4 addresses (unique local)?"
+choices = ["fc00::/7", "fe80::/10", "2001:db8::/32", "::1/128"]
+answers = ["fc00::/7"]
+explanation = "Unique local addresses (in practice fd00::/8) are not meant to be routed on the internet. 2001:db8::/32 is the documentation prefix."
+review = "IPv6 in one page"
+
+# ---- Tools ----
+
+[[question]]
+id = "tool-prefix-windows"
+type = "choice"
+prompt = "Which PowerShell cmdlet shows the prefix length of each IPv4 address on a Windows machine?"
+choices = ["Get-NetIPAddress", "Get-NetNeighbor", "Resolve-DnsName", "Test-NetConnection"]
+answers = ["Get-NetIPAddress"]
+explanation = "Get-NetIPAddress has a PrefixLength column. ipconfig shows the same information as a dotted mask."
+review = "Check your answer with the system"
+
+[[question]]
+id = "tool-prefix-linux"
+type = "short"
+prompt = "Type the Linux command that prints addresses in brief form, with the prefix after a slash."
+answers = ["ip -br addr", "ip -br a", "ip -brief addr", "ip -brief address", "ip -br address"]
+explanation = "ip -br addr shows one line per interface, such as 192.168.1.20/24."
+review = "Check your answer with the system"
+
+[[question]]
+id = "mistake-count-hosts"
+type = "choice"
+prompt = "A network has 254 usable addresses. A colleague counts 256 hosts. What did they forget?"
+choices = ["That the network and broadcast addresses are reserved", "That DHCP uses some addresses", "That IPv6 exists", "That the gateway uses 2 addresses"]
+answers = ["That the network and broadcast addresses are reserved"]
+explanation = "Usable hosts are 2 to the power of the host bits, minus 2."
+review = "Common mistakes"

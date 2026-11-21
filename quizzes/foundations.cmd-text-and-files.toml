@@ -1,0 +1,419 @@
+schema_version = 1
+lesson = "foundations.cmd-text-and-files"
+# Draft for owner review. A bank of 46; each attempt asks 10, favouring questions missed last time.
+draw = 10
+
+# ---- Looking at text ----
+
+[[question]]
+id = "lt-more"
+type = "short"
+prompt = "Which command shows a file one screen at a time? (command name)"
+answers = ["more"]
+explanation = "'more +2 file' starts at line 2."
+review = "Looking at text"
+
+[[question]]
+id = "lt-empty"
+type = "short"
+prompt = "Write the command that creates an empty file named empty.txt without echo."
+answers = ["type nul > empty.txt", "type nul>empty.txt"]
+explanation = "Typing the nul device writes nothing, so the file is created empty."
+review = "Looking at text"
+
+[[question]]
+id = "lt-headtail"
+type = "choice"
+prompt = "Does cmd have head and tail commands?"
+choices = ["No; use more +N, for /f skip=N, or PowerShell", "Yes, head and tail", "Only tail", "Only in PowerShell 5"]
+answers = ["No; use more +N, for /f skip=N, or PowerShell"]
+explanation = "PowerShell has Get-Content -TotalCount and -Tail."
+review = "Looking at text"
+
+[[question]]
+id = "lt-count"
+type = "short"
+prompt = "Write the command that counts the lines of data\\names.txt using type and find."
+answers = ["type data\\names.txt | find /c /v \"\"", "type data\\names.txt|find /c /v \"\""]
+explanation = "find /c /v \"\" counts lines that do not match the empty string, which is all of them."
+review = "Looking at text"
+
+# ---- find ----
+
+[[question]]
+id = "find-c"
+type = "choice"
+prompt = "What does find /c do?"
+choices = ["Counts matching lines", "Ignores case", "Shows line numbers", "Shows context"]
+answers = ["Counts matching lines"]
+explanation = "/i ignores case and /n numbers lines."
+review = "`find`: the simple search"
+
+[[question]]
+id = "find-v"
+type = "choice"
+prompt = "What does find /v show?"
+choices = ["Lines that do not match", "Verbose output", "Version", "Only the first match"]
+answers = ["Lines that do not match"]
+explanation = "The same as grep -v."
+review = "`find`: the simple search"
+
+[[question]]
+id = "find-header"
+type = "choice"
+prompt = "What does find print before the matches when reading a named file?"
+choices = ["A header line with the upper-cased file name", "Nothing", "The file size", "The date"]
+answers = ["A header line with the upper-cased file name"]
+explanation = "findstr is usually better for scripts."
+review = "`find`: the simple search"
+
+# ---- findstr ----
+
+[[question]]
+id = "fs-exit"
+type = "choice"
+prompt = "What exit codes does findstr set?"
+choices = ["0 found, 1 not found", "0 not found, 1 found", "Always 0", "The match count"]
+answers = ["0 found, 1 not found"]
+explanation = "So it works as a test."
+review = "`findstr`: the workhorse"
+
+[[question]]
+id = "fs-spaces"
+type = "choice"
+prompt = "What does findstr \"two words\" search for?"
+choices = ["Lines containing either word", "The exact phrase", "Lines containing both words", "Nothing"]
+answers = ["Lines containing either word"]
+explanation = "Spaces separate alternatives; use /c:\"two words\" for the phrase."
+review = "`findstr`: the workhorse"
+
+[[question]]
+id = "fs-n"
+type = "short"
+prompt = "Which findstr switch prefixes line numbers? (include the slash)"
+answers = ["/n"]
+explanation = "findstr /n /i \"error\" file."
+review = "`findstr`: the workhorse"
+
+[[question]]
+id = "fs-v"
+type = "short"
+prompt = "Which findstr switch shows only the lines that do NOT match? (include the slash)"
+answers = ["/v"]
+explanation = "findstr /v /i \"info\" file."
+review = "`findstr`: the workhorse"
+
+[[question]]
+id = "fs-m"
+type = "choice"
+prompt = "What does findstr /m print?"
+choices = ["Only the names of files that contain a match", "Matches in upper case", "Multiple matches only", "The line numbers"]
+answers = ["Only the names of files that contain a match"]
+explanation = "findstr /m \"ERROR\" logs\\*.log."
+review = "`findstr`: the workhorse"
+
+[[question]]
+id = "fs-s"
+type = "choice"
+prompt = "What does findstr /s do?"
+choices = ["Searches subfolders", "Sorts the result", "Shows the size", "Silences errors"]
+answers = ["Searches subfolders"]
+explanation = "Use it with a file pattern such as *.log."
+review = "`findstr`: the workhorse"
+
+[[question]]
+id = "fs-b"
+type = "choice"
+prompt = "What does findstr /b /c:\"2026-11-20\" match?"
+choices = ["Lines that begin with that text", "Lines that end with it", "Lines containing it anywhere", "Binary files"]
+answers = ["Lines that begin with that text"]
+explanation = "/e matches at the end."
+review = "`findstr`: the workhorse"
+
+[[question]]
+id = "fs-regex-multi"
+type = "multi"
+prompt = "Which regex features does findstr support? Select all that apply."
+choices = [". (any character)", "* (zero or more)", "[a-z] (a range)", "\\< and \\> (word boundaries)", "+ (one or more)"]
+answers = [". (any character)", "* (zero or more)", "[a-z] (a range)", "\\< and \\> (word boundaries)"]
+explanation = "It also supports ^, $, [^abc] and \\x."
+review = "The regular expressions `findstr` understands"
+
+[[question]]
+id = "fs-regex-no"
+type = "multi"
+prompt = "Which regex features does findstr NOT support? Select all that apply."
+choices = ["+ (one or more)", "? (optional)", "| (alternation)", "{n,m} counts", "^ (start of line)"]
+answers = ["+ (one or more)", "? (optional)", "| (alternation)", "{n,m} counts"]
+explanation = "A pattern with unsupported features silently matches nothing."
+review = "The regular expressions `findstr` understands"
+
+[[question]]
+id = "fs-silent"
+type = "choice"
+prompt = "A findstr /r pattern using {2} matches nothing and prints no error. What is the likely reason?"
+choices = ["findstr does not support {n} counts, and it fails silently", "The file is empty", "findstr needs administrator rights", "The pattern is too long"]
+answers = ["findstr does not support {n} counts, and it fails silently"]
+explanation = "Check that you only use features from its dialect."
+review = "The regular expressions `findstr` understands"
+
+[[question]]
+id = "fs-word"
+type = "short"
+prompt = "Write the findstr pattern that matches adam as a whole word (the pattern with its anchors, for example \\<xyz\\>)."
+answers = ["\\<adam\\>"]
+explanation = "\\< and \\> are word boundaries."
+review = "The regular expressions `findstr` understands"
+
+# ---- for /f over commands ----
+
+[[question]]
+id = "ff-pipe"
+type = "choice"
+prompt = "Why is the pipe escaped in for /f ... in ('echo a:b ^| findstr a')?"
+choices = ["Otherwise the pipe applies to the whole for command, not the command inside", "Pipes are not allowed", "To make it faster", "It is just style"]
+answers = ["Otherwise the pipe applies to the whole for command, not the command inside"]
+explanation = "Escape special characters with ^ inside the parentheses."
+review = "Combining tools: `for /f` over a command"
+
+[[question]]
+id = "ff-stable"
+type = "choice"
+prompt = "Why is parsing the output of old tools fragile?"
+choices = ["Output formats are not a stable interface and can change with language or version", "Output is encrypted", "for /f is slow", "Tools print binary"]
+answers = ["Output formats are not a stable interface and can change with language or version"]
+explanation = "Keep such parsing in one place and test it."
+review = "Combining tools: `for /f` over a command"
+
+[[question]]
+id = "ff-tokens"
+type = "short"
+prompt = "In for /f \"tokens=2 delims=:\" over the line key:value:more, what does %%a hold?"
+answers = ["value"]
+explanation = "Token 2 between colons."
+review = "Combining tools: `for /f` over a command"
+
+# ---- sort and compare ----
+
+[[question]]
+id = "sort-text"
+type = "short"
+prompt = "In what order does 'sort' put the numbers 10, 9, 100, 1? (separated by spaces)"
+answers = ["1 10 100 9"]
+explanation = "sort orders text, not numbers."
+review = "`sort`"
+
+[[question]]
+id = "sort-pad"
+type = "choice"
+prompt = "How can cmd's sort order numbers correctly?"
+choices = ["Pad them with leading zeros so text order matches numeric order", "Use sort /n", "Use sort /numeric", "It is not possible in any shell"]
+answers = ["Pad them with leading zeros so text order matches numeric order"]
+explanation = "Or use PowerShell: Sort-Object { [int]$_ }."
+review = "`sort`"
+
+[[question]]
+id = "sort-reverse"
+type = "short"
+prompt = "Which sort switch reverses the order? (include the slash)"
+answers = ["/r"]
+explanation = "sort /r file."
+review = "`sort`"
+
+[[question]]
+id = "sort-unique"
+type = "choice"
+prompt = "How do you remove duplicate lines in PowerShell?"
+choices = ["Sort-Object -Unique", "sort /u", "Get-Content -Unique", "Remove-Duplicate"]
+answers = ["Sort-Object -Unique"]
+explanation = "cmd's sort has no unique switch."
+review = "`sort`"
+
+[[question]]
+id = "fc-code"
+type = "choice"
+prompt = "What exit code does fc set for identical files?"
+choices = ["0", "1", "2", "-1"]
+answers = ["0"]
+explanation = "1 means they differ."
+review = "Comparing files"
+
+[[question]]
+id = "comp-binary"
+type = "choice"
+prompt = "Which tool compares files byte by byte, for binaries?"
+choices = ["comp", "fc /l", "find", "sort"]
+answers = ["comp"]
+explanation = "fc compares text."
+review = "Comparing files"
+
+# ---- Copying ----
+
+[[question]]
+id = "cp-which"
+type = "choice"
+prompt = "Which tool is the one to learn for serious file copying on Windows?"
+choices = ["robocopy", "copy", "type", "move"]
+answers = ["robocopy"]
+explanation = "It retries, logs, mirrors and preserves attributes and security."
+review = "Copying, moving, and keeping in sync"
+
+[[question]]
+id = "rc-l"
+type = "short"
+prompt = "Which robocopy switch lists what would happen and copies nothing? (include the slash)"
+answers = ["/l"]
+explanation = "Always rehearse with /l, especially with /mir."
+review = "`robocopy`"
+
+[[question]]
+id = "rc-mir"
+type = "choice"
+prompt = "What is the danger of robocopy /mir?"
+choices = ["It deletes anything in the destination that is not in the source", "It overwrites the source", "It copies hidden files only", "It slows the disk"]
+answers = ["It deletes anything in the destination that is not in the source"]
+explanation = "Pointing it at the wrong folder loses data."
+review = "`robocopy`"
+
+[[question]]
+id = "rc-retry"
+type = "choice"
+prompt = "Why add /r:1 /w:1 to robocopy in a script?"
+choices = ["The defaults retry a million times, 30 seconds apart, and can hang a script", "They make it faster", "They are required", "They hide errors"]
+answers = ["The defaults retry a million times, 30 seconds apart, and can hang a script"]
+explanation = "Set sane retry and wait values."
+review = "`robocopy`"
+
+[[question]]
+id = "rc-log"
+type = "short"
+prompt = "Which robocopy switch writes a log file? (include the slash and colon form, /xxx:file)"
+answers = ["/log:file", "/log:"]
+explanation = "/tee also shows the log on screen."
+review = "`robocopy`"
+
+[[question]]
+id = "rc-xf"
+type = "multi"
+prompt = "Which robocopy options exclude things? Select all that apply."
+choices = ["/xf", "/xd", "/l", "/mt"]
+answers = ["/xf", "/xd"]
+explanation = "/xf excludes files and /xd excludes folders."
+review = "`robocopy`"
+
+# ---- robocopy exit codes ----
+
+[[question]]
+id = "rcx-0"
+type = "choice"
+prompt = "robocopy returns 0. What happened?"
+choices = ["Nothing needed copying; the folders already match", "A fatal error", "Files were copied", "Extra files exist"]
+answers = ["Nothing needed copying; the folders already match"]
+explanation = "1 copied, 2 extra, 4 mismatch, 8 failures, 16 serious error."
+review = "`robocopy` exit codes"
+
+[[question]]
+id = "rcx-3"
+type = "choice"
+prompt = "robocopy returns 3. What does it mean?"
+choices = ["Files were copied (1) and extra files exist at the destination (2); not a failure", "A fatal error", "Three files failed", "Three files were copied"]
+answers = ["Files were copied (1) and extra files exist at the destination (2); not a failure"]
+explanation = "The code is a bit mask; add the values."
+review = "`robocopy` exit codes"
+
+[[question]]
+id = "rcx-fail"
+type = "short"
+prompt = "From which exit code upward does robocopy signal failure? (number)"
+answers = ["8"]
+explanation = "if errorlevel 8."
+review = "`robocopy` exit codes"
+
+[[question]]
+id = "rcx-test"
+type = "choice"
+prompt = "Which is the correct robocopy failure test?"
+choices = ["if errorlevel 8", "if errorlevel 1", "if %errorlevel% neq 0", "if errorlevel 0"]
+answers = ["if errorlevel 8"]
+explanation = "if errorlevel 1 would treat a normal copy as a failure."
+review = "`robocopy` exit codes"
+
+# ---- forfiles and others ----
+
+[[question]]
+id = "fo-old"
+type = "short"
+prompt = "Which forfiles switch selects files older than 30 days? (write the switch with its value)"
+answers = ["/d -30"]
+explanation = "/d +N selects newer files."
+review = "`forfiles`: select by age and run something"
+
+[[question]]
+id = "fo-none"
+type = "choice"
+prompt = "forfiles prints 'No files found' and exits 1. How should a script treat that?"
+choices = ["As 'nothing to do', not a failure", "As a fatal error", "As success with copies", "As a missing drive"]
+answers = ["As 'nothing to do', not a failure"]
+explanation = "Do not mistake it for a failure."
+review = "`forfiles`: select by age and run something"
+
+[[question]]
+id = "fo-rehearse"
+type = "choice"
+prompt = "Before deleting files selected with forfiles, what should you do?"
+choices = ["Run it first with echo instead of del", "Run it as SYSTEM", "Disable the firewall", "Nothing"]
+answers = ["Run it first with echo instead of del"]
+explanation = "Rehearse every destructive command."
+review = "`forfiles`: select by age and run something"
+
+[[question]]
+id = "mk-sym"
+type = "choice"
+prompt = "What does creating symbolic links with mklink need?"
+choices = ["A privilege: administrator, or Developer Mode", "Nothing", "A reboot", "A domain"]
+answers = ["A privilege: administrator, or Developer Mode"]
+explanation = "Junctions (/j) and hard links (/h) have different rules."
+review = "Attributes, links and listing"
+
+[[question]]
+id = "mk-switches"
+type = "multi"
+prompt = "Which mklink switches create a folder symbolic link, a junction and a hard link? Select all that apply."
+choices = ["/d", "/j", "/h", "/z"]
+answers = ["/d", "/j", "/h"]
+explanation = "/d folder symlink, /j junction, /h hard link."
+review = "Attributes, links and listing"
+
+[[question]]
+id = "at-hide"
+type = "short"
+prompt = "Write the command that hides data\\names.txt with attrib."
+answers = ["attrib +h data\\names.txt"]
+explanation = "-h unhides."
+review = "Attributes, links and listing"
+
+# ---- Three shells ----
+
+[[question]]
+id = "tr-tail"
+type = "short"
+prompt = "Which PowerShell cmdlet and parameter print the last 3 lines of file f? (for example Cmdlet -Param)"
+answers = ["Get-Content f -Tail 3", "Get-Content -Tail 3 f"]
+explanation = "cmd has no simple way."
+review = "The same job in three shells"
+
+[[question]]
+id = "tr-grep"
+type = "short"
+prompt = "Which PowerShell cmdlet is the equivalent of grep and findstr?"
+answers = ["Select-String"]
+explanation = "Select-String uses .NET regular expressions."
+review = "The same job in three shells"
+
+[[question]]
+id = "tr-sortn"
+type = "short"
+prompt = "Which GNU sort switch sorts numerically? (include the dash)"
+answers = ["-n"]
+explanation = "sort -n f."
+review = "The same job in three shells"

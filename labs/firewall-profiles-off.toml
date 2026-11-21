@@ -1,0 +1,31 @@
+schema_version = 1
+id = "labs.firewall-profiles-off"
+target = "windows"
+title = "The host firewall has been turned off"
+summary = "Windows Defender Firewall is disabled on every profile."
+lesson = "endpoints.protect-devices"
+symptom = "A security scan flagged this server: the host firewall is not protecting it. Someone turned it off while troubleshooting a connection problem and never turned it back on. Re-enable protection on every network profile without removing any existing rules."
+hints = [
+  "Windows Defender Firewall has three profiles: Domain, Private and Public. Each can be on or off separately. Get-NetFirewallProfile shows their state.",
+  "Turning a profile off disables every rule at once. Turning it on again re-applies them; you do not need to touch individual rules.",
+  "Set-NetFirewallProfile changes profile settings. Check that the change survives a restart.",
+]
+expected_changes = [
+  "Sets Enabled = False on the Domain, Private and Public firewall profiles of the lab VM",
+]
+hazards = ["The lab VM has no host firewall protection until the profiles are enabled"]
+scope = "single guest (the registered training VM only)"
+privilege = "administrator"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["microsoft-md-102/protect-devices", "comptia-a-core2/security", "comptia-network-plus/network-security"]
+setup = "Set-NetFirewallProfile -Profile Domain,Private,Public -Enabled True"
+fault = "Set-NetFirewallProfile -Profile Domain,Private,Public -Enabled False"
+solution = "Set-NetFirewallProfile -Profile Domain,Private,Public -Enabled True"
+
+[validate]
+script = '''
+$off = @(Get-NetFirewallProfile | Where-Object { $_.Enabled -ne 'True' }).Count
+"profiles_off=$off"
+'''
+expect_output_contains = "profiles_off=0"

@@ -1,0 +1,67 @@
+schema_version = 1
+id = "foundations.cmd-advanced"
+title = "Advanced CMD: parsing, arrays, strings, system tools and knowing when to stop"
+summary = "How cmd parses a line in phases, double expansion with call, the ! character and delayed expansion, emulated arrays and string functions, recursion, menus, parallel jobs, reg and process tools, mixing in PowerShell, performance, and when to move to PowerShell."
+content = "cmd-advanced.md"
+estimated_minutes = 90
+objectives = [
+  "Predict surprises by the order in which cmd expands percent variables, handles special characters and expands !var!",
+  "Use call for double expansion and explain its cost",
+  "Keep a literal ! in a value, and choose the robust method",
+  "Emulate arrays and associative arrays with indexed variable names and list them with set",
+  "Write string functions (length, upper case, contains, trim) from substitution and loops, and fix leading-zero numbers",
+  "Write a recursive subroutine that returns a value safely",
+  "Drive the registry, processes and services with reg, tasklist, taskkill and sc, exporting before changing",
+  "Call PowerShell from cmd for the hard parts, and know the cost and the quoting hazards",
+  "Decide when a script should be PowerShell and migrate it step by step",
+]
+prerequisites = ["foundations.cmd-batch-files", "foundations.cmd-text-and-files"]
+windows_features = ["Command Prompt", "Registry Editor"]
+privilege = "standard"
+certifications = ["comptia-a-core2/operating-systems"]
+evaluation_criteria = [
+  "Learner explains, with the phase order, why a variable changed inside a block shows a stale value",
+  "Learner writes upper-case and length helpers and a recursive function that return values correctly",
+  "Learner exports a registry key, changes a value, and restores it from the export",
+  "Learner justifies, from a table of symptoms, porting a script to PowerShell",
+]
+
+[[references]]
+title = "cmd (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/cmd"
+
+[[references]]
+title = "reg (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/reg"
+
+[[references]]
+title = "reg query (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/reg-query"
+
+[[references]]
+title = "reg add (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/reg-add"
+
+[[references]]
+title = "tasklist (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/tasklist"
+
+[[references]]
+title = "taskkill (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/taskkill"
+
+[[references]]
+title = "shutdown (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/shutdown"
+
+[[references]]
+title = "systeminfo (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/systeminfo"
+
+[[references]]
+title = "choice (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/choice"
+
+[[references]]
+title = "Environment variables (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/win32/procthread/environment-variables"

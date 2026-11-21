@@ -1,0 +1,378 @@
+schema_version = 1
+lesson = "foundations.powershell-control-flow"
+# Draft for owner review. A bank of 41; each attempt asks 10, favouring questions missed last time.
+draw = 10
+
+# ---- if ----
+
+[[question]]
+id = "if-assign"
+type = "choice"
+prompt = "Why does 'if ($x = 5) { ... }' always run its block?"
+choices = ["A single = assigns, and the assigned value 5 is true", "= means equals in conditions", "5 is a keyword", "$x is read-only"]
+answers = ["A single = assigns, and the assigned value 5 is true"]
+explanation = "Comparison is -eq. A lone = inside an if is the first thing to check when reading a script."
+review = "The assignment trap"
+
+[[question]]
+id = "if-assign-data"
+type = "choice"
+prompt = "Besides running the block every time, what else does 'if ($f.Size = 5MB)' do?"
+choices = ["It overwrites the data: the size is set to 5MB", "Nothing", "It raises an error", "It deletes the file"]
+answers = ["It overwrites the data: the size is set to 5MB"]
+explanation = "In the exercise both files ended up with Size 5242880."
+review = "Read this script"
+
+[[question]]
+id = "if-short"
+type = "choice"
+prompt = "In 'if ($path -and (Test-Path $path))', why is it safe when $path is empty?"
+choices = ["-and short-circuits, so Test-Path is never called", "Test-Path accepts empty paths", "PowerShell ignores empty values", "if skips the condition"]
+answers = ["-and short-circuits, so Test-Path is never called"]
+explanation = "The right side runs only if the left is true."
+review = "Decisions with `if`"
+
+[[question]]
+id = "if-cmd"
+type = "choice"
+prompt = "Can a command be used as the condition of an if?"
+choices = ["Yes: if (Test-Path $file) { ... }", "No, only variables", "Only in PowerShell 7", "Only with &"]
+answers = ["Yes: if (Test-Path $file) { ... }"]
+explanation = "Any expression is converted to true or false."
+review = "Decisions with `if`"
+
+[[question]]
+id = "if-else"
+type = "choice"
+prompt = "Where should elseif and else go?"
+choices = ["On the same line as the closing brace: } else {", "On their own lines only", "Before the closing brace", "Anywhere"]
+answers = ["On the same line as the closing brace: } else {"]
+explanation = "A newline before else works in a saved script but fails when typed line by line."
+review = "`else` placement"
+
+# ---- switch ----
+
+[[question]]
+id = "sw-multi"
+type = "choice"
+prompt = "In switch (5) { {$_ -gt 1} {'gt1'} {$_ -gt 3} {'gt3'} 5 {'is5'} default {'default'} }, what runs?"
+choices = ["gt1, gt3 and is5", "Only gt1", "Only default", "gt1 and is5"]
+answers = ["gt1, gt3 and is5"]
+explanation = "Every matching case runs; default runs only if none match."
+review = "Many cases with `switch`"
+
+[[question]]
+id = "sw-break"
+type = "short"
+prompt = "Which keyword stops a switch after the first match? (one word)"
+answers = ["break"]
+explanation = "Put it inside the case block."
+review = "Many cases with `switch`"
+
+[[question]]
+id = "sw-array"
+type = "short"
+prompt = "What does switch (1,2,3) { 1 {'one'} 2 {'two'} default {\"other $_\"} } print for the last element? (the text)"
+answers = ["other 3"]
+explanation = "switch loops over an array and tests each element."
+review = "Many cases with `switch`"
+
+[[question]]
+id = "sw-default"
+type = "choice"
+prompt = "When does the default case run?"
+choices = ["When no other case matched", "Always, first", "Always, last", "Only with -Regex"]
+answers = ["When no other case matched"]
+explanation = "It is the fallback."
+review = "Many cases with `switch`"
+
+[[question]]
+id = "sw-scriptblock"
+type = "choice"
+prompt = "What is $_ inside a switch case block?"
+choices = ["The value being tested", "The case label", "The previous match", "$null"]
+answers = ["The value being tested"]
+explanation = "That lets script-block cases test it."
+review = "Many cases with `switch`"
+
+[[question]]
+id = "sw-regex"
+type = "short"
+prompt = "Which automatic variable holds capture groups after a -Regex case matches? (with the dollar sign)"
+answers = ["$Matches"]
+explanation = "$Matches[1] is the first group."
+review = "Options"
+
+[[question]]
+id = "sw-case"
+type = "choice"
+prompt = "Is switch -Wildcard case-sensitive by default?"
+choices = ["No; add -CaseSensitive", "Yes", "Only for regex", "Only for numbers"]
+answers = ["No; add -CaseSensitive"]
+explanation = "'Report.LOG' matched '*.log' until -CaseSensitive was added."
+review = "Options"
+
+[[question]]
+id = "sw-file"
+type = "choice"
+prompt = "What does switch -File path do?"
+choices = ["Tests each line of the file", "Tests the file name", "Opens the file in an editor", "Counts the files"]
+answers = ["Tests each line of the file"]
+explanation = "It streams the lines, which suits large logs."
+review = "Options"
+
+[[question]]
+id = "sw-use"
+type = "choice"
+prompt = "When is switch better than if/elseif?"
+choices = ["One value with several outcomes", "Unrelated conditions", "A single true/false test", "Never"]
+answers = ["One value with several outcomes"]
+explanation = "Use if/elseif for unrelated conditions."
+review = "Options"
+
+# ---- foreach / ForEach-Object ----
+
+[[question]]
+id = "fe-memory"
+type = "choice"
+prompt = "How does the foreach statement differ from ForEach-Object in memory use?"
+choices = ["foreach collects everything first; ForEach-Object streams", "They are identical", "foreach streams; ForEach-Object collects", "foreach uses no memory"]
+answers = ["foreach collects everything first; ForEach-Object streams"]
+explanation = "Streaming suits large or slow sources."
+review = "The `foreach` statement"
+
+[[question]]
+id = "fe-persist"
+type = "short"
+prompt = "After foreach ($i in 1..3) { }, what is $i? (number)"
+answers = ["3"]
+explanation = "The loop variable persists after the loop."
+review = "The `foreach` statement"
+
+[[question]]
+id = "fe-null"
+type = "choice"
+prompt = "How many times does foreach ($e in $null) { ... } run its body?"
+choices = ["Zero", "Once", "Twice", "It is an error"]
+answers = ["Zero"]
+explanation = "Confirmed in both editions."
+review = "The `foreach` statement"
+
+[[question]]
+id = "fe-blocks"
+type = "multi"
+prompt = "Which are blocks of ForEach-Object? Select all that apply."
+choices = ["-Begin", "-Process", "-End", "-Finally"]
+answers = ["-Begin", "-Process", "-End"]
+explanation = "Begin runs once before, Process per object, End once after."
+review = "`ForEach-Object`"
+
+[[question]]
+id = "fe-return"
+type = "choice"
+prompt = "What does return do inside a ForEach-Object script block?"
+choices = ["Skips only the current item, like continue", "Ends the pipeline", "Ends the function", "Raises an error"]
+answers = ["Skips only the current item, like continue"]
+explanation = "1..4 | ForEach-Object { if ($_ -eq 2) { return }; $_ } printed 1, 3 and 4."
+review = "`ForEach-Object`"
+
+[[question]]
+id = "fe-break"
+type = "choice"
+prompt = "Why avoid break inside a ForEach-Object script block?"
+choices = ["It can end an enclosing loop or the whole script", "It is not a keyword", "It is slower", "It deletes variables"]
+answers = ["It can end an enclosing loop or the whole script"]
+explanation = "Use Select-Object -First n or the foreach statement."
+review = "`ForEach-Object`"
+
+[[question]]
+id = "fe-early"
+type = "short"
+prompt = "Which cmdlet and parameter cleanly stop a pipeline after 3 objects? (for example Cmdlet -Param 3)"
+answers = ["Select-Object -First 3"]
+explanation = "It cuts the upstream."
+review = "`ForEach-Object`"
+
+[[question]]
+id = "fe-speed"
+type = "choice"
+prompt = "For in-memory data, which is usually faster?"
+choices = ["The foreach statement", "ForEach-Object", "They are identical", "Where-Object"]
+answers = ["The foreach statement"]
+explanation = "It beat the pipeline in a 50,000-item test."
+review = "`ForEach-Object`"
+
+[[question]]
+id = "fe-methods"
+type = "short"
+prompt = "Write the method that keeps even numbers of 1..6: (1..6).___({ $_ % 2 -eq 0 }) -- give the method name."
+answers = ["Where", ".Where"]
+explanation = "The .Where() and .ForEach() methods are fast and compact for arrays."
+review = "The `.ForEach()` and `.Where()` methods"
+
+# ---- for / while / do ----
+
+[[question]]
+id = "lp-for-init"
+type = "choice"
+prompt = "How many initialisers can a for loop have?"
+choices = ["One; two assignments separated by a comma is a syntax error", "Two", "Any number", "None"]
+answers = ["One; two assignments separated by a comma is a syntax error"]
+explanation = "for ($i = 0, $j = 10; ...) fails."
+review = "`for`"
+
+[[question]]
+id = "lp-inc"
+type = "choice"
+prompt = "What does $i++ output by itself on a line?"
+choices = ["Nothing", "The old value", "The new value", "An error"]
+answers = ["Nothing"]
+explanation = "($i++) in parentheses outputs the old value."
+review = "`for`"
+
+[[question]]
+id = "lp-while"
+type = "choice"
+prompt = "How many times does 'while ($k -lt 3) { ... }' run when $k starts at 10?"
+choices = ["Zero", "Once", "Three", "Forever"]
+answers = ["Zero"]
+explanation = "while tests first."
+review = "`while` and `do`"
+
+[[question]]
+id = "lp-do"
+type = "choice"
+prompt = "How many times does 'do { ... } until ($true)' run its body?"
+choices = ["Once", "Zero", "Forever", "Twice"]
+answers = ["Once"]
+explanation = "do tests after the body."
+review = "`while` and `do`"
+
+[[question]]
+id = "lp-until"
+type = "choice"
+prompt = "What does 'until' do compared with 'while'?"
+choices = ["Repeats until the condition is true", "Repeats while the condition is true", "Runs zero times", "Is an alias of break"]
+answers = ["Repeats until the condition is true"]
+explanation = "It is while with the condition inverted."
+review = "`while` and `do`"
+
+[[question]]
+id = "lp-poll"
+type = "choice"
+prompt = "What should a polling loop that waits for a file include?"
+choices = ["A deadline, so it cannot run forever", "Nothing", "Recursion", "Parallelism"]
+answers = ["A deadline, so it cannot run forever"]
+explanation = "Throw or exit non-zero when the time is up."
+review = "`while` and `do`"
+
+[[question]]
+id = "lp-sleep"
+type = "short"
+prompt = "Which cmdlet pauses between polls? (cmdlet name)"
+answers = ["Start-Sleep"]
+explanation = "Start-Sleep -Seconds 2."
+review = "`while` and `do`"
+
+# ---- break, continue, labels ----
+
+[[question]]
+id = "br-label"
+type = "choice"
+prompt = "How do you leave an outer loop from an inner one?"
+choices = ["Label the outer loop and use break label", "Use return", "Use exit", "Use continue twice"]
+answers = ["Label the outer loop and use break label"]
+explanation = ":outer foreach ... break outer."
+review = "`break`, `continue` and labels"
+
+[[question]]
+id = "br-stop"
+type = "short"
+prompt = "In the labelled example (a*b >= 4 over 1..3 by 1..3), what does it print? (the text)"
+answers = ["stop at 2 x 2"]
+explanation = "The first pair with product 4 or more is 2 x 2."
+review = "`break`, `continue` and labels"
+
+[[question]]
+id = "br-continue"
+type = "choice"
+prompt = "What does continue do?"
+choices = ["Skips to the next iteration", "Leaves the loop", "Ends the script", "Restarts the script"]
+answers = ["Skips to the next iteration"]
+explanation = "break leaves the loop."
+review = "`break`, `continue` and labels"
+
+# ---- Collections and parallel ----
+
+[[question]]
+id = "co-list"
+type = "choice"
+prompt = "What happens when you add to a List<T> inside a foreach over it?"
+choices = ["InvalidOperationException: the collection was modified", "It works", "The loop runs forever", "The item is ignored silently"]
+answers = ["InvalidOperationException: the collection was modified"]
+explanation = "Build a second collection of changes and apply it after the loop."
+review = "Changing a collection while you loop over it"
+
+[[question]]
+id = "co-array"
+type = "choice"
+prompt = "Why does $arr += 9 inside foreach over $arr not throw?"
+choices = ["+= builds a new array, so the loop keeps walking the old one", "Arrays are immutable only in 7", "foreach copies automatically", "It does throw"]
+answers = ["+= builds a new array, so the loop keeps walking the old one"]
+explanation = "The loop never sees the 9."
+review = "Changing a collection while you loop over it"
+
+[[question]]
+id = "pa-7"
+type = "choice"
+prompt = "Which statement about ForEach-Object -Parallel is true?"
+choices = ["It exists only in PowerShell 7, results come in any order, and variables need $using:", "It exists in 5.1", "It preserves order", "It shares variables automatically"]
+answers = ["It exists only in PowerShell 7, results come in any order, and variables need $using:"]
+explanation = "It pays off for slow work like network calls."
+review = "Parallel loops (PowerShell 7 only)"
+
+[[question]]
+id = "pa-throttle"
+type = "short"
+prompt = "Which parameter limits how many parallel script blocks run at once? (include the dash)"
+answers = ["-ThrottleLimit"]
+explanation = "For example -ThrottleLimit 4."
+review = "Parallel loops (PowerShell 7 only)"
+
+# ---- Reading and exiting ----
+
+[[question]]
+id = "rd-stream"
+type = "choice"
+prompt = "Why is foreach ($line in Get-Content big.log) risky for a huge file?"
+choices = ["It first collects every line into memory", "Get-Content cannot read big files", "foreach cannot loop over text", "It is too slow to start"]
+answers = ["It first collects every line into memory"]
+explanation = "Stream with Get-Content | ForEach-Object, switch -File, or Select-String."
+review = "Reading a loop: patterns to recognise"
+
+[[question]]
+id = "rd-exit"
+type = "choice"
+prompt = "Why avoid exit inside a function you reuse in a console?"
+choices = ["It closes the host session", "It returns the wrong code", "It is slow", "It is deprecated"]
+answers = ["It closes the host session"]
+explanation = "Scripts use exit to give their caller a code; functions use return or throw."
+review = "Exiting early"
+
+[[question]]
+id = "rd-return"
+type = "choice"
+prompt = "What does return do at the top level of a script file?"
+choices = ["Ends the script", "Nothing", "Restarts it", "Raises an error"]
+answers = ["Ends the script"]
+explanation = "exit n also sets the exit code."
+review = "Exiting early"
+
+[[question]]
+id = "rd-wildcard-ex"
+type = "choice"
+prompt = "In the exercise, what does switch -Wildcard print for 'report.LOG' with a '*.log' case?"
+choices = ["log: report.LOG", "Nothing", "An error", "text: report.LOG"]
+answers = ["log: report.LOG"]
+explanation = "Wildcard matching is case-insensitive by default."
+review = "Read this script"

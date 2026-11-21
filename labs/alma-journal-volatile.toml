@@ -1,0 +1,48 @@
+schema_version = 1
+id = "labs.alma-journal-volatile"
+target = "linux"
+distro = "almalinux"
+title = "AlmaLinux: logs disappear after every restart"
+summary = "The system journal is kept in memory only."
+lesson = "foundations.troubleshooting-method"
+symptom = "After an unexpected restart last night nobody could find any log entries from before the reboot. The team needs the system logs to survive restarts so a crash can be investigated afterwards. Make the journal persistent."
+hints = [
+  "systemd's journal is managed by systemd-journald. journalctl --list-boots lists the boots it still has records for; a volatile journal shows only the current one.",
+  "The Storage= option in /etc/systemd/journald.conf (and files in journald.conf.d) decides where logs live: volatile (in /run, lost at reboot), persistent (in /var/log/journal), or auto.",
+  "With Storage=persistent journald creates /var/log/journal if it is missing; creating the folder yourself also works.",
+  "Restart systemd-journald (or use journalctl --flush) after changing it.",
+]
+expected_changes = [
+  "Creates /etc/systemd/journald.conf.d/winlab.conf with Storage=volatile and removes /var/log/journal",
+]
+hazards = ["Journal entries in the lab VM are lost at each restart until persistent storage is configured"]
+scope = "single guest (the registered AlmaLinux training VM only)"
+privilege = "administrator"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["redhat-rhcsa/running-systems", "comptia-linux-plus/system-management", "comptia-linux-plus/troubleshooting"]
+setup = '''
+rm -f /etc/systemd/journald.conf.d/winlab.conf
+mkdir -p /var/log/journal
+systemctl restart systemd-journald
+'''
+fault = '''
+mkdir -p /etc/systemd/journald.conf.d
+printf '[Journal]\nStorage=volatile\n' > /etc/systemd/journald.conf.d/winlab.conf
+rm -rf /var/log/journal
+systemctl restart systemd-journald
+'''
+solution = '''
+sed -i 's/^Storage=volatile/Storage=persistent/' /etc/systemd/journald.conf.d/winlab.conf
+mkdir -p /var/log/journal
+systemctl restart systemd-journald
+'''
+
+[validate]
+script = '''
+s=$(systemd-analyze cat-config systemd/journald.conf 2>/dev/null | awk -F= '/^Storage=/ {v=$2} END {print v}')
+d=no; [ -d /var/log/journal ] && d=yes
+ok=no; [ "$d" = yes ] && [ "${s:-auto}" != volatile ] && ok=yes
+echo "storage=${s:-auto};dir=$d;ok=$ok"
+'''
+expect_output_contains = "ok=yes"

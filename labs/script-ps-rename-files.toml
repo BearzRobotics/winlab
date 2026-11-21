@@ -1,0 +1,70 @@
+schema_version = 1
+kind = "script"
+id = "labs.script-ps-rename-files"
+title = "Script (PowerShell): rename files in bulk"
+summary = "Change files on disk safely; the result is checked, not the commands."
+lesson = "foundations.powershell-control-flow"
+symptom = '''
+Write a PowerShell script and save it as C:\Labs\archive-logs.ps1.
+
+In the folder C:\Labs\data, rename every file whose name ends in .log so that it ends in .old instead (app.log becomes app.old). Do not touch any other file, and do not change the folder.
+
+The script does not need to print anything. Its result is judged by the files left in the folder, which change every time your script is checked.
+'''
+hints = [
+  "Get-ChildItem -Filter *.log lists only the log files in a folder.",
+  "Rename-Item changes a file's name. You can pipe files into it.",
+  "Rename-Item -NewName accepts a script block, so each file can get its own new name: { $_.BaseName + '.old' }.",
+  "Test your script on a copy first: renaming is easy to get wrong and slow to undo.",
+]
+expected_changes = ["Creates C:\\Labs with a starter script and a folder of generated files"]
+hazards = ["None: the script only renames files inside C:\\Labs\\data"]
+scope = "single guest (the registered training VM only)"
+privilege = "standard"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["comptia-a-core2/operating-systems"]
+language = "powershell"
+script_path = 'C:\Labs\archive-logs.ps1'
+starter = '''
+# archive-logs.ps1
+# In C:\Labs\data rename every *.log file to *.old. Leave all other files alone.
+'''
+solution = '''
+Get-ChildItem -Path 'C:\Labs\data' -Filter '*.log' -File | Rename-Item -NewName { $_.BaseName + '.old' }
+'''
+
+[[tests]]
+setup = '''
+$d = 'C:\Labs\data'
+if (Test-Path $d) { Remove-Item $d -Recurse -Force }
+New-Item -ItemType Directory -Path $d | Out-Null
+$logs = 'app','db','web','auth','cache' | Get-Random -Count (Get-Random -Minimum 2 -Maximum 5)
+foreach ($n in $logs) { Set-Content -Path "$d\$n.log" -Value "log $n" }
+Set-Content -Path "$d\readme.txt" -Value 'keep me'
+Set-Content -Path "$d\data.csv" -Value 'a,b'
+$expected = @('readme.txt', 'data.csv') + ($logs | ForEach-Object { "$_.old" })
+$expected | Sort-Object | Set-Content -Path 'C:\Labs\expected-names.txt'
+'''
+expect_exit = 0
+check = '''
+$actual = @(Get-ChildItem 'C:\Labs\data' | Select-Object -ExpandProperty Name | Sort-Object)
+$want = @(Get-Content 'C:\Labs\expected-names.txt')
+if (($actual -join ',') -eq ($want -join ',')) { 'OK' } else { "folder holds: $($actual -join ', ')" }
+'''
+
+[[tests]]
+setup = '''
+$d = 'C:\Labs\data'
+if (Test-Path $d) { Remove-Item $d -Recurse -Force }
+New-Item -ItemType Directory -Path $d | Out-Null
+Set-Content -Path "$d\notes.log.txt" -Value 'not a log: ends in .txt'
+Set-Content -Path "$d\single.log" -Value 'one'
+@('notes.log.txt', 'single.old') | Set-Content -Path 'C:\Labs\expected-names.txt'
+'''
+expect_exit = 0
+check = '''
+$actual = @(Get-ChildItem 'C:\Labs\data' | Select-Object -ExpandProperty Name | Sort-Object)
+$want = @(Get-Content 'C:\Labs\expected-names.txt')
+if (($actual -join ',') -eq ($want -join ',')) { 'OK' } else { "folder holds: $($actual -join ', ')" }
+'''

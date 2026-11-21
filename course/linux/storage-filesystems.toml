@@ -1,0 +1,28 @@
+schema_version = 1
+id = "linux.storage-filesystems"
+title = "Linux storage: block devices, file systems and mounts"
+summary = "See the storage on a Linux server, mount and unmount file systems, and make mounts persistent with /etc/fstab."
+content = "storage-filesystems.md"
+estimated_minutes = 40
+objectives = [
+  "List block devices, file systems and mounts with lsblk, blkid, df and findmnt",
+  "Mount and unmount a file system and explain why a manual mount does not survive a restart",
+  "Read and write an /etc/fstab line, and test it with mount -a",
+  "Recognise the symptom of a volume that is not mounted",
+]
+prerequisites = ["foundations.bash-basics"]
+windows_features = []
+privilege = "administrator"
+certifications = ["redhat-rhcsa/local-storage", "redhat-rhcsa/file-systems", "comptia-linux-plus/system-management"]
+evaluation_criteria = [
+  "Learner mounts a file system and makes the mount persistent, then proves it with mount -a",
+  "Learner explains why UUIDs are preferred in fstab",
+]
+
+[[references]]
+title = "fstab(5) manual page"
+url = "https://man7.org/linux/man-pages/man5/fstab.5.html"
+
+[[references]]
+title = "mount(8) manual page"
+url = "https://man7.org/linux/man-pages/man8/mount.8.html"

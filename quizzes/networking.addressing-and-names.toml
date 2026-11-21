@@ -1,0 +1,313 @@
+schema_version = 1
+lesson = "networking.addressing-and-names"
+# Draft for owner review. A bank of 35; each attempt asks 10, favouring questions missed last time.
+draw = 10
+
+[[question]]
+id = "bottom-up"
+type = "choice"
+prompt = "Why do you test a network problem from the bottom layer up?"
+choices = ["A fault at a lower layer makes every layer above it look broken", "Higher layers are faster to test", "It is the order the commands were invented", "Lower layers never fail"]
+answers = ["A fault at a lower layer makes every layer above it look broken"]
+explanation = "A dead cable looks like 'DNS is down' to the user, so prove the bottom first."
+review = "The layers you actually use"
+certifications = ["comptia-network-plus/network-troubleshooting"]
+
+[[question]]
+id = "four-causes"
+type = "multi"
+prompt = "Most 'the network is down' reports are one of four things. Which of these are among them? Select all that apply."
+choices = ["No address", "Wrong gateway", "Wrong DNS", "A blocked port", "Too many colours in the user interface"]
+answers = ["No address", "Wrong gateway", "Wrong DNS", "A blocked port"]
+explanation = "No address, wrong gateway, wrong DNS, or a blocked port."
+review = "Most \"the network is down\" reports"
+
+[[question]]
+id = "layer-names"
+type = "choice"
+prompt = "Which layer does 'Can it reach other networks?' test?"
+choices = ["Routing", "Link", "Names", "Transport"]
+answers = ["Routing"]
+explanation = "The default gateway and the routing table decide whether other networks are reachable."
+review = "The layers you actually use"
+
+[[question]]
+id = "layer-names-dns"
+type = "choice"
+prompt = "Which layer asks 'Does a name turn into an address?'"
+choices = ["Names (DNS)", "Link", "Routing", "Transport"]
+answers = ["Names (DNS)"]
+explanation = "That is DNS, plus the hosts file."
+review = "The layers you actually use"
+
+[[question]]
+id = "prefix-meaning"
+type = "choice"
+prompt = "What does the prefix length /24 tell you?"
+choices = ["The first 24 bits name the network", "There are 24 hosts", "The address is 24 hops away", "Port 24 is open"]
+answers = ["The first 24 bits name the network"]
+explanation = "/24 is the mask 255.255.255.0."
+review = "Addresses"
+
+[[question]]
+id = "private-1"
+type = "choice"
+prompt = "Which of these is a private (RFC 1918) address?"
+choices = ["172.20.5.9", "172.40.5.9", "8.8.8.8", "169.254.1.1"]
+answers = ["172.20.5.9"]
+explanation = "The private block is 172.16.0.0/12, which covers 172.16 to 172.31."
+review = "Addresses"
+
+[[question]]
+id = "private-2"
+type = "multi"
+prompt = "Which of these are private ranges? Select all that apply."
+choices = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "100.64.0.0/10"]
+answers = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
+explanation = "RFC 1918 lists exactly the first three."
+review = "Addresses"
+
+[[question]]
+id = "apipa"
+type = "choice"
+prompt = "A machine has 169.254.7.9. What happened?"
+choices = ["It asked for DHCP, got no answer and assigned itself a link-local address", "It was given a static address", "It is on the internet directly", "It is using IPv6"]
+answers = ["It asked for DHCP, got no answer and assigned itself a link-local address"]
+explanation = "169.254.0.0/16 is link-local. Windows calls it APIPA."
+review = "Addresses"
+certifications = ["comptia-a-core1/networking"]
+
+[[question]]
+id = "apipa-short"
+type = "short"
+prompt = "What does Windows call the 169.254.x.x self-assigned address feature? (acronym)"
+answers = ["APIPA"]
+explanation = "Automatic Private IP Addressing."
+review = "Addresses"
+
+[[question]]
+id = "dup-ip"
+type = "choice"
+prompt = "Two machines share the same address. What is the typical symptom?"
+choices = ["Intermittent failures that are hard to read from either machine", "Neither machine can ever boot", "DNS stops working everywhere", "The router restarts"]
+answers = ["Intermittent failures that are hard to read from either machine"]
+explanation = "Traffic goes to whichever machine answers the ARP request first."
+review = "Addresses"
+
+[[question]]
+id = "prefix-origin"
+type = "choice"
+prompt = "Get-NetIPAddress shows PrefixOrigin : Dhcp. What does that tell you?"
+choices = ["The address was leased from a DHCP server", "It was typed in by an administrator", "It is the loopback address", "It is an IPv6 address"]
+answers = ["The address was leased from a DHCP server"]
+explanation = "Manual means typed in; WellKnown is the link-local fallback."
+review = "Reading your own configuration"
+
+[[question]]
+id = "prefix-manual"
+type = "choice"
+prompt = "Get-NetIPAddress shows PrefixOrigin : Manual. What does that mean for DHCP troubleshooting?"
+choices = ["The address was typed in, so DHCP is not the cause", "DHCP is failing", "The lease is about to expire", "The address is a rogue server's"]
+answers = ["The address was typed in, so DHCP is not the cause"]
+explanation = "A static address was set by a person."
+review = "Reading your own configuration"
+
+[[question]]
+id = "linux-addr"
+type = "short"
+prompt = "Write the Linux command that lists each interface, its state and its addresses on one line."
+answers = ["ip -br addr", "ip -br a", "ip -brief addr", "ip -brief address"]
+explanation = "The -br (brief) form is easy to read."
+review = "Reading your own configuration"
+
+[[question]]
+id = "win-config"
+type = "short"
+prompt = "Which Windows command prints every adapter's full configuration, including the DHCP server and lease times?"
+answers = ["ipconfig /all"]
+explanation = "ipconfig /all."
+review = "Reading your own configuration"
+
+[[question]]
+id = "hosts-override"
+type = "choice"
+prompt = "A stale line in the hosts file does what?"
+choices = ["Silently overrides DNS for that name on that machine", "Is ignored by every application", "Is used only by nslookup", "Breaks the whole network"]
+answers = ["Silently overrides DNS for that name on that machine"]
+explanation = "The hosts file is checked before DNS."
+review = "Names"
+
+[[question]]
+id = "nslookup-hosts"
+type = "choice"
+prompt = "Does nslookup read the hosts file?"
+choices = ["No, it asks a DNS server directly", "Yes, first", "Only on Linux", "Only for IPv6"]
+answers = ["No, it asks a DNS server directly"]
+explanation = "So it can look healthy while an application is overridden."
+review = "Names"
+
+[[question]]
+id = "getent-why"
+type = "choice"
+prompt = "Which Linux tool resolves a name the way applications do, following nsswitch?"
+choices = ["getent hosts", "nslookup", "dig", "traceroute"]
+answers = ["getent hosts"]
+explanation = "getent uses the system's configured lookup path."
+review = "Names"
+
+[[question]]
+id = "nsswitch"
+type = "short"
+prompt = "Which Linux file sets the order of name sources? (file name)"
+answers = ["nsswitch.conf", "/etc/nsswitch.conf"]
+explanation = "It contains lines such as 'hosts: files dns'."
+review = "Names"
+
+[[question]]
+id = "ip-ok-name-fail"
+type = "choice"
+prompt = "Ping to an IP address works but ping to its name fails. Which layer is at fault?"
+choices = ["Names (DNS or the hosts file)", "Link", "Routing", "Transport"]
+answers = ["Names (DNS or the hosts file)"]
+explanation = "If packets reach the address, the lower layers work."
+review = "Names"
+
+[[question]]
+id = "refused-timeout"
+type = "choice"
+prompt = "Connection timed out (rather than refused) most often suggests:"
+choices = ["A firewall dropping the packets, or a routing fault", "Nothing is listening on the port", "The password is wrong", "The service crashed"]
+answers = ["A firewall dropping the packets, or a routing fault"]
+explanation = "A timeout means nothing came back."
+review = "Ports and services"
+
+[[question]]
+id = "refused-def"
+type = "choice"
+prompt = "Connection refused usually means:"
+choices = ["The host answered, but nothing is listening on that port (or it was rejected)", "The packets were dropped silently", "DNS failed", "The cable is unplugged"]
+answers = ["The host answered, but nothing is listening on that port (or it was rejected)"]
+explanation = "A refusal is an answer."
+review = "Ports and services"
+
+[[question]]
+id = "port-reach"
+type = "choice"
+prompt = "A host answers ping. Does that prove its web service is reachable?"
+choices = ["No; ping has no port, so the service needs its own test", "Yes", "Only on Windows", "Only inside the same subnet"]
+answers = ["No; ping has no port, so the service needs its own test"]
+explanation = "Use Test-NetConnection -Port or nc."
+review = "Ports and services"
+
+[[question]]
+id = "tnc"
+type = "short"
+prompt = "Write the PowerShell command that tests whether TCP port 3389 is reachable on server01."
+answers = ["Test-NetConnection server01 -Port 3389", "Test-NetConnection -ComputerName server01 -Port 3389", "tnc server01 -port 3389"]
+explanation = "Test-NetConnection with -Port."
+review = "Ports and services"
+
+[[question]]
+id = "ss-cmd"
+type = "short"
+prompt = "Which Linux command (with flags) lists listening TCP sockets with numeric ports?"
+answers = ["ss -tln", "ss -ltn", "ss -tlnp", "ss -ltnp", "sudo ss -tlnp"]
+explanation = "-t TCP, -l listening, -n numeric."
+review = "Ports and services"
+
+[[question]]
+id = "wk-3389"
+type = "short"
+prompt = "Which TCP port does Remote Desktop use? (number)"
+answers = ["3389"]
+explanation = "RDP is 3389/tcp."
+review = "Ports and services"
+
+[[question]]
+id = "routine-step2"
+type = "choice"
+prompt = "In the bottom-up routine, step 2 is to ping the gateway. What should you also confirm?"
+choices = ["That the gateway is inside your subnet", "That it has a public address", "That it runs DNS", "That ping uses TCP"]
+answers = ["That the gateway is inside your subnet"]
+explanation = "A gateway outside the local network cannot be reached directly."
+review = "A bottom-up routine"
+
+[[question]]
+id = "routine-step3"
+type = "choice"
+prompt = "Ping to 1.1.1.1 is blocked on a network, but the web works. What can you use instead for step 3?"
+choices = ["Test-NetConnection 1.1.1.1 -Port 443", "ipconfig /release", "nslookup", "route delete 0.0.0.0"]
+answers = ["Test-NetConnection 1.1.1.1 -Port 443"]
+explanation = "A TCP test on a port that is open proves routing out without relying on ICMP."
+review = "A bottom-up routine"
+
+[[question]]
+id = "first-fail-1"
+type = "choice"
+prompt = "Step 1 fails (no usable address). Which lesson do you open next?"
+choices = ["DHCP and subnetting", "DNS", "Ports and firewalls", "Routing and gateways"]
+answers = ["DHCP and subnetting"]
+explanation = "An address fault is DHCP failure or a wrong static configuration."
+review = "A bottom-up routine"
+
+[[question]]
+id = "first-fail-4"
+type = "choice"
+prompt = "Steps 1 to 3 pass but a name will not resolve. Which lesson do you open next?"
+choices = ["DNS", "DHCP", "Subnetting", "Ports and firewalls"]
+answers = ["DNS"]
+explanation = "The fault is names."
+review = "A bottom-up routine"
+
+[[question]]
+id = "first-fail-5"
+type = "choice"
+prompt = "Steps 1 to 4 pass but the service does not answer. Which lesson do you open next?"
+choices = ["Ports and firewalls", "DNS", "DHCP", "Subnetting"]
+answers = ["Ports and firewalls"]
+explanation = "The path and the name work; the port is the problem."
+review = "A bottom-up routine"
+
+[[question]]
+id = "worked-dns"
+type = "choice"
+prompt = "In the worked example, internal names fail but the company DNS server answers when asked directly. What is the finding?"
+choices = ["The laptop was handed the wrong DNS server", "The network is down", "The firewall blocks port 443", "The gateway is wrong"]
+answers = ["The laptop was handed the wrong DNS server"]
+explanation = "Everything below names passed, and a different server answers correctly."
+review = "A worked example"
+
+[[question]]
+id = "one-change"
+type = "choice"
+prompt = "Why change one thing at a time while troubleshooting?"
+choices = ["Otherwise you cannot tell which change fixed it", "The OS only allows one change per day", "Changes are logged one at a time", "It is faster"]
+answers = ["Otherwise you cannot tell which change fixed it"]
+explanation = "A fix you cannot explain is a fault waiting to return."
+review = "Common mistakes"
+
+[[question]]
+id = "top-down-mistake"
+type = "choice"
+prompt = "What is wrong with starting by opening the website and guessing?"
+choices = ["Any lower-layer fault shows up there as a vague failure", "Websites do not give errors", "It needs administrator rights", "It uses too much bandwidth"]
+answers = ["Any lower-layer fault shows up there as a vague failure"]
+explanation = "Start at the address and climb."
+review = "Common mistakes"
+
+[[question]]
+id = "static-origin-short"
+type = "short"
+prompt = "On the Windows address configuration, what PrefixOrigin value shows a typed-in address? (one word)"
+answers = ["Manual"]
+explanation = "Dhcp, Manual and WellKnown are the usual values."
+review = "Reading your own configuration"
+
+[[question]]
+id = "gw-subnet"
+type = "choice"
+prompt = "A host 192.168.1.20/24 has gateway 192.168.2.1. What does the host see?"
+choices = ["Its own subnet works; nothing beyond it does", "Everything works", "Only DNS fails", "Only ping fails"]
+answers = ["Its own subnet works; nothing beyond it does"]
+explanation = "The gateway cannot be reached directly, so off-subnet traffic has nowhere to go."
+review = "A bottom-up routine"

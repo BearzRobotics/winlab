@@ -1,0 +1,69 @@
+schema_version = 1
+kind = "script"
+id = "labs.script-bash-largest-files"
+target = "linux"
+title = "Script (bash): find the three largest files"
+summary = "Combine find, sort and head in a pipeline."
+lesson = "foundations.bash-basics"
+symptom = '''
+Write a bash script and save it as /home/labadmin/labs/largest.sh.
+
+Look at the regular files directly in /home/labadmin/labdata (ignore sub-folders). Print the names (just the file name, not the path) of the three largest files, largest first, one per line. Print nothing else.
+
+The files and their sizes change every time your script is checked. There are always at least three files, and no two files are the same size.
+'''
+hints = [
+  "find can list files and print their size and name: find DIR -maxdepth 1 -type f -printf '%s %f\\n'.",
+  "sort -rn sorts numerically, largest first. head -3 keeps the first three lines.",
+  "cut -d' ' -f2 keeps just the second column (the name).",
+  "ls -S sorts by size too, but it also lists directories. Is that a problem here?",
+]
+expected_changes = ["Creates /home/labadmin/labs with a starter script and a folder of generated files"]
+hazards = ["None: the script only reads file sizes"]
+scope = "single guest (the registered Linux training VM only)"
+privilege = "standard"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["comptia-linux-plus/scripting-containers-automation", "redhat-rhcsa/essential-tools"]
+language = "bash"
+script_path = '/home/labadmin/labs/largest.sh'
+starter = '''
+#!/bin/bash
+# largest.sh
+# Print the names of the 3 largest regular files directly in /home/labadmin/labdata, largest first
+'''
+solution = '''
+#!/bin/bash
+find /home/labadmin/labdata -maxdepth 1 -type f -printf '%s %f\n' | sort -rn | head -3 | cut -d' ' -f2
+'''
+
+[[tests]]
+setup = '''
+d=/home/labadmin/labdata
+rm -rf "$d"; mkdir -p "$d/sub"
+names=$(printf '%s\n' alpha bravo charlie delta echo foxtrot golf hotel | shuf -n $((RANDOM % 4 + 4)))
+i=0
+for n in $names; do
+  i=$((i + 1))
+  head -c $((i * 3000 + RANDOM % 1000)) /dev/zero > "$d/$n.dat"
+done
+head -c 90000 /dev/zero > "$d/sub/huge-in-subfolder.dat"
+'''
+expect = '''
+find /home/labadmin/labdata -maxdepth 1 -type f -printf '%s %f\n' | sort -rn | head -3 | cut -d' ' -f2
+'''
+
+[[tests]]
+setup = '''
+d=/home/labadmin/labdata
+rm -rf "$d"; mkdir -p "$d"
+head -c 100 /dev/zero > "$d/small.dat"
+head -c 5000 /dev/zero > "$d/medium.dat"
+head -c 20000 /dev/zero > "$d/big.dat"
+head -c 700 /dev/zero > "$d/tiny.dat"
+'''
+expect = '''
+echo big.dat
+echo medium.dat
+echo tiny.dat
+'''

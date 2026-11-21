@@ -1,0 +1,90 @@
+schema_version = 1
+id = "windows-admin.accounts-and-permissions"
+title = "Windows accounts, groups and NTFS permissions"
+summary = "Manage local users and groups from PowerShell and the command line, understand the access token and UAC, read and repair NTFS permissions with icacls, and see how share and NTFS permissions combine."
+content = "accounts-and-permissions.md"
+estimated_minutes = 75
+objectives = [
+  "Create, disable, enable, rename and remove local accounts with PowerShell and net user",
+  "Manage group membership and name the common built-in groups and their purpose",
+  "List the common reasons a user cannot sign in, in a sensible order of checking",
+  "Explain what an access token holds, why group changes need a new sign-in, and how UAC's two tokens show in whoami /groups",
+  "Read and change an NTFS ACL with icacls: rights, inheritance flags, grant, grant:r, deny, inheritance, reset, save and restore",
+  "Take ownership of a tree when no one has access, and grant access afterwards",
+  "Explain how share permissions and NTFS permissions combine, and design them so there is one place to manage access",
+  "Follow a procedure to diagnose an access-denied problem and test it as the affected user",
+]
+prerequisites = ["foundations.powershell-basics", "foundations.architecture"]
+windows_features = ["Local Users and Groups", "File Explorer", "Windows PowerShell", "Command Prompt"]
+privilege = "administrator"
+certifications = ["comptia-a-core2/security", "comptia-a-core2/operating-systems", "microsoft-md-102/manage-maintain-devices"]
+evaluation_criteria = [
+  "Learner restores access to a folder by correcting the right group entry, not Everyone",
+  "Learner explains why a new group membership does not apply until the next sign-in",
+  "Learner reads an icacls entry and states who, which right and how it is inherited",
+  "Learner saves permissions before a bulk change and can restore them",
+]
+
+[[references]]
+title = "Local accounts (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/security/identity-protection/access-control/local-accounts"
+
+[[references]]
+title = "Security principals (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/security/identity-protection/access-control/security-principals"
+
+[[references]]
+title = "Access control overview (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/security/identity-protection/access-control/access-control"
+
+[[references]]
+title = "User Account Control (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/security/application-security/application-control/user-account-control/"
+
+[[references]]
+title = "net user (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/net-user"
+
+[[references]]
+title = "New-LocalUser (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.localaccounts/new-localuser"
+
+[[references]]
+title = "Set-LocalUser (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.localaccounts/set-localuser"
+
+[[references]]
+title = "Add-LocalGroupMember (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.localaccounts/add-localgroupmember"
+
+[[references]]
+title = "Get-LocalGroupMember (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.localaccounts/get-localgroupmember"
+
+[[references]]
+title = "whoami (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/whoami"
+
+[[references]]
+title = "icacls (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/icacls"
+
+[[references]]
+title = "takeown (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/takeown"
+
+[[references]]
+title = "Get-Acl (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.security/get-acl"
+
+[[references]]
+title = "Set-Acl (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.security/set-acl"
+
+[[references]]
+title = "New-SmbShare (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/smbshare/new-smbshare"
+
+[[references]]
+title = "Get-SmbShareAccess (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/smbshare/get-smbshareaccess"

@@ -1,0 +1,77 @@
+schema_version = 1
+id = "windows-admin.services-and-startup"
+title = "Windows services, startup types and scheduled tasks"
+summary = "Read and change services and their startup type with PowerShell and sc.exe, find the account and program behind a service, follow dependencies and recovery actions, diagnose a service that will not start, and create and troubleshoot scheduled tasks."
+content = "services-and-startup.md"
+estimated_minutes = 70
+objectives = [
+  "Explain the difference between a service's status and its startup type, and check both",
+  "List, start, stop and reconfigure services with PowerShell, sc.exe and net, including the sc.exe syntax traps",
+  "Find the account, program and dependencies of a service",
+  "Read a service's recovery actions and explain why a stopped service may come back",
+  "Diagnose a service that will not start using Service Control Manager events and a checklist",
+  "Read, enable, run and create scheduled tasks with PowerShell and schtasks, and read LastTaskResult",
+  "Troubleshoot a task that reports success but does nothing",
+]
+prerequisites = ["foundations.powershell-basics", "foundations.troubleshooting-method"]
+windows_features = ["Services", "Task Scheduler", "Event Viewer", "Windows PowerShell", "Command Prompt"]
+privilege = "administrator"
+certifications = ["comptia-a-core2/operating-systems", "comptia-a-core2/software-troubleshooting"]
+evaluation_criteria = [
+  "Learner restores a stopped and disabled service so it survives a restart",
+  "Learner finds the event that explains why a service failed to start",
+  "Learner states the account and program a service runs from using a command",
+  "Learner creates a scheduled task, runs it and explains the result code",
+]
+
+[[references]]
+title = "Service Control Manager (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/win32/services/service-control-manager"
+
+[[references]]
+title = "Get-Service (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.management/get-service"
+
+[[references]]
+title = "Set-Service (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.management/set-service"
+
+[[references]]
+title = "Start-Service (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.management/start-service"
+
+[[references]]
+title = "Restart-Service (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.management/restart-service"
+
+[[references]]
+title = "sc config (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/sc-config"
+
+[[references]]
+title = "sc query (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/sc-query"
+
+[[references]]
+title = "Task Scheduler (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/win32/taskschd/task-scheduler-start-page"
+
+[[references]]
+title = "Task Scheduler error and success constants (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/win32/taskschd/task-scheduler-error-and-success-constants"
+
+[[references]]
+title = "ScheduledTasks module (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/scheduledtasks/get-scheduledtask"
+
+[[references]]
+title = "Register-ScheduledTask (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/scheduledtasks/register-scheduledtask"
+
+[[references]]
+title = "schtasks create (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/schtasks-create"
+
+[[references]]
+title = "schtasks query (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/schtasks-query"

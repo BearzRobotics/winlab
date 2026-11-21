@@ -1,0 +1,65 @@
+schema_version = 1
+kind = "script"
+id = "labs.script-cmd-number-lines"
+title = "Script (CMD): number the lines of a file"
+summary = "Read a file line by line with for /f and use delayed expansion."
+lesson = "foundations.cmd-control-flow"
+symptom = '''
+Write a batch file and save it as C:\Labs\number-lines.cmd.
+
+The file C:\Labs\data\names.txt contains one name per line. Your batch file must print each name on its own line, numbered from 1, in exactly this form:
+
+    1: Alice
+    2: Bob
+
+Print nothing else. The names change every time your batch file is checked.
+'''
+hints = [
+  "for /f \"delims=\" %%a in (file) do ... reads a file one line at a time.",
+  "You need a counter that changes inside the loop. set /a n+=1 does the arithmetic.",
+  "Variables that change inside a loop block are not seen by %n% until the block ends. Put setlocal enabledelayedexpansion at the top and write !n! instead of %n%.",
+]
+expected_changes = ["Creates C:\\Labs with a starter batch file and a names file"]
+hazards = ["None: the batch file only reads a file"]
+scope = "single guest (the registered training VM only)"
+privilege = "standard"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["comptia-a-core2/operating-systems"]
+language = "cmd"
+script_path = 'C:\Labs\number-lines.cmd'
+starter = '''
+@echo off
+rem number-lines.cmd
+rem Print each line of C:\Labs\data\names.txt as "<number>: <name>", counting from 1
+'''
+solution = '''
+@echo off
+setlocal enabledelayedexpansion
+set n=0
+for /f "delims=" %%a in (C:\Labs\data\names.txt) do (
+    set /a n+=1
+    echo !n!: %%a
+)
+'''
+
+[[tests]]
+setup = '''
+New-Item -ItemType Directory -Force -Path 'C:\Labs\data' | Out-Null
+$pool = 'Alice','Bob','Chen','Dara','Elif','Farid','Grace','Hiro','Ines','Jamal'
+$names = $pool | Get-Random -Count (Get-Random -Minimum 3 -Maximum 8)
+Set-Content -Path 'C:\Labs\data\names.txt' -Value $names
+'''
+expect = '''
+$i = 0
+Get-Content 'C:\Labs\data\names.txt' | Where-Object { $_.Trim() } | ForEach-Object { $i++; "${i}: $_" }
+'''
+
+[[tests]]
+setup = '''
+New-Item -ItemType Directory -Force -Path 'C:\Labs\data' | Out-Null
+Set-Content -Path 'C:\Labs\data\names.txt' -Value @('Zoe')
+'''
+expect = '''
+"1: Zoe"
+'''

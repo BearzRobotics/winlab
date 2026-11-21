@@ -1,0 +1,26 @@
+schema_version = 1
+id = "labs.linux-wrong-time-zone"
+target = "linux"
+title = "Linux: logs show the wrong hour"
+summary = "The clock is right but the time zone is not."
+lesson = "foundations.troubleshooting-method"
+symptom = "Scheduled jobs on this Linux server run at the wrong hour and log timestamps do not match the clock on the wall. The server's time source is fine."
+hints = [
+  "The time itself is correct. What else decides how it is shown and used?",
+  "timedatectl shows the clock, the time zone and whether time sync is on.",
+  "This server should be on UTC. timedatectl can set the time zone.",
+]
+expected_changes = ["Sets the Linux lab VM's time zone to Asia/Tokyo"]
+hazards = ["Local time shown in the lab VM is wrong until the time zone is restored"]
+scope = "single guest (the registered Linux training VM only)"
+privilege = "administrator"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["comptia-linux-plus/system-management", "redhat-rhcsa/running-systems"]
+setup = "timedatectl set-timezone UTC"
+fault = "timedatectl set-timezone Asia/Tokyo"
+solution = "timedatectl set-timezone UTC"
+
+[validate]
+script = "timedatectl show -p Timezone --value"
+expect_output_contains = "UTC"

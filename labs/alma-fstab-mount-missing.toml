@@ -1,0 +1,52 @@
+schema_version = 1
+id = "labs.alma-fstab-mount-missing"
+target = "linux"
+distro = "almalinux"
+title = "AlmaLinux: the data volume is not mounted"
+summary = "A file system that should mount at boot is missing from /etc/fstab."
+lesson = "linux.storage-filesystems"
+symptom = "The application writes its files to /srv/data, which is supposed to be a separate volume. After the last maintenance window the volume is not mounted, and the files are landing on the root file system instead. Mount it again, and make sure it also mounts after a restart."
+hints = [
+  "findmnt shows what is mounted where. lsblk and losetup -a show block devices; this lab's volume is a disk image file attached through a loop device.",
+  "The disk image is /var/lib/winlab-data.img and the mount point is /srv/data. The file system type is ext4.",
+  "Persistent mounts are listed in /etc/fstab. Look for a line that has been commented out or removed.",
+  "After editing /etc/fstab, mount -a mounts everything listed that is not mounted yet. It also proves the line is valid before a reboot finds out for you.",
+]
+expected_changes = [
+  "Creates a 64 MB ext4 disk image at /var/lib/winlab-data.img and mounts it at /srv/data through /etc/fstab",
+  "Then unmounts it and comments out its /etc/fstab line in the AlmaLinux lab VM",
+]
+hazards = ["Files written to /srv/data in the lab VM land on the root file system until the volume is mounted"]
+scope = "single guest (the registered AlmaLinux training VM only)"
+privilege = "administrator"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["redhat-rhcsa/file-systems", "redhat-rhcsa/local-storage", "comptia-linux-plus/system-management"]
+setup = '''
+set -e
+mkdir -p /srv/data
+[ -f /var/lib/winlab-data.img ] || { truncate -s 64M /var/lib/winlab-data.img; mkfs.ext4 -q -F /var/lib/winlab-data.img; }
+grep -q '^# *winlab-data' /etc/fstab || true
+sed -i '/winlab-data.img/d' /etc/fstab
+echo '/var/lib/winlab-data.img /srv/data ext4 loop,defaults 0 0' >> /etc/fstab
+systemctl daemon-reload
+mountpoint -q /srv/data || mount /srv/data
+'''
+fault = '''
+umount /srv/data
+sed -i 's|^\(/var/lib/winlab-data.img\)|#\1|' /etc/fstab
+systemctl daemon-reload
+'''
+solution = '''
+sed -i 's|^#\(/var/lib/winlab-data.img\)|\1|' /etc/fstab
+systemctl daemon-reload
+mount -a
+'''
+
+[validate]
+script = '''
+m=no; mountpoint -q /srv/data && m=yes
+p=no; grep -q '^/var/lib/winlab-data.img /srv/data ' /etc/fstab && p=yes
+echo "mounted=$m;persistent=$p"
+'''
+expect_output_contains = "mounted=yes;persistent=yes"

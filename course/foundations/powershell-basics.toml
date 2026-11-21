@@ -1,0 +1,111 @@
+schema_version = 1
+id = "foundations.powershell-basics"
+title = "PowerShell fundamentals"
+summary = "Windows PowerShell 5.1 versus PowerShell 7, starting it, Verb-Noun cmdlets, aliases and parameters, common parameters and -WhatIf, help, objects and the pipeline, formatting versus data, providers and drives, running scripts, execution policy and profiles."
+content = "powershell-basics.md"
+estimated_minutes = 90
+objectives = [
+  "Tell Windows PowerShell 5.1 from PowerShell 7, and say which to target for a given job",
+  "Find a command with Get-Command and learn it with Get-Help, reading the syntax block",
+  "Use aliases at the prompt and full names in scripts, and use positional, named and switch parameters",
+  "Use common parameters, especially -WhatIf and -ErrorAction",
+  "Explain how an object differs from text and inspect one with Get-Member",
+  "Filter, sort, group, measure and select with the pipeline, and filter early",
+  "Explain why formatting cmdlets belong at the end of a pipeline",
+  "Navigate the file system, registry, environment and certificate stores with the same cmdlets",
+  "Run a script, explain the execution policy and what it is not, and find and use your profile",
+]
+prerequisites = ["foundations.cmd-basics"]
+windows_features = ["Windows PowerShell", "Windows Terminal"]
+privilege = "standard"
+certifications = ["comptia-a-core2/operating-systems"]
+evaluation_criteria = [
+  "Learner lists the five processes using the most memory, showing name and working set, using one pipeline",
+  "Learner explains why Format-Table output cannot be passed to Sort-Object usefully",
+  "Learner rehearses a delete with -WhatIf before running it",
+  "Learner lists registry keys with the same cmdlet used for folders and explains why that works",
+]
+
+[[references]]
+title = "PowerShell documentation (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/"
+
+[[references]]
+title = "Get-Command (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/get-command"
+
+[[references]]
+title = "Get-Help (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/get-help"
+
+[[references]]
+title = "Get-Member (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/get-member"
+
+[[references]]
+title = "Where-Object (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/where-object"
+
+[[references]]
+title = "Select-Object (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/select-object"
+
+[[references]]
+title = "Sort-Object (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/sort-object"
+
+[[references]]
+title = "Group-Object (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/group-object"
+
+[[references]]
+title = "Measure-Object (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/measure-object"
+
+[[references]]
+title = "ForEach-Object (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/foreach-object"
+
+[[references]]
+title = "about_Aliases (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_aliases"
+
+[[references]]
+title = "about_CommonParameters (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_commonparameters"
+
+[[references]]
+title = "about_Pipelines (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_pipelines"
+
+[[references]]
+title = "about_Providers (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_providers"
+
+[[references]]
+title = "about_Execution_Policies (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_execution_policies"
+
+[[references]]
+title = "Set-ExecutionPolicy (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.security/set-executionpolicy"
+
+[[references]]
+title = "about_Profiles (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_profiles"
+
+[[references]]
+title = "Start-Transcript (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.host/start-transcript"
+
+[[references]]
+title = "Installing PowerShell on Linux (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/scripting/install/installing-powershell-on-linux"
+
+[[references]]
+title = "PowerShell on Linux and macOS: differences (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/scripting/whats-new/unix-support"
+
+[[references]]
+title = "Using Visual Studio Code for PowerShell development (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/scripting/dev-cross-plat/vscode/using-vscode"

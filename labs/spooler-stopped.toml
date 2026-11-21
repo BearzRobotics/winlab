@@ -1,0 +1,28 @@
+schema_version = 1
+id = "labs.spooler-stopped"
+title = "Printing has stopped"
+summary = "A background service has stopped; find it, bring it back and verify."
+lesson = "windows-admin.services-and-startup"
+symptom = "Printing has stopped working. Nothing comes out of any printer and jobs just sit in the queue. It was fine yesterday."
+hints = [
+  "Printing is handled by a Windows service. Which tool lists services and their state?",
+  "Look for the Print Spooler service.",
+  "Is it running? Is it set to start automatically?",
+]
+expected_changes = ["Stops the Print Spooler service and sets its startup type to Disabled in the lab VM"]
+hazards = ["Printing is unavailable in the lab VM until the service is started"]
+scope = "single guest (the registered training VM only)"
+privilege = "administrator"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["comptia-a-core2/operating-systems", "comptia-a-core2/software-troubleshooting"]
+setup = "Set-Service -Name Spooler -StartupType Automatic; Start-Service -Name Spooler"
+fault = "Stop-Service -Name Spooler -Force; Set-Service -Name Spooler -StartupType Disabled"
+solution = "Set-Service -Name Spooler -StartupType Automatic; Start-Service -Name Spooler"
+
+[validate]
+script = '''
+$s = Get-Service -Name Spooler
+"StartType=$($s.StartType);Status=$($s.Status)"
+'''
+expect_output_contains = "StartType=Automatic;Status=Running"

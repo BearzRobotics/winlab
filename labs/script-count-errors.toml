@@ -1,0 +1,80 @@
+schema_version = 1
+kind = "script"
+id = "labs.script-count-errors"
+title = "Script: count the errors in each log"
+summary = "Write a PowerShell script that summarises a folder of log files."
+lesson = "foundations.powershell-basics"
+symptom = '''
+Write a PowerShell script and save it as C:\Labs\count-errors.ps1.
+
+There is a folder of log files at C:\Labs\logs (files ending in .log). In each file, some lines contain the word ERROR (in capitals) and the rest do not.
+
+Your script must print one line per log file, sorted by file name, in exactly this form:
+
+    app.log: 3
+    db.log: 0
+
+That is the file name, a colon, a space, and the number of lines containing ERROR. Print nothing else.
+
+The folder's contents change every time your script is checked, so it must work on any set of log files, not just the ones you can see now.
+'''
+hints = [
+  "Get-ChildItem lists files. It can filter by name and its output can be sorted.",
+  "Select-String searches inside files. How would you count its matches for one file?",
+  "Build each output line with the -f format operator or string interpolation, for example \"$($f.Name): $count\".",
+  "Remember the search should be case-sensitive: only ERROR in capitals counts.",
+]
+expected_changes = ["Creates C:\\Labs with a starter script and a folder of generated log files"]
+hazards = ["None: the script only reads files in the lab VM"]
+scope = "single guest (the registered training VM only)"
+privilege = "standard"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["comptia-a-core2/operating-systems"]
+language = "powershell"
+script_path = 'C:\Labs\count-errors.ps1'
+starter = '''
+# count-errors.ps1
+# Print one line per .log file in C:\Labs\logs, sorted by name: "<file name>: <number of lines containing ERROR>"
+'''
+solution = '''
+Get-ChildItem -Path 'C:\Labs\logs' -Filter '*.log' | Sort-Object Name | ForEach-Object {
+    $n = @(Select-String -Path $_.FullName -Pattern 'ERROR' -CaseSensitive).Count
+    '{0}: {1}' -f $_.Name, $n
+}
+'''
+
+[[tests]]
+setup = '''
+$d = 'C:\Labs\logs'
+if (Test-Path $d) { Remove-Item $d -Recurse -Force }
+New-Item -ItemType Directory -Path $d | Out-Null
+$names = 'app','db','web','cache','auth' | Get-Random -Count (Get-Random -Minimum 2 -Maximum 5)
+foreach ($n in $names) {
+    $lines = 1..(Get-Random -Minimum 5 -Maximum 25) | ForEach-Object {
+        $level = if ((Get-Random -Maximum 4) -eq 0) { 'ERROR' } else { 'INFO' }
+        '2026-01-02 10:{0:00}:00 {1} message {2}' -f $_, $level, (Get-Random)
+    }
+    Set-Content -Path (Join-Path $d "$n.log") -Value $lines
+}
+'''
+expect = '''
+Get-ChildItem -Path 'C:\Labs\logs' -Filter '*.log' | Sort-Object Name | ForEach-Object {
+    '{0}: {1}' -f $_.Name, @(Select-String -Path $_.FullName -Pattern 'ERROR' -CaseSensitive).Count
+}
+'''
+
+[[tests]]
+setup = '''
+$d = 'C:\Labs\logs'
+if (Test-Path $d) { Remove-Item $d -Recurse -Force }
+New-Item -ItemType Directory -Path $d | Out-Null
+Set-Content -Path (Join-Path $d 'quiet.log') -Value @('all good', 'still good', 'error in lowercase does not count')
+Set-Content -Path (Join-Path $d 'noisy.log') -Value @('ERROR one', 'ERROR two', 'INFO three', 'an ERROR in the middle')
+Set-Content -Path (Join-Path $d 'notes.txt') -Value @('ERROR in a file that is not a log')
+'''
+expect = '''
+Get-ChildItem -Path 'C:\Labs\logs' -Filter '*.log' | Sort-Object Name | ForEach-Object {
+    '{0}: {1}' -f $_.Name, @(Select-String -Path $_.FullName -Pattern 'ERROR' -CaseSensitive).Count
+}
+'''

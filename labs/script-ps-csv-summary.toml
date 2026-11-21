@@ -1,0 +1,67 @@
+schema_version = 1
+kind = "script"
+id = "labs.script-ps-csv-summary"
+title = "Script (PowerShell): total a CSV by group"
+summary = "Import a CSV, group the rows, and total each group."
+lesson = "foundations.powershell-basics"
+symptom = '''
+Write a PowerShell script and save it as C:\Labs\sales-summary.ps1.
+
+The file C:\Labs\data\sales.csv has the columns Region and Amount, one sale per row. Your script must print the total Amount for each Region, one line per region, sorted by region name, in exactly this form:
+
+    East: 1520
+    North: 870
+
+Print nothing else. The data (and the regions in it) change every time your script is checked.
+'''
+hints = [
+  "Import-Csv turns each row into an object with Region and Amount properties.",
+  "Group-Object Region collects the rows for each region into a group. Each group has a Name and a Group.",
+  "Measure-Object -Property Amount -Sum adds up a property across objects. Sort-Object Name orders the groups.",
+  "Format each line with the -f operator, for example '{0}: {1}' -f $name, $total.",
+]
+expected_changes = ["Creates C:\\Labs with a starter script and a generated CSV file"]
+hazards = ["None: the script only reads a CSV file"]
+scope = "single guest (the registered training VM only)"
+privilege = "standard"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["comptia-a-core2/operating-systems"]
+language = "powershell"
+script_path = 'C:\Labs\sales-summary.ps1'
+starter = '''
+# sales-summary.ps1
+# Read C:\Labs\data\sales.csv (columns: Region, Amount) and print "<Region>: <total Amount>"
+# for each region, sorted by region name.
+'''
+solution = '''
+Import-Csv -Path 'C:\Labs\data\sales.csv' | Group-Object -Property Region | Sort-Object -Property Name | ForEach-Object {
+    $total = ($_.Group | Measure-Object -Property Amount -Sum).Sum
+    '{0}: {1}' -f $_.Name, $total
+}
+'''
+
+[[tests]]
+setup = '''
+New-Item -ItemType Directory -Force -Path 'C:\Labs\data' | Out-Null
+$regions = 'North','South','East','West','Central' | Get-Random -Count (Get-Random -Minimum 2 -Maximum 5)
+$rows = 1..(Get-Random -Minimum 12 -Maximum 40) | ForEach-Object {
+    [pscustomobject]@{ Region = ($regions | Get-Random); Amount = (Get-Random -Minimum 10 -Maximum 500) }
+}
+$rows | Export-Csv -Path 'C:\Labs\data\sales.csv' -NoTypeInformation
+'''
+expect = '''
+$sum = @{}
+foreach ($r in (Import-Csv 'C:\Labs\data\sales.csv')) { $sum[$r.Region] = [int]$sum[$r.Region] + [int]$r.Amount }
+$sum.Keys | Sort-Object | ForEach-Object { '{0}: {1}' -f $_, $sum[$_] }
+'''
+
+[[tests]]
+setup = '''
+New-Item -ItemType Directory -Force -Path 'C:\Labs\data' | Out-Null
+@('Region,Amount', 'West,100', 'West,50', 'East,7') | Set-Content -Path 'C:\Labs\data\sales.csv'
+'''
+expect = '''
+"East: 7"
+"West: 150"
+'''

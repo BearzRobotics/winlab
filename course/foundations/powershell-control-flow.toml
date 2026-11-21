@@ -1,0 +1,70 @@
+schema_version = 1
+id = "foundations.powershell-control-flow"
+title = "PowerShell control flow: decisions and loops"
+summary = "if and its assignment trap, switch with its fall-through, regex and wildcard modes, the foreach statement versus ForEach-Object, for, while and do, break, continue and labels, modifying collections safely, parallel loops in PowerShell 7, and reading other people's control flow."
+content = "powershell-control-flow.md"
+estimated_minutes = 90
+objectives = [
+  "Write if/elseif/else with short-circuit conditions, and spot the assignment-in-condition bug",
+  "Use switch with scripts blocks, wildcards, regular expressions and files, and explain why every matching case runs",
+  "Choose between the foreach statement and ForEach-Object by memory, speed and how break and return behave",
+  "Write for, while, do-while and do-until loops, and a polling loop with a deadline",
+  "Use break, continue and labels, and exit a script early",
+  "Modify collections safely while looping, and explain the array versus List difference",
+  "Use ForEach-Object -Parallel in PowerShell 7 and state its caveats",
+  "Read an unfamiliar script's control flow and find the bug",
+]
+prerequisites = ["foundations.ps-variables-types-operators"]
+windows_features = ["Windows PowerShell"]
+privilege = "standard"
+certifications = ["comptia-a-core2/operating-systems"]
+evaluation_criteria = [
+  "Learner predicts the output of a switch with several matching cases and fixes it with break",
+  "Learner explains why return inside ForEach-Object skips only one item",
+  "Learner finds the assignment-in-condition bug in a short script by reading it",
+  "Learner writes a polling loop that times out with a non-zero exit code",
+]
+
+[[references]]
+title = "about_If (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_if"
+
+[[references]]
+title = "about_Switch (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_switch"
+
+[[references]]
+title = "about_Foreach (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_foreach"
+
+[[references]]
+title = "about_For (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_for"
+
+[[references]]
+title = "about_While (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_while"
+
+[[references]]
+title = "about_Do (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_do"
+
+[[references]]
+title = "about_Break (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_break"
+
+[[references]]
+title = "about_Continue (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_continue"
+
+[[references]]
+title = "about_Arrays: ForEach and Where methods (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_arrays"
+
+[[references]]
+title = "ForEach-Object (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/foreach-object"
+
+[[references]]
+title = "Start-Sleep (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/start-sleep"

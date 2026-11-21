@@ -1,0 +1,64 @@
+schema_version = 1
+kind = "script"
+id = "labs.script-ps-json-features"
+title = "Script (PowerShell): read a JSON settings file"
+summary = "Parse JSON, filter objects, and handle the empty case."
+lesson = "foundations.ps-working-with-data"
+symptom = '''
+Write a PowerShell script and save it as C:\Labs\enabled-features.ps1.
+
+The file C:\Labs\data\settings.json describes some features, for example:
+
+    { "features": [ { "name": "search", "enabled": true }, { "name": "audit", "enabled": false } ] }
+
+Your script must print the names of the features that are enabled, one per line, sorted alphabetically. If no feature is enabled it must print the single word none instead.
+
+Print nothing else. The file's contents change every time your script is checked.
+'''
+hints = [
+  "Get-Content -Raw reads a file as one string. ConvertFrom-Json turns JSON text into objects.",
+  "Where-Object { $_.enabled } keeps the features whose enabled value is true.",
+  "Sort-Object name orders them; Select-Object -ExpandProperty name (or ForEach-Object { $_.name }) gives plain names.",
+  "Check the empty case: if nothing is left after filtering, print none.",
+]
+expected_changes = ["Creates C:\\Labs with a starter script and a generated JSON file"]
+hazards = ["None: the script only reads a JSON file"]
+scope = "single guest (the registered training VM only)"
+privilege = "standard"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["comptia-a-core2/operating-systems"]
+language = "powershell"
+script_path = 'C:\Labs\enabled-features.ps1'
+starter = '''
+# enabled-features.ps1
+# Read C:\Labs\data\settings.json and print the names of the enabled features, sorted, one per line.
+# If none are enabled, print: none
+'''
+solution = '''
+$settings = Get-Content -Path 'C:\Labs\data\settings.json' -Raw | ConvertFrom-Json
+$names = @($settings.features | Where-Object { $_.enabled } | Sort-Object -Property name | ForEach-Object { $_.name })
+if ($names.Count -eq 0) { 'none' } else { $names }
+'''
+
+[[tests]]
+setup = '''
+New-Item -ItemType Directory -Force -Path 'C:\Labs\data' | Out-Null
+$all = 'search','export','audit','sync','beta','reports'
+$features = $all | Get-Random -Count (Get-Random -Minimum 3 -Maximum 7) | ForEach-Object { [ordered]@{ name = $_; enabled = ((Get-Random -Maximum 2) -eq 1) } }
+$features[0].enabled = $true
+@{ features = @($features) } | ConvertTo-Json -Depth 4 | Set-Content -Path 'C:\Labs\data\settings.json'
+'''
+expect = '''
+$f = @((Get-Content 'C:\Labs\data\settings.json' -Raw | ConvertFrom-Json).features | Where-Object { $_.enabled } | ForEach-Object { $_.name } | Sort-Object)
+$f
+'''
+
+[[tests]]
+setup = '''
+New-Item -ItemType Directory -Force -Path 'C:\Labs\data' | Out-Null
+'{ "features": [ { "name": "a", "enabled": false }, { "name": "b", "enabled": false } ] }' | Set-Content -Path 'C:\Labs\data\settings.json'
+'''
+expect = '''
+"none"
+'''

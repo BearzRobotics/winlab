@@ -1,0 +1,35 @@
+schema_version = 1
+id = "labs.linux-account-locked"
+target = "linux"
+title = "Linux: a user cannot sign in"
+summary = "An account has a valid password but is locked."
+lesson = "security.security-fundamentals"
+symptom = "Jordan Smith (account jsmith) cannot sign in to this Linux server this morning. They are sure the password is right and it worked on Friday."
+hints = [
+  "A correct password is not the only thing that decides whether an account can be used.",
+  "passwd -S <user> prints a short status for an account. One letter tells you whether the password is usable or locked.",
+  "Unlock the account without changing its password.",
+]
+expected_changes = [
+  "Creates a local account named jsmith with a password",
+  "Locks that account in the Linux lab VM",
+]
+hazards = ["The jsmith account in the lab VM cannot sign in until it is unlocked"]
+scope = "single guest (the registered Linux training VM only)"
+privilege = "administrator"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["comptia-linux-plus/security", "redhat-rhcsa/users-groups"]
+setup = '''
+id jsmith >/dev/null 2>&1 || useradd -m -s /bin/bash -c 'Jordan Smith' jsmith
+echo 'jsmith:Lab-Only-Pass-456' | chpasswd
+passwd -u jsmith >/dev/null 2>&1 || true
+'''
+fault = "passwd -l jsmith"
+solution = "passwd -u jsmith"
+
+[validate]
+script = '''
+passwd -S jsmith | awk '{print "status=" $2}'
+'''
+expect_output_contains = "status=P"

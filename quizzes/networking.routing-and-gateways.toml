@@ -1,0 +1,421 @@
+schema_version = 1
+lesson = "networking.routing-and-gateways"
+# Draft for owner review. A bank of 45; each attempt asks 10, favouring questions missed last time.
+draw = 10
+
+# ---- Concepts ----
+
+[[question]]
+id = "router-role"
+type = "choice"
+prompt = "What does a router do?"
+choices = ["Connects networks and forwards packets between them", "Turns names into addresses", "Hands out addresses to clients", "Encrypts traffic on the local link"]
+answers = ["Connects networks and forwards packets between them"]
+explanation = "A router has an address on each network it joins and forwards packets by choosing a next hop."
+review = "What a router does"
+certifications = ["comptia-network-plus/networking-concepts"]
+
+[[question]]
+id = "dest-unchanged"
+type = "choice"
+prompt = "As a packet crosses several routers, what happens to its destination IP address?"
+choices = ["It stays the same; only the next hop changes", "Each router replaces it with its own address", "It becomes the gateway's address", "It is removed after the first hop"]
+answers = ["It stays the same; only the next hop changes"]
+explanation = "The destination address is end to end. Each router chooses the next hop and forwards the packet."
+review = "What a router does"
+
+[[question]]
+id = "host-decision"
+type = "choice"
+prompt = "A host sends to a destination that is NOT on its own network. Where does it send the packet?"
+choices = ["To its default gateway", "Straight to the destination", "To the DHCP server", "To the DNS server"]
+answers = ["To its default gateway"]
+explanation = "The host delivers directly only to on-link addresses; everything else goes to the gateway."
+review = "What a router does"
+
+[[question]]
+id = "onlink"
+type = "short"
+prompt = "What word describes a destination the host can deliver to directly, without a router? (one word, hyphenated if you like)"
+answers = ["on-link", "onlink", "on link"]
+explanation = "On-link routes have no gateway; the host finds the target's hardware address with ARP."
+review = "What a router does"
+
+[[question]]
+id = "samenet-1"
+type = "choice"
+prompt = "A host is 192.168.1.20/24. Which destination is on-link?"
+choices = ["192.168.1.200", "192.168.2.20", "10.0.0.20", "192.168.0.20"]
+answers = ["192.168.1.200"]
+explanation = "With /24 the network is 192.168.1.0; only 192.168.1.x addresses are on-link."
+review = "What a router does"
+
+[[question]]
+id = "samenet-2"
+type = "choice"
+prompt = "A host is 10.1.4.9/22 (mask 255.255.252.0, so it covers 10.1.4.0 to 10.1.7.255). Which destination is on-link?"
+choices = ["10.1.6.30", "10.1.8.30", "10.1.3.30", "10.2.4.30"]
+answers = ["10.1.6.30"]
+explanation = "A /22 spans four /24s: 10.1.4.0, 10.1.5.0, 10.1.6.0 and 10.1.7.0, so 10.1.6.30 is local."
+review = "What a router does"
+
+# ---- Reading a table ----
+
+[[question]]
+id = "default-route-win"
+type = "short"
+prompt = "On Windows, the default route appears in 'route print' with which network destination? (dotted decimal)"
+answers = ["0.0.0.0"]
+explanation = "The default route is 0.0.0.0 with netmask 0.0.0.0, matching every address."
+review = "The routing table"
+
+[[question]]
+id = "default-route-prefix"
+type = "short"
+prompt = "Write the default route as a prefix, as Get-NetRoute shows it."
+answers = ["0.0.0.0/0"]
+explanation = "A zero-length prefix matches all destinations."
+review = "The routing table"
+
+[[question]]
+id = "default-route-linux"
+type = "choice"
+prompt = "In 'ip route show' output, which line is the default route?"
+choices = ["default via 192.168.1.1 dev wlan0", "192.168.1.0/24 dev wlan0", "127.0.0.0/8 dev lo", "broadcast 192.168.1.255 dev wlan0"]
+answers = ["default via 192.168.1.1 dev wlan0"]
+explanation = "The word default marks it, and via names the gateway."
+review = "The routing table"
+
+[[question]]
+id = "onlink-gateway"
+type = "choice"
+prompt = "A route shows 'On-link' (Windows) or no 'via' (Linux) as its gateway. What does that mean?"
+choices = ["Packets are delivered directly, with no router in between", "The route is disabled", "The gateway is unknown", "The route points at the loopback adapter"]
+answers = ["Packets are delivered directly, with no router in between"]
+explanation = "Such a route describes a network the host is directly connected to."
+review = "The routing table"
+
+[[question]]
+id = "metric-meaning"
+type = "choice"
+prompt = "What does a route's metric express?"
+choices = ["A cost; the lower value is preferred between otherwise equal routes", "The number of hops to the destination", "The link speed in Mbit/s", "The age of the route"]
+answers = ["A cost; the lower value is preferred between otherwise equal routes"]
+explanation = "Metric is a preference value. Windows computes automatic metrics from link speed."
+review = "Choosing between routes"
+
+[[question]]
+id = "loopback"
+type = "choice"
+prompt = "A route for 127.0.0.0/8 appears in every table. What is it for?"
+choices = ["Traffic to the machine itself (loopback); it never leaves the machine", "The default gateway", "The local subnet broadcast", "A VPN tunnel"]
+answers = ["Traffic to the machine itself (loopback); it never leaves the machine"]
+explanation = "127.x.x.x addresses are loopback."
+review = "The routing table"
+
+[[question]]
+id = "host-route"
+type = "choice"
+prompt = "A Windows route has netmask 255.255.255.255. What kind of route is it?"
+choices = ["A host route for exactly one address", "A default route", "A route for a /24", "A multicast route"]
+answers = ["A host route for exactly one address"]
+explanation = "A /32 matches one address only, such as the machine's own address."
+review = "The routing table"
+
+[[question]]
+id = "route-get"
+type = "short"
+prompt = "Which Linux command asks the kernel which route it would use for one destination? Write it for 8.8.8.8 (without sudo)."
+answers = ["ip route get 8.8.8.8"]
+explanation = "ip route get shows the chosen route, which is more reliable than reading the table by eye."
+review = "Linux"
+
+# ---- Choosing between routes ----
+
+[[question]]
+id = "longest-prefix"
+type = "choice"
+prompt = "Two routes match a destination: 10.0.0.0/8 and 10.20.0.0/16. Which is used?"
+choices = ["10.20.0.0/16", "10.0.0.0/8", "Whichever was added first", "Both, alternating"]
+answers = ["10.20.0.0/16"]
+explanation = "The longest matching prefix (most specific route) wins."
+review = "Choosing between routes"
+certifications = ["comptia-network-plus/networking-concepts"]
+
+[[question]]
+id = "longest-vs-metric"
+type = "choice"
+prompt = "A /16 route has metric 500 and a /8 route has metric 10, both matching. Which wins?"
+choices = ["The /16, because prefix length is considered before metric", "The /8, because its metric is lower", "Neither; the packet is dropped", "They are load-balanced"]
+answers = ["The /16, because prefix length is considered before metric"]
+explanation = "Metric only breaks ties between routes with the same prefix length."
+review = "Choosing between routes"
+
+[[question]]
+id = "metric-tie"
+type = "choice"
+prompt = "Two default routes (/0) exist, with metrics 25 and 50. Which carries the traffic?"
+choices = ["The one with metric 25", "The one with metric 50", "Both equally", "The one added last"]
+answers = ["The one with metric 25"]
+explanation = "Equal prefix length, so the lower metric wins."
+review = "Choosing between routes"
+
+[[question]]
+id = "pick-1"
+type = "choice"
+prompt = "Table: default via 192.168.1.1; 10.0.0.0/8 via 192.168.1.2; 10.20.0.0/16 via 192.168.1.3. Which next hop is used for 10.20.5.9?"
+choices = ["192.168.1.3", "192.168.1.2", "192.168.1.1", "None; it is on-link"]
+answers = ["192.168.1.3"]
+explanation = "10.20.0.0/16 is the longest match."
+review = "Choosing between routes"
+
+[[question]]
+id = "pick-2"
+type = "choice"
+prompt = "Same table: default via 192.168.1.1; 10.0.0.0/8 via 192.168.1.2; 10.20.0.0/16 via 192.168.1.3. Which next hop is used for 10.99.1.1?"
+choices = ["192.168.1.2", "192.168.1.3", "192.168.1.1", "None"]
+answers = ["192.168.1.2"]
+explanation = "10.99.1.1 is inside 10.0.0.0/8 but not 10.20.0.0/16."
+review = "Choosing between routes"
+
+[[question]]
+id = "pick-3"
+type = "choice"
+prompt = "Same table: default via 192.168.1.1; 10.0.0.0/8 via 192.168.1.2; 10.20.0.0/16 via 192.168.1.3. Which next hop is used for 8.8.8.8?"
+choices = ["192.168.1.1", "192.168.1.2", "192.168.1.3", "None"]
+answers = ["192.168.1.1"]
+explanation = "Only the default route matches."
+review = "Choosing between routes"
+
+[[question]]
+id = "eth-wifi"
+type = "choice"
+prompt = "You plug Ethernet into a laptop that was on Wi-Fi, and traffic quietly moves to Ethernet. Why?"
+choices = ["Windows gives the faster link a lower automatic metric, so its default route wins", "Wi-Fi is disabled automatically by the driver", "The router tells the laptop to switch", "DNS decides which adapter to use"]
+answers = ["Windows gives the faster link a lower automatic metric, so its default route wins"]
+explanation = "Automatic metrics follow link speed."
+review = "Choosing between routes"
+
+# ---- Gateway ----
+
+[[question]]
+id = "gw-subnet"
+type = "choice"
+prompt = "Host 192.168.1.20/24 is configured with default gateway 192.168.2.1. What is the problem?"
+choices = ["The gateway is outside the host's subnet, so it cannot be reached directly", "Nothing; any gateway works", "The host needs a second IP address", "DNS is misconfigured"]
+answers = ["The gateway is outside the host's subnet, so it cannot be reached directly"]
+explanation = "The gateway is reached by direct delivery, so it must be inside the local network."
+review = "The default gateway must be on your subnet"
+certifications = ["comptia-network-plus/network-troubleshooting"]
+
+[[question]]
+id = "gw-symptom"
+type = "choice"
+prompt = "A machine reaches everything on its own subnet and nothing beyond it. What do you check first?"
+choices = ["The default gateway: is it present and inside the subnet?", "The DNS server", "The TTL", "The hosts file"]
+answers = ["The default gateway: is it present and inside the subnet?"]
+explanation = "Local delivery works without a gateway; anything off-subnet needs one."
+review = "The default gateway must be on your subnet"
+
+[[question]]
+id = "gw-typo"
+type = "multi"
+prompt = "Which of these can produce a gateway that is outside the host's subnet? Select all that apply."
+choices = ["A typo in the gateway address", "A wrong subnet mask on the host", "A cached DNS answer", "A stale hosts-file entry"]
+answers = ["A typo in the gateway address", "A wrong subnet mask on the host"]
+explanation = "Both change whether the gateway falls inside the local network. DNS and hosts-file entries do not."
+review = "The default gateway must be on your subnet"
+
+# ---- TTL and traceroute ----
+
+[[question]]
+id = "ttl-what"
+type = "choice"
+prompt = "What does each router do to a packet's TTL?"
+choices = ["Decreases it by one", "Increases it by one", "Resets it to 64", "Leaves it unchanged"]
+answers = ["Decreases it by one"]
+explanation = "When it would reach zero the packet is discarded."
+review = "TTL and traceroute"
+
+[[question]]
+id = "ttl-zero"
+type = "choice"
+prompt = "A router receives a packet whose TTL is 1. What does it do?"
+choices = ["Discards it and sends back an ICMP time-exceeded message", "Forwards it with TTL 0", "Holds it until the TTL resets", "Sends it to the default gateway"]
+answers = ["Discards it and sends back an ICMP time-exceeded message"]
+explanation = "That behaviour prevents loops and is what traceroute relies on."
+review = "TTL and traceroute"
+
+[[question]]
+id = "ttl-purpose"
+type = "choice"
+prompt = "Why does TTL exist?"
+choices = ["To stop packets circling forever in a routing loop", "To limit the size of a packet", "To show how old the DNS record is", "To prioritise video traffic"]
+answers = ["To stop packets circling forever in a routing loop"]
+explanation = "Without TTL a looping packet would never die."
+review = "TTL and traceroute"
+
+[[question]]
+id = "tracert-cmd"
+type = "short"
+prompt = "Which Windows command traces the route to a host? (command name only)"
+answers = ["tracert"]
+explanation = "On Linux the command is traceroute."
+review = "TTL and traceroute"
+
+[[question]]
+id = "tracert-how"
+type = "choice"
+prompt = "How does traceroute discover each router on the path?"
+choices = ["It sends probes with TTL 1, 2, 3 and so on, and each router that discards one reveals itself", "It asks the default gateway for a list", "It reads the routing table of every router", "It uses DNS NS records"]
+answers = ["It sends probes with TTL 1, 2, 3 and so on, and each router that discards one reveals itself"]
+explanation = "Each ICMP time-exceeded reply identifies the router at that hop."
+review = "TTL and traceroute"
+
+[[question]]
+id = "tracert-d"
+type = "choice"
+prompt = "What does 'tracert -d' do?"
+choices = ["Skips reverse DNS lookups of each hop, making the trace faster", "Shows only the destination", "Uses UDP instead of ICMP", "Disables the TTL"]
+answers = ["Skips reverse DNS lookups of each hop, making the trace faster"]
+explanation = "Reverse lookups can wait for a timeout per hop."
+review = "TTL and traceroute"
+
+[[question]]
+id = "hop1"
+type = "choice"
+prompt = "In a traceroute from a PC on a home network, what is normally hop 1?"
+choices = ["The default gateway", "The destination", "The DNS server", "The ISP's core router"]
+answers = ["The default gateway"]
+explanation = "The first router a host sends to is its gateway. If hop 1 fails, the problem is local."
+review = "TTL and traceroute"
+
+[[question]]
+id = "stars"
+type = "choice"
+prompt = "Hop 4 of a trace shows '* * * Request timed out' but hops 5 and 6 answer normally. How serious is that?"
+choices = ["Usually not: that router simply does not answer probes", "The network is down", "A routing loop exists", "DNS is broken"]
+answers = ["Usually not: that router simply does not answer probes"]
+explanation = "Only worry if everything after a point stays silent."
+review = "TTL and traceroute"
+
+[[question]]
+id = "loop"
+type = "choice"
+prompt = "A trace shows the same two addresses alternating down the list. What is happening?"
+choices = ["A routing loop", "Normal load balancing", "A DNS failure", "A DHCP conflict"]
+answers = ["A routing loop"]
+explanation = "A repeating pair of hops means packets bounce between two routers until TTL expires."
+review = "TTL and traceroute"
+
+[[question]]
+id = "pathping"
+type = "choice"
+prompt = "What does pathping add to a trace?"
+choices = ["Loss statistics for each hop, at the cost of taking minutes", "A graphical map", "DNS records of each hop", "Automatic route repair"]
+answers = ["Loss statistics for each hop, at the cost of taking minutes"]
+explanation = "pathping combines trace and ping statistics."
+review = "TTL and traceroute"
+
+# ---- NAT ----
+
+[[question]]
+id = "private-ranges"
+type = "multi"
+prompt = "Which of these are private (RFC 1918) ranges? Select all that apply."
+choices = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "169.254.0.0/16"]
+answers = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
+explanation = "169.254.0.0/16 is link-local, a different thing."
+review = "Private addresses and NAT"
+
+[[question]]
+id = "nat-does"
+type = "choice"
+prompt = "What does NAT on a home router do?"
+choices = ["Rewrites outgoing packets to use its public address and keeps a table to send replies back", "Encrypts all traffic", "Hands out addresses to clients", "Blocks all incoming and outgoing traffic"]
+answers = ["Rewrites outgoing packets to use its public address and keeps a table to send replies back"]
+explanation = "Hence inside machines are not reachable from outside unless a port is forwarded."
+review = "Private addresses and NAT"
+
+# ---- Changing routes ----
+
+[[question]]
+id = "route-add-win"
+type = "short"
+prompt = "Write the Windows command that adds a route to 10.20.0.0 mask 255.255.0.0 via 192.168.1.3."
+answers = ["route add 10.20.0.0 mask 255.255.0.0 192.168.1.3"]
+explanation = "route add <network> mask <mask> <gateway>."
+review = "Changing routes"
+
+[[question]]
+id = "route-persist-win"
+type = "choice"
+prompt = "Which switch makes a 'route add' on Windows survive a restart of TCP/IP?"
+choices = ["/p", "/s", "/keep", "-save"]
+answers = ["/p"]
+explanation = "The /p parameter stores the route in the registry."
+review = "Changing routes"
+
+[[question]]
+id = "route-add-linux"
+type = "short"
+prompt = "Write the Linux command (with sudo) that adds a route to 10.20.0.0/16 via 192.168.1.3."
+answers = ["sudo ip route add 10.20.0.0/16 via 192.168.1.3", "ip route add 10.20.0.0/16 via 192.168.1.3"]
+explanation = "ip route add <prefix> via <gateway>."
+review = "Changing routes"
+
+[[question]]
+id = "route-persist-linux"
+type = "choice"
+prompt = "You run 'ip route add' on Linux and then reboot. What happens to the route?"
+choices = ["It is gone; it was never saved", "It is kept automatically", "It is kept for one day", "It is copied to the router"]
+answers = ["It is gone; it was never saved"]
+explanation = "Keep routes in the network manager's configuration, not in ad-hoc commands."
+review = "Changing routes"
+
+[[question]]
+id = "route-remote"
+type = "choice"
+prompt = "Why should you avoid changing the default route over a remote session?"
+choices = ["It can cut off the session you are using to repair it", "It voids the licence", "Remote sessions cannot read routes", "It resets the TTL"]
+answers = ["It can cut off the session you are using to repair it"]
+explanation = "A bad change leaves you unable to reach the machine to fix it."
+review = "Safe habits"
+
+[[question]]
+id = "route-prove"
+type = "choice"
+prompt = "After adding a static route, what is the best way to prove it works?"
+choices = ["Trace to a host behind it and check the first hop", "Reboot and hope", "Flush the DNS cache", "Run ipconfig /renew"]
+answers = ["Trace to a host behind it and check the first hop"]
+explanation = "A trace shows the path actually taken."
+review = "Safe habits"
+
+# ---- Troubleshooting ----
+
+[[question]]
+id = "two-defaults"
+type = "choice"
+prompt = "A laptop has two default routes (Wi-Fi and a VM adapter) and traffic takes an unexpected path. What decides which is used?"
+choices = ["The lower metric", "The higher metric", "Alphabetical order of adapters", "Whichever is plugged in first"]
+answers = ["The lower metric"]
+explanation = "Equal prefix length means metric breaks the tie."
+review = "Troubleshooting by symptom"
+
+[[question]]
+id = "one-way"
+type = "choice"
+prompt = "Requests reach a server but replies never come back. What is a likely cause?"
+choices = ["The remote end has no route back to the sender", "The sender's DNS is wrong", "The TTL is too high", "The hosts file is stale"]
+answers = ["The remote end has no route back to the sender"]
+explanation = "Routing must work in both directions."
+review = "Troubleshooting by symptom"
+
+[[question]]
+id = "by-addr-not-name"
+type = "choice"
+prompt = "The internet works by address but not by name. Is this a routing fault?"
+choices = ["No, it points at DNS", "Yes, the default route is missing", "Yes, the TTL is too low", "No, it points at the subnet mask"]
+answers = ["No, it points at DNS"]
+explanation = "If packets reach an address, routing works."
+review = "Troubleshooting by symptom"

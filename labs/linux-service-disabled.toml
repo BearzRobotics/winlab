@@ -1,0 +1,29 @@
+schema_version = 1
+id = "labs.linux-service-disabled"
+target = "linux"
+distro = "ubuntu" # cron is the service name on Debian-family systems (AlmaLinux has its own version of this lab)
+title = "Linux: scheduled jobs are not running"
+summary = "A system service has been stopped and disabled."
+lesson = "foundations.troubleshooting-method"
+symptom = "None of the scheduled jobs on this Linux server have run since yesterday, and the cron service does not seem to be doing anything."
+hints = [
+  "On a modern Linux server, background services are managed by systemd.",
+  "systemctl can show a service's state. Look at both whether it is active now and whether it is enabled at boot.",
+  "The cron service is the one that runs scheduled jobs. Start it, and make sure it comes back after a restart.",
+]
+expected_changes = ["Stops and disables the cron service in the Linux lab VM"]
+hazards = ["Scheduled jobs in the lab VM do not run until cron is enabled and started"]
+scope = "single guest (the registered Linux training VM only)"
+privilege = "administrator"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["comptia-linux-plus/system-management", "comptia-linux-plus/troubleshooting", "redhat-rhcsa/running-systems"]
+setup = "systemctl enable --now cron"
+fault = "systemctl disable --now cron"
+solution = "systemctl enable --now cron"
+
+[validate]
+script = '''
+echo "enabled=$(systemctl is-enabled cron 2>&1);active=$(systemctl is-active cron 2>&1)"
+'''
+expect_output_contains = "enabled=enabled;active=active"

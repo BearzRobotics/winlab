@@ -1,0 +1,28 @@
+schema_version = 1
+id = "labs.time-service-disabled"
+title = "The clock keeps drifting"
+summary = "A service that should start by itself has been disabled."
+lesson = "windows-admin.services-and-startup"
+symptom = "The server's clock has been drifting, and other machines are starting to complain about time differences. Someone mentions it was fine before the last maintenance window."
+hints = [
+  "Keeping the clock right is a background service's job.",
+  "Find the Windows Time service. Look at both its status and its startup type.",
+  "A service can be stopped now and still come back after a restart, or not, depending on its startup type.",
+]
+expected_changes = ["Stops the Windows Time service and sets its startup type to Disabled in the lab VM"]
+hazards = ["The lab VM's clock is no longer corrected until the service is restored"]
+scope = "single guest (the registered training VM only)"
+privilege = "administrator"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["comptia-a-core2/operating-systems", "comptia-a-core2/software-troubleshooting"]
+setup = "Set-Service -Name W32Time -StartupType Automatic; Start-Service -Name W32Time"
+fault = "Stop-Service -Name W32Time -Force; Set-Service -Name W32Time -StartupType Disabled"
+solution = "Set-Service -Name W32Time -StartupType Automatic; Start-Service -Name W32Time"
+
+[validate]
+script = '''
+$s = Get-Service -Name W32Time
+"StartType=$($s.StartType);Status=$($s.Status)"
+'''
+expect_output_contains = "StartType=Automatic;Status=Running"

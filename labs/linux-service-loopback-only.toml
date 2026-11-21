@@ -1,0 +1,58 @@
+schema_version = 1
+id = "labs.linux-service-loopback-only"
+target = "linux"
+title = "Linux: the web service refuses connections from the network"
+summary = "A service is running but only listens on the loopback address."
+lesson = "networking.addressing-and-names"
+symptom = "The notes service on port 8080 works when you test it from the server itself with localhost, but other machines get 'connection refused'. The service shows as running and no firewall rule has changed."
+hints = [
+  "Refused (not timed out) means the host answered and nothing was listening on that address and port. That points at the service, not a firewall.",
+  "ss -tln lists listening TCP sockets. Look at the Local Address column for port 8080: 127.0.0.1 means loopback only, 0.0.0.0 means all addresses.",
+  "systemctl cat winlab-notes shows how the service is started. The address it binds to is part of the command line.",
+  "After you change a unit file, systemctl daemon-reload and restart the service. Make sure it also starts at boot.",
+]
+expected_changes = [
+  "Creates a small file-serving service winlab-notes (python3 http.server on port 8080) and enables it",
+  "Then changes its bind address to 127.0.0.1 so it only answers on loopback, in the Linux lab VM",
+]
+hazards = ["The notes service in the lab VM is unreachable from other addresses until the bind address is corrected"]
+scope = "single guest (the registered Linux training VM only)"
+privilege = "administrator"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["comptia-network-plus/network-troubleshooting", "comptia-linux-plus/troubleshooting", "redhat-rhcsa/basic-networking"]
+setup = '''
+set -e
+mkdir -p /srv/notes
+echo 'notes service ok' > /srv/notes/index.html
+cat > /etc/systemd/system/winlab-notes.service <<'UNIT'
+[Unit]
+Description=WinLab notes service
+After=network.target
+[Service]
+ExecStart=/usr/bin/python3 -m http.server 8080 --bind 0.0.0.0 --directory /srv/notes
+[Install]
+WantedBy=multi-user.target
+UNIT
+systemctl daemon-reload
+systemctl enable --now winlab-notes.service
+'''
+fault = '''
+sed -i 's/--bind 0.0.0.0/--bind 127.0.0.1/' /etc/systemd/system/winlab-notes.service
+systemctl daemon-reload
+systemctl restart winlab-notes.service
+'''
+solution = '''
+sed -i 's/--bind 127.0.0.1/--bind 0.0.0.0/' /etc/systemd/system/winlab-notes.service
+systemctl daemon-reload
+systemctl restart winlab-notes.service
+'''
+
+[validate]
+script = '''
+ip=$(hostname -I | awk '{print $1}')
+body=$(curl -s -m 5 "http://$ip:8080/" || true)
+en=$(systemctl is-enabled winlab-notes 2>&1)
+echo "body=$body;enabled=$en"
+'''
+expect_output_contains = "body=notes service ok;enabled=enabled"

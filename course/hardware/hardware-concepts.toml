@@ -1,0 +1,29 @@
+schema_version = 1
+id = "hardware.hardware-concepts"
+title = "Hardware concepts and reading what a machine reports"
+summary = "CPU, RAM, storage, RAID, firmware and virtualization concepts, plus built-in commands that report hardware on Windows and Linux."
+content = "hardware-concepts.md"
+estimated_minutes = 35
+objectives = [
+  "Name the main hardware parts and the symptom each produces when it fails",
+  "Explain why running out of RAM makes a machine slow",
+  "Compare HDD, SSD and NVMe and describe RAID 0, 1, 5, 6 and 10",
+  "Report CPU, memory and disk details with built-in Windows and Linux commands",
+  "Explain hypervisors and the IaaS, PaaS and SaaS cloud models",
+]
+prerequisites = ["foundations.troubleshooting-method"]
+windows_features = ["Windows PowerShell", "Task Manager"]
+privilege = "standard"
+certifications = ["comptia-a-core1/hardware", "comptia-a-core1/hardware-network-troubleshooting", "comptia-a-core1/virtualization-cloud", "comptia-linux-plus/system-management"]
+evaluation_criteria = [
+  "Learner reports the CPU count, memory and disk types of a lab VM on both Windows and Linux",
+  "Learner explains the difference between RAID and backup",
+]
+
+[[references]]
+title = "Get-CimInstance (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/cimcmdlets/get-ciminstance"
+
+[[references]]
+title = "lscpu(1) manual page"
+url = "https://man7.org/linux/man-pages/man1/lscpu.1.html"

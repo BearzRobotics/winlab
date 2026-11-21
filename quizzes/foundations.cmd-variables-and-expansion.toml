@@ -1,0 +1,447 @@
+schema_version = 1
+lesson = "foundations.cmd-variables-and-expansion"
+# Draft for owner review. A bank of 50; each attempt asks 10, favouring questions missed last time.
+draw = 10
+
+# ---- What a variable is ----
+
+[[question]]
+id = "var-text"
+type = "choice"
+prompt = "What type are values stored in cmd variables?"
+choices = ["Text, always", "Integers", "Objects", "Booleans"]
+answers = ["Text, always"]
+explanation = "Arithmetic is something set /a does to text."
+review = "What a variable is"
+
+[[question]]
+id = "var-case"
+type = "choice"
+prompt = "Are variable names case-sensitive in cmd?"
+choices = ["No", "Yes", "Only for system variables", "Only in batch files"]
+answers = ["No"]
+explanation = "%PATH% and %Path% are the same variable."
+review = "What a variable is"
+
+[[question]]
+id = "var-parent"
+type = "choice"
+prompt = "A batch file you run sets a variable. Does your prompt see it afterwards?"
+choices = ["No; a child process cannot change its parent's environment", "Yes, always", "Only if it uses setx", "Only after a reboot"]
+answers = ["No; a child process cannot change its parent's environment"]
+explanation = "A script that is called, not run, shares the cmd and can."
+review = "What a variable is"
+
+# ---- Setting ----
+
+[[question]]
+id = "set-spaces"
+type = "choice"
+prompt = "What does 'set x = 1' create?"
+choices = ["A variable named 'x ' (trailing space) with the value ' 1'", "x with the value 1", "An error", "Two variables"]
+answers = ["A variable named 'x ' (trailing space) with the value ' 1'"]
+explanation = "Spaces are part of the name and the value."
+review = "Setting and reading"
+
+[[question]]
+id = "set-quoted"
+type = "short"
+prompt = "Write the recommended quoted form that sets name to Bob."
+answers = ["set \"name=Bob\""]
+explanation = "Nothing outside the quotes can become part of the value."
+review = "Setting and reading"
+
+[[question]]
+id = "set-comment"
+type = "choice"
+prompt = "Why must you not put a rem comment on the same line as a set?"
+choices = ["Everything after the = is the value, so the comment becomes part of it", "rem is not allowed in batch files", "It deletes the variable", "It runs the comment as a command"]
+answers = ["Everything after the = is the value, so the comment becomes part of it"]
+explanation = "Use a separate rem line."
+review = "Setting and reading"
+
+[[question]]
+id = "set-amp"
+type = "choice"
+prompt = "Why is the quoted form safe for values containing &?"
+choices = ["Special characters inside the quotes are not interpreted", "& is removed", "set ignores &", "cmd escapes it twice"]
+answers = ["Special characters inside the quotes are not interpreted"]
+explanation = "Without quotes, 'set name=a & b' sets name to 'a ' and tries to run b."
+review = "Setting and reading"
+
+[[question]]
+id = "set-delete"
+type = "short"
+prompt = "Write the command that deletes the variable name."
+answers = ["set name="]
+explanation = "A set with nothing after the = removes the variable."
+review = "Setting and reading"
+
+[[question]]
+id = "set-defined"
+type = "short"
+prompt = "Complete the test (one line): if ___ name echo set  -- what keyword tests whether a variable has a value?"
+answers = ["defined", "if defined name echo set"]
+explanation = "if defined name."
+review = "Setting and reading"
+
+[[question]]
+id = "setp-what"
+type = "choice"
+prompt = "What does 'set /p' do?"
+choices = ["Shows a prompt and stores what the user types", "Sets a permanent variable", "Prints a variable", "Sets a path"]
+answers = ["Shows a prompt and stores what the user types"]
+explanation = "Pressing Enter without typing leaves the variable unchanged."
+review = "Reading input: `set /p`"
+
+[[question]]
+id = "setp-empty"
+type = "choice"
+prompt = "A user presses Enter at a 'set /p answer=' prompt without typing. What is answer?"
+choices = ["Unchanged from before", "Empty", "0", "An error"]
+answers = ["Unchanged from before"]
+explanation = "Clear the variable first if you must know whether it was typed."
+review = "Reading input: `set /p`"
+
+[[question]]
+id = "setp-file"
+type = "short"
+prompt = "Write the command that stores the first line of file.txt in the variable first."
+answers = ["set /p first=<file.txt", "set /p first=< file.txt"]
+explanation = "Redirecting input makes set /p read a line from the file."
+review = "Reading input: `set /p`"
+
+# ---- Arithmetic ----
+
+[[question]]
+id = "a-basic"
+type = "short"
+prompt = "After 'set /a a=7*6' what does 'echo %a%' print? (number)"
+answers = ["42"]
+explanation = "Arithmetic is integer."
+review = "Arithmetic with `set /a`"
+
+[[question]]
+id = "a-intdiv"
+type = "short"
+prompt = "What does 'set /a r=17/5' store in r? (number)"
+answers = ["3"]
+explanation = "Division is integer division."
+review = "Arithmetic with `set /a`"
+
+[[question]]
+id = "a-mod"
+type = "short"
+prompt = "In a batch file, write the remainder of 17 divided by 5 as a set /a expression using a variable c (full set /a command)."
+answers = ["set /a c=17%%5"]
+explanation = "The remainder operator is written %% in a batch file."
+review = "Arithmetic with `set /a`"
+
+[[question]]
+id = "a-octal"
+type = "short"
+prompt = "What does 'set /a d=010+1' store in d? (number)"
+answers = ["9"]
+explanation = "A leading 0 means octal, so 010 is 8."
+review = "Arithmetic with `set /a`"
+
+[[question]]
+id = "a-hex"
+type = "short"
+prompt = "What does 'set /a e=0x1F' store in e? (decimal number)"
+answers = ["31"]
+explanation = "0x prefixes hexadecimal."
+review = "Arithmetic with `set /a`"
+
+[[question]]
+id = "a-08"
+type = "choice"
+prompt = "Why is 'set /a x=08' an error?"
+choices = ["A leading zero means octal and 8 is not an octal digit", "08 is too long", "set /a needs quotes", "x is reserved"]
+answers = ["A leading zero means octal and 8 is not an octal digit"]
+explanation = "Strip leading zeros from user input before arithmetic."
+review = "Arithmetic with `set /a`"
+
+[[question]]
+id = "a-overflow"
+type = "short"
+prompt = "What does 'set /a f=2147483647+1' store? (number)"
+answers = ["-2147483648"]
+explanation = "set /a is 32-bit signed and wraps silently."
+review = "Arithmetic with `set /a`"
+
+[[question]]
+id = "a-shift"
+type = "short"
+prompt = "What does 'set /a \"g=1<<4\"' store in g? (number)"
+answers = ["16"]
+explanation = "A left shift by 4 multiplies by 16."
+review = "Arithmetic with `set /a`"
+
+[[question]]
+id = "a-bitand"
+type = "short"
+prompt = "What does 'set /a \"m=0xFF & 0x0F\"' store in m? (decimal number)"
+answers = ["15"]
+explanation = "0xFF and 0x0F is 0x0F, which is 15."
+review = "Arithmetic with `set /a`"
+
+[[question]]
+id = "a-quote"
+type = "choice"
+prompt = "Why quote the expression in set /a \"g=1<<4\"?"
+choices = ["<< is a special character cmd would otherwise treat as a redirection", "Quotes make it faster", "set /a requires quotes", "To allow negative numbers"]
+answers = ["<< is a special character cmd would otherwise treat as a redirection"]
+explanation = "The same applies to & | ^."
+review = "Arithmetic with `set /a`"
+
+[[question]]
+id = "a-float"
+type = "choice"
+prompt = "Which numbers can set /a handle?"
+choices = ["32-bit signed integers only", "Floating-point numbers", "64-bit integers", "Complex numbers"]
+answers = ["32-bit signed integers only"]
+explanation = "For anything else use PowerShell."
+review = "Arithmetic with `set /a`"
+
+[[question]]
+id = "a-noperc"
+type = "choice"
+prompt = "Inside 'set /a', how do you refer to a variable?"
+choices = ["By its bare name, without percent signs", "With percent signs", "With a dollar sign", "With exclamation marks only"]
+answers = ["By its bare name, without percent signs"]
+explanation = "For example: set /a total=a+b."
+review = "Arithmetic with `set /a`"
+
+[[question]]
+id = "a-random"
+type = "short"
+prompt = "What is the largest number %RANDOM% can return? (number)"
+answers = ["32767"]
+explanation = "It returns 0 to 32767."
+review = "Arithmetic with `set /a`"
+
+# ---- Substitution ----
+
+[[question]]
+id = "sub-replace"
+type = "short"
+prompt = "With s=C:\\Dir\\file.txt, what does %s:\\=/% give?"
+answers = ["C:/Dir/file.txt"]
+explanation = "Every backslash is replaced by a slash."
+review = "String substitution and slicing"
+
+[[question]]
+id = "sub-slice"
+type = "short"
+prompt = "With s=C:\\Dir\\file.txt, what does %s:~3,3% give?"
+answers = ["Dir"]
+explanation = "Three characters from offset 3 (0-based)."
+review = "String substitution and slicing"
+
+[[question]]
+id = "sub-last"
+type = "short"
+prompt = "With s=C:\\Dir\\file.txt, what does %s:~-3% give?"
+answers = ["txt"]
+explanation = "A negative offset counts from the end."
+review = "String substitution and slicing"
+
+[[question]]
+id = "sub-trim"
+type = "short"
+prompt = "With s=C:\\Dir\\file.txt, what does %s:~0,-4% give?"
+answers = ["C:\\Dir\\file"]
+explanation = "From the start, leaving off the last four characters."
+review = "String substitution and slicing"
+
+[[question]]
+id = "sub-star"
+type = "short"
+prompt = "With s=C:\\Dir\\file.txt, what does %s:*\\=% give?"
+answers = ["Dir\\file.txt"]
+explanation = "It deletes everything up to and including the first backslash."
+review = "String substitution and slicing"
+
+[[question]]
+id = "sub-params"
+type = "choice"
+prompt = "Do the %v:old=new% forms work on %1 parameters directly?"
+choices = ["No; copy the parameter into a variable first", "Yes", "Only %0", "Only with delayed expansion"]
+answers = ["No; copy the parameter into a variable first"]
+explanation = "They work on variables only."
+review = "String substitution and slicing"
+
+# ---- Expansion timing ----
+
+[[question]]
+id = "exp-when"
+type = "choice"
+prompt = "When is %var% replaced with its value?"
+choices = ["When the line (or whole block) is read, before it runs", "When the command executes", "At the end of the script", "Only when echoed"]
+answers = ["When the line (or whole block) is read, before it runs"]
+explanation = "A parenthesised block counts as one line."
+review = "When is a variable expanded?"
+
+[[question]]
+id = "exp-sameline"
+type = "choice"
+prompt = "What does 'set y=1 & echo y=%y%' print on the first run, when y was not set before?"
+choices = ["y=", "y=1", "y=1 ", "An error"]
+answers = ["y="]
+explanation = "%y% was replaced before set ran."
+review = "When is a variable expanded?"
+
+[[question]]
+id = "exp-loop"
+type = "choice"
+prompt = "A loop does 'set /a n+=1 & echo %n%' three times and prints the same number each time. Why?"
+choices = ["%n% was expanded once, before the block ran", "set /a is broken", "echo caches output", "n is read-only"]
+answers = ["%n% was expanded once, before the block ran"]
+explanation = "Use delayed expansion and !n!."
+review = "When is a variable expanded?"
+
+[[question]]
+id = "exp-enable"
+type = "short"
+prompt = "Write the command that turns delayed expansion on for the script (one line, two words after setlocal)."
+answers = ["setlocal enabledelayedexpansion"]
+explanation = "After that, !var! is read when the command executes."
+review = "Delayed expansion"
+
+[[question]]
+id = "exp-bang"
+type = "choice"
+prompt = "With delayed expansion on, 'set \"t=Hello!\"' then 'echo !t!' prints:"
+choices = ["Hello", "Hello!", "!t!", "An error"]
+answers = ["Hello"]
+explanation = "A lone ! is consumed when delayed expansion is on."
+review = "Delayed expansion"
+
+[[question]]
+id = "exp-paren"
+type = "choice"
+prompt = "Why can echo %ProgramFiles(x86)% inside a parenthesised block break the block?"
+choices = ["The value contains ) which ends the block early", "x86 is not a valid name", "It needs delayed expansion", "Parentheses are not allowed in blocks"]
+answers = ["The value contains ) which ends the block early"]
+explanation = "Copy it into a variable outside the block with the quoted form and use !var! inside."
+review = "Another expansion trap: `)` inside a block"
+
+# ---- Scope ----
+
+[[question]]
+id = "scope-endlocal"
+type = "choice"
+prompt = "What does endlocal do?"
+choices = ["Discards variable changes made since the matching setlocal", "Ends the script", "Deletes the environment", "Saves variables permanently"]
+answers = ["Discards variable changes made since the matching setlocal"]
+explanation = "Variables set after setlocal are discarded at endlocal or at the end of the script."
+review = "Scope: `setlocal` and `endlocal`"
+
+[[question]]
+id = "scope-return"
+type = "short"
+prompt = "Complete the standard trick: endlocal & set \"result=___\" to return the inner variable local1 (write the value expression)."
+answers = ["%local1%"]
+explanation = "Both commands are on one line, so %local1% is expanded before endlocal discards it."
+review = "Scope: `setlocal` and `endlocal`"
+
+# ---- Parameters ----
+
+[[question]]
+id = "par-all"
+type = "short"
+prompt = "Which expression holds all the arguments of a batch file? (with the symbol)"
+answers = ["%*"]
+explanation = "%1 to %9 are single arguments; %0 is the script."
+review = "Parameters"
+
+[[question]]
+id = "par-shift"
+type = "choice"
+prompt = "What does shift do?"
+choices = ["Moves the arguments down by one, so %2 becomes %1", "Shifts bits left", "Changes the keyboard layout", "Moves a file"]
+answers = ["Moves the arguments down by one, so %2 becomes %1"]
+explanation = "It lets you process more than nine arguments."
+review = "Parameters"
+
+[[question]]
+id = "par-tilde"
+type = "choice"
+prompt = "What does %~1 do?"
+choices = ["Removes surrounding quotes from the first argument", "Adds quotes", "Expands to the script name", "Converts to upper case"]
+answers = ["Removes surrounding quotes from the first argument"]
+explanation = "Re-add your own quotes when you use it: \"%~1\"."
+review = "Parameter modifiers"
+
+[[question]]
+id = "par-dp0"
+type = "choice"
+prompt = "What is %~dp0 used for?"
+choices = ["The folder the script lives in, ending with a backslash", "The current directory", "The user's profile", "The drive of the temp folder"]
+answers = ["The folder the script lives in, ending with a backslash"]
+explanation = "It finds files beside the script however it was started."
+review = "Parameter modifiers"
+
+[[question]]
+id = "par-nx"
+type = "short"
+prompt = "Which modifier gives the file name plus extension of the first argument? (include %)"
+answers = ["%~nx1"]
+explanation = "n is the name and x the extension."
+review = "Parameter modifiers"
+
+[[question]]
+id = "par-size"
+type = "short"
+prompt = "Which modifier gives the size in bytes of the first argument? (include %)"
+answers = ["%~z1"]
+explanation = "%~t1 is the time and %~a1 the attributes."
+review = "Parameter modifiers"
+
+# ---- Provided variables and permanence ----
+
+[[question]]
+id = "prov-dynamic"
+type = "multi"
+prompt = "Which of these are dynamic variables, computed when read? Select all that apply."
+choices = ["%CD%", "%RANDOM%", "%ERRORLEVEL%", "%USERPROFILE%"]
+answers = ["%CD%", "%RANDOM%", "%ERRORLEVEL%"]
+explanation = "%USERPROFILE% is an ordinary environment variable."
+review = "Variables Windows provides"
+
+[[question]]
+id = "prov-errlevel"
+type = "choice"
+prompt = "Why must you never 'set ERRORLEVEL=5' yourself?"
+choices = ["It hides the real dynamic ERRORLEVEL", "It is a protected word", "It deletes the log", "It stops the script"]
+answers = ["It hides the real dynamic ERRORLEVEL"]
+explanation = "A user variable with that name overrides the dynamic one."
+review = "Variables Windows provides"
+
+[[question]]
+id = "perm-setx"
+type = "choice"
+prompt = "You run 'setx PROJECT C:\\work'. When does the value appear?"
+choices = ["In new processes started afterwards, not the current window", "Immediately in the current window", "Only after a reboot", "Never"]
+answers = ["In new processes started afterwards, not the current window"]
+explanation = "setx writes to the registry for future processes."
+review = "Making a change permanent"
+
+[[question]]
+id = "perm-path"
+type = "choice"
+prompt = "Why is 'setx PATH \"%PATH%;C:\\tools\"' a bad idea?"
+choices = ["%PATH% is the merged user-plus-system value, so it copies the system entries into the user variable", "setx cannot set PATH", "It needs a reboot", "It deletes PATH"]
+answers = ["%PATH% is the merged user-plus-system value, so it copies the system entries into the user variable"]
+explanation = "Edit PATH in the dialog or with a deliberate script."
+review = "Making a change permanent"
+
+[[question]]
+id = "perm-gui"
+type = "choice"
+prompt = "Where is the graphical dialog for permanent environment variables?"
+choices = ["System properties, Environment Variables (search Start for 'environment variables')", "Task Manager", "Device Manager", "Windows Update"]
+answers = ["System properties, Environment Variables (search Start for 'environment variables')"]
+explanation = "The upper list is per user, the lower for all users."
+review = "Making a change permanent"

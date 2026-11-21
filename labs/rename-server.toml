@@ -1,0 +1,23 @@
+schema_version = 1
+id = "labs.rename-server"
+title = "The server has the wrong name"
+summary = "A change that only takes effect after a restart."
+lesson = "foundations.architecture"
+symptom = "This server is supposed to be called FILESRV01, but it still reports a different name. Get it named correctly."
+hints = [
+  "Computers have a name that other systems use to find them. Where is it changed?",
+  "PowerShell has a cmdlet for renaming the computer. It may warn you about something.",
+  "After you rename it, check the name again. Does it change straight away?",
+]
+expected_changes = ["Nothing is changed; the server keeps its install-time name until the learner renames it"]
+hazards = ["Renaming and restarting the lab VM interrupts anything running in it"]
+scope = "single guest (the registered training VM only)"
+privilege = "administrator"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["comptia-a-core2/operating-systems"]
+solution = "Rename-Computer -NewName 'FILESRV01' -Force; Restart-Computer -Force"
+
+[validate]
+script = "$env:COMPUTERNAME"
+expect_output_contains = "FILESRV01"

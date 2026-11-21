@@ -1,0 +1,56 @@
+schema_version = 1
+id = "networking.addressing-and-names"
+title = "Networking basics: addresses, names and ports"
+summary = "The overview of the networking track: a layered model and a bottom-up routine that tells no address, wrong gateway, wrong DNS and blocked port apart, using built-in tools on Windows and Linux."
+content = "addressing-and-names.md"
+estimated_minutes = 45
+objectives = [
+  "Read an IPv4 address and prefix and say whether two hosts share a network",
+  "Explain what DHCP, a default gateway and DNS each do",
+  "Tell a link, address, name or port problem apart using built-in tools",
+  "Explain the difference between a refused and a timed-out connection",
+]
+prerequisites = ["foundations.troubleshooting-method"]
+windows_features = ["Command Prompt", "Windows PowerShell"]
+privilege = "standard"
+certifications = ["comptia-network-plus/networking-concepts", "comptia-network-plus/network-troubleshooting", "comptia-a-core1/networking", "comptia-linux-plus/troubleshooting"]
+evaluation_criteria = [
+  "Learner works through the bottom-up routine on a lab VM and records the first failing step",
+  "Learner explains why an APIPA address (169.254.x.x) appears",
+]
+
+[[references]]
+title = "Test-NetConnection (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/nettcpip/test-netconnection"
+
+[[references]]
+title = "ip(8) manual page"
+url = "https://man7.org/linux/man-pages/man8/ip.8.html"
+
+[[references]]
+title = "RFC 791: Internet Protocol"
+url = "https://www.rfc-editor.org/rfc/rfc791"
+
+[[references]]
+title = "RFC 1918: Address allocation for private internets"
+url = "https://www.rfc-editor.org/rfc/rfc1918"
+
+[[references]]
+title = "RFC 3927: Dynamic configuration of IPv4 link-local addresses"
+url = "https://www.rfc-editor.org/rfc/rfc3927"
+
+[[references]]
+title = "ipconfig (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/ipconfig"
+
+[[references]]
+title = "Get-NetIPConfiguration (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/nettcpip/get-netipconfiguration"
+
+[[references]]
+title = "nsswitch.conf(5) manual page"
+url = "https://man7.org/linux/man-pages/man5/nsswitch.conf.5.html"
+
+[[references]]
+title = "IANA service name and transport protocol port number registry"
+url = "https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml"

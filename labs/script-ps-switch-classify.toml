@@ -1,0 +1,93 @@
+schema_version = 1
+kind = "script"
+id = "labs.script-ps-switch-classify"
+title = "Script (PowerShell): classify values with switch and a function"
+summary = "Sort numbers into bands with switch, keep counts, and report them."
+lesson = "foundations.powershell-control-flow"
+symptom = '''
+Write a PowerShell script and save it as C:\Labs\classify.ps1.
+
+The file C:\Labs\data\numbers.txt has one whole number per line. Classify each number:
+
+    below 10        low
+    10 to 49        medium
+    50 or more      high
+
+Your script must print the number of values in each class, in this exact form and order:
+
+    low: 3
+    medium: 5
+    high: 2
+
+Print nothing else. A class with no values still gets a line with 0. Skip blank lines. The numbers change every time your script is checked.
+'''
+hints = [
+  "switch can test a value against conditions written as script blocks: switch ($n) { { $_ -lt 10 } { ... } }.",
+  "A hashtable keeps counts: $counts = @{ low = 0; medium = 0; high = 0 }, then $counts['low']++.",
+  "Read each line with Get-Content and convert it with [int] so the comparisons are numeric.",
+  "Remember switch does not stop at the first match unless you use break. Here the bands do not overlap, so it does not matter, but know the rule.",
+]
+expected_changes = ["Creates C:\\Labs with a starter script and a generated numbers file"]
+hazards = ["None: the script only reads a file"]
+scope = "single guest (the registered training VM only)"
+privilege = "standard"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["comptia-a-core2/operating-systems"]
+language = "powershell"
+script_path = 'C:\Labs\classify.ps1'
+starter = '''
+# classify.ps1
+# Count the numbers in C:\Labs\data\numbers.txt that are low (<10), medium (10-49) and high (50+)
+# Print: "low: N", "medium: N", "high: N" (in that order)
+'''
+solution = '''
+$counts = @{ low = 0; medium = 0; high = 0 }
+foreach ($line in Get-Content -Path 'C:\Labs\data\numbers.txt') {
+    if (-not $line.Trim()) { continue }
+    $n = [int]$line
+    switch ($n) {
+        { $_ -lt 10 } { $counts['low']++; break }
+        { $_ -lt 50 } { $counts['medium']++; break }
+        default       { $counts['high']++ }
+    }
+}
+"low: $($counts['low'])"
+"medium: $($counts['medium'])"
+"high: $($counts['high'])"
+'''
+
+[[tests]]
+setup = '''
+New-Item -ItemType Directory -Force -Path 'C:\Labs\data' | Out-Null
+$nums = 1..(Get-Random -Minimum 8 -Maximum 30) | ForEach-Object { Get-Random -Minimum 0 -Maximum 100 }
+Set-Content -Path 'C:\Labs\data\numbers.txt' -Value $nums
+'''
+expect = '''
+$n = @(Get-Content 'C:\Labs\data\numbers.txt' | Where-Object { $_.Trim() } | ForEach-Object { [int]$_ })
+"low: $(@($n | Where-Object { $_ -lt 10 }).Count)"
+"medium: $(@($n | Where-Object { $_ -ge 10 -and $_ -lt 50 }).Count)"
+"high: $(@($n | Where-Object { $_ -ge 50 }).Count)"
+'''
+
+[[tests]]
+setup = '''
+New-Item -ItemType Directory -Force -Path 'C:\Labs\data' | Out-Null
+Set-Content -Path 'C:\Labs\data\numbers.txt' -Value @('9', '10', '49', '50', '', '0', '99')
+'''
+expect = '''
+"low: 2"
+"medium: 2"
+"high: 2"
+'''
+
+[[tests]]
+setup = '''
+New-Item -ItemType Directory -Force -Path 'C:\Labs\data' | Out-Null
+Set-Content -Path 'C:\Labs\data\numbers.txt' -Value @('5', '6', '7')
+'''
+expect = '''
+"low: 3"
+"medium: 0"
+"high: 0"
+'''

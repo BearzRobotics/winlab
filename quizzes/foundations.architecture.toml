@@ -1,0 +1,367 @@
+schema_version = 1
+lesson = "foundations.architecture"
+# Draft for owner review. A bank of 40; each attempt asks 10, favouring questions missed last time.
+draw = 10
+
+# ---- Kernel and user mode ----
+
+[[question]]
+id = "km-what"
+type = "choice"
+prompt = "What runs in kernel mode?"
+choices = ["The operating system core and device drivers", "Web browsers", "Word processors", "Every service"]
+answers = ["The operating system core and device drivers"]
+explanation = "Kernel-mode code can reach all memory and hardware."
+review = "Two modes of execution"
+certifications = ["comptia-a-core2/operating-systems"]
+
+[[question]]
+id = "um-crash"
+type = "choice"
+prompt = "A user-mode application crashes. What happens to Windows?"
+choices = ["It keeps running", "It always shows a blue screen", "It restarts", "The disk is erased"]
+answers = ["It keeps running"]
+explanation = "Each user-mode process has its own private memory, so one crash does not stop the system."
+review = "Two modes of execution"
+
+[[question]]
+id = "bsod-mode"
+type = "choice"
+prompt = "A fault in which mode can stop the whole machine (a blue screen)?"
+choices = ["Kernel mode", "User mode", "Neither", "Both equally"]
+answers = ["Kernel mode"]
+explanation = "A fault in kernel mode can take down the whole system."
+review = "Two modes of execution"
+
+[[question]]
+id = "bsod-driver"
+type = "choice"
+prompt = "A blue screen began right after a new driver was installed. Which is the most likely area?"
+choices = ["The driver (kernel mode)", "The user's wallpaper", "The browser", "The keyboard layout"]
+answers = ["The driver (kernel mode)"]
+explanation = "Drivers run in kernel mode, and a fault there stops the system."
+review = "Two modes of execution"
+
+[[question]]
+id = "syscall"
+type = "choice"
+prompt = "How does a user-mode program get privileged work done?"
+choices = ["It calls the Win32 API, and the OS makes system calls to the kernel", "It writes directly to hardware", "It edits the registry", "It restarts the machine"]
+answers = ["It calls the Win32 API, and the OS makes system calls to the kernel"]
+explanation = "Applications rarely make system calls themselves."
+review = "Two modes of execution"
+
+[[question]]
+id = "driverquery"
+type = "short"
+prompt = "Which Command Prompt command lists installed device drivers? (command name)"
+answers = ["driverquery"]
+explanation = "driverquery /fo table prints them as a table."
+review = "Seeing the drivers"
+
+[[question]]
+id = "freeze-vs-bsod"
+type = "choice"
+prompt = "An application freezes but Windows keeps responding. Where do you look first?"
+choices = ["The application, its settings and dependencies", "The graphics card firmware", "The motherboard", "The power supply"]
+answers = ["The application, its settings and dependencies"]
+explanation = "A frozen application points at user mode, not the kernel."
+review = "Two modes of execution"
+
+# ---- Processes and threads ----
+
+[[question]]
+id = "proc-def"
+type = "choice"
+prompt = "What is a process?"
+choices = ["A running instance of a program", "A file on disk", "A unit inside a CPU", "A user account"]
+answers = ["A running instance of a program"]
+explanation = "A program is the file; a process is its running instance."
+review = "Programs, processes and threads"
+
+[[question]]
+id = "prog-def"
+type = "choice"
+prompt = "What is a program?"
+choices = ["A file on disk, usually an .exe", "A running instance", "A thread", "A service account"]
+answers = ["A file on disk, usually an .exe"]
+explanation = "Starting it creates a process."
+review = "Programs, processes and threads"
+
+[[question]]
+id = "thread-def"
+type = "choice"
+prompt = "What does Windows schedule onto processor cores?"
+choices = ["Threads", "Programs", "Profiles", "SIDs"]
+answers = ["Threads"]
+explanation = "A thread is a unit of execution inside a process."
+review = "Programs, processes and threads"
+
+[[question]]
+id = "pid"
+type = "choice"
+prompt = "You start Notepad twice. How many processes exist and how do you tell them apart?"
+choices = ["Two, by their PID", "One, by its name", "Two, by their SID", "One, by its session"]
+answers = ["Two, by their PID"]
+explanation = "Each process has its own process ID."
+review = "Programs, processes and threads"
+
+[[question]]
+id = "proc-cmd-ps"
+type = "short"
+prompt = "Which PowerShell cmdlet lists running processes?"
+answers = ["Get-Process"]
+explanation = "Get-Process gives the Id, SessionId and Path among other properties."
+review = "Seeing processes from the command line"
+
+[[question]]
+id = "proc-cmd-cmd"
+type = "short"
+prompt = "Which Command Prompt command lists running processes? (command name)"
+answers = ["tasklist"]
+explanation = "tasklist /v adds the user name and session."
+review = "Seeing processes from the command line"
+
+[[question]]
+id = "proc-path"
+type = "choice"
+prompt = "Why look at a process's path and not only its name?"
+choices = ["A malicious program can use the name of a genuine system process", "Names are always unique", "Paths show the CPU use", "Windows hides names"]
+answers = ["A malicious program can use the name of a genuine system process"]
+explanation = "The path shows where the file really is."
+review = "Seeing processes from the command line"
+
+[[question]]
+id = "proc-parent"
+type = "choice"
+prompt = "A document viewer has started a command shell. What does that deserve?"
+choices = ["A second look at the parent and command line", "Nothing; it is always normal", "A reboot", "Deleting the document viewer"]
+answers = ["A second look at the parent and command line"]
+explanation = "An unexpected parent is worth investigating."
+review = "Seeing processes from the command line"
+
+[[question]]
+id = "proc-parentcmd"
+type = "short"
+prompt = "Which PowerShell cmdlet (with a class name like Win32_Process) can show a process's parent process ID and command line? (cmdlet name)"
+answers = ["Get-CimInstance"]
+explanation = "Get-CimInstance Win32_Process returns ParentProcessId and CommandLine."
+review = "Seeing processes from the command line"
+
+# ---- Services and sessions ----
+
+[[question]]
+id = "svc-def"
+type = "choice"
+prompt = "What is a service?"
+choices = ["A process Windows starts and manages without a user needing to sign in", "A user account", "A folder", "A type of driver"]
+answers = ["A process Windows starts and manages without a user needing to sign in"]
+explanation = "Examples are the print spooler and Windows Update."
+review = "Services"
+
+[[question]]
+id = "svc-starttypes"
+type = "multi"
+prompt = "Which are service start types? Select all that apply."
+choices = ["Automatic", "Manual", "Disabled", "Kernel"]
+answers = ["Automatic", "Manual", "Disabled"]
+explanation = "Services are automatic, manual or disabled."
+review = "Services"
+
+[[question]]
+id = "svc-account"
+type = "choice"
+prompt = "Which kind of account do services normally run under?"
+choices = ["A service account, not the signed-in user's", "Always the signed-in user", "Always a guest", "None"]
+answers = ["A service account, not the signed-in user's"]
+explanation = "Examples are SYSTEM, Local Service and Network Service."
+review = "Services"
+
+[[question]]
+id = "svc-session0"
+type = "choice"
+prompt = "In which session do services run?"
+choices = ["Session 0, separate from user desktops", "The first user's session", "Every session", "No session"]
+answers = ["Session 0, separate from user desktops"]
+explanation = "A service cannot normally show a window on your desktop."
+review = "Sessions, users and profiles"
+
+[[question]]
+id = "logon-session"
+type = "choice"
+prompt = "When is a logon session created?"
+choices = ["Each time an account signs in", "Only at boot", "Only for administrators", "When a service starts"]
+answers = ["Each time an account signs in"]
+explanation = "Each sign-in has its own session."
+review = "Sessions, users and profiles"
+
+[[question]]
+id = "profile-def"
+type = "choice"
+prompt = "What does a user profile hold?"
+choices = ["Documents, desktop items, application settings and the user's registry hive", "The Windows kernel", "All drivers", "Other users' files"]
+answers = ["Documents, desktop items, application settings and the user's registry hive"]
+explanation = "It is a folder under C:\\Users."
+review = "Sessions, users and profiles"
+
+# ---- SIDs ----
+
+[[question]]
+id = "sid-why"
+type = "choice"
+prompt = "Why might two users with the same display name still have different permissions?"
+choices = ["Permissions are stored against the SID, and the accounts have different SIDs", "Windows ignores names", "One is a service", "Names are case-sensitive"]
+answers = ["Permissions are stored against the SID, and the accounts have different SIDs"]
+explanation = "Names are for people; SIDs are what permissions are stored against."
+review = "Sessions, users and profiles"
+
+[[question]]
+id = "sid-cmd"
+type = "short"
+prompt = "Which command shows your own user name and SID? (include the switch)"
+answers = ["whoami /user"]
+explanation = "whoami /user prints USER INFORMATION with the SID."
+review = "Sessions, users and profiles"
+
+[[question]]
+id = "sid-system"
+type = "short"
+prompt = "Which well-known SID is the SYSTEM account? (S-1-5-...)"
+answers = ["S-1-5-18"]
+explanation = "S-1-5-19 is Local Service and S-1-5-20 is Network Service."
+review = "Sessions, users and profiles"
+
+[[question]]
+id = "sid-admins"
+type = "choice"
+prompt = "What is S-1-5-32-544?"
+choices = ["The local Administrators group", "The SYSTEM account", "The Guest account", "Everyone"]
+answers = ["The local Administrators group"]
+explanation = "It is the same on every Windows machine."
+review = "Sessions, users and profiles"
+
+[[question]]
+id = "sid-rid"
+type = "choice"
+prompt = "The last number of a machine SID (for example -1001) is called:"
+choices = ["The RID, the account's own number on that machine", "The PID", "The build number", "The port"]
+answers = ["The RID, the account's own number on that machine"]
+explanation = "500 is the built-in Administrator; ordinary accounts start at 1000."
+review = "Sessions, users and profiles"
+
+[[question]]
+id = "sid-recreate"
+type = "choice"
+prompt = "A user's account was deleted and re-created with the same name. They lost access to their old files. Why?"
+choices = ["The new account has a new SID; the old permissions were stored against the old SID", "The files were encrypted by Windows Update", "Names must be unique across years", "The profile was moved"]
+answers = ["The new account has a new SID; the old permissions were stored against the old SID"]
+explanation = "A re-created account does not inherit the old one's permissions."
+review = "Sessions, users and profiles"
+
+# ---- Folders and variables ----
+
+[[question]]
+id = "dir-windows"
+type = "choice"
+prompt = "Which folder holds 64-bit applications?"
+choices = ["C:\\Program Files", "C:\\Program Files (x86)", "C:\\Windows", "C:\\ProgramData"]
+answers = ["C:\\Program Files"]
+explanation = "32-bit applications go in Program Files (x86) on a 64-bit system."
+review = "What lives where"
+
+[[question]]
+id = "dir-x86"
+type = "choice"
+prompt = "Which folder holds 32-bit applications on a 64-bit Windows?"
+choices = ["C:\\Program Files (x86)", "C:\\Program Files", "C:\\Users", "C:\\Windows\\System32"]
+answers = ["C:\\Program Files (x86)"]
+explanation = "That is what the (x86) means."
+review = "What lives where"
+
+[[question]]
+id = "dir-programdata"
+type = "choice"
+prompt = "Which folder holds application data shared by all users?"
+choices = ["C:\\ProgramData", "C:\\Users\\<name>", "C:\\Windows", "C:\\Program Files"]
+answers = ["C:\\ProgramData"]
+explanation = "Per-user data goes in the user's profile instead."
+review = "What lives where"
+
+[[question]]
+id = "sysroot"
+type = "short"
+prompt = "Which environment variable (Command Prompt form, with percent signs) always points at the Windows folder?"
+answers = ["%SystemRoot%", "%windir%", "SystemRoot", "%SYSTEMROOT%"]
+explanation = "Use it in scripts rather than assuming C:\\Windows."
+review = "What lives where"
+
+[[question]]
+id = "ps-env"
+type = "short"
+prompt = "How do you read the SystemRoot variable in PowerShell? (write the expression)"
+answers = ["$env:SystemRoot", "$env:systemroot", "$Env:SystemRoot"]
+explanation = "PowerShell exposes environment variables through the Env: drive, as $env:Name."
+review = "What lives where"
+
+[[question]]
+id = "known-folders"
+type = "choice"
+prompt = "Why should a script not assume %USERPROFILE%\\Documents is the Documents folder?"
+choices = ["Known folders can be moved, for example by OneDrive", "Documents is always on D:", "Windows renames it daily", "It is read-only"]
+answers = ["Known folders can be moved, for example by OneDrive"]
+explanation = "Use the known-folder API or the shell variables instead."
+review = "What lives where"
+
+# ---- Version and terminal ----
+
+[[question]]
+id = "which-win"
+type = "short"
+prompt = "Which PowerShell cmdlet reports OS name, version and build?"
+answers = ["Get-ComputerInfo"]
+explanation = "Use -Property OsName,OsVersion,OsBuildNumber to limit the output."
+review = "Which Windows is this?"
+
+[[question]]
+id = "win11-build"
+type = "choice"
+prompt = "How can you tell Windows 11 from Windows 10 by build number?"
+choices = ["Windows 11 builds are 22000 or higher", "Windows 11 builds are below 10000", "They report different file systems", "Windows 11 has no build number"]
+answers = ["Windows 11 builds are 22000 or higher"]
+explanation = "Both report version 10.0; the build tells them apart."
+review = "Which Windows is this?"
+
+[[question]]
+id = "win-oldest"
+type = "choice"
+prompt = "Which is the oldest Windows client this course supports?"
+choices = ["Windows 10", "Windows 7", "Windows 8", "Windows XP"]
+answers = ["Windows 10"]
+explanation = "Windows 11 Pro is the default."
+review = "Which Windows is this?"
+
+[[question]]
+id = "edit-what"
+type = "choice"
+prompt = "What is Microsoft Edit?"
+choices = ["A small open-source terminal text editor that ships with Windows 11", "A web browser", "A PowerShell module", "A disk partitioner"]
+answers = ["A small open-source terminal text editor that ships with Windows 11"]
+explanation = "Run it as 'edit file.txt'; it can be installed on Windows 10 with winget."
+review = "Working from the terminal"
+
+[[question]]
+id = "edit-install"
+type = "short"
+prompt = "Write the winget command that installs Microsoft Edit."
+answers = ["winget install Microsoft.Edit", "winget install --id Microsoft.Edit"]
+explanation = "The package id is Microsoft.Edit."
+review = "Working from the terminal"
+
+[[question]]
+id = "terminal-host"
+type = "choice"
+prompt = "Which tool hosts Command Prompt, PowerShell and WSL in tabs?"
+choices = ["Windows Terminal", "Task Manager", "Notepad", "File Explorer"]
+answers = ["Windows Terminal"]
+explanation = "It is a host for several shells side by side."
+review = "Working from the terminal"

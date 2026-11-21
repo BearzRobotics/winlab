@@ -1,0 +1,50 @@
+schema_version = 1
+id = "networking.models-and-protocols"
+title = "How networks work: layers, protocols and ports"
+summary = "The OSI and TCP/IP models, how data is wrapped on its way out, TCP versus UDP, the ports and protocols you meet daily, and how MAC addresses, ARP and switches fit in."
+content = "models-and-protocols.md"
+estimated_minutes = 50
+objectives = [
+  "Name the layers of the OSI and TCP/IP models and place a protocol or device at its layer",
+  "Describe encapsulation and name the unit of data at each layer",
+  "Explain the TCP three-way handshake and when an application uses UDP instead",
+  "Match common services to their well-known ports and transport protocol",
+  "Explain how ARP, MAC addresses, switches and routers work together on one local network",
+]
+prerequisites = ["foundations.troubleshooting-method"]
+windows_features = ["Command Prompt", "Windows PowerShell"]
+privilege = "standard"
+certifications = ["comptia-network-plus/networking-concepts", "comptia-a-core1/networking", "comptia-linux-plus/troubleshooting"]
+evaluation_criteria = [
+  "Learner places ten given protocols and devices at the correct layer",
+  "Learner reads a connection list and says which service each listening port belongs to",
+  "Learner explains why a ping can succeed while a web page does not load",
+]
+
+[[references]]
+title = "Test-NetConnection (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/nettcpip/test-netconnection"
+
+[[references]]
+title = "IANA service name and transport protocol port number registry"
+url = "https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml"
+
+[[references]]
+title = "arp(8) and ip-neighbour(8) manual pages"
+url = "https://man7.org/linux/man-pages/man8/ip-neighbour.8.html"
+
+[[references]]
+title = "RFC 9293: Transmission Control Protocol"
+url = "https://www.rfc-editor.org/rfc/rfc9293"
+
+[[references]]
+title = "RFC 826: Address Resolution Protocol"
+url = "https://www.rfc-editor.org/rfc/rfc826"
+
+[[references]]
+title = "netstat (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/netstat"
+
+[[references]]
+title = "ss(8) manual page"
+url = "https://man7.org/linux/man-pages/man8/ss.8.html"

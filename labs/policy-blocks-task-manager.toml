@@ -1,0 +1,36 @@
+schema_version = 1
+id = "labs.policy-blocks-task-manager"
+target = "windows"
+title = "Task Manager is disabled by a policy"
+summary = "A registry policy stops everyone, including administrators, from opening Task Manager."
+lesson = "windows-admin.registry-and-filesystems"
+symptom = "When anyone tries to open Task Manager, Windows says it has been disabled by your administrator. Nobody remembers setting that. Task Manager should work for administrators again."
+hints = [
+  "The message names a policy. Administrative policies are stored in the registry under HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies, and per-user ones under HKCU and each user's hive.",
+  "Task Manager's policy lives in the 'System' key under Policies. Look at the values there.",
+  "Removing the policy value, not setting a new one, returns the machine to its default.",
+  "gpresult /r and the Local Group Policy Editor show what applies, but the value itself is what you change here.",
+]
+expected_changes = [
+  "Sets the registry value DisableTaskMgr = 1 under HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System",
+]
+hazards = ["Task Manager cannot be opened on the lab VM until the policy value is removed"]
+scope = "single guest (the registered training VM only)"
+privilege = "administrator"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["microsoft-md-102/manage-maintain-devices", "microsoft-md-102/protect-devices", "comptia-a-core2/operating-systems"]
+setup = "Remove-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System' -Name DisableTaskMgr -ErrorAction SilentlyContinue; exit 0"
+fault = '''
+$p = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System'
+New-Item -Path $p -Force | Out-Null
+New-ItemProperty -Path $p -Name DisableTaskMgr -Value 1 -PropertyType DWord -Force | Out-Null
+'''
+solution = "Remove-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System' -Name DisableTaskMgr"
+
+[validate]
+script = '''
+$v = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System' -Name DisableTaskMgr -ErrorAction SilentlyContinue).DisableTaskMgr
+"task_manager=$(if ($v -eq 1) { 'blocked' } else { 'allowed' })"
+'''
+expect_output_contains = "task_manager=allowed"

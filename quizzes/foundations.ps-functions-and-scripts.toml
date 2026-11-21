@@ -1,0 +1,371 @@
+schema_version = 1
+lesson = "foundations.ps-functions-and-scripts"
+# Draft for owner review. A bank of 41; each attempt asks 10, favouring questions missed last time.
+draw = 10
+
+# ---- Calling and naming ----
+
+[[question]]
+id = "ca-comma"
+type = "choice"
+prompt = "Why does Add-Two 1, 2 fail for a function with two int parameters?"
+choices = ["1, 2 is one array argument and goes to the first parameter", "Commas are forbidden", "The function needs parentheses", "Add-Two is reserved"]
+answers = ["1, 2 is one array argument and goes to the first parameter"]
+explanation = "Separate arguments with spaces: Add-Two 1 2."
+review = "The call-syntax trap"
+
+[[question]]
+id = "ca-paren"
+type = "choice"
+prompt = "What does Add-Two(1, 2) do?"
+choices = ["Passes one array argument, the same mistake as the comma", "Calls it correctly", "Is a syntax error", "Calls it twice"]
+answers = ["Passes one array argument, the same mistake as the comma"]
+explanation = "PowerShell functions are not called like methods."
+review = "The call-syntax trap"
+
+[[question]]
+id = "ca-prec"
+type = "choice"
+prompt = "In what order does PowerShell resolve a command name?"
+choices = ["Alias, function, cmdlet, external program", "Function, alias, cmdlet, program", "Cmdlet, function, alias, program", "Program first"]
+answers = ["Alias, function, cmdlet, external program"]
+explanation = "That is why a function named ls or r never runs."
+review = "Do not shadow aliases"
+
+[[question]]
+id = "ca-alias-r"
+type = "choice"
+prompt = "A function named R is defined, but calling R reports 'Cannot locate most recent history'. Why?"
+choices = ["The alias r (Invoke-History) wins over the function", "R is a reserved word", "History is disabled", "Functions cannot be one letter"]
+answers = ["The alias r (Invoke-History) wins over the function"]
+explanation = "Check names with Get-Command first."
+review = "Do not shadow aliases"
+
+[[question]]
+id = "ca-check"
+type = "short"
+prompt = "Which cmdlet shows what a name resolves to before you reuse it? (cmdlet name)"
+answers = ["Get-Command"]
+explanation = "Get-Command ls shows an Alias."
+review = "Do not shadow aliases"
+
+[[question]]
+id = "ca-verb"
+type = "short"
+prompt = "Which cmdlet lists the approved verbs for naming functions? (cmdlet name)"
+answers = ["Get-Verb"]
+explanation = "Use Verb-Noun names."
+review = "A first function"
+
+# ---- Parameters ----
+
+[[question]]
+id = "pm-default"
+type = "short"
+prompt = "With param([int[]]$N = 1..3) summing $N, what does calling it with no argument give? (number)"
+answers = ["6"]
+explanation = "The default applies when the caller omits the parameter."
+review = "Types, defaults and switches"
+
+[[question]]
+id = "pm-switch"
+type = "choice"
+prompt = "What is a [switch] parameter?"
+choices = ["A flag with no value; its presence turns it on", "A parameter that takes true or false text", "A positional parameter", "A parameter set"]
+answers = ["A flag with no value; its presence turns it on"]
+explanation = "Like -Force or -Quiet."
+review = "Types, defaults and switches"
+
+[[question]]
+id = "pm-args"
+type = "choice"
+prompt = "What do you lose by reading $args instead of declaring param()?"
+choices = ["Validation, names, help and tab completion", "Nothing", "Speed only", "The ability to be called"]
+answers = ["Validation, names, help and tab completion"]
+explanation = "Prefer param()."
+review = "The unnamed-argument style (avoid)"
+
+[[question]]
+id = "pm-binding"
+type = "choice"
+prompt = "What does [CmdletBinding()] give a function?"
+choices = ["Common parameters, strict parameter checking and access to $PSCmdlet", "Nothing visible", "Speed", "A module"]
+answers = ["Common parameters, strict parameter checking and access to $PSCmdlet"]
+explanation = "It makes it an advanced function."
+review = "`[CmdletBinding()]`: an advanced function"
+
+[[question]]
+id = "pm-mandatory"
+type = "choice"
+prompt = "A mandatory parameter is missing and the script runs non-interactively. What happens?"
+choices = ["It fails with a missing-mandatory-parameter error instead of hanging", "It prompts forever", "It uses $null", "It guesses"]
+answers = ["It fails with a missing-mandatory-parameter error instead of hanging"]
+explanation = "Interactively, PowerShell prompts."
+review = "Mandatory parameters, validation and pipeline input"
+
+[[question]]
+id = "pm-validateset"
+type = "choice"
+prompt = "What does [ValidateSet('B','KB','MB')] do?"
+choices = ["Limits the parameter to those values and offers tab completion", "Sets the default", "Converts to uppercase", "Makes it mandatory"]
+answers = ["Limits the parameter to those values and offers tab completion"]
+explanation = "Bad values are rejected before the body runs."
+review = "Mandatory parameters, validation and pipeline input"
+
+[[question]]
+id = "pm-validate-when"
+type = "choice"
+prompt = "When does parameter validation run?"
+choices = ["Before the function body runs", "After the body", "Only with -Verbose", "Only in scripts"]
+answers = ["Before the function body runs"]
+explanation = "So the body can assume good input."
+review = "Mandatory parameters, validation and pipeline input"
+
+[[question]]
+id = "pm-validate-list"
+type = "multi"
+prompt = "Which are validation attributes? Select all that apply."
+choices = ["ValidateRange", "ValidatePattern", "ValidateScript", "ValidateMagic"]
+answers = ["ValidateRange", "ValidatePattern", "ValidateScript"]
+explanation = "ValidateNotNullOrEmpty, ValidateCount and ValidateLength exist too."
+review = "Mandatory parameters, validation and pipeline input"
+
+[[question]]
+id = "pm-pipe"
+type = "short"
+prompt = "Which Parameter attribute setting lets a parameter accept objects from the pipeline? (one word)"
+answers = ["ValueFromPipeline"]
+explanation = "[Parameter(ValueFromPipeline)]."
+review = "Mandatory parameters, validation and pipeline input"
+
+[[question]]
+id = "pm-process"
+type = "choice"
+prompt = "How often does the process block run?"
+choices = ["Once per pipeline input object", "Once", "Never", "Twice"]
+answers = ["Once per pipeline input object"]
+explanation = "begin runs once before and end once after."
+review = "`begin`, `process`, `end`"
+
+[[question]]
+id = "pm-noprocess"
+type = "choice"
+prompt = "A function with a ValueFromPipeline parameter but no process block receives 1..3. What does the parameter hold?"
+choices = ["Only the last object, 3", "All three", "Nothing", "The first, 1"]
+answers = ["Only the last object, 3"]
+explanation = "The whole stream is in $input."
+review = "`begin`, `process`, `end`"
+
+[[question]]
+id = "pm-filter"
+type = "choice"
+prompt = "What is a function whose whole body is a process block called?"
+choices = ["A filter", "A script block", "A cmdlet", "A module"]
+answers = ["A filter"]
+explanation = "function Double-It { process { $_ * 2 } }."
+review = "`begin`, `process`, `end`"
+
+[[question]]
+id = "pm-sets"
+type = "choice"
+prompt = "What are parameter sets for?"
+choices = ["Mutually exclusive ways of calling a command", "Grouping validation", "Default values", "Aliases"]
+answers = ["Mutually exclusive ways of calling a command"]
+explanation = "Using parameters from two sets together gives an error."
+review = "Parameter sets"
+
+[[question]]
+id = "pm-pset-var"
+type = "short"
+prompt = "Which expression tells you which parameter set was used? (with the dollar sign, e.g. $PSCmdlet.X)"
+answers = ["$PSCmdlet.ParameterSetName"]
+explanation = "Available in advanced functions."
+review = "Parameter sets"
+
+[[question]]
+id = "pm-splat"
+type = "choice"
+prompt = "What does splatting do?"
+choices = ["Passes a hashtable of parameter values with @ instead of $", "Splits a string", "Expands wildcards", "Runs in parallel"]
+answers = ["Passes a hashtable of parameter values with @ instead of $"]
+explanation = "Get-Size @args1."
+review = "Splatting"
+
+[[question]]
+id = "pm-bound"
+type = "choice"
+prompt = "What does $PSBoundParameters contain?"
+choices = ["The parameters the caller actually supplied, not defaults", "All parameters", "Only mandatory ones", "The defaults"]
+answers = ["The parameters the caller actually supplied, not defaults"]
+explanation = "It tells 'left blank' from 'set to the default'."
+review = "Splatting"
+
+# ---- Returning and output ----
+
+[[question]]
+id = "rt-all"
+type = "choice"
+prompt = "What does a function return?"
+choices = ["Everything it outputs, not only what follows return", "Only what follows return", "The last line only", "Nothing without Write-Output"]
+answers = ["Everything it outputs, not only what follows return"]
+explanation = "Any uncaptured expression goes into the result."
+review = "What a function returns"
+
+[[question]]
+id = "rt-pollute"
+type = "short"
+prompt = "ArrayList.Add returns the index it used. Write the assignment that discards it for $al.Add('x') (e.g. $x = ...)."
+answers = ["$null = $al.Add('x')", "$null = $al.Add(\"x\")"]
+explanation = "[void]$al.Add('x') and | Out-Null also work."
+review = "What a function returns"
+
+[[question]]
+id = "rt-bad"
+type = "choice"
+prompt = "A function adds two items to an ArrayList without capturing and then outputs 'result'. What does the caller get?"
+choices = ["An array: 0, 1 and result", "Just result", "An error", "Nothing"]
+answers = ["An array: 0, 1 and result"]
+explanation = "That is output pollution."
+review = "What a function returns"
+
+[[question]]
+id = "rt-return"
+type = "choice"
+prompt = "What does return do besides outputting its value?"
+choices = ["Exits the function", "Nothing", "Clears the output", "Restarts the function"]
+answers = ["Exits the function"]
+explanation = "'first'; return 'second'; 'never' outputs first and second."
+review = "What a function returns"
+
+[[question]]
+id = "rt-host"
+type = "choice"
+prompt = "Why is Write-Host a poor way to return data?"
+choices = ["It writes to the screen and is not captured in the result", "It is slow", "It is removed in 7", "It needs a module"]
+answers = ["It writes to the screen and is not captured in the result"]
+explanation = "Use Write-Output or output objects."
+review = "What a function returns"
+
+[[question]]
+id = "rt-objects"
+type = "choice"
+prompt = "What is the best kind of output from a function?"
+choices = ["Objects such as [pscustomobject]", "Formatted text", "Write-Host lines", "Strings with padding"]
+answers = ["Objects such as [pscustomobject]"]
+explanation = "The caller can then sort, filter and export it."
+review = "What a function returns"
+
+[[question]]
+id = "rt-scope"
+type = "choice"
+prompt = "A function does $counter++ where $counter exists outside. What happens to the outer variable?"
+choices = ["It is unchanged: the function made a local copy", "It increases", "An error", "It becomes null"]
+answers = ["It is unchanged: the function made a local copy"]
+explanation = "Use $script:counter++ to change the outer one deliberately."
+review = "Scope"
+
+# ---- WhatIf and help ----
+
+[[question]]
+id = "wi-attr"
+type = "short"
+prompt = "Which CmdletBinding setting adds -WhatIf and -Confirm support? (one word)"
+answers = ["SupportsShouldProcess"]
+explanation = "[CmdletBinding(SupportsShouldProcess)]."
+review = "`-WhatIf` and `-Confirm` for your own commands"
+
+[[question]]
+id = "wi-call"
+type = "short"
+prompt = "Which method do you call around each change to honour -WhatIf? (for example $PSCmdlet.X)"
+answers = ["$PSCmdlet.ShouldProcess", "ShouldProcess"]
+explanation = "It returns false under -WhatIf."
+review = "`-WhatIf` and `-Confirm` for your own commands"
+
+[[question]]
+id = "wi-which"
+type = "choice"
+prompt = "Which functions should support ShouldProcess?"
+choices = ["Any function that changes or deletes things", "Only read-only functions", "Only scripts", "None"]
+answers = ["Any function that changes or deletes things"]
+explanation = "Callers then get the same rehearsal habit cmdlets give them."
+review = "`-WhatIf` and `-Confirm` for your own commands"
+
+[[question]]
+id = "he-block"
+type = "choice"
+prompt = "What does comment-based help give a function?"
+choices = ["Get-Help output: synopsis, parameters and examples", "Faster execution", "Validation", "A module"]
+answers = ["Get-Help output: synopsis, parameters and examples"]
+explanation = "Write at least a synopsis, each parameter and one example."
+review = "Help for your functions"
+
+# ---- Scripts ----
+
+[[question]]
+id = "sc-requires"
+type = "short"
+prompt = "Which directive refuses to run a script on the wrong PowerShell version? (for example #Requires -Version 5.1; give the directive name)"
+answers = ["#Requires", "Requires"]
+explanation = "It can also demand modules or administrator rights."
+review = "Scripts"
+
+[[question]]
+id = "sc-exit"
+type = "choice"
+prompt = "How does a script give its caller an exit code?"
+choices = ["exit n", "return n", "Write-Output n", "throw n"]
+answers = ["exit n"]
+explanation = "cmd's %errorlevel% and Task Scheduler read it."
+review = "Scripts"
+
+[[question]]
+id = "sc-root"
+type = "short"
+prompt = "Which automatic variable holds the folder of the running script? (with the dollar sign)"
+answers = ["$PSScriptRoot"]
+explanation = "Join-Path $PSScriptRoot 'config.json'."
+review = "Scripts"
+
+[[question]]
+id = "sc-dot"
+type = "choice"
+prompt = "What is the difference between & .\\lib.ps1 and . .\\lib.ps1?"
+choices = ["& runs it in a child scope so its functions vanish; . keeps them defined", "No difference", "& is faster", ". runs it elevated"]
+answers = ["& runs it in a child scope so its functions vanish; . keeps them defined"]
+explanation = "Dot-sourcing loads a library of functions."
+review = "Running a script versus dot-sourcing it"
+
+[[question]]
+id = "sc-file"
+type = "short"
+prompt = "Which powershell.exe parameter runs a script file from another shell? (include the dash)"
+answers = ["-File"]
+explanation = "powershell -NoProfile -File .\\tool.ps1."
+review = "Scripts"
+
+[[question]]
+id = "ds-assume"
+type = "choice"
+prompt = "Why not assume the current directory in a script?"
+choices = ["A scheduled task or caller may start it elsewhere; use $PSScriptRoot", "It is always System32", "Scripts have no current directory", "It is slower"]
+answers = ["A scheduled task or caller may start it elsewhere; use $PSScriptRoot"]
+explanation = "Refer to files beside the script explicitly."
+review = "Designing a good function"
+
+[[question]]
+id = "ds-total"
+type = "short"
+prompt = "In the Get-Total exercise, what values does $t hold? (numbers separated by commas)"
+answers = ["0,1,2,12", "0, 1, 2, 12"]
+explanation = "The ArrayList.Add return values 0, 1 and 2 leaked, then the return value 12."
+review = "Read this function"
+
+[[question]]
+id = "ds-total-fix"
+type = "choice"
+prompt = "What is the right fix for the Get-Total bug?"
+choices = ["$null = $list.Add($n * 2)", "Remove return", "Use Write-Host for the total", "Use $args"]
+answers = ["$null = $list.Add($n * 2)"]
+explanation = "Also keep Write-Host out of data-returning functions."
+review = "Read this function"

@@ -1,0 +1,417 @@
+schema_version = 1
+lesson = "networking.dns"
+# Draft for owner review. A bank of 45; each attempt asks 10, favouring questions missed last time.
+draw = 10
+
+# ---- Concepts ----
+
+[[question]]
+id = "dns-purpose"
+type = "choice"
+prompt = "What is DNS mainly used for?"
+choices = ["Mapping names to data, most often to IP addresses", "Assigning IP addresses to clients", "Encrypting web traffic", "Choosing the best route to a network"]
+answers = ["Mapping names to data, most often to IP addresses"]
+explanation = "DNS is a distributed database of names. Handing out addresses is DHCP's job."
+review = "What DNS is"
+certifications = ["comptia-network-plus/networking-concepts"]
+
+[[question]]
+id = "tree-order"
+type = "choice"
+prompt = "In www.example.com, which label is the top-level domain?"
+choices = ["com", "www", "example", "example.com"]
+answers = ["com"]
+explanation = "A name is read right to left up the tree: com is the TLD, example the second-level domain, www a host inside it."
+review = "What DNS is"
+
+[[question]]
+id = "root-dot"
+type = "short"
+prompt = "A fully written name ends in a dot, as in www.example.com. What does that final dot stand for? (one word)"
+answers = ["root", "the root"]
+explanation = "The final dot is the root of the tree. It is usually left off."
+review = "What DNS is"
+
+[[question]]
+id = "delegation"
+type = "choice"
+prompt = "Why can no single server hold all of DNS?"
+choices = ["Each level delegates the level below to other servers, so the data is distributed", "DNS records are too large for one disk", "Only the root servers are allowed to answer", "Records expire every hour"]
+answers = ["Each level delegates the level below to other servers, so the data is distributed"]
+explanation = "The root delegates to the TLD servers, which delegate to each domain's own servers."
+review = "What DNS is"
+
+[[question]]
+id = "case"
+type = "choice"
+prompt = "Are DNS names case-sensitive?"
+choices = ["No", "Yes", "Only the top-level domain", "Only on Linux"]
+answers = ["No"]
+explanation = "Names are not case-sensitive: Example.COM and example.com are the same name."
+review = "What DNS is"
+
+# ---- Roles ----
+
+[[question]]
+id = "role-stub"
+type = "choice"
+prompt = "Which role is the small client built into the operating system that asks one configured server?"
+choices = ["Stub resolver", "Recursive resolver", "Authoritative server", "Root server"]
+answers = ["Stub resolver"]
+explanation = "The stub resolver asks its configured server and caches the answer; it does not walk the tree itself."
+review = "The three roles"
+certifications = ["comptia-network-plus/networking-concepts"]
+
+[[question]]
+id = "role-recursive"
+type = "choice"
+prompt = "Which role walks from the root down, follows delegations and caches the result for its clients?"
+choices = ["Recursive resolver", "Stub resolver", "Authoritative server", "DHCP server"]
+answers = ["Recursive resolver"]
+explanation = "A recursive resolver does the lookup work on the client's behalf."
+review = "The three roles"
+
+[[question]]
+id = "role-auth"
+type = "choice"
+prompt = "Which role holds the real records for a zone and answers only for it?"
+choices = ["Authoritative server", "Recursive resolver", "Stub resolver", "Forwarder"]
+answers = ["Authoritative server"]
+explanation = "The authoritative servers are the source of truth for their zone."
+review = "The three roles"
+
+[[question]]
+id = "role-dhcp-source"
+type = "short"
+prompt = "Usually, which protocol hands a client the address of the DNS server it should ask? (acronym)"
+answers = ["DHCP"]
+explanation = "The DHCP offer carries the DNS servers, as the DHCP lesson showed."
+review = "The three roles"
+
+[[question]]
+id = "who-asks-root"
+type = "choice"
+prompt = "When your machine looks up www.example.com, which machine normally asks the root and .com servers?"
+choices = ["The recursive resolver your machine is configured to use", "Your machine directly", "The default gateway", "The DHCP server"]
+answers = ["The recursive resolver your machine is configured to use"]
+explanation = "The stub resolver sends one question to its recursive server; that server does the walking."
+review = "The three roles"
+
+# ---- Records ----
+
+[[question]]
+id = "rec-a"
+type = "choice"
+prompt = "Which record type holds an IPv4 address?"
+choices = ["A", "AAAA", "CNAME", "PTR"]
+answers = ["A"]
+explanation = "A holds IPv4; AAAA holds IPv6."
+review = "Record types"
+certifications = ["comptia-network-plus/networking-concepts"]
+
+[[question]]
+id = "rec-aaaa"
+type = "short"
+prompt = "Which record type holds an IPv6 address? (type only)"
+answers = ["AAAA", "AAAA record"]
+explanation = "AAAA (quad-A) holds an IPv6 address."
+review = "Record types"
+
+[[question]]
+id = "rec-mx"
+type = "short"
+prompt = "Which record type names the mail server for a domain? (two letters)"
+answers = ["MX"]
+explanation = "MX records name mail servers, each with a preference number."
+review = "Record types"
+
+[[question]]
+id = "rec-mx-pref"
+type = "choice"
+prompt = "An MX record has a preference number. Which server is tried first?"
+choices = ["The one with the lowest number", "The one with the highest number", "The first one alphabetically", "All at once"]
+answers = ["The one with the lowest number"]
+explanation = "Lower is tried first; higher numbers are fallbacks."
+review = "Record types"
+
+[[question]]
+id = "rec-ptr"
+type = "choice"
+prompt = "Which record type maps an address back to a name?"
+choices = ["PTR", "CNAME", "NS", "SOA"]
+answers = ["PTR"]
+explanation = "PTR is the reverse mapping, stored under in-addr.arpa for IPv4."
+review = "Record types"
+
+[[question]]
+id = "rec-reverse-name"
+type = "short"
+prompt = "Write the name you would look up to find the PTR record for 192.0.2.10 (include the arpa suffix)."
+answers = ["10.2.0.192.in-addr.arpa", "10.2.0.192.in-addr.arpa."]
+explanation = "The octets are written backwards under in-addr.arpa."
+review = "Record types"
+
+[[question]]
+id = "rec-ns"
+type = "choice"
+prompt = "Which record type lists the authoritative servers for a zone?"
+choices = ["NS", "MX", "TXT", "A"]
+answers = ["NS"]
+explanation = "NS records point at the zone's name servers."
+review = "Record types"
+
+[[question]]
+id = "rec-cname"
+type = "choice"
+prompt = "What does a CNAME record do?"
+choices = ["Makes one name an alias of another name", "Holds an IPv6 address", "Names the mail server", "Holds free text"]
+answers = ["Makes one name an alias of another name"]
+explanation = "A CNAME points a name at another name; the resolver then looks up the target."
+review = "Record types"
+
+[[question]]
+id = "cname-apex"
+type = "choice"
+prompt = "Why is a CNAME never used at the zone apex (for example at example.com itself)?"
+choices = ["A CNAME cannot coexist with other records of the same name, and the apex needs SOA and NS", "CNAME records are slower", "The apex must always be IPv6", "Registrars forbid it for billing reasons"]
+answers = ["A CNAME cannot coexist with other records of the same name, and the apex needs SOA and NS"]
+explanation = "A CNAME must be the only record of its name, but the apex also carries SOA and NS records."
+review = "Record types"
+
+[[question]]
+id = "rec-txt"
+type = "multi"
+prompt = "Which of these are things TXT records are used for? Select all that apply."
+choices = ["Domain ownership verification", "SPF email policy", "Holding the IPv4 address of a host", "Listing the mail servers"]
+answers = ["Domain ownership verification", "SPF email policy"]
+explanation = "TXT carries free text such as verification tokens and SPF. Addresses are A records; mail servers are MX."
+review = "Record types"
+
+# ---- Caching ----
+
+[[question]]
+id = "ttl-meaning"
+type = "choice"
+prompt = "What does a record's TTL tell a resolver?"
+choices = ["How many seconds it may keep the answer before asking again", "How many servers may hold the record", "How many hops to the server", "When the domain registration expires"]
+answers = ["How many seconds it may keep the answer before asking again"]
+explanation = "TTL is time to live, in seconds, for a cached answer."
+review = "Caching, TTL and why changes are slow"
+certifications = ["comptia-network-plus/networking-concepts"]
+
+[[question]]
+id = "change-slow"
+type = "choice"
+prompt = "You change a record's address. Why do some users keep reaching the old address for a while?"
+choices = ["Their resolvers keep the old answer until its TTL runs out", "DNS only updates at midnight", "The change must be approved by the root servers", "Browsers refuse new addresses"]
+answers = ["Their resolvers keep the old answer until its TTL runs out"]
+explanation = "Cached answers are valid until the TTL expires, so the change spreads gradually."
+review = "Caching, TTL and why changes are slow"
+
+[[question]]
+id = "ttl-plan"
+type = "choice"
+prompt = "Before a planned address change, what should you do with the TTL?"
+choices = ["Lower it a day ahead, change, then raise it again", "Raise it as high as possible", "Delete the record first", "Nothing; TTL cannot be changed"]
+answers = ["Lower it a day ahead, change, then raise it again"]
+explanation = "A short TTL means old answers expire quickly once you make the change."
+review = "Caching, TTL and why changes are slow"
+
+[[question]]
+id = "neg-cache"
+type = "short"
+prompt = "What name is given to remembering that a name does NOT exist? (two words, ending in 'caching')"
+answers = ["negative caching"]
+explanation = "RFC 2308 describes negative caching of NXDOMAIN answers."
+review = "Caching, TTL and why changes are slow"
+
+[[question]]
+id = "nxdomain-after-create"
+type = "choice"
+prompt = "You query a name before creating it, then create it, but still see 'does not exist'. What is the most likely cause?"
+choices = ["The negative answer is cached", "The hosts file was deleted", "The firewall dropped the reply", "The TTL was set to zero"]
+answers = ["The negative answer is cached"]
+explanation = "The 'does not exist' answer is cached for a time taken from the zone's SOA."
+review = "Caching, TTL and why changes are slow"
+
+# ---- Local order and files ----
+
+[[question]]
+id = "hosts-win"
+type = "short"
+prompt = "Give the full path of the hosts file on Windows."
+answers = ["C:\\Windows\\System32\\drivers\\etc\\hosts", "%SystemRoot%\\System32\\drivers\\etc\\hosts", "c:\\windows\\system32\\drivers\\etc\\hosts"]
+explanation = "The hosts file lives in drivers\\etc under System32."
+review = "The local lookup order"
+
+[[question]]
+id = "hosts-linux"
+type = "short"
+prompt = "Give the path of the hosts file on Linux."
+answers = ["/etc/hosts"]
+explanation = "Linux keeps it at /etc/hosts."
+review = "The local lookup order"
+
+[[question]]
+id = "hosts-override"
+type = "choice"
+prompt = "A line for a name in the hosts file, and a different answer in DNS. Which does an application on that machine get?"
+choices = ["The hosts-file answer", "The DNS answer", "Both, alternating", "Neither; it fails"]
+answers = ["The hosts-file answer"]
+explanation = "The hosts file is checked before DNS, so it silently overrides it."
+review = "The local lookup order"
+
+[[question]]
+id = "nsswitch"
+type = "short"
+prompt = "Which file on Linux sets the order of name sources, with a line such as 'hosts: files dns'? (file name only)"
+answers = ["nsswitch.conf", "/etc/nsswitch.conf"]
+explanation = "nsswitch.conf names the sources and their order."
+review = "The local lookup order"
+
+[[question]]
+id = "resolv-generated"
+type = "choice"
+prompt = "/etc/resolv.conf says it is generated and points at a local stub. What should you do to set a DNS server permanently?"
+choices = ["Use the network manager (for example nmcli), not the generated file", "Edit resolv.conf and hope", "Make resolv.conf read-only", "Delete resolv.conf"]
+answers = ["Use the network manager (for example nmcli), not the generated file"]
+explanation = "Hand edits to a generated file are overwritten at the next network event."
+review = "The local lookup order"
+
+# ---- Tools ----
+
+[[question]]
+id = "nslookup-unknown"
+type = "choice"
+prompt = "nslookup prints 'Server: UnKnown' but also an answer. What does that mean?"
+choices = ["Only that the DNS server's own address has no reverse name; the answer is fine", "The lookup failed", "The server is infected", "The query was blocked"]
+answers = ["Only that the DNS server's own address has no reverse name; the answer is fine"]
+explanation = "It is a failed reverse lookup of the server's address, not a problem with your query."
+review = "nslookup (Windows, and Linux if installed)"
+
+[[question]]
+id = "nslookup-server"
+type = "short"
+prompt = "Write the nslookup command that asks the server 1.1.1.1 for the MX record of example.com."
+answers = ["nslookup -type=MX example.com 1.1.1.1", "nslookup -q=MX example.com 1.1.1.1"]
+explanation = "The record type goes in -type= and the server is named last."
+review = "nslookup (Windows, and Linux if installed)"
+
+[[question]]
+id = "nslookup-hosts"
+type = "choice"
+prompt = "Does nslookup consult the hosts file?"
+choices = ["No, it talks straight to a DNS server", "Yes, always", "Only on Linux", "Only for IPv6"]
+answers = ["No, it talks straight to a DNS server"]
+explanation = "So nslookup can look healthy while an application is being overridden by a hosts line."
+review = "Querying from the command line"
+
+[[question]]
+id = "ps-nohosts"
+type = "choice"
+prompt = "Which Resolve-DnsName switch skips the hosts file?"
+choices = ["-NoHostsFile", "-DnsOnly", "-CacheOnly", "-Quick"]
+answers = ["-NoHostsFile"]
+explanation = "-NoHostsFile skips the hosts file; -DnsOnly restricts the query to the DNS protocol; -CacheOnly uses the local cache."
+review = "Resolve-DnsName (PowerShell)"
+
+[[question]]
+id = "getent-why"
+type = "choice"
+prompt = "Why is getent hosts a good first tool on Linux?"
+choices = ["It resolves the same way applications do: nsswitch, hosts file, then DNS", "It queries the root servers directly", "It is faster than any other tool", "It edits the hosts file"]
+answers = ["It resolves the same way applications do: nsswitch, hosts file, then DNS"]
+explanation = "getent follows the system's configured path, unlike dig, which asks a server directly."
+review = "Linux"
+
+[[question]]
+id = "flush-win"
+type = "short"
+prompt = "Give one Command Prompt command that clears the Windows DNS client cache."
+answers = ["ipconfig /flushdns"]
+explanation = "The PowerShell equivalent is Clear-DnsClientCache."
+review = "Seeing and changing the DNS settings"
+
+[[question]]
+id = "flush-scope"
+type = "choice"
+prompt = "You flush the cache on your PC. What does that change?"
+choices = ["Only this machine's cache", "The recursive resolver's cache too", "The authoritative servers' records", "Every machine on the network"]
+answers = ["Only this machine's cache"]
+explanation = "Other caches, notably your recursive resolver's, still follow their TTLs."
+review = "Seeing and changing the DNS settings"
+
+# ---- Troubleshooting ----
+
+[[question]]
+id = "ts-first"
+type = "choice"
+prompt = "Names do not resolve. What is the first step of the DNS routine?"
+choices = ["Reach an address directly, to rule DNS in or out", "Flush the cache", "Reinstall the network adapter", "Edit the hosts file"]
+answers = ["Reach an address directly, to rule DNS in or out"]
+explanation = "If you cannot reach an address either, the fault is lower than DNS."
+review = "A DNS troubleshooting routine"
+certifications = ["comptia-network-plus/network-troubleshooting"]
+
+[[question]]
+id = "ts-other-resolver"
+type = "choice"
+prompt = "A name resolves through 1.1.1.1 but not through your configured server. What does that suggest?"
+choices = ["Your configured resolver is at fault", "The name does not exist", "The zone is wrong", "Your cable is bad"]
+answers = ["Your configured resolver is at fault"]
+explanation = "The name is fine; the resolver you normally use is down, filtered or holding a stale answer."
+review = "A DNS troubleshooting routine"
+
+[[question]]
+id = "ts-timeout"
+type = "choice"
+prompt = "'DNS request timed out' most likely means:"
+choices = ["The server did not answer: it is unreachable, down, or port 53 is blocked", "The name does not exist", "The zone has no A record", "The TTL is too long"]
+answers = ["The server did not answer: it is unreachable, down, or port 53 is blocked"]
+explanation = "A missing name returns NXDOMAIN quickly; a timeout means no answer at all."
+review = "A DNS troubleshooting routine"
+
+[[question]]
+id = "ts-nxdomain"
+type = "choice"
+prompt = "NXDOMAIN means:"
+choices = ["The name does not exist (or is cached as missing)", "The server is down", "The server refused you", "The answer is too large for UDP"]
+answers = ["The name does not exist (or is cached as missing)"]
+explanation = "NXDOMAIN is the authoritative 'no such name' answer."
+review = "A DNS troubleshooting routine"
+
+[[question]]
+id = "dns-port"
+type = "choice"
+prompt = "Which transport and port does DNS normally use, and what does it fall back to for large answers?"
+choices = ["UDP 53, falling back to TCP 53", "TCP 53 only", "UDP 67, falling back to TCP 68", "UDP 443 only"]
+answers = ["UDP 53, falling back to TCP 53"]
+explanation = "A firewall that passes only UDP 53 breaks large answers and zone transfers."
+review = "A DNS troubleshooting routine"
+
+[[question]]
+id = "ping-name"
+type = "choice"
+prompt = "Why is ping against a name a poor DNS test?"
+choices = ["Ping may be blocked even when DNS works, so a failure does not prove DNS is broken", "Ping cannot use names", "Ping always uses the hosts file only", "Ping only works for IPv6"]
+answers = ["Ping may be blocked even when DNS works, so a failure does not prove DNS is broken"]
+explanation = "Use resolver tools to test DNS and ping or Test-NetConnection to test reachability."
+review = "Common mistakes"
+
+[[question]]
+id = "suffix"
+type = "choice"
+prompt = "What is the DNS suffix search list used for?"
+choices = ["Adding suffixes to short names so 'fileserver' becomes 'fileserver.corp.example.com'", "Encrypting DNS queries", "Blocking certain domains", "Choosing the fastest server"]
+answers = ["Adding suffixes to short names so 'fileserver' becomes 'fileserver.corp.example.com'"]
+explanation = "The search list is tried in order for names without a dot."
+review = "Seeing and changing the DNS settings"
+
+[[question]]
+id = "internal-names"
+type = "choice"
+prompt = "Names that exist only inside a company fail to resolve on one laptop that uses a public resolver. What is the fix?"
+choices = ["Use the company's DNS server, normally handed out by DHCP", "Raise the TTL", "Flush the public resolver", "Add a CNAME at the apex"]
+answers = ["Use the company's DNS server, normally handed out by DHCP"]
+explanation = "Only the internal DNS knows the internal names."
+review = "Common mistakes"

@@ -1,0 +1,37 @@
+schema_version = 1
+id = "labs.linux-file-permissions"
+target = "linux"
+title = "Linux: nobody can read the reports"
+summary = "A directory's permissions were tightened too far."
+lesson = "security.security-fundamentals"
+symptom = "The reporting team's account (reports_user) says it can no longer open the files in /srv/reports. The root account can still read them. It worked last week."
+hints = [
+  "Linux decides access from the owner, the group, and everyone else, using permission bits. Which command shows them?",
+  "ls -ld shows a directory's own permissions. To list its contents or open files inside, a user needs execute (x) on the directory.",
+  "Other users need at least r and x on the directory. Change it with chmod, and verify as that user, for example with sudo -u reports_user.",
+]
+expected_changes = [
+  "Creates /srv/reports with a sample file and a local account named reports_user",
+  "Sets /srv/reports to mode 700 (owner only)",
+]
+hazards = ["Ordinary accounts in the lab VM cannot read /srv/reports until it is fixed"]
+scope = "single guest (the registered Linux training VM only)"
+privilege = "administrator"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["comptia-linux-plus/security", "redhat-rhcsa/file-systems", "redhat-rhcsa/users-groups"]
+setup = '''
+mkdir -p /srv/reports
+echo 'Quarterly numbers' > /srv/reports/q3.txt
+chmod 755 /srv/reports
+chmod 644 /srv/reports/q3.txt
+id reports_user >/dev/null 2>&1 || useradd -m -s /bin/bash reports_user
+'''
+fault = "chmod 700 /srv/reports"
+solution = "chmod 755 /srv/reports"
+
+[validate]
+script = '''
+if sudo -u reports_user cat /srv/reports/q3.txt >/dev/null 2>&1; then echo "access ok"; else echo "access denied"; fi
+'''
+expect_output_contains = "access ok"

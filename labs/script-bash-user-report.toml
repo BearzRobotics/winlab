@@ -1,0 +1,70 @@
+schema_version = 1
+kind = "script"
+id = "labs.script-bash-user-report"
+target = "linux"
+title = "Script (bash): report users from a colon-separated file"
+summary = "Split fields with awk (or cut) and sort the result."
+lesson = "foundations.bash-control-flow"
+symptom = '''
+Write a bash script and save it as /home/labadmin/labs/bash-users.sh.
+
+The file /home/labadmin/labdata/users.txt has one account per line in the form  name:uid:shell  (like /etc/passwd, but shorter), for example:
+
+    alice:1001:/bin/bash
+    svc-backup:998:/usr/sbin/nologin
+
+Your script must print the names of the accounts whose shell is exactly /bin/bash, one per line, sorted alphabetically. Print nothing else.
+
+The file changes every time your script is checked; there is always at least one account with /bin/bash.
+'''
+hints = [
+  "Several tools split lines into fields: cut -d: -f1, or awk -F: '{print $1}'.",
+  "awk can test a field and print only matching lines: awk -F: '$3 == \"/bin/bash\" {print $1}' FILE",
+  "Pipe the result into sort to put the names in order.",
+  "/bin/bash must match exactly: /bin/sh and /usr/bin/bash do not count.",
+]
+expected_changes = ["Creates /home/labadmin/labs with a starter script and a generated users file"]
+hazards = ["None: the script only reads a file"]
+scope = "single guest (the registered Linux training VM only)"
+privilege = "standard"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["comptia-linux-plus/scripting-containers-automation", "redhat-rhcsa/essential-tools"]
+language = "bash"
+script_path = '/home/labadmin/labs/bash-users.sh'
+starter = '''
+#!/bin/bash
+# bash-users.sh
+# Print the names (first field) of accounts in /home/labadmin/labdata/users.txt whose
+# shell (third field) is exactly /bin/bash, sorted, one per line
+'''
+solution = '''
+#!/bin/bash
+awk -F: '$3 == "/bin/bash" { print $1 }' /home/labadmin/labdata/users.txt | sort
+'''
+
+[[tests]]
+setup = '''
+d=/home/labadmin/labdata
+rm -rf "$d"; mkdir -p "$d"
+shells=(/bin/bash /bin/bash /usr/sbin/nologin /bin/sh /usr/bin/bash /bin/false)
+: > "$d/users.txt"
+for n in $(printf '%s\n' alice bob carol dave erin frank grace heidi ivan judy | shuf -n $((RANDOM % 5 + 5))); do
+  echo "$n:$((1000 + RANDOM % 900)):${shells[$((RANDOM % ${#shells[@]}))]}" >> "$d/users.txt"
+done
+echo "zed:1999:/bin/bash" >> "$d/users.txt"
+'''
+expect = '''
+awk -F: '$3 == "/bin/bash" {print $1}' /home/labadmin/labdata/users.txt | sort
+'''
+
+[[tests]]
+setup = '''
+d=/home/labadmin/labdata
+rm -rf "$d"; mkdir -p "$d"
+printf 'root:0:/bin/bash\nnobody:65534:/usr/sbin/nologin\nbash-lookalike:1100:/bin/bash-lookalike\nmallory:1200:/bin/bash\n' > "$d/users.txt"
+'''
+expect = '''
+echo mallory
+echo root
+'''

@@ -1,0 +1,84 @@
+schema_version = 1
+kind = "script"
+id = "labs.script-cmd-backup"
+title = "Script (CMD): back up files and report what was copied"
+summary = "Create a folder, copy files, count them, and leave the right result on disk."
+lesson = "foundations.cmd-control-flow"
+symptom = '''
+Write a batch file and save it as C:\Labs\backup.cmd.
+
+It must copy every file ending in .txt from C:\Labs\data into the folder C:\Labs\backup, creating that folder if it does not exist. Files with other endings must not be copied.
+
+When it finishes it must print exactly one line in this form:
+
+    Copied 5 files
+
+where the number is how many files it copied.
+
+The folder C:\Labs\data changes every time your batch file is checked, and C:\Labs\backup may not exist yet.
+'''
+hints = [
+  "if not exist C:\\Labs\\backup mkdir C:\\Labs\\backup creates the folder only when it is missing.",
+  "copy \"%%f\" C:\\Labs\\backup >nul copies a file quietly (>nul hides copy's own message).",
+  "Count with set /a n+=1 inside the loop. Printing the count after the loop gives the final total.",
+  "Inside a batch file, loop variables are written %%f (two percent signs).",
+]
+expected_changes = ["Creates C:\\Labs with a starter batch file and a data folder of generated files"]
+hazards = ["None: the batch file only copies files within C:\\Labs"]
+scope = "single guest (the registered training VM only)"
+privilege = "standard"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["comptia-a-core2/operating-systems"]
+language = "cmd"
+script_path = 'C:\Labs\backup.cmd'
+starter = '''
+@echo off
+rem backup.cmd
+rem Copy the .txt files from C:\Labs\data to C:\Labs\backup and print "Copied N files"
+'''
+solution = '''
+@echo off
+if not exist C:\Labs\backup mkdir C:\Labs\backup
+set n=0
+for %%f in (C:\Labs\data\*.txt) do (
+    copy "%%f" C:\Labs\backup >nul
+    set /a n+=1
+)
+echo Copied %n% files
+'''
+
+[[tests]]
+setup = '''
+Remove-Item 'C:\Labs\backup' -Recurse -Force -ErrorAction SilentlyContinue
+$d = 'C:\Labs\data'
+if (Test-Path $d) { Remove-Item $d -Recurse -Force }
+New-Item -ItemType Directory -Path $d | Out-Null
+1..(Get-Random -Minimum 2 -Maximum 8) | ForEach-Object { Set-Content -Path (Join-Path $d "doc$_.txt") -Value "text $_" }
+1..3 | ForEach-Object { Set-Content -Path (Join-Path $d "image$_.png") -Value 'not copied' }
+'''
+expect = '''
+"Copied $(@(Get-ChildItem -Path 'C:\Labs\data' -Filter '*.txt' -File).Count) files"
+'''
+check = '''
+$src = @(Get-ChildItem 'C:\Labs\data' -Filter '*.txt' -File | Select-Object -ExpandProperty Name | Sort-Object)
+$dst = @(Get-ChildItem 'C:\Labs\backup' -File -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name | Sort-Object)
+if (($src -join ',') -eq ($dst -join ',')) { 'OK' } else { "backup folder holds: $($dst -join ', ')" }
+'''
+
+[[tests]]
+setup = '''
+New-Item -ItemType Directory -Force -Path 'C:\Labs\backup' | Out-Null
+Get-ChildItem 'C:\Labs\backup' | Remove-Item -Force
+$d = 'C:\Labs\data'
+if (Test-Path $d) { Remove-Item $d -Recurse -Force }
+New-Item -ItemType Directory -Path $d | Out-Null
+Set-Content -Path (Join-Path $d 'only.txt') -Value 'one file'
+'''
+expect = '''
+"Copied 1 files"
+'''
+check = '''
+$dst = @(Get-ChildItem 'C:\Labs\backup' -File | Select-Object -ExpandProperty Name)
+if (($dst -join ',') -eq 'only.txt') { 'OK' } else { "backup folder holds: $($dst -join ', ')" }
+'''

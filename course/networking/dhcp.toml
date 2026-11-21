@@ -1,0 +1,49 @@
+schema_version = 1
+id = "networking.dhcp"
+title = "DHCP: how machines get their addresses"
+summary = "The four-step DHCP exchange, leases and renewal, what a scope and its options hand out, relay agents, and how to read a lease and recover from a missing or wrong one on Windows and Linux."
+content = "dhcp.md"
+estimated_minutes = 45
+objectives = [
+  "Describe the Discover, Offer, Request and Acknowledge exchange and the ports it uses",
+  "Read a client's lease: address, mask, gateway, DNS, server, obtained and expires",
+  "Explain lease renewal and what happens when it fails",
+  "Recognise a link-local 169.254 address and the faults that cause it",
+  "Explain what a scope, an exclusion, a reservation and a relay agent do",
+]
+prerequisites = ["networking.subnetting"]
+windows_features = ["Command Prompt", "Windows PowerShell"]
+privilege = "standard"
+certifications = ["comptia-network-plus/networking-concepts", "comptia-network-plus/network-troubleshooting", "comptia-a-core1/networking", "redhat-rhcsa/basic-networking"]
+evaluation_criteria = [
+  "Learner reads a pasted ipconfig /all and states the lease start, the lease end and the DHCP server",
+  "Learner explains why releasing and renewing the lease over a remote session can cut off the session",
+]
+
+[[references]]
+title = "RFC 2131: Dynamic Host Configuration Protocol"
+url = "https://www.rfc-editor.org/rfc/rfc2131"
+
+[[references]]
+title = "RFC 2132: DHCP Options and BOOTP Vendor Extensions"
+url = "https://www.rfc-editor.org/rfc/rfc2132"
+
+[[references]]
+title = "DHCP overview (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/networking/technologies/dhcp/dhcp-top"
+
+[[references]]
+title = "ipconfig (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/ipconfig"
+
+[[references]]
+title = "Get-NetIPConfiguration (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/nettcpip/get-netipconfiguration"
+
+[[references]]
+title = "nmcli (NetworkManager reference)"
+url = "https://networkmanager.dev/docs/api/latest/nmcli.html"
+
+[[references]]
+title = "RFC 3927: Dynamic configuration of IPv4 link-local addresses"
+url = "https://www.rfc-editor.org/rfc/rfc3927"

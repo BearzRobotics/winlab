@@ -1,0 +1,29 @@
+schema_version = 1
+id = "foundations.bash-control-flow"
+title = "Bash scripting: tests, loops, case, functions and error handling"
+summary = "Conditions with [ ] and [[ ]], if/case, the loop forms, functions, arrays, reading files safely and failing safely."
+content = "bash-control-flow.md"
+estimated_minutes = 75
+objectives = [
+  "Write conditions with test operators for strings, numbers and files, and combine them with && and ||",
+  "Choose between if/elif/else and case, and write patterns for case",
+  "Use for, while read, until and C-style loops, with break and continue",
+  "Write a function with local variables, and return a status versus return a value",
+  "Handle errors deliberately: exit statuses, set -u and set -e, pipefail, and trap for cleanup",
+]
+prerequisites = ["foundations.bash-basics"]
+windows_features = []
+privilege = "standard"
+certifications = ["redhat-rhcsa/essential-tools", "comptia-linux-plus/scripting-containers-automation"]
+evaluation_criteria = [
+  "Learner writes a script that reads a file line by line and counts items by category",
+  "Learner explains what for f in $(ls) gets wrong and how to write it safely",
+]
+
+[[references]]
+title = "Bash Reference Manual: Shell Commands (GNU)"
+url = "https://www.gnu.org/software/bash/manual/bash.html#Shell-Commands"
+
+[[references]]
+title = "Bash Reference Manual: Conditional Constructs (GNU)"
+url = "https://www.gnu.org/software/bash/manual/bash.html#Conditional-Constructs"

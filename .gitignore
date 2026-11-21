@@ -1,0 +1,22 @@
+# Zig build output and cache
+.zig-cache/
+zig-out/
+
+# Debug symbols and objects
+*.pdb
+*.obj
+*.ilk
+
+# Editor and OS files
+.vs/
+.vscode/
+*.swp
+Thumbs.db
+desktop.ini
+
+# Local lab state (VM disks, keys and credentials live outside the repo; never commit them)
+credentials.txt
+id_ed25519
+id_ed25519.pub
+*.qcow2
+*.iso

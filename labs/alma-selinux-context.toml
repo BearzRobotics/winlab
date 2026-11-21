@@ -1,0 +1,48 @@
+schema_version = 1
+id = "labs.alma-selinux-context"
+target = "linux"
+distro = "almalinux"
+title = "AlmaLinux: the website says Forbidden"
+summary = "Permissions look right and Apache is running, but SELinux denies access."
+lesson = "security.security-fundamentals"
+symptom = "The company intranet page on this AlmaLinux server now answers 'Forbidden'. The files are there, their Unix permissions look fine, and Apache (httpd) is running."
+hints = [
+  "If ordinary permissions are correct and the service is running, something else is saying no. Red Hat family systems ship SELinux enforcing.",
+  "ls -Z shows each file's SELinux label. Compare the label on the site's files with the label httpd is allowed to read (httpd_sys_content_t).",
+  "The audit log records denials (ausearch -m avc -ts recent shows them). The fix is to restore the correct label, not to turn SELinux off.",
+  "restorecon -Rv <directory> resets labels to what the policy says they should be.",
+]
+expected_changes = [
+  "Installs Apache (httpd) and serves /srv/web, with the correct SELinux file-context rule",
+  "Relabels /srv/web with the wrong SELinux type so httpd is denied",
+]
+hazards = ["The intranet page in the lab VM answers 403 until the SELinux label is restored"]
+scope = "single guest (the registered AlmaLinux training VM only)"
+privilege = "administrator"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["redhat-rhcsa/security", "comptia-linux-plus/security", "comptia-linux-plus/troubleshooting"]
+setup = '''
+set -e
+dnf -y install httpd policycoreutils-python-utils >/dev/null
+mkdir -p /srv/web
+echo 'Welcome to the intranet' > /srv/web/index.html
+cat > /etc/httpd/conf.d/winlab.conf <<'CONF'
+DocumentRoot "/srv/web"
+<Directory "/srv/web">
+    Require all granted
+</Directory>
+CONF
+semanage fcontext -a -t httpd_sys_content_t '/srv/web(/.*)?'
+restorecon -R /srv/web
+systemctl enable --now httpd
+'''
+fault = "chcon -R -t user_home_t /srv/web"
+solution = "restorecon -R /srv/web"
+
+[validate]
+script = '''
+code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost/)
+echo "http=$code"
+'''
+expect_output_contains = "http=200"

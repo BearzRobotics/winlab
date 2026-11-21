@@ -1,0 +1,37 @@
+schema_version = 1
+id = "labs.alma-sudo-access-lost"
+target = "linux"
+distro = "almalinux"
+title = "AlmaLinux: an administrator cannot use sudo"
+summary = "A support engineer was removed from the administrators group."
+lesson = "security.security-fundamentals"
+symptom = "Pat Ortiz (account 'opsuser') is a member of the operations team and is meant to be able to administer this server with sudo. Since Monday sudo answers 'opsuser is not in the sudoers file'. Restore Pat's administrative access the standard way, without editing the sudoers file itself."
+hints = [
+  "id opsuser and groups opsuser show which groups the account belongs to.",
+  "On Red Hat family systems the group that is allowed to use sudo is called wheel. The sudoers file already grants it access; you can see the rule with sudo grep wheel /etc/sudoers.",
+  "usermod -aG adds a user to a supplementary group. Forget the -a and you replace all their groups.",
+  "Group changes apply at the user's next sign-in.",
+]
+expected_changes = [
+  "Creates the account opsuser and adds it to the wheel group",
+  "Then removes opsuser from the wheel group in the AlmaLinux lab VM",
+]
+hazards = ["The opsuser account in the lab VM cannot use sudo until it is added to wheel again"]
+scope = "single guest (the registered AlmaLinux training VM only)"
+privilege = "administrator"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["redhat-rhcsa/users-groups", "redhat-rhcsa/security", "comptia-linux-plus/security"]
+setup = '''
+id opsuser >/dev/null 2>&1 || useradd -m -c 'Pat Ortiz' opsuser
+usermod -aG wheel opsuser
+'''
+fault = "gpasswd -d opsuser wheel"
+solution = "usermod -aG wheel opsuser"
+
+[validate]
+script = '''
+g=$(id -nG opsuser 2>&1)
+case " $g " in *" wheel "*) echo "wheel=yes";; *) echo "wheel=no";; esac
+'''
+expect_output_contains = "wheel=yes"

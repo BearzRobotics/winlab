@@ -1,0 +1,91 @@
+schema_version = 1
+id = "foundations.ps-functions-and-scripts"
+title = "PowerShell functions and scripts"
+summary = "Writing functions and scripts that other people can rely on: parameters, validation, pipeline input, parameter sets, splatting, what a function returns and how output pollution happens, -WhatIf support, help, script parameters and exit codes, dot-sourcing, and command precedence."
+content = "ps-functions-and-scripts.md"
+estimated_minutes = 110
+objectives = [
+  "Call functions with the correct syntax and explain the comma and parentheses trap",
+  "Predict command resolution (alias, function, cmdlet, program) and avoid shadowing aliases",
+  "Write advanced functions with [CmdletBinding()], typed parameters, defaults, switches and validation attributes",
+  "Write begin, process and end blocks for pipeline input, and filters",
+  "Use parameter sets, splatting and $PSBoundParameters",
+  "Explain what a function returns, find and fix output pollution, and use Write-Output, Write-Host and Write-Verbose correctly",
+  "Support -WhatIf and -Confirm with SupportsShouldProcess",
+  "Document functions with comment-based help",
+  "Write scripts with param blocks, #Requires, $PSScriptRoot and meaningful exit codes, and tell running from dot-sourcing",
+]
+prerequisites = ["foundations.powershell-control-flow"]
+windows_features = ["Windows PowerShell"]
+privilege = "standard"
+certifications = ["comptia-a-core2/operating-systems"]
+evaluation_criteria = [
+  "Learner finds the output-pollution bug in a function by reading it and fixes it",
+  "Learner adds validation and -WhatIf support to a function and shows both working",
+  "Learner writes a script whose exit code and parameters are checked by a caller",
+  "Learner explains why an alias wins over a function of the same name",
+]
+
+[[references]]
+title = "about_Functions (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_functions"
+
+[[references]]
+title = "about_Functions_Advanced (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_functions_advanced"
+
+[[references]]
+title = "about_Functions_Advanced_Parameters (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_functions_advanced_parameters"
+
+[[references]]
+title = "about_Functions_CmdletBindingAttribute (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_functions_cmdletbindingattribute"
+
+[[references]]
+title = "about_Functions_OutputTypeAttribute (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_functions_outputtypeattribute"
+
+[[references]]
+title = "about_Parameters (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_parameters"
+
+[[references]]
+title = "about_Parameter_Sets (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_parameter_sets"
+
+[[references]]
+title = "about_Splatting (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_splatting"
+
+[[references]]
+title = "about_Command_Precedence (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_command_precedence"
+
+[[references]]
+title = "about_Return (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_return"
+
+[[references]]
+title = "about_Comment_Based_Help (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_comment_based_help"
+
+[[references]]
+title = "about_Requires (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_requires"
+
+[[references]]
+title = "about_Script_Blocks (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_script_blocks"
+
+[[references]]
+title = "about_Output_Streams (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_output_streams"
+
+[[references]]
+title = "Write-Output (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/write-output"
+
+[[references]]
+title = "Write-Verbose (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/write-verbose"

@@ -1,0 +1,425 @@
+schema_version = 1
+lesson = "foundations.cmd-control-flow"
+# Draft for owner review. A bank of 47; each attempt asks 10, favouring questions missed last time.
+draw = 10
+
+# ---- if ----
+
+[[question]]
+id = "if-quote"
+type = "choice"
+prompt = "Why quote both sides in if \"%1\"==\"\" ?"
+choices = ["An empty value would otherwise leave a syntax error", "Quotes make the test faster", "== only works with quotes on Windows 11", "To ignore case"]
+answers = ["An empty value would otherwise leave a syntax error"]
+explanation = "if ==x is invalid; if \"\"==\"x\" is fine."
+review = "Comparing text"
+
+[[question]]
+id = "if-icase"
+type = "short"
+prompt = "Which switch makes an if string comparison ignore case? (include the slash)"
+answers = ["/i"]
+explanation = "if /i \"%1\"==\"yes\"."
+review = "Comparing text"
+
+[[question]]
+id = "if-strip"
+type = "short"
+prompt = "How do you test whether the first argument is empty even if it arrived with its own quotes? Write the condition (just the if test, for example if ...==...)."
+answers = ["if \"%~1\"==\"\"", "if \"%~1\"==\"\" "]
+explanation = "%~1 strips the quotes, and your own quotes protect the empty case."
+review = "Comparing text"
+
+[[question]]
+id = "if-numops"
+type = "multi"
+prompt = "Which are numeric comparison operators in cmd's if? Select all that apply."
+choices = ["equ", "neq", "gtr", "=>"]
+answers = ["equ", "neq", "gtr"]
+explanation = "equ, neq, lss, leq, gtr, geq."
+review = "Comparing numbers"
+
+[[question]]
+id = "if-text-vs-num"
+type = "choice"
+prompt = "What does if \"10\" lss \"9\" do?"
+choices = ["It is true: quoted values are compared as text", "It is false: 10 is more than 9", "It is an error", "It compares lengths"]
+answers = ["It is true: quoted values are compared as text"]
+explanation = "As text, 10 sorts before 9."
+review = "Comparing numbers"
+
+[[question]]
+id = "if-numeric-true"
+type = "choice"
+prompt = "What does if 10 gtr 9 do (unquoted)?"
+choices = ["It is true: both sides are compared as numbers", "It is false", "It is an error", "It compares as text"]
+answers = ["It is true: both sides are compared as numbers"]
+explanation = "Use the word operators for numbers."
+review = "Comparing numbers"
+
+[[question]]
+id = "if-exist-folder"
+type = "choice"
+prompt = "How do you test for a folder only (not a file) with if exist?"
+choices = ["Add a trailing backslash: if exist \"C:\\Labs\\data\\\"", "Use if folder", "Use if exist /d", "It is not possible"]
+answers = ["Add a trailing backslash: if exist \"C:\\Labs\\data\\\""]
+explanation = "A trailing backslash makes the test succeed only for folders."
+review = "Testing files and variables"
+
+[[question]]
+id = "if-defined"
+type = "short"
+prompt = "Which keyword tests whether a variable has a value? (if ___ name)"
+answers = ["defined"]
+explanation = "if defined name; reverse with not."
+review = "Testing files and variables"
+
+[[question]]
+id = "if-errorlevel-meaning"
+type = "choice"
+prompt = "What does 'if errorlevel 2' test?"
+choices = ["The last exit code is 2 or greater", "The exit code is exactly 2", "The exit code is below 2", "Two errors occurred"]
+answers = ["The last exit code is 2 or greater"]
+explanation = "So test the higher number first in a chain."
+review = "Testing an exit code"
+
+[[question]]
+id = "if-errorlevel-exact"
+type = "short"
+prompt = "Write the test that is true only when the exit code is exactly 1 (an if line using %errorlevel%)."
+answers = ["if %errorlevel% equ 1", "if %errorlevel%==1"]
+explanation = "The numeric equality operator is equ."
+review = "Testing an exit code"
+
+[[question]]
+id = "if-errorlevel-block"
+type = "choice"
+prompt = "Inside a parenthesised block, which test reads the live exit code even without delayed expansion?"
+choices = ["if errorlevel N", "if %errorlevel% equ N", "if defined errorlevel", "echo %errorlevel%"]
+answers = ["if errorlevel N"]
+explanation = "%errorlevel% is expanded when the block is read, so use !errorlevel! with delayed expansion, or if errorlevel."
+review = "Testing an exit code"
+
+[[question]]
+id = "if-else-line"
+type = "choice"
+prompt = "Where must the closing parenthesis and else be?"
+choices = ["On the same line: ) else (", "The else on the next line", "Either way", "else is not supported"]
+answers = ["On the same line: ) else ("]
+explanation = "else on its own line is a syntax error."
+review = "`else`, blocks and AND/OR"
+
+[[question]]
+id = "if-and"
+type = "choice"
+prompt = "How do you write AND in cmd's if?"
+choices = ["Nest the tests: if A if B command", "if A and B", "if A && B", "if A & B"]
+answers = ["Nest the tests: if A if B command"]
+explanation = "cmd has no and/or operators for if."
+review = "`else`, blocks and AND/OR"
+
+[[question]]
+id = "comment-rem"
+type = "choice"
+prompt = "Why is rem the safe comment inside parenthesised blocks?"
+choices = ["A :: comment as the last line of a block is a syntax error", "rem is faster", ":: is not allowed anywhere", "rem hides output"]
+answers = ["A :: comment as the last line of a block is a syntax error"]
+explanation = "The error is ') was unexpected at this time.'"
+review = "Comments inside blocks"
+
+[[question]]
+id = "comment-sameline"
+type = "choice"
+prompt = "Why not put a rem comment on the same line as a command?"
+choices = ["The text after the command becomes part of the command line", "rem only works in batch files", "It is slower", "cmd forbids it"]
+answers = ["The text after the command becomes part of the command line"]
+explanation = "For a set, it becomes part of the value."
+review = "Comments inside blocks"
+
+# ---- for ----
+
+[[question]]
+id = "for-pct"
+type = "choice"
+prompt = "How many percent signs does the for loop variable need in a batch file?"
+choices = ["Two: %%f", "One: %f", "None", "Three"]
+answers = ["Two: %%f"]
+explanation = "At the prompt you use one."
+review = "Repeating work with `for`"
+
+[[question]]
+id = "for-case"
+type = "choice"
+prompt = "Are for loop variable names case-sensitive?"
+choices = ["Yes: %%a and %%A differ", "No", "Only at the prompt", "Only for digits"]
+answers = ["Yes: %%a and %%A differ"]
+explanation = "They are single letters."
+review = "Repeating work with `for`"
+
+[[question]]
+id = "for-l"
+type = "short"
+prompt = "What does 'for /l %%i in (3,-1,1) do echo %%i' print, as the numbers in order separated by spaces?"
+answers = ["3 2 1"]
+explanation = "The set is (start,step,end)."
+review = "Counted loops: `for /l`"
+
+[[question]]
+id = "for-d"
+type = "choice"
+prompt = "What does 'for /d %%d in (C:\\Labs\\*)' match?"
+choices = ["Folders, one level deep", "Files", "Everything below recursively", "Drives"]
+answers = ["Folders, one level deep"]
+explanation = "for /r walks the tree."
+review = "Folders and trees: `for /d`, `for /r`"
+
+[[question]]
+id = "for-r"
+type = "choice"
+prompt = "What does 'for /r C:\\Labs %%f in (*.log)' do?"
+choices = ["Walks everything below C:\\Labs and matches the .log files", "Matches only folders", "Reads lines from a log", "Restarts the loop"]
+answers = ["Walks everything below C:\\Labs and matches the .log files"]
+explanation = "It replaces many dir /s pipelines."
+review = "Folders and trees: `for /d`, `for /r`"
+
+[[question]]
+id = "fof-skip"
+type = "choice"
+prompt = "What does skip=1 do in for /f?"
+choices = ["Skips the first line", "Skips every other line", "Skips blank lines", "Skips the first token"]
+answers = ["Skips the first line"]
+explanation = "Useful for a CSV header."
+review = "The lines of a file, and splitting them: `for /f`"
+
+[[question]]
+id = "fof-tokens-rest"
+type = "choice"
+prompt = "With tokens=2* and delims=, what do %%a and %%b hold?"
+choices = ["%%a is field 2 and %%b is the rest of the line", "%%a is field 1 and %%b field 2", "Both are field 2", "%%a is the line and %%b empty"]
+answers = ["%%a is field 2 and %%b is the rest of the line"]
+explanation = "The star takes the rest into the next variable."
+review = "The lines of a file, and splitting them: `for /f`"
+
+[[question]]
+id = "fof-delims-empty"
+type = "choice"
+prompt = "What does delims= with nothing after the equals sign do?"
+choices = ["Keeps the whole line in one token", "Uses no tokens", "Splits at every character", "Is an error"]
+answers = ["Keeps the whole line in one token"]
+explanation = "Typical form: for /f \"delims=\" %%a in (file) do ..."
+review = "The lines of a file, and splitting them: `for /f`"
+
+[[question]]
+id = "fof-blank"
+type = "choice"
+prompt = "How does for /f treat blank lines in a file?"
+choices = ["It skips them", "It returns an empty token", "It stops", "It returns a space"]
+answers = ["It skips them"]
+explanation = "A blank line never reaches the loop body."
+review = "The lines of a file, and splitting them: `for /f`"
+
+[[question]]
+id = "fof-eol"
+type = "short"
+prompt = "Which character does for /f treat as the comment (eol) character by default? (one character)"
+answers = [";"]
+explanation = "Lines starting with ; vanish. Use eol=# to change it."
+review = "The lines of a file, and splitting them: `for /f`"
+
+[[question]]
+id = "fof-tokens-star"
+type = "choice"
+prompt = "With tokens=* what happens to leading spaces on the line?"
+choices = ["They are stripped", "They are kept", "The line is skipped", "They become tabs"]
+answers = ["They are stripped"]
+explanation = "Leading delimiters are removed."
+review = "The lines of a file, and splitting them: `for /f`"
+
+[[question]]
+id = "fof-cmd"
+type = "short"
+prompt = "Write the for /f set that runs the command 'dir /b' and reads its output (the part in parentheses, with quotes as needed)."
+answers = ["('dir /b')", "'dir /b'"]
+explanation = "Single quotes run a command; with usebackq use backquotes."
+review = "The lines of a file, and splitting them: `for /f`"
+
+[[question]]
+id = "fof-usebackq"
+type = "choice"
+prompt = "What does usebackq change in for /f?"
+choices = ["Backquotes run a command and double quotes name a file with spaces", "It reverses the lines", "It enables delayed expansion", "It sorts the output"]
+answers = ["Backquotes run a command and double quotes name a file with spaces"]
+explanation = "It changes the meaning of the quoting."
+review = "The lines of a file, and splitting them: `for /f`"
+
+[[question]]
+id = "fof-tokens-letters"
+type = "choice"
+prompt = "With tokens=1,2 the first variable is %%a. What is the second?"
+choices = ["%%b, allocated automatically", "%%2", "%%a2", "You must name it"]
+answers = ["%%b, allocated automatically"]
+explanation = "Following letters are assigned automatically."
+review = "The lines of a file, and splitting them: `for /f`"
+
+[[question]]
+id = "for-nested"
+type = "short"
+prompt = "With total starting at 0, 'for %%a in (1 2 3) do for %%b in (10 20) do set /a total+=%%a*%%b' leaves total as what? (number)"
+answers = ["180"]
+explanation = "(1+2+3)*(10+20) = 6*30 = 180."
+review = "Nested loops and counting"
+
+# ---- Structure ----
+
+[[question]]
+id = "goto-eof"
+type = "choice"
+prompt = "What does 'goto :eof' do?"
+choices = ["Jumps to the end of the file, ending the script or subroutine", "Opens the end of file", "Jumps to a label named eof", "Ends the window"]
+answers = ["Jumps to the end of the file, ending the script or subroutine"]
+explanation = ":eof is built in; you do not define it."
+review = "Structure: labels, `goto`, `call`, subroutines"
+
+[[question]]
+id = "call-needed"
+type = "choice"
+prompt = "A script runs child.cmd without call. What happens when the child finishes?"
+choices = ["Control does not return: the calling script ends too", "Control returns to the caller", "The child runs twice", "An error is shown"]
+answers = ["Control does not return: the calling script ends too"]
+explanation = "Always call another batch file."
+review = "Running other scripts: `call`"
+
+[[question]]
+id = "call-el"
+type = "choice"
+prompt = "After 'call child.cmd' where the child ends with exit /b 4, what is %errorlevel%?"
+choices = ["4", "0", "1", "Undefined"]
+answers = ["4"]
+explanation = "call returns the child's exit code."
+review = "Running other scripts: `call`"
+
+[[question]]
+id = "call-cmdc"
+type = "choice"
+prompt = "How do you run a script in its own cmd, with its own environment?"
+choices = ["cmd /c child.cmd", "call child.cmd", "goto child.cmd", "start /b child.cmd"]
+answers = ["cmd /c child.cmd"]
+explanation = "call shares the environment; cmd /c does not."
+review = "Running other scripts: `call`"
+
+[[question]]
+id = "sub-fall"
+type = "choice"
+prompt = "What happens if a subroutine does not end with exit /b?"
+choices = ["Execution falls through into the next label", "It restarts", "It returns an error automatically", "Nothing special"]
+answers = ["Execution falls through into the next label"]
+explanation = "Always finish a subroutine with exit /b."
+review = "Subroutines"
+
+[[question]]
+id = "sub-return"
+type = "short"
+prompt = "In 'call :max 7 12 big', the subroutine ends with 'endlocal & set \"%3=%r%\"'. What is the result? (the final value of big)"
+answers = ["12"]
+explanation = "It returned the larger number in the variable the caller named."
+review = "Subroutines"
+
+[[question]]
+id = "sub-args"
+type = "choice"
+prompt = "Inside a subroutine reached with 'call :square 4', what is %1?"
+choices = ["4, the argument given to call", "The script's first argument", ":square", "Empty"]
+answers = ["4, the argument given to call"]
+explanation = "Subroutine arguments replace the script's own for that call."
+review = "Subroutines"
+
+# ---- Exit codes ----
+
+[[question]]
+id = "ec-robocopy"
+type = "choice"
+prompt = "robocopy returns 3. Is that a failure?"
+choices = ["No; 0 to 7 all mean success of some kind", "Yes; any non-zero code is failure", "Yes; only 0 is success", "It depends on the file count"]
+answers = ["No; 0 to 7 all mean success of some kind"]
+explanation = "robocopy's code is a bit mask; 8 or more means failure."
+review = "Success, failure and exit codes"
+
+[[question]]
+id = "ec-robocopy-fail"
+type = "short"
+prompt = "From which robocopy exit code upward is it a failure? (number)"
+answers = ["8"]
+explanation = "Test: if errorlevel 8."
+review = "Success, failure and exit codes"
+
+[[question]]
+id = "ec-chain"
+type = "choice"
+prompt = "Why is 'a && b || c' not the same as if/else?"
+choices = ["c also runs when b fails", "c never runs", "&& and || cannot be combined", "c runs before b"]
+answers = ["c also runs when b fails"]
+explanation = "|| reacts to the most recent command."
+review = "Success, failure and exit codes"
+
+[[question]]
+id = "ec-exit"
+type = "choice"
+prompt = "Why use exit /b rather than exit in a script?"
+choices = ["Plain exit closes the whole cmd window", "exit /b is faster", "exit does not set a code", "exit is deprecated"]
+answers = ["Plain exit closes the whole cmd window"]
+explanation = "exit /b ends only the script or subroutine."
+review = "Success, failure and exit codes"
+
+[[question]]
+id = "ec-pause"
+type = "choice"
+prompt = "Why avoid pause and timeout in unattended scripts?"
+choices = ["They can hang or fail when input is redirected", "They need administrator rights", "They delete files", "They are removed from Windows 11"]
+answers = ["They can hang or fail when input is redirected"]
+explanation = "timeout reports 'Input redirection is not supported'."
+review = "Success, failure and exit codes"
+
+[[question]]
+id = "choice-el"
+type = "choice"
+prompt = "What does the choice command set errorlevel to?"
+choices = ["The position of the key chosen (1 for the first)", "The ASCII code", "0 for yes, 1 for no", "The number of keys pressed"]
+answers = ["The position of the key chosen (1 for the first)"]
+explanation = "Test the higher number first."
+review = "Asking the user: `choice`"
+
+[[question]]
+id = "err-distinct"
+type = "choice"
+prompt = "Why give a script distinct exit codes for distinct failures?"
+choices = ["Callers and scheduled tasks can tell what went wrong", "It makes the script faster", "Windows requires it", "It hides errors"]
+answers = ["Callers and scheduled tasks can tell what went wrong"]
+explanation = "Document them too."
+review = "Handling errors well"
+
+[[question]]
+id = "err-log"
+type = "choice"
+prompt = "Why log with >> to a file in a scheduled script?"
+choices = ["A scheduled run has no screen to read", "Files are faster than the screen", "echo is deprecated", "It avoids setlocal"]
+answers = ["A scheduled run has no screen to read"]
+explanation = "A log is the only record of an unattended run."
+review = "Handling errors well"
+
+[[question]]
+id = "habit-start"
+type = "multi"
+prompt = "Which are good habits at the top of a batch file? Select all that apply."
+choices = ["@echo off", "setlocal", "Quote paths that may contain spaces", "Use plain exit to finish"]
+answers = ["@echo off", "setlocal", "Quote paths that may contain spaces"]
+explanation = "Finish with exit /b."
+review = "Good habits and limits"
+
+[[question]]
+id = "habit-limit"
+type = "choice"
+prompt = "When should you switch from batch to PowerShell?"
+choices = ["When you need arrays, objects, JSON or real functions", "Never", "Only for printing", "Only for one-line scripts"]
+answers = ["When you need arrays, objects, JSON or real functions"]
+explanation = "cmd has no real data types."
+review = "Good habits and limits"

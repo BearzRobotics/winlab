@@ -1,0 +1,496 @@
+schema_version = 1
+lesson = "foundations.ps-variables-types-operators"
+# Draft for owner review. A bank of 56; each attempt asks 10, favouring questions missed last time.
+draw = 10
+
+# ---- Variables ----
+
+[[question]]
+id = "va-decl"
+type = "choice"
+prompt = "How do you declare a variable in PowerShell?"
+choices = ["Just assign: $name = 'Ada'", "var $name", "set name=Ada", "declare name"]
+answers = ["Just assign: $name = 'Ada'"]
+explanation = "There is no declaration."
+review = "Variables"
+
+[[question]]
+id = "va-typed"
+type = "short"
+prompt = "Write the line that creates an integer-constrained variable t with the value 5."
+answers = ["[int]$t = 5", "[int] $t = 5"]
+explanation = "Later assignments are converted or rejected."
+review = "Typed variables"
+
+[[question]]
+id = "va-typed-conv"
+type = "choice"
+prompt = "[int]$t = 5; $t = '7'. What is $t afterwards?"
+choices = ["The integer 7: the text was converted", "The string '7'", "An error", "5"]
+answers = ["The integer 7: the text was converted"]
+explanation = "The constraint converts text that can be converted."
+review = "Typed variables"
+
+[[question]]
+id = "va-readonly"
+type = "choice"
+prompt = "What does Set-Variable -Option ReadOnly do?"
+choices = ["Makes a variable that cannot be changed", "Makes it hidden", "Makes it global", "Makes it a constant that cannot be removed"]
+answers = ["Makes a variable that cannot be changed"]
+explanation = "-Option Constant also forbids removal."
+review = "Read-only and constants"
+
+[[question]]
+id = "va-auto-current"
+type = "short"
+prompt = "Which automatic variable holds the current object in a pipeline script block? (with the dollar sign)"
+answers = ["$_", "$PSItem"]
+explanation = "$PSItem is the long name."
+review = "Automatic and preference variables"
+
+[[question]]
+id = "va-auto-success"
+type = "short"
+prompt = "Which automatic variable is True if the last command succeeded? (with the dollar sign)"
+answers = ["$?"]
+explanation = "$LASTEXITCODE holds a native program's exit code."
+review = "Automatic and preference variables"
+
+[[question]]
+id = "va-auto-exit"
+type = "short"
+prompt = "Which automatic variable holds the exit code of the last native program? (with the dollar sign)"
+answers = ["$LASTEXITCODE"]
+explanation = "It is separate from $?."
+review = "Automatic and preference variables"
+
+[[question]]
+id = "va-auto-root"
+type = "short"
+prompt = "Which automatic variable holds the folder of the running script? (with the dollar sign)"
+answers = ["$PSScriptRoot"]
+explanation = "It is empty at the interactive prompt."
+review = "Automatic and preference variables"
+
+[[question]]
+id = "va-pref"
+type = "choice"
+prompt = "What does $ErrorActionPreference = 'Stop' do?"
+choices = ["Turns every non-terminating error into a terminating one", "Hides errors", "Stops the script after one error message", "Logs errors"]
+answers = ["Turns every non-terminating error into a terminating one"]
+explanation = "That lets try/catch see them."
+review = "Automatic and preference variables"
+
+[[question]]
+id = "va-scope"
+type = "choice"
+prompt = "A function assigns $x = 2 while the caller has $x = 1. What is $x in the caller afterwards?"
+choices = ["1: the function created its own variable", "2", "An error", "Both"]
+answers = ["1: the function created its own variable"]
+explanation = "Use $script: or $global: to change the outer one deliberately."
+review = "Scope"
+
+[[question]]
+id = "va-scope-q"
+type = "short"
+prompt = "Write the scope-qualified name for changing a variable x at script scope. (with the dollar sign)"
+answers = ["$script:x"]
+explanation = "$global:x is the global equivalent."
+review = "Scope"
+
+# ---- Types and numbers ----
+
+[[question]]
+id = "ty-int"
+type = "choice"
+prompt = "What type is the literal 42?"
+choices = ["Int32", "Int64", "Double", "Decimal"]
+answers = ["Int32"]
+explanation = "3000000000 is Int64."
+review = "Types"
+
+[[question]]
+id = "ty-dec"
+type = "choice"
+prompt = "Which numeric type should hold money?"
+choices = ["Decimal", "Double", "Int32", "Char"]
+answers = ["Decimal"]
+explanation = "Binary floating point cannot represent 0.1 exactly."
+review = "Numbers"
+
+[[question]]
+id = "ty-div"
+type = "short"
+prompt = "What does 5/2 evaluate to? (number)"
+answers = ["2.5"]
+explanation = "Division returns a double."
+review = "Numbers"
+
+[[question]]
+id = "ty-trunc"
+type = "choice"
+prompt = "How do you do whole-number division of 5 by 2 (result 2)?"
+choices = ["[math]::Truncate(5/2)", "5 div 2", "5 // 2", "[int]5/2"]
+answers = ["[math]::Truncate(5/2)"]
+explanation = "[math]::Floor also works for positive numbers."
+review = "Numbers"
+
+[[question]]
+id = "ty-overflow"
+type = "choice"
+prompt = "What happens with 2147483647 + 1 in PowerShell?"
+choices = ["It becomes a Double (2147483648); no error", "It wraps to a negative number", "It raises an overflow error", "It stays at the maximum"]
+answers = ["It becomes a Double (2147483648); no error"]
+explanation = "Unlike cmd's set /a."
+review = "Numbers"
+
+[[question]]
+id = "ty-round-2"
+type = "short"
+prompt = "What does [int](2.5) evaluate to? (number)"
+answers = ["2"]
+explanation = "Casting rounds to the nearest even number."
+review = "Numbers"
+
+[[question]]
+id = "ty-round-3"
+type = "short"
+prompt = "What does [int](3.5) evaluate to? (number)"
+answers = ["4"]
+explanation = "3.5 rounds to the even neighbour, 4."
+review = "Numbers"
+
+[[question]]
+id = "ty-round-7"
+type = "short"
+prompt = "What does [int](7/2) evaluate to? (number)"
+answers = ["4"]
+explanation = "7/2 is 3.5, which rounds to 4 (not truncated to 3)."
+review = "Numbers"
+
+[[question]]
+id = "ty-floor"
+type = "choice"
+prompt = "Which expression drops the fraction of 3.9, giving 3?"
+choices = ["[math]::Floor(3.9)", "[int](3.9)", "[math]::Round(3.9)", "3.9 -as [string]"]
+answers = ["[math]::Floor(3.9)"]
+explanation = "[int](3.9) would round to 4."
+review = "Numbers"
+
+[[question]]
+id = "ty-kb"
+type = "short"
+prompt = "What does 2MB evaluate to? (number)"
+answers = ["2097152"]
+explanation = "KB, MB, GB and TB are powers of 1024."
+review = "Numbers"
+
+[[question]]
+id = "ty-hex"
+type = "short"
+prompt = "What does 0x1F evaluate to? (decimal)"
+answers = ["31"]
+explanation = "0x prefixes hexadecimal."
+review = "Numbers"
+
+[[question]]
+id = "ty-check"
+type = "short"
+prompt = "Which method returns the type of a value, for example (42).?"
+answers = ["GetType()", "GetType"]
+explanation = "(42).GetType().Name is Int32."
+review = "Types"
+
+# ---- Strings ----
+
+[[question]]
+id = "st-single"
+type = "choice"
+prompt = "What does 'Hello $n' (single quotes) print when $n is 'World'?"
+choices = ["Hello $n", "Hello World", "Hello", "An error"]
+answers = ["Hello $n"]
+explanation = "Single quotes are literal."
+review = "Quoting rules"
+
+[[question]]
+id = "st-double"
+type = "choice"
+prompt = "What does \"Sum: $(1+2)\" print?"
+choices = ["Sum: 3", "Sum: $(1+2)", "Sum: 1+2", "An error"]
+answers = ["Sum: 3"]
+explanation = "$( ) is a subexpression."
+review = "Quoting rules"
+
+[[question]]
+id = "st-esc"
+type = "short"
+prompt = "Which character is the escape character inside double-quoted strings? (name the character, or write it)"
+answers = ["`", "backtick"]
+explanation = "`n is a newline, `t a tab."
+review = "Quoting rules"
+
+[[question]]
+id = "st-interp"
+type = "choice"
+prompt = "Why does \"Name: $p.Name\" print @{Name=Bob}.Name?"
+choices = ["Only a plain variable expands, not a property", "p has no Name", "Quotes are wrong", "PowerShell 5.1 bug"]
+answers = ["Only a plain variable expands, not a property"]
+explanation = "Use \"Name: $($p.Name)\"."
+review = "Two interpolation traps"
+
+[[question]]
+id = "st-drive"
+type = "choice"
+prompt = "Why does \"$n: done\" fail?"
+choices = ["$n: is read as a variable on a provider drive", "Colons are illegal in strings", "n is not defined", "It needs single quotes"]
+answers = ["$n: is read as a variable on a provider drive"]
+explanation = "Write \"${n}: done\"."
+review = "Two interpolation traps"
+
+[[question]]
+id = "st-here"
+type = "choice"
+prompt = "Which here-string expands variables?"
+choices = ["@\"...\"@", "@'...'@", "Both", "Neither"]
+answers = ["@\"...\"@"]
+explanation = "@'...'@ is literal."
+review = "Here-strings"
+
+[[question]]
+id = "st-fmt"
+type = "short"
+prompt = "What does \"{0:N2}\" -f 3.14159 produce?"
+answers = ["3.14"]
+explanation = "N2 is a number with two decimals."
+review = "Formatting with `-f`"
+
+[[question]]
+id = "st-split"
+type = "short"
+prompt = "Write the expression that joins 'a','b','c' with a dash."
+answers = ["'a','b','c' -join '-'", "'a','b','c' -join \"-\""]
+explanation = "-join builds one string from an array."
+review = "Splitting, joining and searching"
+
+[[question]]
+id = "st-replace"
+type = "short"
+prompt = "What does 'John Smith' -replace '(\\w+) (\\w+)','$2, $1' return?"
+answers = ["Smith, John"]
+explanation = "$1 and $2 are capture groups."
+review = "Splitting, joining and searching"
+
+[[question]]
+id = "st-like"
+type = "choice"
+prompt = "What kind of pattern does -like use?"
+choices = ["Wildcards (* and ?)", "Regular expressions", "SQL", "Exact text"]
+answers = ["Wildcards (* and ?)"]
+explanation = "-match uses regular expressions."
+review = "Splitting, joining and searching"
+
+[[question]]
+id = "st-match"
+type = "short"
+prompt = "Which automatic variable holds the capture groups after a successful -match? (with the dollar sign)"
+answers = ["$Matches"]
+explanation = "$Matches[1] is the first group."
+review = "Splitting, joining and searching"
+
+# ---- Operators ----
+
+[[question]]
+id = "op-plus"
+type = "short"
+prompt = "What does '1' + 1 evaluate to?"
+answers = ["11"]
+explanation = "The left operand is a string, so + concatenates."
+review = "Arithmetic and string operators"
+
+[[question]]
+id = "op-plus2"
+type = "short"
+prompt = "What does 1 + '1' evaluate to? (number)"
+answers = ["2"]
+explanation = "The left operand is a number, so + adds."
+review = "Arithmetic and string operators"
+
+[[question]]
+id = "op-case"
+type = "choice"
+prompt = "What does 'abc' -eq 'ABC' return?"
+choices = ["True", "False", "An error", "Null"]
+answers = ["True"]
+explanation = "Comparison is case-insensitive by default; -ceq is case-sensitive."
+review = "Comparison"
+
+[[question]]
+id = "op-array-eq"
+type = "choice"
+prompt = "What does 1,2,3,2 -eq 2 return?"
+choices = ["2, 2 (the matching elements)", "True", "False", "2"]
+answers = ["2, 2 (the matching elements)"]
+explanation = "An array on the left filters instead of returning a boolean."
+review = "Comparison"
+
+[[question]]
+id = "op-contains"
+type = "choice"
+prompt = "Which operator asks whether a collection contains a value?"
+choices = ["-contains", "-like", "-has", "-eq"]
+answers = ["-contains"]
+explanation = "-in is the reverse: value -in collection."
+review = "Comparison"
+
+[[question]]
+id = "op-version"
+type = "choice"
+prompt = "What does '5.1.26100' -gt '5.1.9' return?"
+choices = ["False: it is compared as text", "True", "An error", "Null"]
+answers = ["False: it is compared as text"]
+explanation = "Cast both to [version] to compare correctly."
+review = "Comparison"
+
+[[question]]
+id = "op-bitand"
+type = "short"
+prompt = "What does 5 -band 3 evaluate to? (number)"
+answers = ["1"]
+explanation = "0101 and 0011 is 0001."
+review = "Comparison"
+
+# ---- Truthiness and null ----
+
+[[question]]
+id = "tr-false"
+type = "multi"
+prompt = "Which values are false in an if? Select all that apply."
+choices = ["$null", "0", "''", "'False'"]
+answers = ["$null", "0", "''"]
+explanation = "The non-empty string 'False' is true."
+review = "Truthiness and `$null`"
+
+[[question]]
+id = "tr-array"
+type = "choice"
+prompt = "How does a one-element array @(0) behave in an if?"
+choices = ["Like its element: false", "True: it is not empty", "An error", "Null"]
+answers = ["Like its element: false"]
+explanation = "@(0,0) is true."
+review = "Truthiness and `$null`"
+
+[[question]]
+id = "tr-null-left"
+type = "choice"
+prompt = "Why put $null on the left in a null comparison?"
+choices = ["With an array on the left, -eq filters instead of returning a boolean", "It is faster", "It avoids quoting", "It is required by syntax"]
+answers = ["With an array on the left, -eq filters instead of returning a boolean"]
+explanation = "if ($null -eq $x)."
+review = "Truthiness and `$null`"
+
+# ---- PowerShell 7 only ----
+
+[[question]]
+id = "p7-coalesce"
+type = "short"
+prompt = "Which operator, PowerShell 7 only, supplies a default when a value is $null? (two characters)"
+answers = ["??"]
+explanation = "$x ?? 'default'."
+review = "Operators only in PowerShell 7"
+
+[[question]]
+id = "p7-chain"
+type = "choice"
+prompt = "What does Test-Path C:\\nope && 'yes' do in PowerShell 7?"
+choices = ["Prints False, then yes: && tests whether the command succeeded, not its value", "Prints nothing", "Prints False only", "An error"]
+answers = ["Prints False, then yes: && tests whether the command succeeded, not its value"]
+explanation = "Test-Path ran successfully; it just returned False."
+review = "Operators only in PowerShell 7"
+
+[[question]]
+id = "p7-51"
+type = "choice"
+prompt = "What happens when 5.1 meets $x ?? 'default'?"
+choices = ["A parse error", "It prints default", "It treats ?? as a comment", "It returns null"]
+answers = ["A parse error"]
+explanation = "A script that must run on 5.1 cannot use it."
+review = "Operators only in PowerShell 7"
+
+# ---- Arrays, hashtables, dates ----
+
+[[question]]
+id = "ar-neg"
+type = "short"
+prompt = "With $a = 1..5, what does $a[-1] return? (number)"
+answers = ["5"]
+explanation = "Negative indexes count from the end."
+review = "Arrays"
+
+[[question]]
+id = "ar-slice"
+type = "short"
+prompt = "With $a = 1..5, what does $a[1..3] return, as numbers separated by commas?"
+answers = ["2,3,4", "2, 3, 4"]
+explanation = "A slice."
+review = "Arrays"
+
+[[question]]
+id = "ar-plus"
+type = "choice"
+prompt = "What does $a += 3 do to an array?"
+choices = ["Builds a new array and copies, so it is slow in big loops", "Extends it in place", "Raises an error", "Sorts it"]
+answers = ["Builds a new array and copies, so it is slow in big loops"]
+explanation = "Use a List[string] or similar for many additions."
+review = "Arrays"
+
+[[question]]
+id = "ar-force"
+type = "choice"
+prompt = "Why wrap a command in @() ?"
+choices = ["So the result is always an array, even for zero or one object", "To make it run faster", "To suppress errors", "To sort it"]
+answers = ["So the result is always an array, even for zero or one object"]
+explanation = "That makes it safe to index and count."
+review = "Arrays"
+
+[[question]]
+id = "ht-order"
+type = "choice"
+prompt = "Does a plain @{} hashtable keep the order you wrote keys in?"
+choices = ["No; use [ordered]@{}", "Yes", "Only for strings", "Only in 7"]
+answers = ["No; use [ordered]@{}"]
+explanation = "Keys are also case-insensitive."
+review = "Hashtables and objects"
+
+[[question]]
+id = "ht-custom"
+type = "short"
+prompt = "Which accelerator builds a record that behaves like cmdlet output, for example [____]@{Name='Bob'}?"
+answers = ["pscustomobject"]
+explanation = "So Format-Table, Export-Csv and Sort-Object work on it."
+review = "Hashtables and objects"
+
+[[question]]
+id = "dt-sub"
+type = "choice"
+prompt = "What does subtracting two [datetime] values give?"
+choices = ["A TimeSpan", "A string", "An integer", "A date"]
+answers = ["A TimeSpan"]
+explanation = "($d1 - $d2).Days."
+review = "Dates and durations"
+
+[[question]]
+id = "dt-fmt"
+type = "short"
+prompt = "Write the Get-Date format string for a timestamp like 20261121-143000 (use -Format 'x')."
+answers = ["yyyyMMdd-HHmmss"]
+explanation = "MM is month, mm is minutes; HH is 24-hour."
+review = "Dates and durations"
+
+[[question]]
+id = "va-islinux"
+type = "choice"
+prompt = "Which variables tell PowerShell 7 code which platform it runs on?"
+choices = ["$IsWindows, $IsLinux and $IsMacOS", "$OS only", "$Platform", "$env:OS only"]
+answers = ["$IsWindows, $IsLinux and $IsMacOS"]
+explanation = "They do not exist in Windows PowerShell 5.1."
+review = "Automatic and preference variables"

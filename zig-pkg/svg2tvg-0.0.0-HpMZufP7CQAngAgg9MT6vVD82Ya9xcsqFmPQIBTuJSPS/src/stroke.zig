@@ -1,0 +1,571 @@
+//! Strokes of polylines, two ways. `strokeOutline` gives contours whose nonzero fill is exactly the
+//! stroke, so every pixel is covered once. `strip` writes the mesh directly, faster, but its pieces
+//! overlap, which only an opaque stroke hides.
+
+const std = @import("std");
+const math = std.math;
+const assert = std.debug.assert;
+const Allocator = std.mem.Allocator;
+const tessellation = @import("tessellation.zig");
+const mesh = @import("mesh.zig");
+const Point = tessellation.Point;
+const Vector = @Vector(2, f32);
+
+/// How far an outer miter point may lie outside the join circle, in the units of the polyline.
+const miter_overshoot = 0.03;
+const max_arc_steps = 1024;
+
+pub const Polyline = struct { points: []const Point, closed: bool = false };
+
+/// Width and miter limit within `tessellation.max_coordinate_pixels`, else invalid input.
+pub fn validateOptions(options: mesh.StrokeOptions) tessellation.Error!void {
+    if (!(options.width > 0 and options.width / 2 <= tessellation.max_coordinate_pixels)) return error.InvalidInput;
+    if (!(options.miter_limit >= 1 and options.miter_limit <= tessellation.max_coordinate_pixels)) return error.InvalidInput;
+    if (!(options.tolerance > 0)) return error.InvalidInput;
+}
+
+/// `validateOptions`, and points within `tessellation.max_coordinate_pixels`.
+pub fn validate(polyline: []const Point, options: mesh.StrokeOptions) tessellation.Error!void {
+    try validateOptions(options);
+    for (polyline) |point| for (point) |coordinate| {
+        if (!(@abs(coordinate) <= tessellation.max_coordinate_pixels)) return error.InvalidInput;
+    };
+}
+
+/// Points of `polyline` without near repeats, and for a closed one without a last point on the
+/// first, at the front of `buffer`.
+fn distinctPoints(polyline: []const Point, closed: bool, buffer: []Vector) []Vector {
+    assert(buffer.len >= polyline.len);
+    var count: usize = 0;
+    for (polyline) |point| {
+        if (count == 0 or !nearlyEqual(buffer[count - 1], point)) {
+            buffer[count] = point;
+            count += 1;
+        }
+    }
+    if (closed) while (count > 1 and nearlyEqual(buffer[0], buffer[count - 1])) {
+        count -= 1;
+    };
+    return buffer[0..count];
+}
+
+/// Contours whose nonzero fill is the stroke of `polyline` in the style of `options`: edge quads,
+/// join wedges and caps as SVG draws them. A single point is a disc for round caps, a square for
+/// square caps and nothing for butt caps. Join and cap arcs stay within `options.tolerance` of the
+/// circle. Appends to `points`, which grows to at most `max_points`, and one past the last point
+/// of every contour to `ends`.
+pub fn strokeOutline(
+    allocator: Allocator,
+    polyline: []const Point,
+    closed: bool,
+    options: mesh.StrokeOptions,
+    max_points: usize,
+    points: *std.ArrayList(Point),
+    ends: *std.ArrayList(usize),
+) tessellation.Error!void {
+    assert(options.tolerance > 0);
+    try validate(polyline, options);
+    if (polyline.len == 0) return;
+
+    const buffer = try allocator.alloc(Vector, polyline.len);
+    defer allocator.free(buffer);
+    const pts = distinctPoints(polyline, closed, buffer);
+    const radius = options.width / 2;
+    var outliner: Outliner = .{ .allocator = allocator, .radius = radius, .options = options, .max_points = max_points, .points = points, .ends = ends };
+    if (pts.len == 1) {
+        switch (options.cap) {
+            .butt => return,
+            .round => {
+                const right: Vector = .{ radius, 0 };
+                try outliner.append(pts[0] + right);
+                try outliner.appendArc(pts[0], right, -2 * math.pi);
+                _ = points.pop();
+            },
+            .square => for ([_]Vector{ .{ 1, 1 }, .{ 1, -1 }, .{ -1, -1 }, .{ -1, 1 } }) |corner| {
+                try outliner.append(pts[0] + corner * @as(Vector, @splat(radius)));
+            },
+        }
+    } else if (closed) {
+        for (0..pts.len) |i| try outliner.appendJoin(pts[(i + pts.len - 1) % pts.len], pts[i], pts[(i + 1) % pts.len]);
+        try outliner.endContour();
+        var i = pts.len;
+        while (i > 0) : (i -= 1) try outliner.appendJoin(pts[i % pts.len], pts[i - 1], pts[(i + pts.len - 2) % pts.len]);
+    } else {
+        const last = pts.len - 1;
+        for (1..last) |i| try outliner.appendJoin(pts[i - 1], pts[i], pts[i + 1]);
+        try outliner.appendCap(pts[last], outliner.leftOffset(pts[last - 1], pts[last]));
+        var i = last;
+        while (i > 1) : (i -= 1) try outliner.appendJoin(pts[i], pts[i - 1], pts[i - 2]);
+        try outliner.appendCap(pts[0], outliner.leftOffset(pts[1], pts[0]));
+    }
+    try outliner.endContour();
+}
+
+const Outliner = struct {
+    allocator: Allocator,
+    radius: f32,
+    options: mesh.StrokeOptions,
+    max_points: usize,
+    points: *std.ArrayList(Point),
+    ends: *std.ArrayList(usize),
+
+    fn append(outliner: *Outliner, point: Vector) error{ OutOfMemory, TooComplex }!void {
+        if (outliner.points.items.len >= outliner.max_points) return error.TooComplex;
+        try outliner.points.append(outliner.allocator, point);
+    }
+
+    fn endContour(outliner: *Outliner) error{OutOfMemory}!void {
+        assert(outliner.ends.items.len == 0 or outliner.ends.getLast() < outliner.points.items.len);
+        try outliner.ends.append(outliner.allocator, outliner.points.items.len);
+    }
+
+    /// Left offset at `vertex` from the edge `previous`-`vertex` to the edge `vertex`-`next`. Outlines
+    /// run clockwise on screen. A join takes the miter point, where both offset lines cross, on the
+    /// inner side when the corner it cuts off lies inside both edge quads, or on the outer side within the miter limit of a
+    /// miter join or less than `miter_overshoot` outside the circle of a round join. Otherwise an
+    /// outer join is a clockwise arc or a bevel and an inner join runs through the vertex.
+    fn appendJoin(outliner: *Outliner, previous: Vector, vertex: Vector, next: Vector) error{ OutOfMemory, TooComplex }!void {
+        const incoming = vertex - previous;
+        const outgoing = next - vertex;
+        const incoming_offset = outliner.leftOffset(previous, vertex);
+        const outgoing_offset = outliner.leftOffset(vertex, next);
+        const turn = turnAngle(incoming, outgoing);
+        const half_turn_cos = @cos(turn / 2);
+        const miter_fits = if (turn < 0) switch (outliner.options.join) {
+            .round => outliner.radius * (1 - half_turn_cos) <= miter_overshoot * half_turn_cos,
+            .miter => half_turn_cos * outliner.options.miter_limit >= 1,
+            .bevel => false,
+        } else turn < math.pi / 2.0 and outliner.radius * @sin(turn) <= @min(length(incoming), length(outgoing));
+        if (miter_fits) {
+            const miter_scale: Vector = @splat(1 / (1 + @cos(turn)));
+            try outliner.append(vertex + (incoming_offset + outgoing_offset) * miter_scale);
+            return;
+        }
+        try outliner.append(vertex + incoming_offset);
+        if (turn < 0) {
+            if (outliner.options.join == .round) try outliner.appendArc(vertex, incoming_offset, turn) else try outliner.append(vertex + outgoing_offset);
+        } else {
+            try outliner.append(vertex);
+            try outliner.append(vertex + outgoing_offset);
+        }
+    }
+
+    /// From `center + offset` around the end to `center - offset`, `offset` being the left offset
+    /// of the last edge.
+    fn appendCap(outliner: *Outliner, center: Vector, offset: Vector) error{ OutOfMemory, TooComplex }!void {
+        switch (outliner.options.cap) {
+            .butt => {
+                try outliner.append(center + offset);
+                try outliner.append(center - offset);
+            },
+            .round => {
+                try outliner.append(center + offset);
+                try outliner.appendArc(center, offset, -math.pi);
+            },
+            .square => {
+                const extension: Vector = .{ offset[1], -offset[0] };
+                try outliner.append(center + offset + extension);
+                try outliner.append(center - offset + extension);
+            },
+        }
+    }
+
+    /// Points after `center + start_offset` along the circle through it, turned by `sweep` radians.
+    fn appendArc(outliner: *Outliner, center: Vector, start_offset: Vector, sweep: f32) error{ OutOfMemory, TooComplex }!void {
+        assert(math.isFinite(sweep) and @abs(sweep) <= 2 * math.pi);
+        const steps = arcSteps(outliner.radius, outliner.options.tolerance, sweep);
+        // Inner points move out by half the sag, so the chords straddle the circle.
+        const outward_reach = 2 / (1 + @cos(sweep / @as(f32, @floatFromInt(steps)) / 2));
+        for (1..steps + 1) |step| {
+            const angle = sweep * @as(f32, @floatFromInt(step)) / @as(f32, @floatFromInt(steps));
+            const reach = if (step == steps) 1 else outward_reach;
+            try outliner.append(center + rotate(start_offset, angle) * @as(Vector, @splat(reach)));
+        }
+    }
+
+    fn leftOffset(outliner: *const Outliner, from: Vector, to: Vector) Vector {
+        return leftNormal(from, to) * @as(Vector, @splat(outliner.radius));
+    }
+};
+
+/// Steps that keep the chords of an arc with `radius` within `tolerance` of it.
+fn arcSteps(radius: f32, tolerance: f32, sweep: f32) usize {
+    const max_step = if (radius <= tolerance) math.pi / 2.0 else 2 * math.acos(1 - tolerance / radius);
+    return @intFromFloat(@min(max_arc_steps, @max(1, @ceil(@abs(sweep) / max_step))));
+}
+
+/// Signed turn from `incoming` to `outgoing`, a reversal counts as -π.
+fn turnAngle(incoming: Vector, outgoing: Vector) f32 {
+    const turn = math.atan2(incoming[0] * outgoing[1] - incoming[1] * outgoing[0], @reduce(.Add, incoming * outgoing));
+    return if (@abs(turn) > math.pi - 1e-3) -math.pi else turn;
+}
+
+/// The mesh of a stroke written directly: one station of core and fade vertices across every
+/// point, quads between stations, and fans for wide joins and round caps. Stations at gentle
+/// joins are shared by both edges; where the inner side would fold back the strip splits and a
+/// patch fills the outer wedge. The fade lies as `mesh.StrokeOptions.fade` says, strokes thinner
+/// than it get core coverage 2 width / (width + min(fade, 1)), which keeps their ink. Overlapping pieces cover a pixel twice, so for `options.translucent`
+/// it returns null unless the strokes are one polyline turning one way, an open one by at most
+/// half a turn and a closed one once around, with every join shared and end segments longer than
+/// the fade at butt caps.
+pub fn strip(allocator: Allocator, polylines: []const Polyline, options: mesh.StrokeOptions) tessellation.Error!?mesh.Mesh {
+    try validateOptions(options);
+    for (polylines) |polyline| try validate(polyline.points, options);
+
+    const radius = options.width / 2;
+    const fade = options.fade;
+    const inside = @min(0.5, fade / 2);
+    // Thin strokes keep the ink of a 1 px fade, a wider one adds to it.
+    const ink_fade = @min(1, fade);
+    var builder: StripBuilder = .{
+        .allocator = allocator,
+        .core = @max(0, radius - inside),
+        .inside = inside,
+        .outer = radius + if (fade <= 1) fade / 2 else fade - 0.5,
+        .core_coverage = if (options.width < ink_fade) 2 * options.width / (options.width + ink_fade) else 1,
+        .has_fade = fade > 0,
+        .radius = radius,
+        .options = options,
+        .max_vertices = options.limits.max_edges,
+    };
+    defer builder.deinit();
+    var point_total: usize = 0;
+    var longest: usize = 0;
+    for (polylines) |polyline| {
+        point_total += polyline.points.len;
+        longest = @max(longest, polyline.points.len);
+    }
+    try builder.positions.ensureTotalCapacity(allocator, point_total * 4 + 16);
+    try builder.coverages.ensureTotalCapacity(allocator, point_total * 4 + 16);
+    try builder.indices.ensureTotalCapacity(allocator, point_total * 18 + 48);
+
+    const buffer = try allocator.alloc(Vector, longest);
+    defer allocator.free(buffer);
+    const segment_buffer = try allocator.alloc(Segment, longest);
+    defer allocator.free(segment_buffer);
+    var drawn_polylines: usize = 0;
+    for (polylines) |polyline| {
+        const is_closed = polyline.closed;
+        const pts = distinctPoints(polyline.points, is_closed, buffer);
+        if (pts.len == 0) continue;
+        drawn_polylines += 1;
+        if (options.translucent and drawn_polylines > 1) return null;
+        if (pts.len == 1) {
+            if (options.cap == .butt) continue;
+            // A square cap thinner than the fade puts both stations inside the point, they cross.
+            if (options.translucent and options.cap == .square and inside > radius) return null;
+            const start = try builder.startCap(pts[0], .{ 1, 0 });
+            try builder.connect(start, try builder.endCap(pts[0], .{ 1, 0 }));
+            continue;
+        }
+        const segments = segment_buffer[0..if (is_closed) pts.len else pts.len - 1];
+        for (segments, 0..) |*segment, index| {
+            const chord = pts[(index + 1) % pts.len] - pts[index];
+            const chord_length = length(chord);
+            assert(chord_length > 0);
+            segment.* = .{ .direction = chord / @as(Vector, @splat(chord_length)), .length = chord_length };
+        }
+        if (options.translucent) {
+            if (!turnsOnce(segments, is_closed)) return null;
+            // Butt and thin square caps put their last station inside the end, two of them must not cross.
+            const cap_inset = inside - if (options.cap == .square) radius else 0;
+            if (!is_closed and cap_inset > 0 and !(@min(segments[0].length, segments[segments.len - 1].length) >= 2 * cap_inset)) return null;
+        }
+        (if (is_closed) builder.closedPolyline(pts, segments) else builder.openPolyline(pts, segments)) catch |err| switch (err) {
+            error.Overlap => return null,
+            else => |other| return other,
+        };
+    }
+    const positions = try builder.positions.toOwnedSlice(allocator);
+    errdefer allocator.free(positions);
+    const coverages = try builder.coverages.toOwnedSlice(allocator);
+    errdefer allocator.free(coverages);
+    return .{ .positions = positions, .coverages = coverages, .indices = try builder.indices.toOwnedSlice(allocator) };
+}
+
+/// From a point to the next, the last one of a closed polyline back to the first.
+const Segment = struct { direction: Vector, length: f32 };
+
+/// All joins turn the same way, an open polyline by at most half a turn in total and a closed one
+/// exactly once around: the direction enters the half plane behind the first one never or once.
+fn turnsOnce(segments: []const Segment, closed: bool) bool {
+    const segment_count = segments.len;
+    const first = segments[0].direction;
+    var turn_sign: f32 = 0;
+    var behind_entries: usize = 0;
+    var previous_behind = false;
+    const join_count = if (closed) segment_count else segment_count - 1;
+    for (0..join_count) |join_index| {
+        const incoming = segments[join_index].direction;
+        const outgoing = segments[(join_index + 1) % segment_count].direction;
+        const cross = incoming[0] * outgoing[1] - incoming[1] * outgoing[0];
+        if (cross != 0) {
+            if (turn_sign == 0) turn_sign = math.sign(cross);
+            if (math.sign(cross) != turn_sign) return false;
+        }
+    }
+    for (1..segment_count) |segment_index| {
+        const direction = segments[segment_index].direction;
+        const behind = (first[0] * direction[1] - first[1] * direction[0]) * turn_sign < 0;
+        if (behind and !previous_behind) behind_entries += 1;
+        previous_behind = behind;
+    }
+    return behind_entries == @intFromBool(closed);
+}
+
+/// Vertices across a point from the right fade edge over the right and left core edges to the left
+/// fade edge. Without fade the fade entries repeat the core ones.
+const Station = [4]u32;
+
+const StripBuilder = struct {
+    allocator: Allocator,
+    /// Half width of full coverage and of the fade's outer edge.
+    core: f32,
+    /// Part of the fade inside the stroke's edge.
+    inside: f32,
+    outer: f32,
+    core_coverage: f32,
+    has_fade: bool,
+    radius: f32,
+    options: mesh.StrokeOptions,
+    max_vertices: usize,
+    positions: std.ArrayList(Point) = .empty,
+    coverages: std.ArrayList(f32) = .empty,
+    indices: std.ArrayList(u32) = .empty,
+
+    fn deinit(builder: *StripBuilder) void {
+        builder.positions.deinit(builder.allocator);
+        builder.coverages.deinit(builder.allocator);
+        builder.indices.deinit(builder.allocator);
+    }
+
+    fn reserveVertices(builder: *StripBuilder, count: usize) error{ OutOfMemory, TooComplex }!void {
+        if (builder.positions.items.len + count > builder.max_vertices) return error.TooComplex;
+        try builder.positions.ensureUnusedCapacity(builder.allocator, count);
+        try builder.coverages.ensureUnusedCapacity(builder.allocator, count);
+    }
+
+    fn vertex(builder: *StripBuilder, position: Vector, coverage: f32) error{ OutOfMemory, TooComplex }!u32 {
+        try builder.reserveVertices(1);
+        return builder.vertexAssumeCapacity(position, coverage);
+    }
+
+    fn vertexAssumeCapacity(builder: *StripBuilder, position: Vector, coverage: f32) u32 {
+        builder.positions.appendAssumeCapacity(position);
+        builder.coverages.appendAssumeCapacity(coverage);
+        return @intCast(builder.positions.items.len - 1);
+    }
+
+    /// Counterclockwise on screen whatever the order, slivers of no area left out.
+    fn triangle(builder: *StripBuilder, a: u32, b: u32, c: u32) error{OutOfMemory}!void {
+        try builder.indices.ensureUnusedCapacity(builder.allocator, 3);
+        builder.triangleAssumeCapacity(a, b, c);
+    }
+
+    fn triangleAssumeCapacity(builder: *StripBuilder, a: u32, b: u32, c: u32) void {
+        const positions = builder.positions.items;
+        // In f64 the sign survives nearly collinear corners, f32 flips it.
+        const Wide = @Vector(2, f64);
+        const pa: Wide = @floatCast(@as(Vector, positions[a]));
+        const ab = @as(Wide, @floatCast(@as(Vector, positions[b]))) - pa;
+        const ac = @as(Wide, @floatCast(@as(Vector, positions[c]))) - pa;
+        const cross = ab[0] * ac[1] - ab[1] * ac[0];
+        if (!(@abs(cross) > 1e-6)) return;
+        builder.indices.appendSliceAssumeCapacity(if (cross < 0) &.{ a, b, c } else &.{ a, c, b });
+    }
+
+    fn quad(builder: *StripBuilder, a: u32, b: u32, c: u32, d: u32) error{OutOfMemory}!void {
+        try builder.triangle(a, b, c);
+        try builder.triangle(a, c, d);
+    }
+
+    /// Core vertices `core_offset` and fade vertices `outer_offset` to the left of `center`, the
+    /// same to the right. `coverage` scales the core, cap stations fade out with 0.
+    fn station(builder: *StripBuilder, center: Vector, normal: Vector, core_scale: f32, outer_scale: f32, coverage: f32) error{ OutOfMemory, TooComplex }!Station {
+        try builder.reserveVertices(4);
+        const core_offset = normal * @as(Vector, @splat(core_scale));
+        const right_core = builder.vertexAssumeCapacity(center - core_offset, coverage);
+        const left_core = builder.vertexAssumeCapacity(center + core_offset, coverage);
+        if (!builder.has_fade) return .{ right_core, right_core, left_core, left_core };
+        const outer_offset = normal * @as(Vector, @splat(outer_scale));
+        return .{ builder.vertexAssumeCapacity(center - outer_offset, 0), right_core, left_core, builder.vertexAssumeCapacity(center + outer_offset, 0) };
+    }
+
+    fn plainStation(builder: *StripBuilder, center: Vector, normal: Vector, coverage: f32) error{ OutOfMemory, TooComplex }!Station {
+        return builder.station(center, normal, builder.core, builder.outer, coverage);
+    }
+
+    fn connect(builder: *StripBuilder, from: Station, to: Station) error{OutOfMemory}!void {
+        try builder.indices.ensureUnusedCapacity(builder.allocator, 18);
+        const sides = [_]usize{ 1, 0, 2 };
+        for (sides[0..if (builder.has_fade) 3 else 1]) |side| {
+            builder.triangleAssumeCapacity(from[side], from[side + 1], to[side + 1]);
+            builder.triangleAssumeCapacity(from[side], to[side + 1], to[side]);
+        }
+    }
+
+    /// Fan around `center` from the core and fade vertices of `first` on one side to those of
+    /// `last`, through `ring` offsets of unit length (scaled by core and outer) between them.
+    fn fan(builder: *StripBuilder, center: Vector, first: [2]u32, last: [2]u32, ring: RingOffsets) error{ OutOfMemory, TooComplex }!void {
+        const middle = try builder.vertex(center, builder.core_coverage);
+        var previous = first;
+        var iterator = ring;
+        while (iterator.next()) |offset| {
+            const current: [2]u32 = .{
+                try builder.vertex(center + offset * @as(Vector, @splat(builder.core)), builder.core_coverage),
+                if (builder.has_fade) try builder.vertex(center + offset * @as(Vector, @splat(builder.outer)), 0) else undefined,
+            };
+            try builder.fanPiece(middle, previous, current);
+            previous = current;
+        }
+        try builder.fanPiece(middle, previous, last);
+    }
+
+    fn fanPiece(builder: *StripBuilder, middle: u32, from: [2]u32, to: [2]u32) error{OutOfMemory}!void {
+        try builder.triangle(middle, from[0], to[0]);
+        if (builder.has_fade) try builder.quad(from[0], from[1], to[1], to[0]);
+    }
+
+    const Error = error{ OutOfMemory, TooComplex, Overlap };
+
+    fn openPolyline(builder: *StripBuilder, pts: []const Vector, segments: []const Segment) Error!void {
+        assert(pts.len == segments.len + 1);
+        var current = try builder.startCap(pts[0], segments[0].direction);
+        for (1..pts.len - 1) |i| {
+            const stations = try builder.join(pts[i], segments[i - 1], segments[i]);
+            try builder.connect(current, stations.incoming);
+            current = stations.outgoing;
+        }
+        const end = try builder.endCap(pts[pts.len - 1], segments[segments.len - 1].direction);
+        try builder.connect(current, end);
+    }
+
+    fn closedPolyline(builder: *StripBuilder, pts: []const Vector, segments: []const Segment) Error!void {
+        assert(pts.len == segments.len and pts.len >= 2);
+        const count = pts.len;
+        const first = try builder.join(pts[0], segments[count - 1], segments[0]);
+        var current = first.outgoing;
+        for (1..count) |i| {
+            const stations = try builder.join(pts[i], segments[i - 1], segments[i]);
+            try builder.connect(current, stations.incoming);
+            current = stations.outgoing;
+        }
+        try builder.connect(current, first.incoming);
+    }
+
+    /// The station the first edge starts from, after the cap behind `point`.
+    fn startCap(builder: *StripBuilder, point: Vector, direction: Vector) error{ OutOfMemory, TooComplex }!Station {
+        const cap_station = try builder.endCap(point, -direction);
+        return .{ cap_station[3], cap_station[2], cap_station[1], cap_station[0] };
+    }
+
+    /// The station the last edge ends at, with the cap beyond `point` in `direction`.
+    fn endCap(builder: *StripBuilder, point: Vector, direction: Vector) error{ OutOfMemory, TooComplex }!Station {
+        const normal: Vector = .{ -direction[1], direction[0] };
+        if (builder.options.cap == .round) {
+            const end = try builder.plainStation(point, normal, builder.core_coverage);
+            try builder.fan(point, .{ end[2], end[3] }, .{ end[1], end[0] }, .init(normal, -math.pi, builder.radius, builder.options.tolerance));
+            return end;
+        }
+        const extension: f32 = if (builder.options.cap == .square) builder.radius else 0;
+        const end = try builder.plainStation(point + direction * @as(Vector, @splat(extension - builder.inside)), normal, builder.core_coverage);
+        if (!builder.has_fade) return end;
+        const beyond = try builder.plainStation(point + direction * @as(Vector, @splat(extension + builder.outer - builder.radius)), normal, 0);
+        try builder.connect(end, beyond);
+        return end;
+    }
+
+    const Join = struct { incoming: Station, outgoing: Station };
+
+    fn join(builder: *StripBuilder, point: Vector, incoming_segment: Segment, outgoing_segment: Segment) Error!Join {
+        const incoming = incoming_segment.direction;
+        const outgoing = outgoing_segment.direction;
+        const dot = @reduce(.Add, incoming * outgoing);
+        const cross = incoming[0] * outgoing[1] - incoming[1] * outgoing[0];
+        // Within 1e-3 of a reversal counts as one, as in `turnAngle`.
+        const reversal = dot < -0.9999995;
+        const half_turn_cos: f32 = if (reversal) 0 else @sqrt(@max(0, (1 + dot) / 2));
+        const half_turn_sin = @sqrt(@max(0, (1 - dot) / 2));
+        const incoming_normal: Vector = .{ -incoming[1], incoming[0] };
+        const outgoing_normal: Vector = .{ -outgoing[1], outgoing[0] };
+        const outer_fits = half_turn_cos > 0 and switch (builder.options.join) {
+            .miter => half_turn_cos * builder.options.miter_limit >= 1,
+            // The fade corner on the miter lies furthest outside, so it sets the error.
+            .round => builder.outer * (1 - half_turn_cos) <= builder.options.tolerance * half_turn_cos,
+            .bevel => builder.outer * (1 - half_turn_cos * half_turn_cos) <= builder.options.tolerance * half_turn_cos,
+        };
+        // The inner miter moves back along both edges, half an edge each leaves room for the other end.
+        const inner_fits = half_turn_cos > 0 and
+            builder.outer * half_turn_sin <= 0.5 * @min(incoming_segment.length, outgoing_segment.length) * half_turn_cos;
+        // Scaled to the miter: an offset of 1 along it lies 1 from both edges.
+        const miter = (incoming_normal + outgoing_normal) * @as(Vector, @splat(if (reversal) 0 else 1 / (1 + dot)));
+        if (outer_fits and inner_fits) {
+            const shared = try builder.plainStation(point, miter, builder.core_coverage);
+            return .{ .incoming = shared, .outgoing = shared };
+        }
+        if (builder.options.translucent) return error.Overlap;
+        const incoming_station = try builder.plainStation(point, incoming_normal, builder.core_coverage);
+        const outgoing_station = try builder.plainStation(point, outgoing_normal, builder.core_coverage);
+        // A right turn on screen has its outer side on the left, as in the outline.
+        const left_outer = reversal or cross < 0;
+        const turn: f32 = if (reversal) -math.pi else math.atan2(cross, dot);
+        const first: [2]u32 = if (left_outer) .{ incoming_station[2], incoming_station[3] } else .{ incoming_station[1], incoming_station[0] };
+        const last: [2]u32 = if (left_outer) .{ outgoing_station[2], outgoing_station[3] } else .{ outgoing_station[1], outgoing_station[0] };
+        const side: Vector = @splat(if (left_outer) 1 else -1);
+        const ring: RingOffsets = switch (builder.options.join) {
+            .round => .init(incoming_normal * side, turn, builder.radius, builder.options.tolerance),
+            .bevel => .none,
+            .miter => if (outer_fits) .{ .single = miter * side } else .none,
+        };
+        try builder.fan(point, first, last, ring);
+        return .{ .incoming = incoming_station, .outgoing = outgoing_station };
+    }
+};
+
+/// Unit offsets strictly between the ends of a fan.
+const RingOffsets = union(enum) {
+    none,
+    single: ?Vector,
+    arc: struct { start: Vector, sweep: f32, steps: usize, step: usize = 1 },
+
+    fn init(start: Vector, sweep: f32, radius: f32, tolerance: f32) RingOffsets {
+        return .{ .arc = .{ .start = start, .sweep = sweep, .steps = arcSteps(radius, tolerance, sweep) } };
+    }
+
+    fn next(ring: *RingOffsets) ?Vector {
+        switch (ring.*) {
+            .none => return null,
+            .single => |*offset| {
+                defer offset.* = null;
+                return offset.*;
+            },
+            .arc => |*arc| {
+                if (arc.step >= arc.steps) return null;
+                defer arc.step += 1;
+                return rotate(arc.start, arc.sweep * @as(f32, @floatFromInt(arc.step)) / @as(f32, @floatFromInt(arc.steps)));
+            },
+        }
+    }
+};
+
+fn rotate(vector: Vector, angle: f32) Vector {
+    const cos = @cos(angle);
+    const sin = @sin(angle);
+    return .{ vector[0] * cos - vector[1] * sin, vector[0] * sin + vector[1] * cos };
+}
+
+fn leftNormal(from: Vector, to: Vector) Vector {
+    const direction = to - from;
+    const direction_length = length(direction);
+    assert(direction_length > 0);
+    return Vector{ -direction[1], direction[0] } / @as(Vector, @splat(direction_length));
+}
+
+fn length(vector: Vector) f32 {
+    return @sqrt(@reduce(.Add, vector * vector));
+}
+
+fn nearlyEqual(a: Vector, b: Vector) bool {
+    const difference = a - b;
+    return @reduce(.Add, difference * difference) < 1e-6;
+}

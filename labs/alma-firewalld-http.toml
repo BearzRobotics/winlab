@@ -1,0 +1,45 @@
+schema_version = 1
+id = "labs.alma-firewalld-http"
+target = "linux"
+distro = "almalinux"
+title = "AlmaLinux: the website is unreachable from other machines"
+summary = "The service works locally but the firewall does not allow it in."
+lesson = "security.security-fundamentals"
+symptom = "Customers cannot reach the company website on this AlmaLinux server from other machines. On the server itself, the page loads fine."
+hints = [
+  "Works locally but not remotely: is the service listening on the network, or is something filtering traffic?",
+  "AlmaLinux uses firewalld. firewall-cmd --list-all shows what the active zone allows.",
+  "Check whether the http service is in the list. Changes need --permanent to survive a restart, and a reload to take effect.",
+]
+expected_changes = [
+  "Installs Apache and firewalld and allows ssh and http through the firewall",
+  "Then removes the http service from the firewall (permanently)",
+]
+hazards = ["Web traffic to the lab VM is blocked by firewalld until the http service is allowed again (SSH stays open)"]
+scope = "single guest (the registered AlmaLinux training VM only)"
+privilege = "administrator"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["redhat-rhcsa/basic-networking", "redhat-rhcsa/security", "comptia-linux-plus/security", "comptia-network-plus/network-security"]
+setup = '''
+set -e
+dnf -y install httpd firewalld >/dev/null
+echo 'Welcome' > /var/www/html/index.html
+systemctl enable --now httpd firewalld
+firewall-cmd --permanent --add-service=ssh --add-service=http >/dev/null
+firewall-cmd --reload >/dev/null
+'''
+fault = '''
+firewall-cmd --permanent --remove-service=http >/dev/null
+firewall-cmd --reload >/dev/null
+'''
+solution = '''
+firewall-cmd --permanent --add-service=http >/dev/null
+firewall-cmd --reload >/dev/null
+'''
+
+[validate]
+script = '''
+if firewall-cmd --permanent --query-service=http >/dev/null 2>&1 && firewall-cmd --query-service=http >/dev/null 2>&1; then echo "http allowed"; else echo "http blocked"; fi
+'''
+expect_output_contains = "http allowed"

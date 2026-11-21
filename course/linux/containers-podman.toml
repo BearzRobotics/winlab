@@ -1,0 +1,29 @@
+schema_version = 1
+id = "linux.containers-podman"
+title = "Containers with Podman"
+summary = "Images, containers, registries, rootless operation, volumes and SELinux labels, and running containers as systemd services with Quadlet."
+content = "containers-podman.md"
+estimated_minutes = 45
+objectives = [
+  "Explain images, containers, registries and tags, and how a container differs from a virtual machine",
+  "Pull an image, run a container, list, read logs from, enter and remove containers",
+  "Persist data with volumes and explain the SELinux :Z option",
+  "Explain rootless versus rootful containers",
+  "Run a container as a systemd service with a Quadlet file and troubleshoot it when it fails",
+]
+prerequisites = ["foundations.bash-basics"]
+windows_features = []
+privilege = "administrator"
+certifications = ["redhat-rhcsa/containers", "comptia-linux-plus/scripting-containers-automation"]
+evaluation_criteria = [
+  "Learner repairs a failing container service and shows the commands that revealed the cause",
+  "Learner explains where data written inside a container goes when it is removed",
+]
+
+[[references]]
+title = "Podman documentation"
+url = "https://docs.podman.io/"
+
+[[references]]
+title = "podman-systemd.unit (Quadlet) manual"
+url = "https://docs.podman.io/en/latest/markdown/podman-systemd.unit.5.html"

@@ -1,0 +1,35 @@
+schema_version = 1
+id = "labs.alma-crond-disabled"
+target = "linux"
+distro = "almalinux"
+title = "AlmaLinux: scheduled jobs are not running"
+summary = "The cron daemon has been stopped and disabled."
+lesson = "foundations.troubleshooting-method"
+symptom = "None of the scheduled jobs on this AlmaLinux server have run since yesterday, and the cron service does not seem to be doing anything."
+hints = [
+  "On a modern Linux server, background services are managed by systemd.",
+  "systemctl shows whether a service is active now and whether it is enabled at boot. On Red Hat family systems the cron service is called crond.",
+  "Start it, and make sure it comes back after a restart.",
+]
+expected_changes = [
+  "Installs cronie (the cron daemon) if needed and enables it",
+  "Then stops and disables crond in the AlmaLinux lab VM",
+]
+hazards = ["Scheduled jobs in the lab VM do not run until crond is enabled and started"]
+scope = "single guest (the registered AlmaLinux training VM only)"
+privilege = "administrator"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["redhat-rhcsa/running-systems", "comptia-linux-plus/system-management"]
+setup = '''
+dnf -y install cronie >/dev/null
+systemctl enable --now crond
+'''
+fault = "systemctl disable --now crond"
+solution = "systemctl enable --now crond"
+
+[validate]
+script = '''
+echo "enabled=$(systemctl is-enabled crond 2>&1);active=$(systemctl is-active crond 2>&1)"
+'''
+expect_output_contains = "enabled=enabled;active=active"

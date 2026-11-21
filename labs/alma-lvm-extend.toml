@@ -1,0 +1,75 @@
+schema_version = 1
+id = "labs.alma-lvm-extend"
+target = "linux"
+distro = "almalinux"
+title = "AlmaLinux: the LVM volume is full"
+summary = "Grow a logical volume and its file system without deleting any data."
+lesson = "linux.storage-filesystems"
+symptom = "The reports volume at /srv/lvdata is full and the application cannot write. The data in it must stay. The volume group has spare space: make the logical volume at least 80 MB in total, with the file system grown to match, so there is room to write again."
+hints = [
+  "lvs, vgs and pvs show logical volumes, volume groups and physical volumes. vgs shows how much free space the group has. The group is called labvg and the volume is labvg/data.",
+  "df -h /srv/lvdata shows the file system's size and how full it is.",
+  "lvextend makes a logical volume bigger. A file system does not grow by itself unless you tell it to.",
+  "lvextend has an option that resizes the file system in the same step (see man lvextend, option -r or --resizefs).",
+]
+expected_changes = [
+  "Installs the LVM tools, creates a 200 MB disk image attached through a loop device, and builds volume group labvg with a 40 MB ext4 logical volume mounted at /srv/lvdata",
+  "Installs a small boot-time service that re-attaches the image and mounts the volume",
+  "Then fills the volume with a large file in the AlmaLinux lab VM",
+]
+hazards = ["Writes to /srv/lvdata in the lab VM fail until the volume is grown"]
+scope = "single guest (the registered AlmaLinux training VM only)"
+privilege = "administrator"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["redhat-rhcsa/local-storage", "redhat-rhcsa/file-systems", "comptia-linux-plus/system-management"]
+setup = '''
+set -e
+dnf -y install lvm2 >/dev/null
+truncate -s 200M /var/lib/winlab-pv.img
+dev=$(losetup -f --show /var/lib/winlab-pv.img)
+pvcreate -q -y "$dev"
+vgcreate -q labvg "$dev"
+lvcreate -q -y -L 40M -n data labvg
+mkfs.ext4 -q /dev/labvg/data
+mkdir -p /srv/lvdata
+mount /dev/labvg/data /srv/lvdata
+lvmdevices --adddev "$dev" 2>/dev/null || true
+cat > /usr/local/sbin/winlab-lvm-up.sh <<'SH'
+#!/bin/sh
+losetup -j /var/lib/winlab-pv.img | grep -q . || losetup -f /var/lib/winlab-pv.img
+dev=$(losetup -j /var/lib/winlab-pv.img | cut -d: -f1)
+lvmdevices --adddev "$dev" 2>/dev/null || true
+vgchange -ay labvg >/dev/null
+mountpoint -q /srv/lvdata || mount /dev/labvg/data /srv/lvdata
+SH
+chmod +x /usr/local/sbin/winlab-lvm-up.sh
+cat > /etc/systemd/system/winlab-lvm.service <<'UNIT'
+[Unit]
+Description=WinLab lab volume (loop-backed LVM)
+After=local-fs.target lvm2-monitor.service
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/winlab-lvm-up.sh
+[Install]
+WantedBy=multi-user.target
+UNIT
+systemctl daemon-reload
+systemctl enable winlab-lvm.service >/dev/null 2>&1
+'''
+fault = '''
+echo 'Q3 report' > /srv/lvdata/report.txt
+dd if=/dev/zero of=/srv/lvdata/bigfile bs=1M count=100 2>/dev/null || true
+sync
+'''
+solution = "lvextend -r -L 80M /dev/labvg/data"
+
+[validate]
+script = '''
+lv=$(lvs --noheadings --units m --nosuffix -o lv_size labvg/data 2>/dev/null | tr -d ' ' | cut -d. -f1)
+fs=$(df -m --output=size /srv/lvdata 2>/dev/null | tail -1 | tr -d ' ')
+ok=no; [ "${lv:-0}" -ge 80 ] && [ "${fs:-0}" -ge 65 ] && [ -f /srv/lvdata/report.txt ] && [ -f /srv/lvdata/bigfile ] && ok=yes
+echo "lv=${lv};fs=${fs};ok=$ok"
+'''
+expect_output_contains = "ok=yes"

@@ -1,0 +1,29 @@
+schema_version = 1
+id = "windows-admin.registry-and-filesystems"
+title = "The Windows registry, startup locations and file systems"
+summary = "Hives, keys and values, safe registry editing, where programs start from, NTFS versus other file systems, and finding what fills a disk."
+content = "registry-and-filesystems.md"
+estimated_minutes = 40
+objectives = [
+  "Name the registry hives and the types of value",
+  "Read, create and remove a value with PowerShell and export a key first",
+  "List the places a program can start automatically",
+  "Compare NTFS, ReFS, FAT32 and exFAT",
+  "Find what is using disk space and explain why a full system drive causes odd failures",
+]
+prerequisites = ["foundations.powershell-basics"]
+windows_features = ["Registry Editor", "Disk Management", "File Explorer"]
+privilege = "administrator"
+certifications = ["comptia-a-core2/operating-systems", "comptia-a-core2/software-troubleshooting", "microsoft-md-102/manage-maintain-devices"]
+evaluation_criteria = [
+  "Learner exports a key, changes one value and restores it from the export",
+  "Learner finds the ten largest files on a volume and says what they would check before deleting any",
+]
+
+[[references]]
+title = "Registry (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/win32/sysinfo/registry"
+
+[[references]]
+title = "File systems overview (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/storage/file-server/file-system-overview"

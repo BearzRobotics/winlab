@@ -1,0 +1,34 @@
+schema_version = 1
+id = "labs.rdp-firewall"
+title = "Remote Desktop connections are refused"
+summary = "A service is configured correctly but the firewall blocks it."
+lesson = "security.security-fundamentals"
+symptom = "Remote Desktop to this server stopped working. Connections are refused outright, but the server itself is up and Remote Desktop is turned on in settings."
+hints = [
+  "Separate 'the service is off' from 'something is blocking the connection'. Which one fits 'refused'?",
+  "Windows Defender Firewall has rules grouped by feature. Look for the Remote Desktop group.",
+  "Check whether the inbound rules in that group are enabled.",
+]
+expected_changes = [
+  "Turns Remote Desktop on and enables its inbound firewall rules",
+  "Then disables the Remote Desktop firewall rule group in the lab VM",
+]
+hazards = ["Remote Desktop to the lab VM is blocked until the firewall rules are enabled (WinLab's own control channel is unaffected)"]
+scope = "single guest (the registered training VM only)"
+privilege = "administrator"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["comptia-network-plus/network-security", "comptia-a-core2/security", "comptia-network-plus/network-troubleshooting"]
+setup = '''
+Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name 'fDenyTSConnections' -Value 0
+Enable-NetFirewallRule -DisplayGroup 'Remote Desktop'
+'''
+fault = "Disable-NetFirewallRule -DisplayGroup 'Remote Desktop'"
+solution = "Enable-NetFirewallRule -DisplayGroup 'Remote Desktop'"
+
+[validate]
+script = '''
+$rules = Get-NetFirewallRule -DisplayGroup 'Remote Desktop' | Where-Object { $_.Enabled -eq 'True' -and $_.Direction -eq 'Inbound' }
+if (@($rules).Count -gt 0) { 'RDP allowed' } else { 'RDP blocked by firewall' }
+'''
+expect_output_contains = "RDP allowed"

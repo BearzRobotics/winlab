@@ -1,0 +1,32 @@
+schema_version = 1
+id = "labs.scheduled-task-disabled"
+title = "The nightly job is not running"
+summary = "A scheduled task exists but no longer runs."
+lesson = "windows-admin.services-and-startup"
+symptom = "The cleanup job that should run every night at 2 AM has not run for days, and the disk is filling up."
+hints = [
+  "Scheduled jobs are managed by the Task Scheduler.",
+  "Find the task called Nightly Cleanup. Does it exist? What state is it in?",
+  "A task can be fully configured and still not run. Look at its state, not just its trigger.",
+]
+expected_changes = [
+  "Creates a scheduled task named Nightly Cleanup that runs daily at 2 AM as SYSTEM",
+  "Disables that task",
+]
+hazards = ["The Nightly Cleanup task in the lab VM does not run until it is enabled"]
+scope = "single guest (the registered training VM only)"
+privilege = "administrator"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["comptia-a-core2/operating-systems", "comptia-a-core2/software-troubleshooting"]
+setup = '''
+$action = New-ScheduledTaskAction -Execute 'cmd.exe' -Argument '/c echo cleanup >> C:\ProgramData\winlab-cleanup.log'
+$trigger = New-ScheduledTaskTrigger -Daily -At 2am
+Register-ScheduledTask -TaskName 'Nightly Cleanup' -Action $action -Trigger $trigger -User 'SYSTEM' -RunLevel Highest -Force | Out-Null
+'''
+fault = "Disable-ScheduledTask -TaskName 'Nightly Cleanup' | Out-Null"
+solution = "Enable-ScheduledTask -TaskName 'Nightly Cleanup' | Out-Null"
+
+[validate]
+script = "(Get-ScheduledTask -TaskName 'Nightly Cleanup').State.ToString()"
+expect_output_contains = "Ready"

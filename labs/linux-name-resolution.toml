@@ -1,0 +1,31 @@
+schema_version = 1
+id = "labs.linux-name-resolution"
+target = "linux"
+title = "Linux: names will not resolve"
+summary = "Programs cannot look up host names, although the DNS server answers."
+lesson = "foundations.troubleshooting-method"
+symptom = "Programs on this Linux server cannot find any host by name. A direct query to the DNS server still gets an answer, and reaching sites by IP address works."
+hints = [
+  "If a direct DNS query works but ordinary programs fail, the problem is in how the system decides where to look names up.",
+  "That order is set by the 'hosts' line of /etc/nsswitch.conf. Compare it with what a normal system has.",
+  "A working line lists files first, then dns (Ubuntu also adds mdns4_minimal [NOTFOUND=return] in between).",
+]
+expected_changes = ["Edits the 'hosts:' line of /etc/nsswitch.conf so DNS is no longer consulted"]
+hazards = ["Name lookups from the lab VM fail until nsswitch.conf is repaired"]
+scope = "single guest (the registered Linux training VM only)"
+privilege = "administrator"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["comptia-linux-plus/troubleshooting", "redhat-rhcsa/basic-networking", "comptia-network-plus/network-troubleshooting"]
+fault = '''
+sed -i 's/^hosts:.*/hosts:          files/' /etc/nsswitch.conf
+'''
+solution = '''
+sed -i 's/^hosts:.*/hosts:          files dns/' /etc/nsswitch.conf
+'''
+
+[validate]
+script = '''
+if getent hosts example.com >/dev/null 2>&1; then echo "name resolution works"; else echo "name resolution fails"; fi
+'''
+expect_output_contains = "name resolution works"

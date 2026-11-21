@@ -1,0 +1,402 @@
+schema_version = 1
+lesson = "foundations.cmd-batch-files"
+# Draft for owner review. A bank of 44; each attempt asks 10, favouring questions missed last time.
+draw = 10
+
+# ---- Template and file ----
+
+[[question]]
+id = "tpl-self"
+type = "short"
+prompt = "Which expression gives a script's own file name and extension? (include the percent sign)"
+answers = ["%~nx0"]
+explanation = "%~dp0 is its folder."
+review = "A script template"
+
+[[question]]
+id = "tpl-pushd"
+type = "choice"
+prompt = "Why prefer pushd over cd /d for a path that may be a network share?"
+choices = ["pushd maps a temporary drive letter for a UNC path, and popd removes it", "pushd is faster", "cd cannot change folders", "pushd needs no quotes"]
+answers = ["pushd maps a temporary drive letter for a UNC path, and popd removes it"]
+explanation = "cd cannot change to a UNC path."
+review = "A script template"
+
+[[question]]
+id = "tpl-popd"
+type = "short"
+prompt = "Which command returns to the folder remembered by pushd? (command name)"
+answers = ["popd"]
+explanation = "pushd and popd work as a pair."
+review = "A script template"
+
+[[question]]
+id = "tpl-exit"
+type = "choice"
+prompt = "How should a script end?"
+choices = ["With an explicit exit /b <code>", "With exit", "With pause", "With no command"]
+answers = ["With an explicit exit /b <code>"]
+explanation = "So callers and scheduled tasks can read how it went."
+review = "A script template"
+
+[[question]]
+id = "file-crlf"
+type = "choice"
+prompt = "Which line endings should batch files use?"
+choices = ["CR+LF (Windows)", "LF only", "CR only", "It does not matter at all"]
+answers = ["CR+LF (Windows)"]
+explanation = "LF-only worked in a simple test, but save with CR+LF to be safe."
+review = "The file itself"
+
+[[question]]
+id = "file-bom"
+type = "choice"
+prompt = "How should you save a batch file's encoding?"
+choices = ["ANSI or UTF-8 without a BOM, keeping to ASCII where possible", "UTF-16", "UTF-8 with a BOM", "Any binary format"]
+answers = ["ANSI or UTF-8 without a BOM, keeping to ASCII where possible"]
+explanation = "A byte-order mark is one more thing that can corrupt the first line."
+review = "The file itself"
+
+[[question]]
+id = "file-chcp"
+type = "short"
+prompt = "Which command shows and changes the console code page? (command name)"
+answers = ["chcp"]
+explanation = "chcp 65001 selects UTF-8."
+review = "The file itself"
+
+[[question]]
+id = "file-edit"
+type = "choice"
+prompt = "Which terminal editor ships with Windows 11?"
+choices = ["Microsoft Edit (edit)", "vim", "nano", "emacs"]
+answers = ["Microsoft Edit (edit)"]
+explanation = "Notepad is the graphical alternative."
+review = "The file itself"
+
+# ---- Arguments ----
+
+[[question]]
+id = "arg-validate"
+type = "choice"
+prompt = "Why validate arguments before acting?"
+choices = ["To fail early with a clear message and a distinct exit code", "To make the script shorter", "Windows requires it", "To avoid using call"]
+answers = ["To fail early with a clear message and a distinct exit code"]
+explanation = "Usage errors should not turn into half-finished work."
+review = "Arguments"
+
+[[question]]
+id = "arg-folder-test"
+type = "short"
+prompt = "Write the test that is true when the first argument is NOT a folder (an if line, quoting the argument)."
+answers = ["if not exist \"%~1\\\"", "if not exist \"%~1\\\" "]
+explanation = "The trailing backslash makes it succeed only for folders."
+review = "Arguments"
+
+[[question]]
+id = "arg-switch"
+type = "choice"
+prompt = "In the parse-loop pattern, how is a switch recognised?"
+choices = ["Its first character is /", "It contains a colon", "It is uppercase", "It is the last argument"]
+answers = ["Its first character is /"]
+explanation = "if \"!a:~0,1!\"==\"/\" needs delayed expansion."
+review = "Arguments"
+
+[[question]]
+id = "arg-embedded"
+type = "choice"
+prompt = "What goes wrong with the argument /out:\"my file.txt\" (quote in the middle) in if \"%~1\"==\"\"?"
+choices = ["The embedded quotes unbalance the test and cmd reports a syntax error", "Nothing; it works", "The file is deleted", "The script loops forever"]
+answers = ["The embedded quotes unbalance the test and cmd reports a syntax error"]
+explanation = "Quote the whole argument: \"/out:my file.txt\"."
+review = "Arguments"
+
+[[question]]
+id = "arg-quote-use"
+type = "choice"
+prompt = "Why use \"%~1\" rather than %1 when using an argument in a command?"
+choices = ["Characters like & and spaces would otherwise be interpreted by cmd", "%1 is deprecated", "It is faster", "%~1 adds a drive letter"]
+answers = ["Characters like & and spaces would otherwise be interpreted by cmd"]
+explanation = "Always quote expansions of untrusted text."
+review = "Arguments"
+
+# ---- Output and logging ----
+
+[[question]]
+id = "out-blank"
+type = "short"
+prompt = "Which spelling of echo prints a blank line most reliably? (the command with its punctuation)"
+answers = ["echo(", "echo("]
+explanation = "echo( also prints text that starts with special characters."
+review = "Output and logging"
+
+[[question]]
+id = "out-stderr"
+type = "short"
+prompt = "Write the redirection that sends an echo message to stderr (after the message, for example 'echo msg ___')."
+answers = ["1>&2", ">&2"]
+explanation = "So a caller can separate errors from output."
+review = "Output and logging"
+
+[[question]]
+id = "out-log"
+type = "choice"
+prompt = "Why log to a file in a script?"
+choices = ["An unattended run has no screen, so the log is often the only record", "echo is slow", "cmd cannot print", "Logs are required by Windows"]
+answers = ["An unattended run has no screen, so the log is often the only record"]
+explanation = "Rotate or limit logs so they do not fill a disk."
+review = "Output and logging"
+
+[[question]]
+id = "out-date"
+type = "choice"
+prompt = "Why is parsing %DATE% unreliable?"
+choices = ["Its format follows regional settings and differs between machines", "It is read-only", "It is in UTC", "It is only set in PowerShell"]
+answers = ["Its format follows regional settings and differs between machines"]
+explanation = "Ask PowerShell for a formatted timestamp instead."
+review = "Output and logging"
+
+[[question]]
+id = "out-ts"
+type = "short"
+prompt = "Which PowerShell cmdlet do the lesson's scripts call to produce a timestamp? (cmdlet name)"
+answers = ["Get-Date"]
+explanation = "Get-Date -Format yyyyMMdd-HHmmss."
+review = "Output and logging"
+
+[[question]]
+id = "out-wmic"
+type = "choice"
+prompt = "Why not use wmic in new scripts?"
+choices = ["It is deprecated and may not be installed", "It is too fast", "It needs a licence", "It only runs on Windows 7"]
+answers = ["It is deprecated and may not be installed"]
+explanation = "Use PowerShell instead."
+review = "Output and logging"
+
+# ---- Config and elevation ----
+
+[[question]]
+id = "cfg-split"
+type = "choice"
+prompt = "What does for /f \"tokens=1,* delims==\" do with the line name=Demo App?"
+choices = ["Puts name in %%k and everything after the first = in %%l", "Puts the whole line in %%k", "Splits at every space", "Skips the line"]
+answers = ["Puts name in %%k and everything after the first = in %%l"]
+explanation = "The star takes the rest, including spaces and later = signs."
+review = "Reading configuration"
+
+[[question]]
+id = "cfg-comment"
+type = "short"
+prompt = "Which for /f option makes lines starting with ; be ignored as comments? (write the option)"
+answers = ["eol=;"]
+explanation = "eol=; is also the default."
+review = "Reading configuration"
+
+[[question]]
+id = "cfg-untrusted"
+type = "choice"
+prompt = "Who could edit a configuration file your script reads, and what does that imply?"
+choices = ["Anyone with write access, so treat it as untrusted input", "Only you, so it is always safe", "Only Windows", "Nobody"]
+answers = ["Anyone with write access, so treat it as untrusted input"]
+explanation = "Validate and quote what you read."
+review = "Reading configuration"
+
+[[question]]
+id = "elev-test"
+type = "choice"
+prompt = "How does a batch file test whether it is elevated?"
+choices = ["Run a command that needs administrator rights, such as net session, and test its exit code", "Read %ISADMIN%", "Check the user name", "Look at the window title"]
+answers = ["Run a command that needs administrator rights, such as net session, and test its exit code"]
+explanation = "fltmc works the same way."
+review = "Elevation: are we administrator?"
+
+[[question]]
+id = "elev-self"
+type = "choice"
+prompt = "What is lost when a script restarts itself elevated via Start-Process -Verb RunAs?"
+choices = ["Arguments and working folder unless you pass them, and the user sees a UAC prompt", "Nothing", "The script file", "The log"]
+answers = ["Arguments and working folder unless you pass them, and the user sees a UAC prompt"]
+explanation = "For unattended jobs, use an already-elevated scheduled task."
+review = "Elevation: are we administrator?"
+
+# ---- Starting things ----
+
+[[question]]
+id = "st-wait"
+type = "short"
+prompt = "Write the command that starts a GUI program app.exe and waits for it, with an empty title."
+answers = ["start /wait \"\" app.exe", "start /wait \"\" app"]
+explanation = "It returns the program's exit code."
+review = "Starting and calling things"
+
+[[question]]
+id = "st-title"
+type = "choice"
+prompt = "Why does start need an empty \"\" before a quoted program path?"
+choices = ["Otherwise the quoted path is mistaken for the window title", "To suppress errors", "To run elevated", "To set the working directory"]
+answers = ["Otherwise the quoted path is mistaken for the window title"]
+explanation = "The first quoted argument is taken as the title."
+review = "Starting and calling things"
+
+[[question]]
+id = "st-el"
+type = "short"
+prompt = "After 'start /wait \"\" cmd /c exit 5', what does %errorlevel% hold? (number)"
+answers = ["5"]
+explanation = "start /wait returns the program's exit code."
+review = "Starting and calling things"
+
+[[question]]
+id = "st-ps"
+type = "choice"
+prompt = "Which switch stops PowerShell loading your profile when called from a batch file?"
+choices = ["-NoProfile", "-NoLogo", "-Quiet", "-Safe"]
+answers = ["-NoProfile"]
+explanation = "Keeps your own customisations from interfering."
+review = "Starting and calling things"
+
+[[question]]
+id = "st-cmdc"
+type = "choice"
+prompt = "How should you write cmd /c when both the program path and an argument contain quotes?"
+choices = ["Wrap the whole command in an extra pair of quotes", "Remove all quotes", "Use single quotes", "Use backquotes"]
+answers = ["Wrap the whole command in an extra pair of quotes"]
+explanation = "cmd /c \"\"C:\\Program Files\\app.exe\" \"arg one\"\"."
+review = "Starting and calling things"
+
+# ---- findstr ----
+
+[[question]]
+id = "fs-code"
+type = "choice"
+prompt = "What exit code does findstr set when it finds a match?"
+choices = ["0", "1", "2", "-1"]
+answers = ["0"]
+explanation = "1 means no match."
+review = "Searching text: `find` and `findstr`"
+
+[[question]]
+id = "fs-literal"
+type = "short"
+prompt = "Which findstr switch searches for a literal phrase with spaces? (for example /c:\"two words\"; give the switch)"
+answers = ["/c:", "/c"]
+explanation = "Without it, spaces separate alternatives."
+review = "Searching text: `find` and `findstr`"
+
+[[question]]
+id = "fs-icase"
+type = "short"
+prompt = "Which findstr switch ignores case? (include the slash)"
+answers = ["/i"]
+explanation = "/s searches subfolders and /n prints line numbers."
+review = "Searching text: `find` and `findstr`"
+
+# ---- Unattended ----
+
+[[question]]
+id = "un-cwd"
+type = "choice"
+prompt = "What is the working directory of a typical scheduled task?"
+choices = ["Usually C:\\Windows\\System32, not the script's folder", "The script's folder", "The user's desktop", "The root of D:"]
+answers = ["Usually C:\\Windows\\System32, not the script's folder"]
+explanation = "Start with pushd \"%~dp0\" and use full paths."
+review = "Unattended running"
+
+[[question]]
+id = "un-drives"
+type = "choice"
+prompt = "A script uses drive Z: mapped in your session. Why does it fail as a scheduled task?"
+choices = ["Mapped drive letters do not exist in the task's session", "Z: is reserved", "Tasks cannot use drives", "The drive is encrypted"]
+answers = ["Mapped drive letters do not exist in the task's session"]
+explanation = "Use UNC paths with pushd."
+review = "Unattended running"
+
+[[question]]
+id = "un-interactive"
+type = "multi"
+prompt = "Which commands should you remove from an unattended script? Select all that apply."
+choices = ["pause", "set /p", "choice", "echo"]
+answers = ["pause", "set /p", "choice"]
+explanation = "They wait for a user who is not there. timeout can fail when input is redirected."
+review = "Unattended running"
+
+[[question]]
+id = "un-temp"
+type = "choice"
+prompt = "A script run as SYSTEM uses %TEMP%. Where does it point?"
+choices = ["Under C:\\Windows, not your profile", "Your profile's Temp", "The desktop", "It is empty"]
+answers = ["Under C:\\Windows, not your profile"]
+explanation = "The account differs, so per-user folders differ."
+review = "Unattended running"
+
+[[question]]
+id = "un-result"
+type = "choice"
+prompt = "Where does a scheduled task's exit code show up?"
+choices = ["In the task's LastTaskResult", "In the registry only", "In the Start menu", "Nowhere"]
+answers = ["In the task's LastTaskResult"]
+explanation = "That is how you notice a failure."
+review = "Unattended running"
+
+# ---- Debugging and security ----
+
+[[question]]
+id = "dbg-echo"
+type = "choice"
+prompt = "How do you see each command as it runs?"
+choices = ["Remove @echo off, or use echo on for a section", "Add pause", "Use setlocal", "Use start"]
+answers = ["Remove @echo off, or use echo on for a section"]
+explanation = "Then run it from a prompt that stays open."
+review = "Debugging"
+
+[[question]]
+id = "dbg-dry"
+type = "short"
+prompt = "In the dry-run pattern, 'set \"RUN=echo WOULD RUN:\"' then '%RUN% del x'. What does it print? (the text printed)"
+answers = ["WOULD RUN: del x"]
+explanation = "Set RUN= (empty) to do it for real."
+review = "Debugging"
+
+[[question]]
+id = "dbg-kopen"
+type = "short"
+prompt = "Which cmd switch runs a script and keeps the window open? (include the slash)"
+answers = ["/k"]
+explanation = "cmd /k script.cmd."
+review = "Debugging"
+
+[[question]]
+id = "sec-input"
+type = "choice"
+prompt = "Why must you never paste untrusted input into a command line unquoted?"
+choices = ["A value like 'x & del ...' becomes two commands", "It is slower", "Windows forbids it", "It deletes the log"]
+answers = ["A value like 'x & del ...' becomes two commands"]
+explanation = "Quote every expansion and validate input."
+review = "Security"
+
+[[question]]
+id = "sec-delete"
+type = "choice"
+prompt = "Before running rd /s /q %target%, what should the script check?"
+choices = ["That the variable is not empty and points where expected", "That the window is maximised", "That echo is off", "Nothing"]
+answers = ["That the variable is not empty and points where expected"]
+explanation = "An empty variable could delete the wrong tree."
+review = "Security"
+
+[[question]]
+id = "sec-writable"
+type = "choice"
+prompt = "Why should an elevated script not be writable by standard users?"
+choices = ["A standard user could edit it and gain administrator rights", "It would run slower", "Windows blocks it", "It would be deleted"]
+answers = ["A standard user could edit it and gain administrator rights"]
+explanation = "Scripts are code that runs with your rights."
+review = "Security"
+
+[[question]]
+id = "sec-pass"
+type = "choice"
+prompt = "Where should a script get a password?"
+choices = ["A credential store or Task Scheduler's stored account, never the script text", "Hard-coded in the script", "In a comment", "In the file name"]
+answers = ["A credential store or Task Scheduler's stored account, never the script text"]
+explanation = "Anything in the script is readable by whoever can read the script."
+review = "Security"

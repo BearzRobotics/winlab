@@ -1,0 +1,48 @@
+schema_version = 1
+id = "labs.windows-updates-blocked"
+target = "windows"
+title = "Windows Update is not installing updates"
+summary = "The update service is disabled and a policy value switches automatic updates off."
+lesson = "endpoints.update-and-policy"
+symptom = "This machine has not installed any updates for months. Users say the Windows Update service never seems to run, and a colleague mentioned that 'something' was changed to stop updates during a project. Make the machine able to receive updates again."
+hints = [
+  "Windows Update is a service. Check the Windows Update service (wuauserv): is it running, and what is its startup type?",
+  "A service can be blocked by its startup type, and updates can also be switched off by policy. Policies are stored under HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU.",
+  "A value NoAutoUpdate = 1 there turns off automatic updating. Removing the value (or setting it to 0) returns control to the default.",
+  "Changes to the service startup type survive a restart; make sure yours does.",
+]
+expected_changes = [
+  "Sets the Windows Update service (wuauserv) startup type to Disabled and stops it",
+  "Creates the policy value NoAutoUpdate = 1 under HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU",
+]
+hazards = ["The lab VM does not install updates until the service and policy are restored"]
+scope = "single guest (the registered training VM only)"
+privilege = "administrator"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["microsoft-md-102/manage-maintain-devices", "comptia-a-core2/operating-systems", "comptia-a-core2/software-troubleshooting"]
+setup = '''
+Remove-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU' -Name NoAutoUpdate -ErrorAction SilentlyContinue
+Set-Service -Name wuauserv -StartupType Manual
+'''
+fault = '''
+Stop-Service -Name wuauserv -Force -ErrorAction SilentlyContinue
+Set-Service -Name wuauserv -StartupType Disabled
+$p = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU'
+New-Item -Path $p -Force | Out-Null
+New-ItemProperty -Path $p -Name NoAutoUpdate -Value 1 -PropertyType DWord -Force | Out-Null
+'''
+solution = '''
+Set-Service -Name wuauserv -StartupType Manual
+Remove-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU' -Name NoAutoUpdate -ErrorAction SilentlyContinue
+Start-Service -Name wuauserv
+'''
+
+[validate]
+script = '''
+$s = (Get-Service -Name wuauserv).StartType
+$v = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU' -Name NoAutoUpdate -ErrorAction SilentlyContinue).NoAutoUpdate
+$ok = if (($s -ne 'Disabled') -and ($v -ne 1)) { 'yes' } else { 'no' }
+"start=$s;noautoupdate=$(if ($v -eq 1) { 'on' } else { 'off' });ok=$ok"
+'''
+expect_output_contains = "ok=yes"

@@ -1,0 +1,370 @@
+schema_version = 1
+lesson = "foundations.cmd-advanced"
+# Draft for owner review. A bank of 40; each attempt asks 10, favouring questions missed last time.
+draw = 10
+
+# ---- Parsing ----
+
+[[question]]
+id = "pa-doc"
+type = "choice"
+prompt = "How is the order in which cmd parses a line known?"
+choices = ["By observation; Microsoft documents the commands but not the parser", "From the cmd manual page", "From the Windows source licence", "It is random"]
+answers = ["By observation; Microsoft documents the commands but not the parser"]
+explanation = "The lesson gives the observed order."
+review = "How cmd parses a line"
+
+[[question]]
+id = "pa-first"
+type = "choice"
+prompt = "Which expansion happens first for the whole line or block?"
+choices = ["%var% percent expansion", "!var! delayed expansion", "for variable substitution", "Redirection"]
+answers = ["%var% percent expansion"]
+explanation = "It finishes before anything in the block runs."
+review = "How cmd parses a line"
+
+[[question]]
+id = "pa-delayed"
+type = "choice"
+prompt = "Why does !var! show a value changed inside the same block?"
+choices = ["It is replaced just before the command runs, after the block was read", "It is replaced before %var%", "It reads the registry", "It re-reads the file"]
+answers = ["It is replaced just before the command runs, after the block was read"]
+explanation = "Delayed expansion is a later phase."
+review = "How cmd parses a line"
+
+[[question]]
+id = "pa-debug"
+type = "choice"
+prompt = "A line does something odd. What helps you see what cmd built?"
+choices = ["Put echo in front of it", "Add pause", "Use setlocal", "Use start"]
+answers = ["Put echo in front of it"]
+explanation = "It shows the line after the early phases."
+review = "How cmd parses a line"
+
+# ---- call and bang ----
+
+[[question]]
+id = "ce-what"
+type = "short"
+prompt = "With name=color and color=blue, what does 'call echo %%%name%%%' print?"
+answers = ["blue"]
+explanation = "Phase 1 gives %color%; call expands it again."
+review = "Double expansion with `call`"
+
+[[question]]
+id = "ce-cost"
+type = "choice"
+prompt = "What is the cost of using call for double expansion?"
+choices = ["It is slow and tricky; use it only when you need a computed variable name", "It deletes the variable", "It needs administrator rights", "It disables echo"]
+answers = ["It is slow and tricky; use it only when you need a computed variable name"]
+explanation = "It starts another parsing round."
+review = "Double expansion with `call`"
+
+[[question]]
+id = "bang-one"
+type = "short"
+prompt = "With delayed expansion on, write the value in set \"a=Wow___\" that gives a literal Wow! (the part after Wow)."
+answers = ["^!"]
+explanation = "One caret keeps a literal !. ^^! would produce a caret and consume the !."
+review = "Delayed expansion and the `!` character"
+
+[[question]]
+id = "bang-robust"
+type = "choice"
+prompt = "What is the most robust way to handle a value that contains !?"
+choices = ["Set it while delayed expansion is off and read it with !var!", "Escape it with several carets", "Avoid using variables", "Use percent signs in the loop"]
+answers = ["Set it while delayed expansion is off and read it with !var!"]
+explanation = "!var! never re-parses the value."
+review = "Delayed expansion and the `!` character"
+
+[[question]]
+id = "bang-percent"
+type = "choice"
+prompt = "With delayed expansion on and e set to Wow!, what does echo %e% show?"
+choices = ["Wow (the ! is consumed)", "Wow!", "%e%", "An error"]
+answers = ["Wow (the ! is consumed)"]
+explanation = "%e% is expanded first, and then the leftover ! is treated as a delimiter."
+review = "Delayed expansion and the `!` character"
+
+# ---- Arrays ----
+
+[[question]]
+id = "ar-how"
+type = "choice"
+prompt = "How are arrays emulated in cmd?"
+choices = ["Variable names with an index, such as arr[1], computed with !i!", "With the array command", "With set /a", "They cannot be emulated"]
+answers = ["Variable names with an index, such as arr[1], computed with !i!"]
+explanation = "Names can contain [ and ]."
+review = "Emulated arrays"
+
+[[question]]
+id = "ar-list"
+type = "choice"
+prompt = "What does 'set arr' print?"
+choices = ["Every variable whose name starts with arr", "Only arr", "The length of the array", "An error"]
+answers = ["Every variable whose name starts with arr"]
+explanation = "A free way to dump the whole array."
+review = "Emulated arrays"
+
+[[question]]
+id = "ar-assoc"
+type = "choice"
+prompt = "How would you emulate an associative array?"
+choices = ["Variable names with a key, such as user.alice", "set /assoc", "for /k", "It is not possible"]
+answers = ["Variable names with a key, such as user.alice"]
+explanation = "List them with set user."
+review = "Emulated arrays"
+
+[[question]]
+id = "ar-limit"
+type = "short"
+prompt = "What is the documented maximum size, in characters, of a single user-defined environment variable? (number, without comma)"
+answers = ["32767", "32,767"]
+explanation = "The environment block for a process is also limited to 32,767 characters."
+review = "Emulated arrays"
+
+# ---- Strings ----
+
+[[question]]
+id = "st-len"
+type = "short"
+prompt = "After the length loop on s=hello world, what does len hold? (number)"
+answers = ["11"]
+explanation = "The loop increments until !s:~N,1! is empty."
+review = "String functions"
+
+[[question]]
+id = "st-upper"
+type = "choice"
+prompt = "Why does replacing each letter with its upper-case form convert a string to capitals?"
+choices = ["Substitution is case-insensitive, so every a or A is replaced by A", "set /a handles letters", "cmd has an upper function", "The loop sorts the string"]
+answers = ["Substitution is case-insensitive, so every a or A is replaced by A"]
+explanation = "It is a classic trick."
+review = "String functions"
+
+[[question]]
+id = "st-contains"
+type = "choice"
+prompt = "How do you test whether a variable contains text, using substitution?"
+choices = ["Remove the text and check whether the value changed", "Use if contains", "Use set /c", "Use find /c on the variable"]
+answers = ["Remove the text and check whether the value changed"]
+explanation = "if not \"!p:Program=!\"==\"!p!\"."
+review = "String functions"
+
+[[question]]
+id = "st-octal"
+type = "short"
+prompt = "Write the set /a that turns the text 08 in variable mm into the number 8 (set /a good=...)."
+answers = ["set /a good=1%mm%-100"]
+explanation = "Prefixing 1 avoids the octal interpretation of the leading zero."
+review = "String functions"
+
+[[question]]
+id = "st-trim"
+type = "choice"
+prompt = "How do you trim trailing spaces in cmd?"
+choices = ["Peel one space at a time with !t:~0,-1! in a loop", "Use trim", "Use set /t", "Use find /v"]
+answers = ["Peel one space at a time with !t:~0,-1! in a loop"]
+explanation = "cmd has no trim function."
+review = "String functions"
+
+# ---- Recursion ----
+
+[[question]]
+id = "re-fact"
+type = "short"
+prompt = "What does the recursive factorial subroutine return for 5? (number)"
+answers = ["120"]
+explanation = "5*4*3*2*1."
+review = "Recursion"
+
+[[question]]
+id = "re-local"
+type = "choice"
+prompt = "Why does each recursion level need its own setlocal?"
+choices = ["So the variables of different levels do not collide", "To speed it up", "To enable echo", "Windows requires it"]
+answers = ["So the variables of different levels do not collide"]
+explanation = "Return the result with endlocal & set."
+review = "Recursion"
+
+[[question]]
+id = "re-loop"
+type = "choice"
+prompt = "What is usually better than recursion in cmd?"
+choices = ["A loop", "More recursion", "call on itself twice", "goto :eof"]
+answers = ["A loop"]
+explanation = "Nesting depth is limited and a runaway recursion ends in an error."
+review = "Recursion"
+
+# ---- Input, waiting, processes ----
+
+[[question]]
+id = "in-choice"
+type = "choice"
+prompt = "After choice /c YNQ, the user presses N. What is errorlevel?"
+choices = ["2", "1", "3", "0"]
+answers = ["2"]
+explanation = "It is the position of the key in the list."
+review = "Menus and input validation"
+
+[[question]]
+id = "in-valid"
+type = "choice"
+prompt = "How does the lesson validate that input is digits only?"
+choices = ["Pipes it to findstr /r \"^[0-9][0-9]*$\" and tests the exit code", "Uses set /a", "Uses choice", "Uses fc"]
+answers = ["Pipes it to findstr /r \"^[0-9][0-9]*$\" and tests the exit code"]
+explanation = "Both choice and set /p stop and wait, so keep them out of unattended scripts."
+review = "Menus and input validation"
+
+[[question]]
+id = "wa-ping"
+type = "short"
+prompt = "Write the command that waits about five seconds without console input (ping to localhost, discarding output)."
+answers = ["ping -n 6 127.0.0.1 >nul", "ping -n 6 127.0.0.1>nul"]
+explanation = "ping sends one packet per second, and N+1 packets take N seconds."
+review = "Waiting, parallel jobs and processes"
+
+[[question]]
+id = "wa-why"
+type = "choice"
+prompt = "Why use ping instead of timeout to wait in a script with redirected input?"
+choices = ["timeout refuses redirected input", "ping is more accurate", "timeout is deprecated", "ping needs no network"]
+answers = ["timeout refuses redirected input"]
+explanation = "It reports 'Input redirection is not supported'."
+review = "Waiting, parallel jobs and processes"
+
+[[question]]
+id = "wa-bg"
+type = "short"
+prompt = "Which start switch runs a command in the background of the same window? (include the slash)"
+answers = ["/b"]
+explanation = "start /b cmd /c job.cmd."
+review = "Waiting, parallel jobs and processes"
+
+[[question]]
+id = "wa-tasklist"
+type = "short"
+prompt = "Which tasklist switches give CSV output without a header? (for example /xx /yy)"
+answers = ["/fo csv /nh"]
+explanation = "That form is easy to parse with for /f."
+review = "Waiting, parallel jobs and processes"
+
+[[question]]
+id = "wa-kill"
+type = "choice"
+prompt = "What does taskkill /f do?"
+choices = ["Forcibly ends the process without asking", "Fixes the process", "Finds the process", "Freezes it"]
+answers = ["Forcibly ends the process without asking"]
+explanation = "Check the image name or PID first."
+review = "Waiting, parallel jobs and processes"
+
+# ---- Registry and system tools ----
+
+[[question]]
+id = "rg-undo"
+type = "choice"
+prompt = "What should you always do before changing a registry key from a script?"
+choices = ["Export it with reg export so you have an undo", "Reboot", "Disable UAC", "Nothing"]
+answers = ["Export it with reg export so you have an undo"]
+explanation = "The registry has no undo by itself."
+review = "System administration from cmd"
+
+[[question]]
+id = "rg-add"
+type = "short"
+prompt = "Which reg subcommand creates or changes a value? (one word)"
+answers = ["add"]
+explanation = "reg add \"HKCU\\Software\\Test\" /v Name /t REG_SZ /d value /f."
+review = "System administration from cmd"
+
+[[question]]
+id = "rg-hklm"
+type = "choice"
+prompt = "What does writing to HKLM need?"
+choices = ["An elevated prompt", "A reboot", "A domain", "Developer Mode"]
+answers = ["An elevated prompt"]
+explanation = "HKCU is the per-user hive."
+review = "System administration from cmd"
+
+[[question]]
+id = "rg-parse"
+type = "choice"
+prompt = "Why is parsing systeminfo or netstat output fragile?"
+choices = ["Their output depends on the Windows language and version", "They print binary", "They are slow", "They need a licence"]
+answers = ["Their output depends on the Windows language and version"]
+explanation = "Keep parsing in one place and test it."
+review = "System administration from cmd"
+
+# ---- PowerShell, performance, leaving ----
+
+[[question]]
+id = "ps-back"
+type = "choice"
+prompt = "How does a value computed in PowerShell get back to cmd?"
+choices = ["Print it in PowerShell and read it with for /f", "It is shared automatically", "Through the registry only", "It cannot"]
+answers = ["Print it in PowerShell and read it with for /f"]
+explanation = "A status travels as the exit code."
+review = "Mixing in PowerShell"
+
+[[question]]
+id = "ps-file"
+type = "choice"
+prompt = "Why prefer powershell -File script.ps1 over a long -Command string?"
+choices = ["Embedded quotes and % in one-liners are painful in both shells", "-Command is deprecated", "-File is faster to start", "-Command cannot print"]
+answers = ["Embedded quotes and % in one-liners are painful in both shells"]
+explanation = "A real .ps1 avoids the quoting hazard."
+review = "Mixing in PowerShell"
+
+[[question]]
+id = "ps-cost"
+type = "choice"
+prompt = "Why not call PowerShell inside a tight loop in a batch file?"
+choices = ["Starting it takes a noticeable fraction of a second each time", "It cannot run in loops", "It needs administrator rights", "It overwrites variables"]
+answers = ["Starting it takes a noticeable fraction of a second each time"]
+explanation = "Count the process launches."
+review = "Mixing in PowerShell"
+
+[[question]]
+id = "pf-forf"
+type = "choice"
+prompt = "Why is a for /f over a command expensive in a loop?"
+choices = ["Each one starts a new cmd process", "for /f is single-threaded", "It reads the registry", "It writes a file"]
+answers = ["Each one starts a new cmd process"]
+explanation = "Run it once and read the result."
+review = "Performance"
+
+[[question]]
+id = "pf-console"
+type = "choice"
+prompt = "What is slow in cmd scripts besides external processes?"
+choices = ["Writing a lot to the console", "Variables", "Labels", "Comments"]
+answers = ["Writing a lot to the console"]
+explanation = "Redirect large output to a file."
+review = "Performance"
+
+[[question]]
+id = "lv-signs"
+type = "multi"
+prompt = "Which are signs a cmd script should become PowerShell? Select all that apply."
+choices = ["You parse tool output with for /f and findstr", "You need real arrays or sorting", "You handle JSON or XML", "The script is five lines long"]
+answers = ["You parse tool output with for /f and findstr", "You need real arrays or sorting", "You handle JSON or XML"]
+explanation = "A five-line glue script is exactly what cmd is for."
+review = "When to leave cmd"
+
+[[question]]
+id = "lv-method"
+type = "choice"
+prompt = "What is a good migration method from cmd to PowerShell?"
+choices = ["Keep cmd as a thin launcher and move logic across a function at a time, comparing output", "Rewrite everything blind", "Delete the cmd file first", "Translate line by line without testing"]
+answers = ["Keep cmd as a thin launcher and move logic across a function at a time, comparing output"]
+explanation = "Compare against the original as you go."
+review = "When to leave cmd"
+
+[[question]]
+id = "lv-glue"
+type = "choice"
+prompt = "When is cmd still the right tool?"
+choices = ["Small glue, installers, and places where PowerShell is unavailable", "Large data processing", "JSON handling", "Remoting at scale"]
+answers = ["Small glue, installers, and places where PowerShell is unavailable"]
+explanation = "For example recovery environments."
+review = "When to leave cmd"

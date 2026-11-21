@@ -1,0 +1,29 @@
+schema_version = 1
+id = "endpoints.update-and-policy"
+title = "Windows updates and policy settings"
+summary = "How Windows Update works, where policy values live, how to find the setting that is winning, and how to edit registry policy safely."
+content = "update-and-policy.md"
+estimated_minutes = 35
+objectives = [
+  "Explain the update services and name the update types and deployment rings",
+  "Check the Windows Update service, installed updates and update log",
+  "Describe the sources of policy (local, domain, MDM, direct) and where values are stored",
+  "Use gpresult and the registry to find which policy applies",
+  "Edit registry policy safely: export, change one value, verify, record",
+]
+prerequisites = ["foundations.powershell-basics"]
+windows_features = ["Windows Update", "Registry Editor", "Group Policy"]
+privilege = "administrator"
+certifications = ["microsoft-md-102/manage-maintain-devices", "comptia-a-core2/operating-systems", "comptia-a-core2/software-troubleshooting"]
+evaluation_criteria = [
+  "Learner restores Windows Update on the lab VM and explains which setting was blocking it",
+  "Learner removes a blocking policy value and states how they would confirm it will not return",
+]
+
+[[references]]
+title = "Windows Update for Business (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/deployment/update/waas-manage-updates-wufb"
+
+[[references]]
+title = "gpresult (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/gpresult"

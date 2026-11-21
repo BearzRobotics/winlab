@@ -1,0 +1,115 @@
+schema_version = 1
+id = "foundations.ps-variables-types-operators"
+title = "PowerShell variables, types, strings and operators"
+summary = "Variables and scope, automatic and preference variables, .NET types and numeric traps, quoting and interpolation, here-strings and -f formatting, comparison and logical operators, truthiness and $null, arrays, hashtables and custom objects, dates, and what is PowerShell 7 only."
+content = "ps-variables-types-operators.md"
+estimated_minutes = 100
+objectives = [
+  "Create typed, read-only and scoped variables, and name the important automatic and preference variables",
+  "Identify the type of a value and convert between types, including the rounding and overflow behaviour of numbers",
+  "Choose single or double quotes, interpolate properties with $( ), and avoid the drive-qualifier trap",
+  "Format output with -f, and split, join, replace and match strings with regular expressions",
+  "Use comparison, logical and bitwise operators, including case sensitivity and the way an array on the left filters",
+  "Apply truthiness rules and compare against $null safely",
+  "Use arrays and lists, hashtables, and [pscustomobject] records",
+  "Work with dates and durations as objects",
+  "Name which operators exist only in PowerShell 7 and write code that also runs on 5.1",
+]
+prerequisites = ["foundations.powershell-basics"]
+windows_features = ["Windows PowerShell"]
+privilege = "standard"
+certifications = ["comptia-a-core2/operating-systems"]
+evaluation_criteria = [
+  "Learner explains the output of 1,2,3,2 -eq 2 and rewrites it to return a boolean",
+  "Learner fixes an interpolation bug by using a subexpression",
+  "Learner explains why [int](2.5) is 2 and chooses the right rounding method",
+  "Learner rewrites a PowerShell 7 expression so it runs in Windows PowerShell 5.1",
+]
+
+[[references]]
+title = "about_Variables (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_variables"
+
+[[references]]
+title = "about_Automatic_Variables (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_automatic_variables"
+
+[[references]]
+title = "about_Preference_Variables (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_preference_variables"
+
+[[references]]
+title = "about_Scopes (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_scopes"
+
+[[references]]
+title = "about_Type_Accelerators (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_type_accelerators"
+
+[[references]]
+title = "about_Numeric_Literals (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_numeric_literals"
+
+[[references]]
+title = "about_Quoting_Rules (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_quoting_rules"
+
+[[references]]
+title = "about_Special_Characters (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_special_characters"
+
+[[references]]
+title = "about_Operators (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_operators"
+
+[[references]]
+title = "about_Comparison_Operators (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_comparison_operators"
+
+[[references]]
+title = "about_Logical_Operators (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_logical_operators"
+
+[[references]]
+title = "about_Split (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_split"
+
+[[references]]
+title = "about_Join (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_join"
+
+[[references]]
+title = "about_Regular_Expressions (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_regular_expressions"
+
+[[references]]
+title = "about_Arrays (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_arrays"
+
+[[references]]
+title = "about_Hash_Tables (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_hash_tables"
+
+[[references]]
+title = "about_Pipeline_Chain_Operators (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_pipeline_chain_operators"
+
+[[references]]
+title = "Composite formatting (.NET, Microsoft Learn)"
+url = "https://learn.microsoft.com/dotnet/standard/base-types/composite-formatting"
+
+[[references]]
+title = "Standard date and time format strings (.NET, Microsoft Learn)"
+url = "https://learn.microsoft.com/dotnet/standard/base-types/standard-date-and-time-format-strings"
+
+[[references]]
+title = "Custom date and time format strings (.NET, Microsoft Learn)"
+url = "https://learn.microsoft.com/dotnet/standard/base-types/custom-date-and-time-format-strings"
+
+[[references]]
+title = "Get-Date (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/get-date"
+
+[[references]]
+title = "New-TimeSpan (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/new-timespan"

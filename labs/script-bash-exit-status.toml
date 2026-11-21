@@ -1,0 +1,76 @@
+schema_version = 1
+kind = "script"
+id = "labs.script-bash-exit-status"
+target = "linux"
+title = "Script (bash): report success or failure with an exit status"
+summary = "Test a file and exit with the right status so other programs can react."
+lesson = "foundations.bash-control-flow"
+symptom = '''
+Write a bash script and save it as /home/labadmin/labs/check-file.sh.
+
+It is run with one argument: a path, for example:
+
+    check-file.sh /home/labadmin/labdata/report.txt
+
+If the path is a regular file, print found and exit with status 0. If it is not (missing, or a directory), print missing and exit with status 1. Print nothing else.
+
+Exit status is how shells, cron and other scripts learn whether something worked, so the status matters as much as the text.
+'''
+hints = [
+  "[ -f \"$1\" ] tests whether $1 is a regular file. A directory is not one.",
+  "if ... then ... else ... fi chooses between two actions.",
+  "exit 0 and exit 1 end the script with that status. The status of the last command is available as $?.",
+  "Always quote \"$1\" inside [ ] so a path with spaces does not break the test.",
+]
+expected_changes = ["Creates /home/labadmin/labs with a starter script and some test files"]
+hazards = ["None: the script only tests whether a path is a file"]
+scope = "single guest (the registered Linux training VM only)"
+privilege = "standard"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["comptia-linux-plus/scripting-containers-automation", "redhat-rhcsa/essential-tools"]
+language = "bash"
+script_path = '/home/labadmin/labs/check-file.sh'
+starter = '''
+#!/bin/bash
+# check-file.sh
+# Print "found" and exit 0 if $1 is a regular file; otherwise print "missing" and exit 1
+'''
+solution = '''
+#!/bin/bash
+if [ -f "$1" ]; then
+    echo found
+    exit 0
+else
+    echo missing
+    exit 1
+fi
+'''
+
+[[tests]]
+setup = '''
+d=/home/labadmin/labdata
+rm -rf "$d"; mkdir -p "$d/adir"
+echo here > "$d/present.txt"
+'''
+args = "/home/labadmin/labdata/present.txt"
+expect = "echo found"
+expect_exit = 0
+
+[[tests]]
+setup = '''
+d=/home/labadmin/labdata
+rm -rf "$d"; mkdir -p "$d/adir"
+'''
+args = "/home/labadmin/labdata/absent.txt"
+expect = "echo missing"
+expect_exit = 1
+
+[[tests]]
+setup = '''
+d=/home/labadmin/labdata
+rm -rf "$d"; mkdir -p "$d/adir"
+'''
+args = "/home/labadmin/labdata/adir"
+expect = "echo missing"
+expect_exit = 1

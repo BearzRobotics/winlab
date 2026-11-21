@@ -1,0 +1,37 @@
+schema_version = 1
+id = "labs.folder-permissions"
+title = "Nobody can open the reports"
+summary = "A folder's permissions were changed; restore access without over-granting."
+lesson = "windows-admin.accounts-and-permissions"
+symptom = "The reporting team says they can no longer open the files in C:\\Data\\Reports. Administrators can still see them. It worked last week."
+hints = [
+  "Who is allowed to do what is stored in the folder's access control list (ACL).",
+  "Compare the folder's permissions with a similar folder, and note whether it still inherits from its parent.",
+  "The built-in Users group is the usual way to give ordinary accounts read access. You only need read and execute.",
+]
+expected_changes = [
+  "Creates C:\\Data\\Reports with a sample file and a local account named reports_user",
+  "Removes inherited permissions on C:\\Data\\Reports, leaving only Administrators and SYSTEM",
+]
+hazards = ["Ordinary accounts in the lab VM cannot read C:\\Data\\Reports until it is fixed"]
+scope = "single guest (the registered training VM only)"
+privilege = "administrator"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["comptia-a-core2/security", "comptia-a-core2/operating-systems"]
+setup = '''
+New-Item -ItemType Directory -Path 'C:\Data\Reports' -Force | Out-Null
+Set-Content -Path 'C:\Data\Reports\q3.txt' -Value 'Quarterly numbers'
+if (-not (Get-LocalUser -Name 'reports_user' -ErrorAction SilentlyContinue)) {
+    New-LocalUser -Name 'reports_user' -Password (ConvertTo-SecureString 'Lab-Only-Pass-123!' -AsPlainText -Force) -PasswordNeverExpires | Out-Null
+}
+'''
+fault = "icacls.exe 'C:\\Data\\Reports' /inheritance:r /grant 'Administrators:(OI)(CI)F' /grant 'SYSTEM:(OI)(CI)F' | Out-Null"
+solution = "icacls.exe 'C:\\Data\\Reports' /grant 'BUILTIN\\Users:(OI)(CI)RX' | Out-Null"
+
+[validate]
+script = '''
+$entries = (Get-Acl 'C:\Data\Reports').Access | Where-Object { $_.IdentityReference -eq 'BUILTIN\Users' }
+if ($entries) { ($entries | ForEach-Object { $_.FileSystemRights.ToString() }) -join ';' } else { 'no access entry for Users' }
+'''
+expect_output_contains = "ReadAndExecute"

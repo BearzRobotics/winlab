@@ -1,0 +1,435 @@
+schema_version = 1
+lesson = "foundations.ps-errors-and-debugging"
+# Draft for owner review. A bank of 48; each attempt asks 10, favouring questions missed last time.
+draw = 10
+
+# ---- Two kinds of error ----
+
+[[question]]
+id = "er-kinds"
+type = "choice"
+prompt = "What is the difference between a terminating and a non-terminating error?"
+choices = ["A terminating error stops execution; a non-terminating one is reported and the command carries on", "Terminating errors are always fatal to Windows", "Non-terminating errors are only warnings", "There is no difference"]
+answers = ["A terminating error stops execution; a non-terminating one is reported and the command carries on"]
+explanation = "Most cmdlet errors are non-terminating."
+review = "Two kinds of error"
+certifications = ["comptia-a-core2/software-troubleshooting"]
+
+[[question]]
+id = "er-catch-miss"
+type = "choice"
+prompt = "Why does try { Get-Item C:\\nope } catch { 'caught' } not print caught?"
+choices = ["The error is non-terminating, so catch never fires", "Get-Item cannot fail", "catch needs a type", "try needs a finally"]
+answers = ["The error is non-terminating, so catch never fires"]
+explanation = "Add -ErrorAction Stop to make it catchable."
+review = "Two kinds of error"
+
+[[question]]
+id = "er-stop"
+type = "short"
+prompt = "Which -ErrorAction value turns a non-terminating error into a terminating one?"
+answers = ["Stop"]
+explanation = "Then try/catch can catch it."
+review = "Two kinds of error"
+
+[[question]]
+id = "er-default"
+type = "short"
+prompt = "What is the default value of $ErrorActionPreference? (one word)"
+answers = ["Continue"]
+explanation = "Report the error and carry on."
+review = "`-ErrorAction` and `$ErrorActionPreference`"
+
+[[question]]
+id = "er-silent-ignore"
+type = "choice"
+prompt = "What is the difference between -ErrorAction SilentlyContinue and Ignore?"
+choices = ["SilentlyContinue still records the error in $Error; Ignore does not", "Ignore records it; SilentlyContinue does not", "There is none", "Ignore stops the script"]
+answers = ["SilentlyContinue still records the error in $Error; Ignore does not"]
+explanation = "After SilentlyContinue, $Error.Count was 1; after Ignore it was 0."
+review = "`-ErrorAction` and `$ErrorActionPreference`"
+
+[[question]]
+id = "er-global"
+type = "choice"
+prompt = "What does $ErrorActionPreference = 'Stop' at the top of a script do?"
+choices = ["Makes every error terminating, so try/catch can catch them", "Hides all errors", "Ends the script at the first warning", "Logs errors"]
+answers = ["Makes every error terminating, so try/catch can catch them"]
+explanation = "It applies to the whole scope."
+review = "`-ErrorAction` and `$ErrorActionPreference`"
+
+[[question]]
+id = "er-hide"
+type = "choice"
+prompt = "Why is hiding errors with SilentlyContinue how 'silent failures' are made?"
+choices = ["The script carries on as if nothing went wrong", "It deletes the logs", "It disables the cmdlet", "It slows the script"]
+answers = ["The script carries on as if nothing went wrong"]
+explanation = "Use it only where a failure is expected and you handle the outcome."
+review = "`-ErrorAction` and `$ErrorActionPreference`"
+
+# ---- try / catch / finally ----
+
+[[question]]
+id = "tc-order"
+type = "choice"
+prompt = "In what order should catch blocks be written?"
+choices = ["Specific exception types first, a general catch last", "General first", "Alphabetically", "Order does not matter"]
+answers = ["Specific exception types first, a general catch last"]
+explanation = "The first matching catch runs."
+review = "`try`, `catch`, `finally`"
+
+[[question]]
+id = "tc-finally"
+type = "choice"
+prompt = "When does a finally block run?"
+choices = ["Always, even after return", "Only when there is an error", "Only when there is no error", "Never after return"]
+answers = ["Always, even after return"]
+explanation = "Use it to clean up files and connections."
+review = "`try`, `catch`, `finally`"
+
+[[question]]
+id = "tc-rethrow"
+type = "short"
+prompt = "Which bare keyword inside a catch rethrows the current error with its original details?"
+answers = ["throw"]
+explanation = "'throw' with no argument rethrows."
+review = "`try`, `catch`, `finally`"
+
+[[question]]
+id = "tc-divzero"
+type = "short"
+prompt = "Which exception type does 1/0 raise? (type name, without namespace)"
+answers = ["DivideByZeroException", "System.DivideByZeroException"]
+explanation = "catch [System.DivideByZeroException] { ... }."
+review = "`try`, `catch`, `finally`"
+
+[[question]]
+id = "tc-notfound"
+type = "short"
+prompt = "Which exception type does Get-Content on a missing file raise with -ErrorAction Stop? (type name, without namespace)"
+answers = ["ItemNotFoundException", "System.Management.Automation.ItemNotFoundException"]
+explanation = "It is in System.Management.Automation."
+review = "`try`, `catch`, `finally`"
+
+[[question]]
+id = "tc-empty"
+type = "choice"
+prompt = "What is wrong with an empty catch { } block?"
+choices = ["It swallows the error and hides the one fact you needed", "It is a syntax error", "It runs finally twice", "It rethrows"]
+answers = ["It swallows the error and hides the one fact you needed"]
+explanation = "At least log the error."
+review = "Defensive scripting"
+
+# ---- ErrorRecord ----
+
+[[question]]
+id = "rec-type"
+type = "short"
+prompt = "Which property of $_ in a catch block holds the .NET exception? (property name)"
+answers = ["Exception", ".Exception"]
+explanation = "$_.Exception.Message and $_.Exception.GetType()."
+review = "What is in `$_` inside `catch`"
+
+[[question]]
+id = "rec-fqid"
+type = "choice"
+prompt = "What is FullyQualifiedErrorId?"
+choices = ["A stable identifier for the error that you can search for", "The file name", "The line number", "The user name"]
+answers = ["A stable identifier for the error that you can search for"]
+explanation = "For example PathNotFound,Microsoft.PowerShell.Commands.GetItemCommand."
+review = "What is in `$_` inside `catch`"
+
+[[question]]
+id = "rec-line"
+type = "short"
+prompt = "Which property chain gives the script line number of a caught error? (e.g. $_.X.Y)"
+answers = ["$_.InvocationInfo.ScriptLineNumber"]
+explanation = "InvocationInfo describes where the command was called."
+review = "What is in `$_` inside `catch`"
+
+[[question]]
+id = "rec-error"
+type = "short"
+prompt = "Which automatic variable holds the recent errors, newest first? (with the dollar sign)"
+answers = ["$Error"]
+explanation = "$Error[0] is the latest."
+review = "What is in `$_` inside `catch`"
+
+[[question]]
+id = "rec-errvar"
+type = "short"
+prompt = "Which common parameter collects errors into a variable without stopping? (include the dash)"
+answers = ["-ErrorVariable"]
+explanation = "Get-Item x -ErrorAction SilentlyContinue -ErrorVariable ev."
+review = "Collecting errors without stopping: `-ErrorVariable`"
+
+# ---- throw / Write-Error ----
+
+[[question]]
+id = "th-diff"
+type = "choice"
+prompt = "What is the difference between throw and Write-Error?"
+choices = ["throw is terminating; Write-Error is non-terminating by default", "Write-Error stops the script; throw does not", "They are identical", "throw is only for scripts"]
+answers = ["throw is terminating; Write-Error is non-terminating by default"]
+explanation = "Use Write-Error for 'this item failed, others may succeed'."
+review = "Raising errors yourself: `throw` and `Write-Error`"
+
+[[question]]
+id = "th-stop"
+type = "choice"
+prompt = "A caller passes -ErrorAction Stop to your advanced function that uses Write-Error. What happens?"
+choices = ["The Write-Error becomes terminating and can be caught", "Nothing", "The function ignores it", "It is a syntax error"]
+answers = ["The Write-Error becomes terminating and can be caught"]
+explanation = "Advanced functions respect the caller's -ErrorAction."
+review = "Raising errors yourself: `throw` and `Write-Error`"
+
+[[question]]
+id = "th-text"
+type = "choice"
+prompt = "What should a thrown message contain?"
+choices = ["What failed and with what input", "Just 'error'", "A stack trace only", "Nothing"]
+answers = ["What failed and with what input"]
+explanation = "Meaningful text saves hours."
+review = "Raising errors yourself: `throw` and `Write-Error`"
+
+# ---- Native programs ----
+
+[[question]]
+id = "na-code"
+type = "short"
+prompt = "Which automatic variable holds the exit code of the last native program? (with the dollar sign)"
+answers = ["$LASTEXITCODE"]
+explanation = "$? is False for a non-zero code."
+review = "Errors from programs: `$?` and `$LASTEXITCODE`"
+
+[[question]]
+id = "na-nocatch"
+type = "choice"
+prompt = "A native program exits with 5. Does try/catch see it by default?"
+choices = ["No; you must test $LASTEXITCODE", "Yes", "Only in 7", "Only with finally"]
+answers = ["No; you must test $LASTEXITCODE"]
+explanation = "Native failures do not raise exceptions by default."
+review = "Errors from programs: `$?` and `$LASTEXITCODE`"
+
+[[question]]
+id = "na-pref"
+type = "short"
+prompt = "Which preference variable (PowerShell 7.3+) makes a non-zero native exit code an error? (with the dollar sign)"
+answers = ["$PSNativeCommandUseErrorActionPreference"]
+explanation = "Set it to $true together with $ErrorActionPreference = 'Stop'."
+review = "Errors from programs: `$?` and `$LASTEXITCODE`"
+
+[[question]]
+id = "na-robocopy"
+type = "choice"
+prompt = "robocopy returns 3. What does the lesson's check do?"
+choices = ["Treats it as success; only 8 or more is failure", "Throws", "Retries", "Logs an error"]
+answers = ["Treats it as success; only 8 or more is failure"]
+explanation = "if ($LASTEXITCODE -ge 8) { throw ... }."
+review = "Errors from programs: `$?` and `$LASTEXITCODE`"
+
+[[question]]
+id = "na-q"
+type = "choice"
+prompt = "Why test $? immediately after the command?"
+choices = ["It reflects only the last command and is overwritten by the next", "It expires after a second", "It is only set once per script", "It is slow"]
+answers = ["It reflects only the last command and is overwritten by the next"]
+explanation = "Do not run anything in between."
+review = "Errors from programs: `$?` and `$LASTEXITCODE`"
+
+[[question]]
+id = "na-stderr"
+type = "choice"
+prompt = "A program that succeeds writes to stderr, and you merge with 2>&1. What do the lines become?"
+choices = ["ErrorRecord objects, which look like errors", "Plain strings only", "Warnings", "Nothing"]
+answers = ["ErrorRecord objects, which look like errors"]
+explanation = "Do not mistake that for a failure."
+review = "Errors from programs: `$?` and `$LASTEXITCODE`"
+
+# ---- Streams ----
+
+[[question]]
+id = "st-verbose"
+type = "choice"
+prompt = "Is Write-Verbose output shown by default?"
+choices = ["No; it needs -Verbose or $VerbosePreference", "Yes", "Only in scripts", "Only in 7"]
+answers = ["No; it needs -Verbose or $VerbosePreference"]
+explanation = "Stream 4."
+review = "Output streams"
+
+[[question]]
+id = "st-nums"
+type = "multi"
+prompt = "Which stream numbers are correct? Select all that apply."
+choices = ["1 is success output", "2 is errors", "3 is warnings", "4 is verbose", "7 is debug"]
+answers = ["1 is success output", "2 is errors", "3 is warnings", "4 is verbose"]
+explanation = "Debug is 5 and information is 6."
+review = "Output streams"
+
+[[question]]
+id = "st-redirect"
+type = "short"
+prompt = "Write the redirection that sends the warning stream into the success stream."
+answers = ["3>&1"]
+explanation = "*> redirects every stream."
+review = "Output streams"
+
+[[question]]
+id = "st-use"
+type = "choice"
+prompt = "Which stream should carry a function's data?"
+choices = ["Success (objects)", "Verbose", "Information", "Host"]
+answers = ["Success (objects)"]
+explanation = "Progress chatter on the success stream corrupts the result."
+review = "Output streams"
+
+# ---- Exit codes and defence ----
+
+[[question]]
+id = "ex-throw"
+type = "short"
+prompt = "What exit code does an uncaught terminating error give a script run with -File? (number)"
+answers = ["1"]
+explanation = "Use exit n for distinct codes."
+review = "Exit codes from scripts"
+
+[[question]]
+id = "ex-where"
+type = "choice"
+prompt = "Where should exit be called?"
+choices = ["At the script's top level, not in a function others call", "Inside every function", "Only in finally", "Nowhere"]
+answers = ["At the script's top level, not in a function others call"]
+explanation = "Exiting inside a function can kill the host."
+review = "Exit codes from scripts"
+
+[[question]]
+id = "df-strict"
+type = "choice"
+prompt = "What does Set-StrictMode -Version Latest change?"
+choices = ["Uninitialised variables and bad property names raise errors instead of silent $null", "It makes scripts faster", "It disables aliases", "It enables parallelism"]
+answers = ["Uninitialised variables and bad property names raise errors instead of silent $null"]
+explanation = "It finds typos."
+review = "Defensive scripting"
+
+[[question]]
+id = "df-idem"
+type = "choice"
+prompt = "What does idempotent mean for a script?"
+choices = ["Running it twice does not break anything", "It runs once only", "It is fast", "It is signed"]
+answers = ["Running it twice does not break anything"]
+explanation = "For example create a folder only if it does not exist."
+review = "Defensive scripting"
+
+[[question]]
+id = "df-clean"
+type = "choice"
+prompt = "Where should you remove temporary files and close connections?"
+choices = ["In a finally block", "At the top", "In catch only", "Nowhere"]
+answers = ["In a finally block"]
+explanation = "It runs error or not."
+review = "Defensive scripting"
+
+# ---- Debugging, logging, checking ----
+
+[[question]]
+id = "db-trace"
+type = "short"
+prompt = "Write the command that prints every line before it runs. (Set-PSDebug with its parameter and value)"
+answers = ["Set-PSDebug -Trace 1"]
+explanation = "Set-PSDebug -Off stops it."
+review = "Debugging"
+
+[[question]]
+id = "db-bp"
+type = "short"
+prompt = "Which cmdlet sets a breakpoint on a line, command or variable?"
+answers = ["Set-PSBreakpoint"]
+explanation = "For example -Variable total -Mode Write."
+review = "Debugging"
+
+[[question]]
+id = "db-vscode"
+type = "choice"
+prompt = "What is the easiest way to learn the PowerShell debugger?"
+choices = ["Visual Studio Code's graphical debugger", "Notepad", "The registry", "Task Manager"]
+answers = ["Visual Studio Code's graphical debugger"]
+explanation = "Click the margin and press F5."
+review = "Debugging"
+
+[[question]]
+id = "db-measure"
+type = "short"
+prompt = "Which cmdlet times a script block? (cmdlet name)"
+answers = ["Measure-Command"]
+explanation = "It finds the slow step."
+review = "Debugging"
+
+[[question]]
+id = "db-transcript"
+type = "short"
+prompt = "Which cmdlet records everything shown in a session to a file, useful for unattended runs? (cmdlet name)"
+answers = ["Start-Transcript"]
+explanation = "Stop-Transcript ends it."
+review = "Debugging"
+
+[[question]]
+id = "lg-secrets"
+type = "choice"
+prompt = "What must you never put in a log?"
+choices = ["Passwords and other secrets", "Timestamps", "Error messages", "Levels"]
+answers = ["Passwords and other secrets"]
+explanation = "Rotate or limit the file too."
+review = "Logging"
+
+[[question]]
+id = "ck-psa"
+type = "choice"
+prompt = "What is PSScriptAnalyzer?"
+choices = ["A static checker for PowerShell scripts, the counterpart of ShellCheck", "A debugger", "A test framework", "A profiler"]
+answers = ["A static checker for PowerShell scripts, the counterpart of ShellCheck"]
+explanation = "It is not installed by default; Install-Module PSScriptAnalyzer."
+review = "Checking code you did not run"
+
+[[question]]
+id = "ck-risky"
+type = "multi"
+prompt = "Which constructs deserve a close look when reading an unknown script? Select all that apply."
+choices = ["Invoke-Expression or iex", "-EncodedCommand or FromBase64String", "Downloads with Invoke-WebRequest", "Write-Verbose"]
+answers = ["Invoke-Expression or iex", "-EncodedCommand or FromBase64String", "Downloads with Invoke-WebRequest"]
+explanation = "Also registry writes and anything that disables security features."
+review = "Checking code you did not run"
+
+[[question]]
+id = "pe-version"
+type = "choice"
+prompt = "Which Pester version ships with Windows PowerShell 5.1?"
+choices = ["3.4.0, with the older Should Be syntax", "5.x only", "None", "6.x"]
+answers = ["3.4.0, with the older Should Be syntax"]
+explanation = "Current Pester uses Should -Be; install it with Install-Module Pester."
+review = "Testing with Pester"
+
+[[question]]
+id = "pe-assert"
+type = "short"
+prompt = "Write the Pester assertion (current syntax) that checks a value equals 3, after the pipe: ... | Should ___"
+answers = ["-Be 3"]
+explanation = "Add-Two 1 2 | Should -Be 3."
+review = "Testing with Pester"
+
+[[question]]
+id = "rd-exercise"
+type = "choice"
+prompt = "In the exercise, Get-Content on a missing file inside try with no -ErrorAction Stop. What is printed and what is the exit code?"
+choices = ["'read a.txt' (and an error message); exit code 0", "'failed a.txt'; exit code 1", "Nothing; exit code 1", "'failed a.txt'; exit code 0"]
+answers = ["'read a.txt' (and an error message); exit code 0"]
+explanation = "The error is non-terminating, so catch never ran."
+review = "Read this script"
+
+[[question]]
+id = "rd-fix"
+type = "choice"
+prompt = "What is the fix for that script?"
+choices = ["Add -ErrorAction Stop to Get-Content (or set $ErrorActionPreference = 'Stop')", "Remove try", "Add finally", "Use Write-Host"]
+answers = ["Add -ErrorAction Stop to Get-Content (or set $ErrorActionPreference = 'Stop')"]
+explanation = "Then catch runs, and the script can exit 1."
+review = "Read this script"

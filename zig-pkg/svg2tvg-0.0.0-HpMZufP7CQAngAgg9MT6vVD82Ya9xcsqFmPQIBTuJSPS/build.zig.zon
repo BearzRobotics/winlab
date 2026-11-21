@@ -1,0 +1,17 @@
+.{
+    .name = .svg2tvg,
+    .fingerprint = 0x15ec8a64b919931e,
+    .minimum_zig_version = "0.17.0",
+    .version = "0.0.0",
+    .dependencies = .{
+        .xml = .{
+            .url = "git+https://github.com/nat3Github/zig-lib-xml#82233206c4f83ed190c1fd7fc976f3e2b26be4b7",
+            .hash = "xml-0.2.2-ZTbP34_NAgAvbDNF1BjVuSDNDdN8bGGrzSjsH4l20H-h",
+        },
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+    },
+}

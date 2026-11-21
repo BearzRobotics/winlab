@@ -1,0 +1,80 @@
+schema_version = 1
+kind = "script"
+id = "labs.script-ps-parameters"
+title = "Script (PowerShell): parameters, defaults and exit codes"
+summary = "Accept named parameters, give one a default, and fail properly when one is missing."
+lesson = "foundations.ps-functions-and-scripts"
+symptom = '''
+Write a PowerShell script and save it as C:\Labs\greet.ps1.
+
+It takes two named parameters:
+
+    -Name   (text, required)
+    -Count  (a whole number, default 1)
+
+For example, greet.ps1 -Name Bob -Count 2 must print the line Hello, Bob! twice, and greet.ps1 -Name Ann prints it once.
+
+If -Name is not given, print Name is required and exit with code 2.
+'''
+hints = [
+  "A param() block at the top of a script declares parameters: param([string]$Name, [int]$Count = 1).",
+  "Check whether $Name has a value. Throwing an error exits with a different code than you want: use exit 2 yourself.",
+  "1..$Count gives you the numbers 1 to Count. ForEach-Object can run once for each.",
+  "Strings with variables use double quotes: \"Hello, $Name!\".",
+]
+expected_changes = ["Creates C:\\Labs with a starter script"]
+hazards = ["None: the script only prints text"]
+scope = "single guest (the registered training VM only)"
+privilege = "standard"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["comptia-a-core2/operating-systems"]
+language = "powershell"
+script_path = 'C:\Labs\greet.ps1'
+starter = '''
+# greet.ps1
+# Parameters: -Name (required text), -Count (whole number, default 1)
+# Print "Hello, <Name>!" Count times. If -Name is missing: print "Name is required" and exit 2.
+'''
+solution = '''
+param([string]$Name, [int]$Count = 1)
+if (-not $Name) {
+    Write-Output 'Name is required'
+    exit 2
+}
+1..$Count | ForEach-Object { "Hello, $Name!" }
+exit 0
+'''
+
+[[tests]]
+setup = "$null = 1"
+args = "-Name Bob -Count 2"
+expect = '''
+"Hello, Bob!"
+"Hello, Bob!"
+'''
+expect_exit = 0
+
+[[tests]]
+setup = "$null = 1"
+args = "-Name Ann"
+expect = '''
+"Hello, Ann!"
+'''
+expect_exit = 0
+
+[[tests]]
+setup = "$null = 1"
+args = "-Count 3"
+expect = '''
+"Name is required"
+'''
+expect_exit = 2
+
+[[tests]]
+setup = "$null = 1"
+args = "-Name Zed -Count 4"
+expect = '''
+1..4 | ForEach-Object { "Hello, Zed!" }
+'''
+expect_exit = 0

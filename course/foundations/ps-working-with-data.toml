@@ -1,0 +1,119 @@
+schema_version = 1
+id = "foundations.ps-working-with-data"
+title = "PowerShell: files, text, CSV, JSON, XML and the web"
+summary = "Paths and the -LiteralPath trap, reading and writing text with the encoding differences between 5.1 and 7 and Linux, Select-String, CSV and its all-strings trap, JSON depth and one-element-array traps, XML, comparing data, and Invoke-RestMethod and Invoke-WebRequest including HTTP errors."
+content = "ps-working-with-data.md"
+estimated_minutes = 120
+objectives = [
+  "Build and take apart paths portably, and use -LiteralPath for names that come from data",
+  "Read text as lines or one string, stream large files, and avoid the one-line-file indexing bug",
+  "Write text with a deliberate encoding, and explain what Out-File, Set-Content and > produce in 5.1, 7 and on Linux",
+  "Search with Select-String and use its match objects, context and regular-expression groups",
+  "Import and export CSV, convert string columns to numbers and dates, summarise with Group-Object, and join with a hashtable",
+  "Convert to and from JSON with enough -Depth, and avoid the one-element-array and date traps",
+  "Read, query, change and save XML, and cache PowerShell objects with Clixml",
+  "Compare files and data and verify downloads with Compare-Object and Get-FileHash",
+  "Call web APIs with Invoke-RestMethod and Invoke-WebRequest, send JSON and headers, and handle HTTP errors in 5.1 and 7",
+]
+prerequisites = ["foundations.ps-functions-and-scripts"]
+windows_features = ["Windows PowerShell"]
+privilege = "standard"
+certifications = ["comptia-a-core2/operating-systems"]
+evaluation_criteria = [
+  "Learner shows the bytes each writer produces and explains the differences by edition",
+  "Learner converts CSV strings to numbers and dates and produces a correct per-group summary",
+  "Learner serialises nested data with enough depth and shows the data survives a round trip",
+  "Learner calls a local API, sends JSON with a header, and handles a failing request on both editions",
+]
+
+[[references]]
+title = "Get-Content (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.management/get-content"
+
+[[references]]
+title = "Set-Content (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.management/set-content"
+
+[[references]]
+title = "Add-Content (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.management/add-content"
+
+[[references]]
+title = "Out-File (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/out-file"
+
+[[references]]
+title = "Join-Path (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.management/join-path"
+
+[[references]]
+title = "Test-Path (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.management/test-path"
+
+[[references]]
+title = "about_Wildcards (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_wildcards"
+
+[[references]]
+title = "about_Character_Encoding (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_character_encoding"
+
+[[references]]
+title = "Understanding file encoding in VS Code and PowerShell (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/scripting/dev-cross-plat/vscode/understanding-file-encoding"
+
+[[references]]
+title = "about_Regular_Expressions (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_regular_expressions"
+
+[[references]]
+title = "Select-String (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/select-string"
+
+[[references]]
+title = "Import-Csv (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/import-csv"
+
+[[references]]
+title = "Export-Csv (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/export-csv"
+
+[[references]]
+title = "ConvertFrom-Json (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/convertfrom-json"
+
+[[references]]
+title = "ConvertTo-Json (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/convertto-json"
+
+[[references]]
+title = "Select-Xml (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/select-xml"
+
+[[references]]
+title = "Export-Clixml (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/export-clixml"
+
+[[references]]
+title = "Compare-Object (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/compare-object"
+
+[[references]]
+title = "Get-FileHash (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/get-filehash"
+
+[[references]]
+title = "Invoke-RestMethod (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/invoke-restmethod"
+
+[[references]]
+title = "Invoke-WebRequest (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/invoke-webrequest"
+
+[[references]]
+title = "RFC 8259: The JSON Data Interchange Format"
+url = "https://www.rfc-editor.org/rfc/rfc8259"
+
+[[references]]
+title = "RFC 4180: Common Format and MIME Type for CSV Files"
+url = "https://www.rfc-editor.org/rfc/rfc4180"

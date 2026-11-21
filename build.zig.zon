@@ -1,0 +1,27 @@
+.{
+    .name = .winlab,
+    .version = "0.0.1",
+    // Pinned toolchain: see docs/decisions/0001-pin-zig-version.md
+    .dependencies = .{
+        .md = .{
+            .url = "https://github.com/BearzRobotics/md-zig/releases/download/v0.3.0/md-0.3.0.tar.gz",
+            .hash = "md-0.3.0-V1LLYbWqBwDx92Iqx75tuTq1S_5BZ9heA64zPkBdwW4Y",
+        },
+        .toml = .{
+            .url = "https://github.com/BearzRobotics/toml-zig/releases/download/v0.2.0/toml-0.2.0.tar.gz",
+            .hash = "toml-0.2.0-dDatLIhiAgBq8q4SLFu0RZSUcCJLAwl49UZRIZ-fHqqx",
+        },
+        .pdf = .{
+            .url = "https://github.com/BearzRobotics/pdf-zig/releases/download/v0.2.0/pdf-0.2.0.tar.gz",
+            .hash = "pdf-0.2.0-H1tZ4m7DDABclGabx2iHdYL_hNYUmZwfWwd0R1PUOer7",
+        },
+        .dvui = .{
+            .url = "git+https://github.com/david-vanderson/dvui#59c8d666a8a27d8ff4e54bb545db778e5b760915",
+            .hash = "dvui-0.6.0-dev-AQFJmTylAwGY37XintTBXKrGY_x9Qi9Zh11otWC5w42o",
+        },
+    },
+    .minimum_zig_version = "0.17.1",
+    // Dependencies are pinned by hash and extracted to zig-pkg/, which release tarballs preserve (offline builds). See docs/decisions/0003-vendoring-via-zig-pkg.md
+    .paths = .{ "build.zig", "build.zig.zon", "src", "docs", "zig-pkg", "README.md" },
+    .fingerprint = 0x76a96100638f715c,
+}

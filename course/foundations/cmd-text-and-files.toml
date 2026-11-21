@@ -1,0 +1,73 @@
+schema_version = 1
+id = "foundations.cmd-text-and-files"
+title = "CMD text and file tools"
+summary = "type, more, find, findstr and its regex dialect, sort, fc, copy, xcopy, robocopy with its exit-code bit mask, forfiles, attrib and mklink, for /f over command output, and the same jobs in PowerShell and bash."
+content = "cmd-text-and-files.md"
+estimated_minutes = 80
+objectives = [
+  "Search text with find and findstr, and use findstr's switches and regular-expression subset",
+  "Name what findstr cannot do and recognise a silent no-match caused by an unsupported feature",
+  "Sort and compare files, and explain why sort orders numbers as text",
+  "Choose between copy, xcopy and robocopy, and use robocopy safely with /l, /mir, retries and logs",
+  "Read robocopy's exit code as a bit mask and test it correctly",
+  "Select files by age with forfiles and rehearse destructive commands first",
+  "Extract a value from a tool's output with for /f, findstr and an escaped pipe",
+  "Translate common cmd text and file tasks into PowerShell and bash",
+]
+prerequisites = ["foundations.cmd-control-flow"]
+windows_features = ["Command Prompt", "File Explorer"]
+privilege = "standard"
+certifications = ["comptia-a-core2/operating-systems"]
+evaluation_criteria = [
+  "Learner writes a findstr command with line numbers and another that counts matches",
+  "Learner mirrors a folder with robocopy, first as a /l dry run, and explains the exit code",
+  "Learner extracts an IPv4 address from ipconfig output with for /f and findstr",
+]
+
+[[references]]
+title = "find (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/find"
+
+[[references]]
+title = "findstr (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/findstr"
+
+[[references]]
+title = "sort (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/sort"
+
+[[references]]
+title = "fc (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/fc"
+
+[[references]]
+title = "comp (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/comp"
+
+[[references]]
+title = "xcopy (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/xcopy"
+
+[[references]]
+title = "robocopy (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/robocopy"
+
+[[references]]
+title = "forfiles (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/forfiles"
+
+[[references]]
+title = "mklink (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/mklink"
+
+[[references]]
+title = "attrib (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/attrib"
+
+[[references]]
+title = "more (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/more"
+
+[[references]]
+title = "type (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/type"

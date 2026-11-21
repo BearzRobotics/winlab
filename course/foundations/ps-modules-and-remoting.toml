@@ -1,0 +1,130 @@
+schema_version = 1
+id = "foundations.ps-modules-and-remoting"
+title = "PowerShell modules, signing, secrets, jobs and remoting"
+summary = "Writing and versioning modules, how PSModulePath differs between 5.1 and 7, the PowerShell Gallery as a trust decision, Authenticode signing, credentials and SecureString limits, background and thread jobs with $using and serialization, and remoting over WinRM and SSH including the default access error and the second hop."
+content = "ps-modules-and-remoting.md"
+estimated_minutes = 120
+objectives = [
+  "Explain where PowerShell finds modules and how 5.1 and 7 differ, and use auto-loading and Import-Module",
+  "Write a module with a manifest, private helpers, exported commands and side-by-side versions",
+  "Treat installing from the PowerShell Gallery as a trust decision: scope, inspection with Save-Module, version pinning",
+  "Verify an Authenticode signature, interpret its status, and state what a signature does and does not prove",
+  "Handle credentials without plain-text passwords, and state the limits of SecureString and Export-Clixml",
+  "Run background jobs and thread jobs, pass variables with $using and -ArgumentList, and explain serialization and job errors",
+  "Explain the two remoting transports, the default access rules and how to enable remoting safely",
+  "Use Invoke-Command and persistent sessions, and explain $using, result ordering and the second-hop problem",
+]
+prerequisites = ["foundations.ps-working-with-data"]
+windows_features = ["Windows PowerShell", "Windows Remote Management"]
+privilege = "administrator"
+certifications = ["comptia-a-core2/operating-systems", "comptia-a-core2/security"]
+evaluation_criteria = [
+  "Learner builds a module whose helper function is hidden and whose versions load side by side",
+  "Learner explains why a job could not see a local variable and fixes it two ways",
+  "Learner states why a remote connection to localhost was denied from a non-elevated prompt",
+  "Learner reviews a script and finds the plain-text password, the Gallery risk and the wildcard TrustedHosts",
+]
+
+[[references]]
+title = "about_Modules (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_modules"
+
+[[references]]
+title = "about_PSModulePath (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_psmodulepath"
+
+[[references]]
+title = "New-ModuleManifest (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/new-modulemanifest"
+
+[[references]]
+title = "Export-ModuleMember (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/export-modulemember"
+
+[[references]]
+title = "Import-Module (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/import-module"
+
+[[references]]
+title = "PowerShell Gallery overview (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/gallery/overview"
+
+[[references]]
+title = "Install-Module (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/powershellget/install-module"
+
+[[references]]
+title = "Install-PSResource (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.psresourceget/install-psresource"
+
+[[references]]
+title = "about_Signing (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_signing"
+
+[[references]]
+title = "Get-AuthenticodeSignature (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.security/get-authenticodesignature"
+
+[[references]]
+title = "Set-AuthenticodeSignature (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.security/set-authenticodesignature"
+
+[[references]]
+title = "Get-Credential (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.security/get-credential"
+
+[[references]]
+title = "ConvertTo-SecureString (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.security/convertto-securestring"
+
+[[references]]
+title = "SecretManagement overview (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/utility-modules/secretmanagement/overview"
+
+[[references]]
+title = "about_Jobs (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_jobs"
+
+[[references]]
+title = "about_Thread_Jobs (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_thread_jobs"
+
+[[references]]
+title = "Start-Job (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/start-job"
+
+[[references]]
+title = "about_Remote (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_remote"
+
+[[references]]
+title = "about_Remote_Requirements (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_remote_requirements"
+
+[[references]]
+title = "about_Remote_Troubleshooting (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_remote_troubleshooting"
+
+[[references]]
+title = "about_Remote_Variables (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_remote_variables"
+
+[[references]]
+title = "Invoke-Command (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/invoke-command"
+
+[[references]]
+title = "New-PSSession (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/new-pssession"
+
+[[references]]
+title = "Enable-PSRemoting (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/enable-psremoting"
+
+[[references]]
+title = "PowerShell remoting over SSH (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/scripting/security/remoting/ssh-remoting-in-powershell"
+
+[[references]]
+title = "Making the second hop in PowerShell remoting (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/scripting/security/remoting/ps-remoting-second-hop"

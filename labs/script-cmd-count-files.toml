@@ -1,0 +1,68 @@
+schema_version = 1
+kind = "script"
+id = "labs.script-cmd-count-files"
+title = "Script: count text files with a batch file"
+summary = "Write a CMD batch file that counts files and prints a report."
+lesson = "foundations.cmd-basics"
+symptom = '''
+Write a batch file and save it as C:\Labs\count-files.cmd.
+
+There is a folder at C:\Labs\files. Your batch file must print exactly one line, in this form:
+
+    Files: 7
+
+where the number is how many files ending in .txt are in that folder (not in sub-folders). Files with other endings must not be counted. Print nothing else, so turn off command echoing.
+
+The folder's contents change every time your batch file is checked, so it must work for any number of files, including none.
+'''
+hints = [
+  "Batch files print every command as it runs unless you start with @echo off.",
+  "A for loop can visit every file matching a pattern: for %%f in (C:\\Labs\\files\\*.txt) do ...",
+  "set /a count+=1 adds one to a variable. Set it to 0 before the loop so an empty folder prints 0.",
+  "Inside a batch file, loop variables use two percent signs (%%f), unlike at the prompt.",
+]
+expected_changes = ["Creates C:\\Labs with a starter batch file and a folder of generated files"]
+hazards = ["None: the batch file only reads files in the lab VM"]
+scope = "single guest (the registered training VM only)"
+privilege = "standard"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["comptia-a-core2/operating-systems"]
+language = "cmd"
+script_path = 'C:\Labs\count-files.cmd'
+starter = '''
+@echo off
+rem count-files.cmd
+rem Print "Files: N" where N is the number of .txt files in C:\Labs\files
+'''
+solution = '''
+@echo off
+set count=0
+for %%f in (C:\Labs\files\*.txt) do set /a count+=1
+echo Files: %count%
+'''
+
+[[tests]]
+setup = '''
+$d = 'C:\Labs\files'
+if (Test-Path $d) { Remove-Item $d -Recurse -Force }
+New-Item -ItemType Directory -Path $d | Out-Null
+1..(Get-Random -Minimum 1 -Maximum 12) | ForEach-Object { Set-Content -Path (Join-Path $d "note$_.txt") -Value "text $_" }
+1..(Get-Random -Minimum 1 -Maximum 4) | ForEach-Object { Set-Content -Path (Join-Path $d "data$_.csv") -Value "a,b" }
+'''
+expect = '''
+"Files: $(@(Get-ChildItem -Path 'C:\Labs\files' -Filter '*.txt' -File).Count)"
+'''
+
+[[tests]]
+setup = '''
+$d = 'C:\Labs\files'
+if (Test-Path $d) { Remove-Item $d -Recurse -Force }
+New-Item -ItemType Directory -Path $d | Out-Null
+Set-Content -Path (Join-Path $d 'readme.md') -Value 'not a txt file'
+New-Item -ItemType Directory -Path (Join-Path $d 'sub') | Out-Null
+Set-Content -Path (Join-Path $d 'sub\inner.txt') -Value 'in a sub-folder'
+'''
+expect = '''
+"Files: 0"
+'''

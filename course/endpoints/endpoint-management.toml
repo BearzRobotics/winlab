@@ -1,0 +1,29 @@
+schema_version = 1
+id = "endpoints.endpoint-management"
+title = "Endpoint management concepts: provisioning, enrollment and apps"
+summary = "Provisioning approaches, join versus enroll, policy targeting, application deployment and update rings, with local equivalents."
+content = "endpoint-management.md"
+estimated_minutes = 35
+objectives = [
+  "Compare manual install, imaging, provisioning packages and Autopilot",
+  "Distinguish joining a device to an identity from enrolling it in management",
+  "Describe how settings are targeted and piloted",
+  "Describe what an application deployment needs: detection, requirements, install command, exit codes, uninstall",
+  "Run a silent installation and read its exit code",
+]
+prerequisites = ["endpoints.update-and-policy"]
+windows_features = ["Windows PowerShell"]
+privilege = "administrator"
+certifications = ["microsoft-md-102/prepare-infrastructure", "microsoft-md-102/manage-applications", "microsoft-md-102/manage-maintain-devices"]
+evaluation_criteria = [
+  "Learner explains the difference between join and enroll, and which edition can join a domain",
+  "Learner lists the five parts of an application deployment definition",
+]
+
+[[references]]
+title = "Windows Autopilot (Microsoft Learn)"
+url = "https://learn.microsoft.com/autopilot/"
+
+[[references]]
+title = "Microsoft Intune documentation"
+url = "https://learn.microsoft.com/mem/intune/"

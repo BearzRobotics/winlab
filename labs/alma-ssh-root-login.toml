@@ -1,0 +1,41 @@
+schema_version = 1
+id = "labs.alma-ssh-root-login"
+target = "linux"
+distro = "almalinux"
+title = "AlmaLinux: SSH allows direct root login"
+summary = "A security audit finding: sshd lets root sign in remotely."
+lesson = "security.security-fundamentals"
+symptom = "A security scan of this server reports that SSH allows the root account to sign in directly over the network. Policy says administrators must sign in as themselves and use sudo. Fix the SSH server's configuration so direct root login is refused, and keep SSH running for everyone else."
+hints = [
+  "sshd reads /etc/ssh/sshd_config and every file in /etc/ssh/sshd_config.d. sshd -T prints the settings that are actually in effect.",
+  "The setting is PermitRootLogin. Find where it is set to yes. Where a setting appears more than once, the first value that sshd reads wins.",
+  "sshd -t tests the configuration for errors before you reload. Reload (not stop) the service so existing sessions survive.",
+  "Do not close your only session until you have confirmed a new login works.",
+]
+expected_changes = [
+  "Creates /etc/ssh/sshd_config.d/00-winlab.conf with PermitRootLogin yes and reloads sshd",
+]
+hazards = ["The lab VM's SSH server permits direct root login until the setting is corrected"]
+scope = "single guest (the registered AlmaLinux training VM only)"
+privilege = "administrator"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["redhat-rhcsa/security", "comptia-linux-plus/security", "comptia-network-plus/network-security"]
+setup = '''
+rm -f /etc/ssh/sshd_config.d/00-winlab.conf
+systemctl reload sshd
+'''
+fault = '''
+echo 'PermitRootLogin yes' > /etc/ssh/sshd_config.d/00-winlab.conf
+systemctl reload sshd
+'''
+solution = '''
+echo 'PermitRootLogin no' > /etc/ssh/sshd_config.d/00-winlab.conf
+systemctl reload sshd
+'''
+
+[validate]
+script = '''
+echo "root=$(sshd -T 2>/dev/null | awk '/^permitrootlogin/ {print $2}');sshd=$(systemctl is-active sshd)"
+'''
+expect_output_contains = "root=no;sshd=active"

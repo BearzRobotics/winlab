@@ -1,0 +1,67 @@
+schema_version = 1
+id = "foundations.troubleshooting-method"
+title = "A troubleshooting method"
+summary = "Reproduce, scope, observe, hypothesize, test, repair, verify, document, with the built-in Windows and Linux tools for each step, safety nets for changes, and worked examples."
+content = "troubleshooting-method.md"
+estimated_minutes = 45
+objectives = [
+  "List the eight steps of the method in order",
+  "Explain why each step exists and what goes wrong when it is skipped",
+  "Narrow a problem by scope: one user, one machine, everything, or one application",
+  "Collect evidence without changing the system, using event logs, service state and recent changes",
+  "Write a hypothesis a test could disprove, and design a read-only test that separates two of them",
+  "Choose a safety net (note, export, restore point, snapshot) before making a change",
+  "Apply the method to a written scenario and produce a short problem record",
+]
+prerequisites = ["foundations.architecture"]
+privilege = "standard"
+certifications = ["comptia-a-core2/software-troubleshooting", "comptia-a-core2/operational-procedures", "comptia-network-plus/network-troubleshooting", "comptia-linux-plus/troubleshooting"]
+evaluation_criteria = [
+  "Learner orders a shuffled list of the eight steps correctly",
+  "Learner's problem record names a reproduction, a scope, evidence, a tested hypothesis and a verification",
+  "Learner states the command or tool they would use to observe, for each scenario, without changing the system",
+]
+
+[[references]]
+title = "Windows troubleshooting documentation (Microsoft Learn)"
+url = "https://learn.microsoft.com/troubleshoot/windows-client/welcome-windows-client"
+
+[[references]]
+title = "Get-WinEvent (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.diagnostics/get-winevent"
+
+[[references]]
+title = "wevtutil (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/wevtutil"
+
+[[references]]
+title = "Get-Service (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.management/get-service"
+
+[[references]]
+title = "Get-Process (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.management/get-process"
+
+[[references]]
+title = "Get-HotFix (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.management/get-hotfix"
+
+[[references]]
+title = "Checkpoint-Computer (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.management/checkpoint-computer"
+
+[[references]]
+title = "Get-ComputerRestorePoint (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.management/get-computerrestorepoint"
+
+[[references]]
+title = "journalctl(1) manual page"
+url = "https://man7.org/linux/man-pages/man1/journalctl.1.html"
+
+[[references]]
+title = "systemctl(1) manual page"
+url = "https://man7.org/linux/man-pages/man1/systemctl.1.html"
+
+[[references]]
+title = "dmesg(1) manual page"
+url = "https://man7.org/linux/man-pages/man1/dmesg.1.html"

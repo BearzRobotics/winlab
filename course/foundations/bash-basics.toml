@@ -1,0 +1,29 @@
+schema_version = 1
+id = "foundations.bash-basics"
+title = "Linux shell and bash scripting fundamentals"
+summary = "Commands, pipes, redirection, quoting, variables, loops, exit status and writing your first scripts on a Linux server."
+content = "bash-basics.md"
+estimated_minutes = 60
+objectives = [
+  "Run commands, read their manual pages, and move around the file system",
+  "Combine commands with pipes and redirect their input and output",
+  "Explain quoting and use variables and command substitution safely",
+  "Write a bash script with arguments, a loop, a condition and an exit status",
+  "Make a script executable and run it, and explain what the first line does",
+]
+prerequisites = ["foundations.troubleshooting-method"]
+windows_features = []
+privilege = "standard"
+certifications = ["redhat-rhcsa/essential-tools", "comptia-linux-plus/system-management", "comptia-linux-plus/scripting-containers-automation"]
+evaluation_criteria = [
+  "Learner writes a script that prints a count per file from a folder of logs",
+  "Learner explains the difference between single, double and no quotes in a given example",
+]
+
+[[references]]
+title = "Bash Reference Manual (GNU)"
+url = "https://www.gnu.org/software/bash/manual/bash.html"
+
+[[references]]
+title = "man7.org: Linux manual pages"
+url = "https://man7.org/linux/man-pages/"

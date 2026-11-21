@@ -1,0 +1,64 @@
+schema_version = 1
+kind = "script"
+id = "labs.script-cmd-exit-code"
+title = "Script (CMD): report success or failure with an exit code"
+summary = "Use if exist and exit codes so other programs can react to your script."
+lesson = "foundations.cmd-control-flow"
+symptom = '''
+Write a batch file and save it as C:\Labs\check-file.cmd.
+
+It is run with one argument: a file path, for example:
+
+    check-file.cmd C:\Labs\data\report.txt
+
+If the file exists, print the word found and exit with code 0. If it does not exist, print the word missing and exit with code 1. Print nothing else.
+
+Exit codes are how scripts and scheduled tasks learn whether something worked, so the code matters as much as the text.
+'''
+hints = [
+  "if exist <path> checks whether a file or folder exists. It has an else branch: if exist ... (...) else (...).",
+  "exit /b 0 ends a batch file with exit code 0 (use exit /b, not exit, so you do not close the whole command window).",
+  "The argument is %1.",
+]
+expected_changes = ["Creates C:\\Labs with a starter batch file and a small test file"]
+hazards = ["None: the batch file only checks whether a file exists"]
+scope = "single guest (the registered training VM only)"
+privilege = "standard"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["comptia-a-core2/operating-systems"]
+language = "cmd"
+script_path = 'C:\Labs\check-file.cmd'
+starter = '''
+@echo off
+rem check-file.cmd
+rem Print "found" and exit 0 if the file in %1 exists; print "missing" and exit 1 if not
+'''
+solution = '''
+@echo off
+if exist %1 (
+    echo found
+    exit /b 0
+) else (
+    echo missing
+    exit /b 1
+)
+'''
+
+[[tests]]
+setup = '''
+New-Item -ItemType Directory -Force -Path 'C:\Labs\data' | Out-Null
+Set-Content -Path 'C:\Labs\data\present.txt' -Value 'here'
+'''
+args = 'C:\Labs\data\present.txt'
+expect = '"found"'
+expect_exit = 0
+
+[[tests]]
+setup = '''
+New-Item -ItemType Directory -Force -Path 'C:\Labs\data' | Out-Null
+Remove-Item 'C:\Labs\data\absent.txt' -ErrorAction SilentlyContinue
+'''
+args = 'C:\Labs\data\absent.txt'
+expect = '"missing"'
+expect_exit = 1
