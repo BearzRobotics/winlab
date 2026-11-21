@@ -1,0 +1,505 @@
+schema_version = 1
+lesson = "foundations.ps-system-admin-scripting"
+# Draft for owner review. A bank of 56; each attempt asks 10, favouring questions missed last time.
+draw = 10
+
+# ---- CIM ----
+
+[[question]]
+id = "cim-cmdlet"
+type = "choice"
+prompt = "Which cmdlet is the current way to query WMI/CIM data in new scripts?"
+choices = ["Get-CimInstance", "Get-WmiObject", "Get-Service", "Get-Process"]
+answers = ["Get-CimInstance"]
+explanation = "Get-WmiObject is the older family. New scripts use the CIM cmdlets."
+review = "CIM: asking the operating system questions"
+
+[[question]]
+id = "cim-uptime"
+type = "choice"
+prompt = "Why can you compute uptime with (Get-Date) - $os.LastBootUpTime without parsing text?"
+choices = ["LastBootUpTime is a real DateTime object", "Get-Date returns a string", "CIM returns only text", "Because Win32_OperatingSystem has an Uptime property"]
+answers = ["LastBootUpTime is a real DateTime object"]
+explanation = "Subtracting two DateTime values gives a TimeSpan."
+review = "CIM: asking the operating system questions"
+
+[[question]]
+id = "cim-filter-why"
+type = "choice"
+prompt = "Why is Get-CimInstance -Filter better than piping to Where-Object?"
+choices = ["The provider returns only matching objects", "It is the only way to compare strings", "It makes the command elevated", "Where-Object cannot read CIM objects"]
+answers = ["The provider returns only matching objects"]
+explanation = "Fewer objects cross the boundary, so it is faster."
+review = "Filter at the source, not in the pipeline"
+
+[[question]]
+id = "cim-wql"
+type = "short"
+prompt = "What is the name of the SQL-like language used by the -Filter and -Query parameters of Get-CimInstance? (acronym)"
+answers = ["WQL"]
+explanation = "WMI Query Language. It is not PowerShell syntax."
+review = "Filter at the source, not in the pipeline"
+
+[[question]]
+id = "cim-wql-eq"
+type = "choice"
+prompt = "Which filter is valid WQL?"
+choices = ["Name = 'Spooler'", "Name -eq 'Spooler'", "$_.Name -eq 'Spooler'", "Name == Spooler"]
+answers = ["Name = 'Spooler'"]
+explanation = "WQL uses = and single-quoted strings, and <> for not equal."
+review = "Filter at the source, not in the pipeline"
+
+[[question]]
+id = "cim-wql-neq"
+type = "short"
+prompt = "Which WQL operator means 'not equal'?"
+answers = ["<>", "!="]
+explanation = "The lesson uses <> (State <> 'Running')."
+review = "Filter at the source, not in the pipeline"
+
+[[question]]
+id = "cim-inject"
+type = "choice"
+prompt = "What is the risk of building a WQL filter from untrusted text?"
+choices = ["Injection, like SQL; validate the text first", "None, WQL is read-only so nothing can go wrong", "The command becomes slower", "PowerShell refuses to run it"]
+answers = ["Injection, like SQL; validate the text first"]
+explanation = "Use ValidateSet or ValidatePattern before splicing text into a filter."
+review = "Filter at the source, not in the pipeline"
+
+[[question]]
+id = "cim-class"
+type = "short"
+prompt = "Which cmdlet lists the properties and methods a CIM class offers? (cmdlet name)"
+answers = ["Get-CimClass"]
+explanation = "For example (Get-CimClass Win32_Service).CimClassMethods.Name."
+review = "Filter at the source, not in the pipeline"
+
+[[question]]
+id = "cim-method"
+type = "short"
+prompt = "Which cmdlet calls a method such as ChangeStartMode on a CIM object? (cmdlet name)"
+answers = ["Invoke-CimMethod"]
+explanation = "Pass the arguments in a hashtable with -Arguments."
+review = "Filter at the source, not in the pipeline"
+
+[[question]]
+id = "cim-extra"
+type = "multi"
+prompt = "Which of these does Win32_Service show that Get-Service does not?"
+choices = ["StartName (the account it runs as)", "ExitCode", "Status", "The service's display colour"]
+answers = ["StartName (the account it runs as)", "ExitCode"]
+explanation = "Get-Service has Status and StartType; CIM adds the account and exit code."
+review = "Filter at the source, not in the pipeline"
+
+[[question]]
+id = "cim-finding"
+type = "choice"
+prompt = "An audit lists automatic services that are stopped. How should you treat the list?"
+choices = ["As questions to judge: some are trigger-started or on demand", "As proof each one is broken", "As a list to start with a loop", "As irrelevant"]
+answers = ["As questions to judge: some are trigger-started or on demand"]
+explanation = "BITS, sppsvc and StateRepository were stopped with exit code 0 and were not faults."
+review = "Filter at the source, not in the pipeline"
+
+# ---- Registry ----
+
+[[question]]
+id = "reg-idea"
+type = "choice"
+prompt = "In the registry provider, what do keys and values correspond to?"
+choices = ["Keys are like folders; values are properties of a key", "Keys are files; values are folders", "Both are folders", "Both are files"]
+answers = ["Keys are like folders; values are properties of a key"]
+explanation = "That one idea explains the Item and ItemProperty cmdlet pairs."
+review = "The registry provider"
+
+[[question]]
+id = "reg-drives"
+type = "multi"
+prompt = "Which registry drives did Get-PSDrive -PSProvider Registry show?"
+choices = ["HKCU:", "HKLM:", "HKCR:", "HKEY:"]
+answers = ["HKCU:", "HKLM:"]
+explanation = "Only HKCU and HKLM are mounted by default."
+review = "The registry provider"
+
+[[question]]
+id = "reg-productname"
+type = "choice"
+prompt = "A Windows 11 machine shows ProductName 'Windows 10 Home' in the registry. What should you use to decide the version?"
+choices = ["The build number (CurrentBuild)", "ProductName anyway", "The wallpaper", "The computer name"]
+answers = ["The build number (CurrentBuild)"]
+explanation = "Registry data is whatever a program wrote; the build number is reliable."
+review = "The registry provider"
+
+[[question]]
+id = "reg-readvalue"
+type = "short"
+prompt = "Which cmdlet returns one registry value as a plain value rather than an object with PS* properties? (cmdlet name)"
+answers = ["Get-ItemPropertyValue"]
+explanation = "Get-ItemProperty returns an object including PSPath, PSChildName and others."
+review = "The registry provider"
+
+[[question]]
+id = "reg-psprops"
+type = "multi"
+prompt = "Which properties does Get-ItemProperty add that are not registry values?"
+choices = ["PSPath", "PSChildName", "PSProvider", "DisplayVersion"]
+answers = ["PSPath", "PSChildName", "PSProvider"]
+explanation = "Skip them when you loop over 'all values'."
+review = "The registry provider"
+
+[[question]]
+id = "reg-testpath"
+type = "choice"
+prompt = "Test-Path 'HKCU:\\Software\\X\\Count' returned False although the value Count exists. Why?"
+choices = ["Test-Path tests keys, not values", "The value was hidden", "Test-Path needs -Force", "HKCU does not support Test-Path"]
+answers = ["Test-Path tests keys, not values"]
+explanation = "Use (Get-Item -LiteralPath $key).GetValueNames() -contains 'Count'."
+review = "The registry provider"
+
+[[question]]
+id = "reg-newtwice"
+type = "choice"
+prompt = "What happens when New-ItemProperty runs a second time for a value that exists?"
+choices = ["IOException: The property already exists.", "It overwrites silently", "It creates a second value", "It deletes the value"]
+answers = ["IOException: The property already exists."]
+explanation = "Use Set-ItemProperty to change a value, or -Force to overwrite on purpose."
+review = "Traps I reproduced (in my own `HKCU:\\Software\\WinLabTest` key, removed afterwards)"
+
+[[question]]
+id = "reg-guess"
+type = "choice"
+prompt = "Set-ItemProperty -Name Guess -Value 5 on a name that does not exist created which type?"
+choices = ["DWord", "String", "MultiString", "QWord"]
+answers = ["DWord"]
+explanation = "The type is guessed from the .NET type of the value. -Value '5' created a String."
+review = "Traps I reproduced (in my own `HKCU:\\Software\\WinLabTest` key, removed afterwards)"
+
+[[question]]
+id = "reg-pass-type"
+type = "short"
+prompt = "Which New-ItemProperty parameter sets the registry value type? (include the dash)"
+answers = ["-PropertyType"]
+explanation = "Always pass the type when creating a value."
+review = "Traps I reproduced (in my own `HKCU:\\Software\\WinLabTest` key, removed afterwards)"
+
+[[question]]
+id = "reg-kind"
+type = "short"
+prompt = "Which method of a registry key object tells you the stored type of a value? (method name)"
+answers = ["GetValueKind"]
+explanation = "(Get-Item -LiteralPath $key).GetValueKind('Count') returned DWord."
+review = "Traps I reproduced (in my own `HKCU:\\Software\\WinLabTest` key, removed afterwards)"
+
+[[question]]
+id = "reg-literal"
+type = "choice"
+prompt = "Why did Test-Path -Path on a key named a[1] return False while -LiteralPath returned True?"
+choices = ["-Path treats [ ] as a wildcard", "-LiteralPath is case-insensitive", "-Path cannot read HKCU", "The key was deleted in between"]
+answers = ["-Path treats [ ] as a wildcard"]
+explanation = "Use -LiteralPath whenever the path comes from data."
+review = "Traps I reproduced (in my own `HKCU:\\Software\\WinLabTest` key, removed afterwards)"
+
+[[question]]
+id = "reg-default"
+type = "short"
+prompt = "Which Set-ItemProperty-family cmdlet sets a key's '(default)' value? (cmdlet name)"
+answers = ["Set-Item"]
+explanation = "Set-Item -Path $key -Value 'text'; read it as (Get-ItemProperty $key).'(default)'."
+review = "Traps I reproduced (in my own `HKCU:\\Software\\WinLabTest` key, removed afterwards)"
+
+[[question]]
+id = "reg-write-rights"
+type = "choice"
+prompt = "Which hive can an ordinary, non-elevated user write to?"
+choices = ["HKCU", "HKLM", "Both", "Neither"]
+answers = ["HKCU"]
+explanation = "Writing under HKLM needs administrator rights."
+review = "Which hive, and 32 or 64 bit"
+
+[[question]]
+id = "reg-wow"
+type = "choice"
+prompt = "What is HKLM:\\SOFTWARE\\WOW6432Node for?"
+choices = ["The view of HKLM\\SOFTWARE that 32-bit programs see", "A backup of the registry", "Windows on Windows 3.1 settings", "A per-user hive"]
+answers = ["The view of HKLM\\SOFTWARE that 32-bit programs see"]
+explanation = "A 64-bit PowerShell sees the real HKLM\\SOFTWARE."
+review = "Which hive, and 32 or 64 bit"
+
+[[question]]
+id = "reg-backup"
+type = "short"
+prompt = "Which program exports a registry key to a .reg file from the command line? (name with .exe)"
+answers = ["reg.exe", "reg"]
+explanation = "reg.exe export 'HKLM\\SOFTWARE\\X' file.reg /y"
+review = "Backup before change"
+
+[[question]]
+id = "reg-regfile"
+type = "choice"
+prompt = "What does double-clicking a .reg file do?"
+choices = ["Merges its contents into the live registry with no preview", "Opens it read-only", "Shows a diff first", "Nothing without administrator rights"]
+answers = ["Merges its contents into the live registry with no preview"]
+explanation = "Read a .reg file before you open it."
+review = "Backup before change"
+
+# ---- Services ----
+
+[[question]]
+id = "svc-silent"
+type = "choice"
+prompt = "What does Start-Service do for a service that is already running?"
+choices = ["Succeeds silently", "Raises an error", "Restarts it", "Stops it"]
+answers = ["Succeeds silently"]
+explanation = "Both start-when-running and stop-when-stopped are silent, so scripts are naturally repeatable."
+review = "Services"
+
+[[question]]
+id = "svc-passthru"
+type = "short"
+prompt = "Which parameter makes Start-Service return the service object so you can check its new state? (include the dash)"
+answers = ["-PassThru"]
+explanation = "By default these cmdlets print nothing."
+review = "Services"
+
+[[question]]
+id = "svc-deps"
+type = "choice"
+prompt = "Why was Stop-Service RPCSS refused?"
+choices = ["Other services depend on it, and -Force is needed", "It was already stopped", "RPCSS does not exist", "The session was not elevated"]
+answers = ["Other services depend on it, and -Force is needed"]
+explanation = "Read (Get-Service X).DependentServices first; -Force stops the dependents as well."
+review = "Services"
+
+[[question]]
+id = "svc-starttype"
+type = "multi"
+prompt = "Which values does Set-Service -StartupType accept?"
+choices = ["Automatic", "Manual", "Disabled", "Paused"]
+answers = ["Automatic", "Manual", "Disabled"]
+explanation = "Paused is not a startup type."
+review = "Services"
+
+[[question]]
+id = "svc-sc"
+type = "choice"
+prompt = "Why write sc.exe instead of sc in PowerShell?"
+choices = ["sc is an alias of Set-Content", "sc.exe is faster", "sc does not exist on Windows", "sc needs a different path"]
+answers = ["sc is an alias of Set-Content"]
+explanation = "'sc qfailure X' would not query the service; the alias intercepts it."
+review = "Services"
+
+[[question]]
+id = "svc-recovery"
+type = "choice"
+prompt = "Where do you see what Windows does when a service crashes (restart, delay)?"
+choices = ["sc.exe qfailure or the Recovery tab in services.msc", "Get-Service output", "Task Manager", "msinfo32"]
+answers = ["sc.exe qfailure or the Recovery tab in services.msc"]
+explanation = "Get-Service does not show recovery options."
+review = "Services"
+
+[[question]]
+id = "svc-eventid"
+type = "short"
+prompt = "Which System log event ID records that a service entered the running or stopped state? (number)"
+answers = ["7036"]
+explanation = "7040 records a start-type change."
+review = "Services"
+
+# ---- Event logs ----
+
+[[question]]
+id = "ev-which"
+type = "choice"
+prompt = "Which cmdlet should new scripts use to read event logs?"
+choices = ["Get-WinEvent", "Get-EventLog", "Get-Content", "wevtutil only"]
+answers = ["Get-WinEvent"]
+explanation = "Get-EventLog reads only the classic logs."
+review = "Event logs"
+
+[[question]]
+id = "ev-filter"
+type = "choice"
+prompt = "Why did -FilterHashtable (32 ms) beat Get-WinEvent | Where-Object (1130 ms) in my test?"
+choices = ["The filter runs in the event log service, not in the pipeline", "Hashtables are always faster", "Where-Object is broken", "It read more events"]
+answers = ["The filter runs in the event log service, not in the pipeline"]
+explanation = "The two also read different amounts, so the gap, not the numbers, is the point."
+review = "Filter in the query, not afterwards"
+
+[[question]]
+id = "ev-nomatch"
+type = "choice"
+prompt = "What does Get-WinEvent do when no event matches the filter?"
+choices = ["Raises NoMatchingEventsFound", "Returns an empty array silently", "Returns all events", "Hangs"]
+answers = ["Raises NoMatchingEventsFound"]
+explanation = "A script should catch it and treat it as an empty result."
+review = "Filter in the query, not afterwards"
+
+[[question]]
+id = "ev-level"
+type = "short"
+prompt = "In a FilterHashtable, which Level number means Error? (number)"
+answers = ["2"]
+explanation = "1 critical, 2 error, 3 warning, 4 information."
+review = "Filter in the query, not afterwards"
+
+[[question]]
+id = "ev-keys"
+type = "multi"
+prompt = "Which are valid FilterHashtable keys?"
+choices = ["LogName", "ProviderName", "StartTime", "Colour"]
+answers = ["LogName", "ProviderName", "StartTime"]
+explanation = "Also Id, Level and EndTime."
+review = "Filter in the query, not afterwards"
+
+[[question]]
+id = "ev-xml"
+type = "choice"
+prompt = "Where do you get named event data reliably when the Message is empty or wrong?"
+choices = ["In the event XML (ToXml()), under EventData", "In the log's file name", "In Get-Date", "Nowhere"]
+answers = ["In the event XML (ToXml()), under EventData"]
+explanation = "A message can be empty when the provider's message file is missing; the data is still there."
+review = "Reading the data"
+
+[[question]]
+id = "ev-security"
+type = "choice"
+prompt = "What does reading the Security log need?"
+choices = ["Administrator rights", "Nothing", "A domain", "Safe Mode"]
+answers = ["Administrator rights"]
+explanation = "The lesson ran it elevated and did not test non-elevated."
+review = "Reading the data"
+
+[[question]]
+id = "ev-write"
+type = "short"
+prompt = "Which cmdlet writes an entry to a classic event log such as Application? (cmdlet name)"
+answers = ["Write-EventLog"]
+explanation = "Creating the source with New-EventLog needs elevation, once."
+review = "Writing your own events"
+
+# ---- Scheduled tasks ----
+
+[[question]]
+id = "st-parts"
+type = "multi"
+prompt = "Which are the four parts of a scheduled task in PowerShell?"
+choices = ["Action", "Trigger", "Principal", "Settings", "Wallpaper"]
+answers = ["Action", "Trigger", "Principal", "Settings"]
+explanation = "Each has a New-ScheduledTask... command; Register-ScheduledTask joins them."
+review = "Scheduled tasks"
+
+[[question]]
+id = "st-twice"
+type = "choice"
+prompt = "What happens when Register-ScheduledTask runs for a task name that exists?"
+choices = ["An error: the file already exists", "It replaces the task silently", "It creates a duplicate", "It disables the old one"]
+answers = ["An error: the file already exists"]
+explanation = "Check first, or use -Force to replace."
+review = "Scheduled tasks"
+
+[[question]]
+id = "st-result"
+type = "short"
+prompt = "Which property of Get-ScheduledTaskInfo is 0 when the last run succeeded?"
+answers = ["LastTaskResult"]
+explanation = "A task that started is not necessarily a task that worked."
+review = "Scheduled tasks"
+
+[[question]]
+id = "st-risk"
+type = "choice"
+prompt = "Why is a task that runs as SYSTEM with -RunLevel Highest sensitive?"
+choices = ["If a user can edit the task or its script, they can run code as SYSTEM", "It runs slower", "It cannot be removed", "It uses more memory"]
+answers = ["If a user can edit the task or its script, they can run code as SYSTEM"]
+explanation = "Audit who can modify the task and the file it runs."
+review = "Scheduled tasks"
+
+[[question]]
+id = "st-gui"
+type = "choice"
+prompt = "Which Task Scheduler wizard shows the principal and settings tabs?"
+choices = ["Create Task", "Create Basic Task", "Import Task only", "None"]
+answers = ["Create Task"]
+explanation = "Create Basic Task hides those settings."
+review = "Scheduled tasks"
+
+# ---- Safe changes and reading scripts ----
+
+[[question]]
+id = "wi-what"
+type = "choice"
+prompt = "What does -WhatIf do?"
+choices = ["Prints what the command would do instead of doing it", "Asks you to confirm", "Undoes the last change", "Runs the command twice"]
+answers = ["Prints what the command would do instead of doing it"]
+explanation = "-Confirm is the one that asks."
+review = "Safe changes: `-WhatIf`, `-Confirm` and idempotence"
+
+[[question]]
+id = "wi-limit"
+type = "choice"
+prompt = "What does -WhatIf on a script not protect you from?"
+choices = ["A script that ignores it, or external programs it launches", "Cmdlets that support it", "Typing mistakes", "Nothing, it is complete protection"]
+answers = ["A script that ignores it, or external programs it launches"]
+explanation = "Reading the script is the real protection."
+review = "Safe changes: `-WhatIf`, `-Confirm` and idempotence"
+
+[[question]]
+id = "wi-attr"
+type = "short"
+prompt = "Which CmdletBinding argument lets your own function support -WhatIf and -Confirm?"
+answers = ["SupportsShouldProcess"]
+explanation = "Then wrap the change in $PSCmdlet.ShouldProcess()."
+review = "Safe changes: `-WhatIf`, `-Confirm` and idempotence"
+
+[[question]]
+id = "wi-idem"
+type = "choice"
+prompt = "What makes a script idempotent?"
+choices = ["It compares with the wanted state and changes only the difference", "It runs once", "It uses -Force everywhere", "It hides errors"]
+answers = ["It compares with the wanted state and changes only the difference"]
+explanation = "Running it twice leaves the same result, and the second run changes nothing."
+review = "Safe changes: `-WhatIf`, `-Confirm` and idempotence"
+
+[[question]]
+id = "wi-return"
+type = "choice"
+prompt = "What did my Set-WlServiceState return under -WhatIf?"
+choices = ["Nothing; only the What if message appeared", "'changed'", "'unchanged'", "An error"]
+answers = ["Nothing; only the What if message appeared"]
+explanation = "So callers must not depend on a return value under -WhatIf."
+review = "Safe changes: `-WhatIf`, `-Confirm` and idempotence"
+
+[[question]]
+id = "rd-persist"
+type = "multi"
+prompt = "Which lines in an unknown script suggest persistence?"
+choices = ["Set-ItemProperty on HKLM:\\...\\Run", "Register-ScheduledTask -AtLogOn", "Get-Date", "Write-Output 'hello'"]
+answers = ["Set-ItemProperty on HKLM:\\...\\Run", "Register-ScheduledTask -AtLogOn"]
+explanation = "Both make code start again at logon or boot."
+review = "Reading an unknown administration script"
+
+[[question]]
+id = "rd-evidence"
+type = "choice"
+prompt = "Which command erases the Security log?"
+choices = ["wevtutil.exe cl Security", "wevtutil.exe gl Security", "Get-WinEvent -LogName Security", "reg.exe query"]
+answers = ["wevtutil.exe cl Security"]
+explanation = "cl is clear-log; gl only reads settings. Clearing logs is a classic evidence-erasing step."
+review = "Reading an unknown administration script"
+
+[[question]]
+id = "rd-defence"
+type = "choice"
+prompt = "Add-MpPreference -ExclusionPath 'C:\\ProgramData' in an unknown script is a concern because..."
+choices = ["It stops Microsoft Defender scanning that folder, which weakens protection", "It adds a printer", "It formats the folder", "It is a read-only query"]
+answers = ["It stops Microsoft Defender scanning that folder, which weakens protection"]
+explanation = "Ask who wanted it and whether the script says why."
+review = "Reading an unknown administration script"
+
+[[question]]
+id = "rd-question"
+type = "choice"
+prompt = "A script creates a service. What is the right conclusion?"
+choices = ["Ask who requested it and whether the script says why; installers do this legitimately", "It is malware", "It is always safe", "Services cannot be created by scripts"]
+answers = ["Ask who requested it and whether the script says why; installers do this legitimately"]
+explanation = "None of the patterns is evil by itself; the context decides."
+review = "Reading an unknown administration script"
