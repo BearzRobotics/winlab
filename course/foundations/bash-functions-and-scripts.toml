@@ -1,0 +1,59 @@
+schema_version = 1
+id = "foundations.bash-functions-and-scripts"
+title = "Bash functions and scripts: arguments, traps, temp files, logs and locks"
+summary = "Functions (status versus output, dynamic scope, namerefs), argument parsing with getopts and a manual loop, here-documents, exit codes, trap and signals including what cannot be trapped, mktemp and the predictable-name symlink attack, logging, lock files with flock and their traps, finding the script's own folder, and a tested script skeleton."
+content = "bash-functions-and-scripts.md"
+estimated_minutes = 120
+level = 3
+objectives = [
+  "Write functions that return a status, an output or a value through a nameref, and explain return limits and exit in a function",
+  "Explain bash's dynamic scope and use local correctly, including the local x=$(cmd) status trap",
+  "Parse options with getopts (including silent mode and local OPTIND) and with a manual loop that supports long options, -- and unknown options",
+  "Choose the right here-document form (<<EOF, <<'EOF', <<-EOF) and avoid the delimiter traps",
+  "Use exit codes by convention and read the statuses 126, 127 and 128+n",
+  "Use trap EXIT for cleanup, explain what it sees in $?, and state what cannot be trapped and when a trap will not fire",
+  "Use mktemp, and explain and reproduce the symlink attack on predictable temp names",
+  "Log to stderr, time-stamp efficiently, and avoid the asynchronous exec > >(tee) race",
+  "Make a script single-instance with flock, and explain stale locks and inherited lock descriptors",
+  "Find a script's own folder safely, write a script that is also a library, and source files portably",
+  "Read an unknown script for shadowing functions, risky traps, temp files and locks",
+]
+prerequisites = ["foundations.bash-variables-and-expansion"]
+privilege = "standard"
+certifications = ["comptia-a-core2/operating-systems"]
+evaluation_criteria = [
+  "Learner demonstrates dynamic scoping and fixes the leak with local",
+  "Learner shows why a second getopts call parses nothing without local OPTIND=1",
+  "Learner proves a temp directory is removed on exit 1, on a set -e abort and on TERM, and not on KILL",
+  "Learner reproduces the /tmp/x.$$ symlink attack in a folder they own and shows mktemp and noclobber preventing it",
+  "Learner starts two copies of a flock-protected script and explains the inherited-descriptor case",
+  "Learner finds every problem in the exercise-11 script",
+]
+
+[[references]]
+title = "Bash Reference Manual: Shell Functions, Bourne Shell Builtins (getopts, trap), Redirections (Chet Ramey)"
+url = "https://tiswww.case.edu/php/chet/bash/bashref.html"
+
+[[references]]
+title = "bash(1) manual page (man7.org)"
+url = "https://man7.org/linux/man-pages/man1/bash.1.html"
+
+[[references]]
+title = "POSIX Shell Command Language (The Open Group)"
+url = "https://pubs.opengroup.org/onlinepubs/9799919799/utilities/V3_chap02.html"
+
+[[references]]
+title = "execve(2) manual page (man7.org)"
+url = "https://man7.org/linux/man-pages/man2/execve.2.html"
+
+[[references]]
+title = "ShellCheck"
+url = "https://www.shellcheck.net/"
+
+[[references]]
+title = "Shell Style Guide (Google)"
+url = "https://google.github.io/styleguide/shellguide.html"
+
+[[references]]
+title = "Bashism (Greg's Wiki)"
+url = "https://mywiki.wooledge.org/Bashism"

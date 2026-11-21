@@ -1,0 +1,478 @@
+schema_version = 1
+lesson = "foundations.bash-functions-and-scripts"
+# Draft for owner review. A bank of 52; each attempt asks 10, favouring questions missed last time.
+draw = 10
+
+# ---- Functions ----
+
+[[question]]
+id = "fn-status"
+type = "choice"
+prompt = "What is the status of a function whose last command was echo, even if an earlier command failed?"
+choices = ["0, the status of the last command", "The status of the failed command", "1", "It depends on set -e"]
+answers = ["0, the status of the last command"]
+explanation = "Or whatever return N says."
+review = "A function has a status and an output; they are different things"
+
+[[question]]
+id = "fn-return"
+type = "short"
+prompt = "What status does 'return 300' give in a function? (number)"
+answers = ["44"]
+explanation = "Statuses are 0 to 255; 300 wraps modulo 256. Print larger numbers."
+review = "A function has a status and an output; they are different things"
+
+[[question]]
+id = "fn-exit"
+type = "choice"
+prompt = "What does exit 3 do inside a function?"
+choices = ["Ends the whole shell (or the subshell it runs in)", "Leaves only the function", "Sets $? and continues", "Is an error"]
+answers = ["Ends the whole shell (or the subshell it runs in)"]
+explanation = "Use return to leave a function."
+review = "A function has a status and an output; they are different things"
+
+[[question]]
+id = "fn-both"
+type = "choice"
+prompt = "How do you capture a function's printed value and its status?"
+choices = ["val=$(f); st=$?", "val=f; st=$?", "val=$f", "f > val"]
+answers = ["val=$(f); st=$?"]
+explanation = "The status of the assignment is the status of the command inside."
+review = "Returning more than a status"
+
+[[question]]
+id = "fn-dyn"
+type = "choice"
+prompt = "f1 sets local x=inner and calls f2, which echoes $x (a global x also exists). What does f2 print?"
+choices = ["inner", "The global value", "Nothing", "An error"]
+answers = ["inner"]
+explanation = "Bash uses dynamic scope: local is visible to everything the function calls."
+review = "Scope: `local`, and bash's local is dynamic"
+
+[[question]]
+id = "fn-leak"
+type = "choice"
+prompt = "Which variable leaks out of a function unless declared local?"
+choices = ["A for-loop variable such as i", "Positional parameters", "FUNCNAME", "Nothing leaks"]
+answers = ["A for-loop variable such as i"]
+explanation = "The run showed i=3 in the caller. Write local i."
+review = "Scope: `local`, and bash's local is dynamic"
+
+[[question]]
+id = "fn-local2"
+type = "choice"
+prompt = "Why did 'local a=1 b=$a' leave b empty?"
+choices = ["$a was still unset when b was assigned in the same statement", "local cannot take two variables", "a was readonly", "b is reserved"]
+answers = ["$a was still unset when b was assigned in the same statement"]
+explanation = "Declare first, then assign: local a=1; local b=$a."
+review = "Scope: `local`, and bash's local is dynamic"
+
+[[question]]
+id = "fn-pipe"
+type = "choice"
+prompt = "echo | inc, where inc increments a global counter. What is the counter afterwards?"
+choices = ["Unchanged: the function ran in a subshell", "Incremented by 1", "An error", "Incremented twice"]
+answers = ["Unchanged: the function ran in a subshell"]
+explanation = "The same happens in $(...)."
+review = "Scope: `local`, and bash's local is dynamic"
+
+[[question]]
+id = "fn-nameref"
+type = "short"
+prompt = "Which declaration lets a function set a variable named by its caller (bash 4.3+)? (e.g. local -X ref=$1; fill in X)"
+answers = ["n", "local -n"]
+explanation = "local -n ref=$1; ref=value."
+review = "Returning more than a status"
+
+[[question]]
+id = "fn-fwd"
+type = "choice"
+prompt = "Which forwards arguments without re-splitting them?"
+choices = ["fwd \"$@\"", "fwd $@", "fwd $*", "fwd \"$*\""]
+answers = ["fwd \"$@\""]
+explanation = "fwd $@ turned [x y] [z] into three words."
+review = "Passing arguments through"
+
+[[question]]
+id = "fn-shift"
+type = "choice"
+prompt = "What does shift 2 do when only one argument exists?"
+choices = ["Fails with status 1 and does not shift", "Removes the one argument", "Exits the shell", "Prints an error and continues with status 0"]
+answers = ["Fails with status 1 and does not shift"]
+explanation = "Check $# first."
+review = "Passing arguments through"
+
+[[question]]
+id = "fn-shadow"
+type = "choice"
+prompt = "A function ls() is defined. How do you run the real ls anyway?"
+choices = ["command ls", "ls --real", "unset ls", "export ls"]
+answers = ["command ls"]
+explanation = "unset -f ls removes the function; builtin cd bypasses a cd function."
+review = "Functions versus commands"
+
+[[question]]
+id = "fn-exportf"
+type = "choice"
+prompt = "export -f hi makes hi available to which child?"
+choices = ["A child bash, but not sh (dash)", "Any child shell", "Only sh", "No child"]
+answers = ["A child bash, but not sh (dash)"]
+explanation = "sh -c hi gave 'hi: not found'."
+review = "Functions versus commands"
+
+# ---- Arguments ----
+
+[[question]]
+id = "go-silent"
+type = "choice"
+prompt = "What does a leading colon in getopts \":vo:h\" do?"
+choices = ["Silent mode: you handle errors (: for a missing value, ? for unknown)", "Makes -v mandatory", "Enables long options", "Reads from a file"]
+answers = ["Silent mode: you handle errors (: for a missing value, ? for unknown)"]
+explanation = "The value goes in $OPTARG."
+review = "`getopts`: short options, built in, POSIX"
+
+[[question]]
+id = "go-optind"
+type = "choice"
+prompt = "A function calling getopts is called twice in one shell. The second call parses nothing. Why?"
+choices = ["OPTIND is global and still points past the earlier arguments", "getopts only works once", "OPTARG was set", "The options were invalid"]
+answers = ["OPTIND is global and still points past the earlier arguments"]
+explanation = "local OPTIND=1 fixed it (2 options parsed both times)."
+review = "`getopts`: short options, built in, POSIX"
+
+[[question]]
+id = "go-long"
+type = "choice"
+prompt = "Does getopts handle --verbose?"
+choices = ["No; it has no long options", "Yes, if declared", "Only in bash", "Only with a colon"]
+answers = ["No; it has no long options"]
+explanation = "Write a manual loop with case for long options."
+review = "`getopts`: short options, built in, POSIX"
+
+[[question]]
+id = "go-stop"
+type = "choice"
+prompt = "'parse a -v b' with getopts: what are the options?"
+choices = ["None: parsing stops at the first non-option", "-v", "-v and a", "All three words"]
+answers = ["None: parsing stops at the first non-option"]
+explanation = "rest: a -v b. That is POSIX behaviour."
+review = "`getopts`: short options, built in, POSIX"
+
+[[question]]
+id = "go-dash"
+type = "choice"
+prompt = "Does getopts work in dash?"
+choices = ["Yes, for short options", "No", "Only with -o", "Only in busybox"]
+answers = ["Yes, for short options"]
+explanation = "It is the portable choice for short options."
+review = "`getopts`: short options, built in, POSIX"
+
+[[question]]
+id = "ma-dd"
+type = "choice"
+prompt = "Why should a manual option loop handle '--' and reject unknown options?"
+choices = ["-- lets operands start with a dash; rejecting unknown options catches typos", "-- is required by bash", "Unknown options crash bash", "It makes the script faster"]
+answers = ["-- lets operands start with a dash; rejecting unknown options catches typos"]
+explanation = "--output=b.txt -- -notopt gave out=b.txt and the operand -notopt."
+review = "A manual loop (long options)"
+
+[[question]]
+id = "ma-req"
+type = "short"
+prompt = "Which expansion makes the script stop with a message when $2 is missing: out=${2:?...}. Write the operator after the name (e.g. ?)."
+answers = [":?"]
+explanation = "${2:?--output needs a value} aborts with the message."
+review = "A manual loop (long options)"
+
+[[question]]
+id = "us-status"
+type = "short"
+prompt = "Which exit status does the lesson use for wrong usage? (number)"
+answers = ["2"]
+explanation = "1 for runtime errors; messages go to stderr."
+review = "Usage and error helpers"
+
+[[question]]
+id = "us-name"
+type = "short"
+prompt = "Which expansion gives the script's name without its folder? (e.g. ${0...})"
+answers = ["${0##*/}"]
+explanation = "Longest prefix up to the last slash removed."
+review = "Usage and error helpers"
+
+# ---- Here-docs and exit codes ----
+
+[[question]]
+id = "hd-quoted"
+type = "choice"
+prompt = "How does <<'EOF' differ from <<EOF?"
+choices = ["Nothing is expanded in the text", "It strips tabs", "It writes to a file", "It reads from a file"]
+answers = ["Nothing is expanded in the text"]
+explanation = "Use it for code, SQL or config that must stay literal."
+review = "Here-documents"
+
+[[question]]
+id = "hd-dash"
+type = "choice"
+prompt = "What does <<-EOF strip?"
+choices = ["Leading tab characters (not spaces)", "Leading spaces", "Trailing newlines", "Comments"]
+answers = ["Leading tab characters (not spaces)"]
+explanation = "So you can indent a here-doc inside an if."
+review = "Here-documents"
+
+[[question]]
+id = "hd-space"
+type = "choice"
+prompt = "A space before the closing EOF does what?"
+choices = ["The shell does not recognise the delimiter and keeps reading", "Nothing", "A warning only", "It closes the document"]
+answers = ["The shell does not recognise the delimiter and keeps reading"]
+explanation = "The delimiter must be alone on its line."
+review = "Here-documents"
+
+[[question]]
+id = "ex-wrap"
+type = "short"
+prompt = "What does 'exit 256' return? (number)"
+answers = ["0"]
+explanation = "Statuses wrap modulo 256; exit -1 gave 255."
+review = "Exit codes"
+
+[[question]]
+id = "ex-sig"
+type = "multi"
+prompt = "Which statuses did signals give (128 + n)?"
+choices = ["143 for TERM", "130 for INT", "137 for KILL", "126 for TERM"]
+answers = ["143 for TERM", "130 for INT", "137 for KILL"]
+explanation = "126 is found-but-could-not-run; 127 is command not found."
+review = "Exit codes"
+
+[[question]]
+id = "ex-sub"
+type = "choice"
+prompt = "x=$(exit 7) in a script. What happens?"
+choices = ["Only the subshell exits; the script continues with status 7", "The script exits with 7", "The script exits with 0", "Nothing; x is empty and status 0"]
+answers = ["Only the subshell exits; the script continues with status 7"]
+explanation = "Same for a pipeline stage."
+review = "Exit codes"
+
+# ---- trap ----
+
+[[question]]
+id = "tr-status"
+type = "choice"
+prompt = "What does $? hold inside an EXIT trap after 'exit 3'?"
+choices = ["3, the status the script was exiting with", "0", "The trap's own status", "Empty"]
+answers = ["3, the status the script was exiting with"]
+explanation = "If the trap itself calls exit 9, the script's status becomes 9."
+review = "`trap`: cleanup and signals"
+
+[[question]]
+id = "tr-quote"
+type = "choice"
+prompt = "x=before; trap \"echo x=$x\" EXIT; x=after. What does the trap print?"
+choices = ["x=before, expanded when the trap was set", "x=after", "Nothing", "An error"]
+answers = ["x=before, expanded when the trap was set"]
+explanation = "Use single quotes and refer to the variable: trap 'rm -rf \"$tmp\"' EXIT."
+review = "`trap`: cleanup and signals"
+
+[[question]]
+id = "tr-one"
+type = "choice"
+prompt = "A second trap ... EXIT in the same shell does what?"
+choices = ["Replaces the first", "Adds to the first", "Is an error", "Runs before the first"]
+answers = ["Replaces the first"]
+explanation = "There is one trap per signal."
+review = "`trap`: cleanup and signals"
+
+[[question]]
+id = "tr-sub"
+type = "choice"
+prompt = "Is a trap inherited by a subshell ( ... )?"
+choices = ["No", "Yes", "Only EXIT traps", "Only in bash 5"]
+answers = ["No"]
+explanation = "The parent's trap ran at the parent's own exit."
+review = "`trap`: cleanup and signals"
+
+[[question]]
+id = "tr-kill"
+type = "choice"
+prompt = "Does an EXIT trap run after kill -KILL?"
+choices = ["No; KILL cannot be trapped (status 137)", "Yes", "Only with set -e", "Only for children"]
+answers = ["No; KILL cannot be trapped (status 137)"]
+explanation = "Design for it: stale locks and partial files."
+review = "Signals"
+
+[[question]]
+id = "tr-ign"
+type = "choice"
+prompt = "Why did a trap on INT not run for a script started in the background by another script?"
+choices = ["A signal ignored when the script starts cannot be trapped, and background jobs start with SIGINT ignored", "INT traps do not work in bash", "The sleep absorbed it", "kill -INT does nothing"]
+answers = ["A signal ignored when the script starts cannot be trapped, and background jobs start with SIGINT ignored"]
+explanation = "trap -p INT showed trap -- '' SIGINT; with timeout -s INT it worked."
+review = "Signals"
+
+[[question]]
+id = "tr-err"
+type = "short"
+prompt = "Which set option makes an ERR trap fire inside functions? (e.g. set -X; give the letter)"
+answers = ["E", "-E", "set -E"]
+explanation = "errtrace. ERR itself is a bash/ksh feature (dash: bad trap)."
+review = "Signals"
+
+[[question]]
+id = "tr-local"
+type = "choice"
+prompt = "Why did my skeleton leave a temp directory behind when tmp was declared local in main?"
+choices = ["The EXIT trap runs after main returns, when the local no longer exists", "mktemp failed", "rm -rf is disabled", "trap ignores variables"]
+answers = ["The EXIT trap runs after main returns, when the local no longer exists"]
+explanation = "With set -u it printed 'tmp: unbound variable'. Make the variable global."
+review = "Putting it together: a script skeleton"
+
+# ---- mktemp, logging, locks ----
+
+[[question]]
+id = "mk-mode"
+type = "multi"
+prompt = "Which are true of mktemp in my test?"
+choices = ["The file is created with mode 600", "mktemp -d makes a directory with mode 700", "The name is predictable from the pid", "TMPDIR changes where it creates the file"]
+answers = ["The file is created with mode 600", "mktemp -d makes a directory with mode 700", "TMPDIR changes where it creates the file"]
+explanation = "The name is random, which is the point."
+review = "`mktemp`: temporary files without races"
+
+[[question]]
+id = "mk-pid"
+type = "choice"
+prompt = "Why is /tmp/report.$$ unsafe?"
+choices = ["The name is predictable, so a planted symlink makes your script write through it", "$$ is empty in scripts", "/tmp is read-only", "The file would be world-readable only"]
+answers = ["The name is predictable, so a planted symlink makes your script write through it"]
+explanation = "In my reproduction victim.txt was overwritten."
+review = "Why not `/tmp/myscript.$$`?"
+
+[[question]]
+id = "mk-clobber"
+type = "choice"
+prompt = "What did set -C (noclobber) do in the symlink demonstration?"
+choices = ["Refused to overwrite the existing file", "Followed the link", "Deleted the victim", "Nothing"]
+answers = ["Refused to overwrite the existing file"]
+explanation = "mktemp prevents the whole class."
+review = "Why not `/tmp/myscript.$$`?"
+
+[[question]]
+id = "lg-stderr"
+type = "choice"
+prompt = "Where should log and diagnostic messages go?"
+choices = ["Standard error (or a log file)", "Standard output", "A file named log in the current folder", "The kernel"]
+answers = ["Standard error (or a log file)"]
+explanation = "Standard output is for the script's real output."
+review = "Logging"
+
+[[question]]
+id = "lg-time"
+type = "choice"
+prompt = "300 calls: $(date +%T) took 1,563 ms, printf -v x '%(%T)T' -1 took 12 ms. Why the gap?"
+choices = ["date starts a new process each time; printf %T is a builtin", "printf is compiled", "date waits for the network", "The numbers are random"]
+answers = ["date starts a new process each time; printf %T is a builtin"]
+explanation = "The printf form is bash 4.2+ only."
+review = "Logging"
+
+[[question]]
+id = "lg-tee"
+type = "choice"
+prompt = "What went wrong with exec > >(tee -a run.log) 2>&1 followed by an immediate read of run.log?"
+choices = ["tee runs asynchronously, so the file did not exist yet", "tee is not installed", "stderr is not copied", "exec closes the terminal"]
+answers = ["tee runs asynchronously, so the file did not exist yet"]
+explanation = "Use { ...; } 2>&1 | tee -a log, or redirect from outside."
+review = "Logging"
+
+[[question]]
+id = "lk-flock"
+type = "choice"
+prompt = "Why is flock better than a noclobber lock file?"
+choices = ["The kernel releases the lock when the process dies, so there is no stale lock", "It is faster", "It works over NFS everywhere", "It needs no file"]
+answers = ["The kernel releases the lock when the process dies, so there is no stale lock"]
+explanation = "The noclobber lock stayed (PID no longer alive) after kill -9."
+review = "Lock files: one copy at a time"
+
+[[question]]
+id = "lk-inherit"
+type = "choice"
+prompt = "After kill -9 of a flock-holding script, the lock was still held. Why?"
+choices = ["A child sleep inherited the lock descriptor and kept the lock alive", "flock is broken", "The file was deleted", "The kernel keeps it for 30 seconds"]
+answers = ["A child sleep inherited the lock descriptor and kept the lock alive"]
+explanation = "Start the child as sleep 30 9>&- to close the descriptor for it."
+review = "Lock files: one copy at a time"
+
+[[question]]
+id = "lk-alive"
+type = "short"
+prompt = "Which command checks whether a process id still exists (to detect a stale lock)? (command and flag, then PID not needed)"
+answers = ["kill -0", "kill -0 PID"]
+explanation = "It sends no signal; the status says whether the process exists."
+review = "Lock files: one copy at a time"
+
+# ---- Script location, library, dot ----
+
+[[question]]
+id = "wh-dirname"
+type = "choice"
+prompt = "Which finds the script's absolute folder safely?"
+choices = ["here=$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)", "here=$(dirname $0)", "here=$PWD", "here=$HOME"]
+answers = ["here=$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)"]
+explanation = "Quote everything; cd $(dirname $0) failed with a space in the path. realpath resolves symlinks."
+review = "Where is my script?"
+
+[[question]]
+id = "wh-link"
+type = "choice"
+prompt = "A script runs through a symlink in another folder. What does dirname \"$0\" give?"
+choices = ["The link's folder, not the real script's", "The real script's folder", "/", "Nothing"]
+answers = ["The link's folder, not the real script's"]
+explanation = "realpath gave the real file."
+review = "Where is my script?"
+
+[[question]]
+id = "wh-guard"
+type = "choice"
+prompt = "What does [[ ${BASH_SOURCE[0]} == \"$0\" ]] && main \"$@\" achieve?"
+choices = ["main runs when the file is executed, not when it is sourced", "It runs main twice", "It checks the shebang", "It locks the script"]
+answers = ["main runs when the file is executed, not when it is sourced"]
+explanation = "It also makes functions testable."
+review = "A script that is also a library"
+
+[[question]]
+id = "wh-dot"
+type = "choice"
+prompt = ". plainlib.sh (a bare name) in dash:"
+choices = ["Fails: not found, because POSIX shells search PATH", "Finds it in the current folder", "Works with a warning", "Hangs"]
+answers = ["Fails: not found, because POSIX shells search PATH"]
+explanation = "Write . ./plainlib.sh. bash found it in the current folder; bash --posix did not."
+review = "`source` and the dot command"
+
+[[question]]
+id = "wh-fd"
+type = "choice"
+prompt = "exec 4< file; read -r a <&4; read -r b <&4 gives what?"
+choices = ["The first and second lines: the descriptor stays open", "The first line twice", "An error", "The whole file in a"]
+answers = ["The first and second lines: the descriptor stays open"]
+explanation = "That open-descriptor idea underlies flock lock files."
+review = "File descriptors and `exec`"
+
+# ---- Reading unknown scripts ----
+
+[[question]]
+id = "rd-shadow"
+type = "choice"
+prompt = "In an unknown script you see sudo() { ... }. What should you suspect?"
+choices = ["A function shadowing the real sudo, which changes what later lines mean", "A syntax error", "A comment", "Nothing"]
+answers = ["A function shadowing the real sudo, which changes what later lines mean"]
+explanation = "Search for name() and function name first."
+review = "Reading an unknown script (functions and flow)"
+
+[[question]]
+id = "rd-ex11"
+type = "multi"
+prompt = "Which are problems in the exercise-11 script?"
+choices = ["tmp=/tmp/report.$$ is predictable", "cd $(dirname $0) is unquoted", "local count=... outside a function", "exit $count uses a line count as a status", ". ./helpers.sh is wrong in every shell"]
+answers = ["tmp=/tmp/report.$$ is predictable", "cd $(dirname $0) is unquoted", "local count=... outside a function", "exit $count uses a line count as a status"]
+explanation = "Also getopts without shift, a bare-name source and unquoted $1."
+review = "Reading an unknown script (functions and flow)"
