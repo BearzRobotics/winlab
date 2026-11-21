@@ -1,0 +1,489 @@
+schema_version = 1
+lesson = "foundations.bash-basics"
+# Draft for owner review. A bank of 53; each attempt asks 10, favouring questions missed last time.
+draw = 10
+
+# ---- Help and navigation ----
+
+[[question]]
+id = "hp-builtin"
+type = "choice"
+prompt = "cd is a shell builtin. Where do you read about it?"
+choices = ["help cd", "man cd (always)", "which cd", "ls cd"]
+answers = ["help cd"]
+explanation = "Builtins have no program and usually no manual page; help is bash's own help. which printed nothing for cd."
+review = "The shell, a command, and getting help"
+
+[[question]]
+id = "hp-type"
+type = "short"
+prompt = "Which command tells you whether a name is a builtin, a program, an alias or a function? (one word)"
+answers = ["type", "command -v"]
+explanation = "type cd ls help gave builtin, /usr/bin/ls, builtin. command -v is the portable relative."
+review = "The shell, a command, and getting help"
+
+[[question]]
+id = "hp-127"
+type = "short"
+prompt = "What exit status does 'command not found' give? (number)"
+answers = ["127"]
+explanation = "126 is found but could not run (for example no execute bit)."
+review = "The shell, a command, and getting help"
+
+[[question]]
+id = "nv-dash"
+type = "choice"
+prompt = "What does cd with no argument do?"
+choices = ["Goes to your home folder", "Stays where it is", "Goes to /", "Lists the folder"]
+answers = ["Goes to your home folder"]
+explanation = "cd - goes back to the previous folder."
+review = "Where you are"
+
+[[question]]
+id = "nv-space"
+type = "choice"
+prompt = "cd my folder (unquoted) fails with 'too many arguments'. Why?"
+choices = ["The shell passes two words", "Folders cannot have spaces", "cd needs -r", "my is reserved"]
+answers = ["The shell passes two words"]
+explanation = "Quote it: cd \"my folder\"."
+review = "Where you are"
+
+[[question]]
+id = "nv-mode"
+type = "choice"
+prompt = "In ls -l, what does the first character d (as in drwxr-xr-x) mean?"
+choices = ["A directory", "A deleted file", "A device", "A hidden file"]
+answers = ["A directory"]
+explanation = "- is a file, l a symbolic link."
+review = "Reading `ls -l`"
+
+[[question]]
+id = "nv-hidden"
+type = "choice"
+prompt = "Which option shows names that begin with a dot?"
+choices = ["ls -a", "ls -h", "ls -R", "ls -d"]
+answers = ["ls -a"]
+explanation = "-h gives human sizes, -R recurses, -d lists the folder itself."
+review = "Reading `ls -l`"
+
+[[question]]
+id = "nv-ld"
+type = "choice"
+prompt = "What does ls -ld dir1 show?"
+choices = ["The folder itself, not its contents", "The contents recursively", "Hidden files", "The folder's owner only"]
+answers = ["The folder itself, not its contents"]
+explanation = "Without -d, ls lists the contents."
+review = "Reading `ls -l`"
+
+# ---- File operations ----
+
+[[question]]
+id = "fo-cp"
+type = "choice"
+prompt = "cp a b when b already exists:"
+choices = ["Overwrites b silently", "Asks first", "Fails", "Renames b"]
+answers = ["Overwrites b silently"]
+explanation = "cp -i asks; cp -n refuses (GNU cp 9.7 warned that -n is non-portable)."
+review = "Making, copying, moving and removing, and the traps"
+
+[[question]]
+id = "fo-mv"
+type = "choice"
+prompt = "mv a1 a2 when a2 exists:"
+choices = ["Replaces a2 silently", "Asks first", "Merges them", "Fails"]
+answers = ["Replaces a2 silently"]
+explanation = "Use mv -i, or check first."
+review = "Making, copying, moving and removing, and the traps"
+
+[[question]]
+id = "fo-cpr"
+type = "choice"
+prompt = "cp -r dir1 dest when dest already exists copies where?"
+choices = ["Into it, as dest/dir1", "Over it", "Fails", "Merges the contents into dest directly"]
+answers = ["Into it, as dest/dir1"]
+explanation = "When dest does not exist, dest becomes the copy. Same command, two results."
+review = "Making, copying, moving and removing, and the traps"
+
+[[question]]
+id = "fo-rm"
+type = "multi"
+prompt = "Which are true?"
+choices = ["rm dir fails: Is a directory", "rmdir fails on a non-empty folder", "rm -r removes a folder and its contents", "rm moves files to a trash folder"]
+answers = ["rm dir fails: Is a directory", "rmdir fails on a non-empty folder", "rm -r removes a folder and its contents"]
+explanation = "rm has no trash and no undo."
+review = "Making, copying, moving and removing, and the traps"
+
+[[question]]
+id = "fo-rmf"
+type = "choice"
+prompt = "rm -f nosuch returns what status, and why is that a risk?"
+choices = ["0: -f hides the failure as well as the prompt", "1, as without -f", "2", "It asks"]
+answers = ["0: -f hides the failure as well as the prompt"]
+explanation = "rm nosuch returned 1."
+review = "Making, copying, moving and removing, and the traps"
+
+[[question]]
+id = "fo-echo"
+type = "choice"
+prompt = "How do you preview what rm -rf PATTERN will delete?"
+choices = ["Run it with echo (or ls) in front and read the expansion", "Add -n", "Nothing can preview it", "Run it twice"]
+answers = ["Run it with echo (or ls) in front and read the expansion"]
+explanation = "The shell shows exactly the words it will pass."
+review = "Making, copying, moving and removing, and the traps"
+
+[[question]]
+id = "fo-dashfile"
+type = "choice"
+prompt = "A folder contains -rf.txt. What does rm *.txt do (GNU rm)?"
+choices = ["Fails: reads -rf.txt as options, and removes nothing", "Removes all .txt files", "Removes everything", "Asks first"]
+answers = ["Fails: reads -rf.txt as options, and removes nothing"]
+explanation = "Use ./*.txt or rm -- -rf.txt."
+review = "Names that bite: spaces and a leading dash"
+
+[[question]]
+id = "fo-dd"
+type = "short"
+prompt = "Which two characters end option processing so a name starting with a dash is a name? (e.g. rm ... -rf.txt)"
+answers = ["--"]
+explanation = "rm -- -rf.txt, or use rm ./-rf.txt."
+review = "Names that bite: spaces and a leading dash"
+
+[[question]]
+id = "fo-space"
+type = "choice"
+prompt = "With files 'my file.txt', 'my' and 'file.txt', rm my file.txt removes what?"
+choices = ["my and file.txt, leaving 'my file.txt'", "my file.txt", "All three", "Nothing"]
+answers = ["my and file.txt, leaving 'my file.txt'"]
+explanation = "The shell passed two words. Quote: rm \"my file.txt\"."
+review = "Names that bite: spaces and a leading dash"
+
+[[question]]
+id = "fo-link"
+type = "choice"
+prompt = "After ln orig hard, ln -s orig soft and rm orig, what happens?"
+choices = ["hard still reads the content; soft is broken", "Both still work", "Both are broken", "hard is broken; soft works"]
+answers = ["hard still reads the content; soft is broken"]
+explanation = "A hard link is another name for the same file; a symlink stores a path."
+review = "Links"
+
+[[question]]
+id = "fo-find-l"
+type = "short"
+prompt = "Which find test locates broken symlinks? (e.g. -xtype l; give the test with its dash)"
+answers = ["-xtype l", "-xtype"]
+explanation = "find . -xtype l found ./soft."
+review = "Links"
+
+# ---- Looking inside files ----
+
+[[question]]
+id = "lk-wc"
+type = "choice"
+prompt = "wc -l < file versus wc -l file:"
+choices = ["The first prints only the number; the second also prints the file name", "They are identical", "The first counts words", "The second fails"]
+answers = ["The first prints only the number; the second also prints the file name"]
+explanation = "Use the redirect when capturing the number."
+review = "Looking inside files"
+
+[[question]]
+id = "lk-cat-a"
+type = "choice"
+prompt = "Which command reveals tabs, carriage returns and trailing spaces?"
+choices = ["cat -A", "cat -n", "ls -l", "wc -c"]
+answers = ["cat -A"]
+explanation = "It printed ^I for a tab, ^M for a Windows carriage return and $ at line ends."
+review = "Looking inside files"
+
+[[question]]
+id = "lk-tail"
+type = "short"
+prompt = "Which tail option follows a growing file? (include the dash)"
+answers = ["-f"]
+explanation = "Ctrl-C stops it."
+review = "Looking inside files"
+
+[[question]]
+id = "lk-head"
+type = "choice"
+prompt = "head -n -17 file prints what?"
+choices = ["Everything except the last 17 lines", "The first 17 lines", "The last 17 lines", "An error"]
+answers = ["Everything except the last 17 lines"]
+explanation = "A negative count means all but that many."
+review = "Looking inside files"
+
+[[question]]
+id = "lk-mc"
+type = "choice"
+prompt = "For the word 'café' in UTF-8, how do wc -c and wc -m differ?"
+choices = ["-c counts bytes, -m counts characters", "They are the same", "-c counts words", "-m counts lines"]
+answers = ["-c counts bytes, -m counts characters"]
+explanation = "6 bytes with the newline against 5 characters."
+review = "Looking inside files"
+
+# ---- Permissions ----
+
+[[question]]
+id = "pm-755"
+type = "short"
+prompt = "What permission string is mode 755? (9 characters)"
+answers = ["rwxr-xr-x"]
+explanation = "7 = rwx, 5 = r-x."
+review = "Who you are and what you may do"
+
+[[question]]
+id = "pm-600"
+type = "short"
+prompt = "What numeric mode is rw-------? (3 digits)"
+answers = ["600"]
+explanation = "6 = rw-, 0 = ---."
+review = "Who you are and what you may do"
+
+[[question]]
+id = "pm-umask"
+type = "choice"
+prompt = "With umask 0022, new files and folders start as:"
+choices = ["Files 644, folders 755", "Files 755, folders 644", "Both 777", "Both 600"]
+answers = ["Files 644, folders 755"]
+explanation = "umask 077 gave files 600 and folders 700."
+review = "Who you are and what you may do"
+
+[[question]]
+id = "pm-exec"
+type = "choice"
+prompt = "./script says Permission denied, but bash script works. Why?"
+choices = ["The execute bit is missing; bash only needs to read the file", "bash ignores permissions", "The shebang is wrong", "The script is a link"]
+answers = ["The execute bit is missing; bash only needs to read the file"]
+explanation = "Status 126. Fix with chmod +x."
+review = "Who you are and what you may do"
+
+[[question]]
+id = "pm-dir"
+type = "choice"
+prompt = "A folder with mode 600 cannot be entered. Which bit is missing for you?"
+choices = ["x (execute/search)", "r", "w", "s"]
+answers = ["x (execute/search)"]
+explanation = "A folder needs x to be entered."
+review = "Who you are and what you may do"
+
+# ---- Environment ----
+
+[[question]]
+id = "en-path"
+type = "choice"
+prompt = "Why do you run your own script as ./hello.sh?"
+choices = ["The current folder is not on PATH", "./ makes it faster", "hello.sh is reserved", "bash requires it"]
+answers = ["The current folder is not on PATH"]
+explanation = "A name with a slash is not searched on PATH."
+review = "The environment, `PATH` and aliases"
+
+[[question]]
+id = "en-export"
+type = "choice"
+prompt = "v=plain; bash -c 'echo ${v:-not set}' prints what?"
+choices = ["not set; v was not exported", "plain", "An error", "Nothing"]
+answers = ["not set; v was not exported"]
+explanation = "After export v it printed plain."
+review = "The environment, `PATH` and aliases"
+
+[[question]]
+id = "en-once"
+type = "choice"
+prompt = "MYVAR=once command sets MYVAR for how long?"
+choices = ["For that command only", "For the session", "Until reboot", "For all children forever"]
+answers = ["For that command only"]
+explanation = "Afterwards it was unset."
+review = "The environment, `PATH` and aliases"
+
+[[question]]
+id = "en-alias"
+type = "choice"
+prompt = "Why do aliases not belong in scripts?"
+choices = ["They are not expanded in non-interactive shells", "They are slow", "They need root", "They are removed by chmod"]
+answers = ["They are not expanded in non-interactive shells"]
+explanation = "bash -c 'alias hi=...; hi' said hi: command not found. Use functions."
+review = "The environment, `PATH` and aliases"
+
+# ---- Redirection and pipes ----
+
+[[question]]
+id = "rd-trunc"
+type = "choice"
+prompt = "What does sort file > file do?"
+choices = ["Empties the file: it is truncated before sort reads it", "Sorts it in place", "Appends the sorted lines", "Fails with an error"]
+answers = ["Empties the file: it is truncated before sort reads it"]
+explanation = "Write to a new file and mv it over the old one."
+review = "Redirection and pipes"
+
+[[question]]
+id = "rd-order"
+type = "choice"
+prompt = "ls nosuch . 2>&1 > f: where does the error go?"
+choices = ["To the screen; only normal output reaches f", "Into f", "Nowhere", "Into both"]
+answers = ["To the screen; only normal output reaches f"]
+explanation = "2>&1 copies where stdout points at that moment. Write > f 2>&1."
+review = "Redirection and pipes"
+
+[[question]]
+id = "rd-null"
+type = "choice"
+prompt = "Does 2>/dev/null change the command's exit status?"
+choices = ["No", "Yes, to 0", "Yes, to 1", "Only for ls"]
+answers = ["No"]
+explanation = "ls nosuch 2>/dev/null still returned 2."
+review = "Redirection and pipes"
+
+[[question]]
+id = "rd-uniq"
+type = "choice"
+prompt = "Why sort before uniq -c?"
+choices = ["uniq only collapses adjacent duplicate lines", "uniq needs sorted letters", "sort is required by bash", "To save memory"]
+answers = ["uniq only collapses adjacent duplicate lines"]
+explanation = "sort | uniq -c | sort -rn counts and ranks."
+review = "Redirection and pipes"
+
+[[question]]
+id = "rd-andor"
+type = "choice"
+prompt = "true && false || echo c prints c. Why is it not if/else?"
+choices = ["c runs whenever the last command in the chain fails, including b", "|| always runs", "&& is ignored", "echo overrides it"]
+answers = ["c runs whenever the last command in the chain fails, including b"]
+explanation = "Use if/else when b can fail."
+review = "Chaining and exit status"
+
+[[question]]
+id = "rd-pipestatus"
+type = "choice"
+prompt = "false | true leaves $? as what, and where is every stage's status kept?"
+choices = ["0; in the array PIPESTATUS", "1; in $?", "0; nowhere", "1; in PIPESTATUS"]
+answers = ["0; in the array PIPESTATUS"]
+explanation = "PIPESTATUS was 1 0."
+review = "Chaining and exit status"
+
+# ---- Processes ----
+
+[[question]]
+id = "pr-143"
+type = "multi"
+prompt = "Which statuses did I see?"
+choices = ["143 after kill (SIGTERM) and wait", "137 after kill -KILL and wait", "124 for timeout", "126 for kill"]
+answers = ["143 after kill (SIGTERM) and wait", "137 after kill -KILL and wait", "124 for timeout"]
+explanation = "128 + signal number; 124 means timed out."
+review = "Processes and jobs"
+
+[[question]]
+id = "pr-wait"
+type = "choice"
+prompt = "( exit 3 ) & then plain wait returns:"
+choices = ["0, even though the job failed; wait PID gives that job's status", "3", "1", "It hangs"]
+answers = ["0, even though the job failed; wait PID gives that job's status"]
+explanation = "Check each job with wait PID."
+review = "Processes and jobs"
+
+[[question]]
+id = "pr-bang"
+type = "short"
+prompt = "Which special parameter holds the PID of the last background job?"
+answers = ["$!", "!"]
+explanation = "$$ is the shell's own PID."
+review = "Processes and jobs"
+
+# ---- Finding ----
+
+[[question]]
+id = "fd-grep"
+type = "choice"
+prompt = "grep exits 0, 1 or 2 when:"
+choices = ["found; not found; error", "error; found; not found", "found; error; not found", "always 0"]
+answers = ["found; not found; error"]
+explanation = "That is why if grep -q needle file; then works."
+review = "Finding things"
+
+[[question]]
+id = "fd-xargs"
+type = "choice"
+prompt = "Why did find | xargs ls fail on 'sp ace.txt'?"
+choices = ["xargs split the name at the space; use -print0 | xargs -0", "ls cannot open spaces", "find omitted it", "xargs needs sudo"]
+answers = ["xargs split the name at the space; use -print0 | xargs -0"]
+explanation = "Or use find ... -exec ... {} +."
+review = "Finding things"
+
+[[question]]
+id = "fd-w"
+type = "choice"
+prompt = "echo 'a needles' | grep -w needle matches?"
+choices = ["Nothing: -w needs a whole word", "The line", "Only the word needles", "An error"]
+answers = ["Nothing: -w needs a whole word"]
+explanation = "-i, -n, -l, -c, -v, -q and -E were the other options used."
+review = "Finding things"
+
+# ---- First script ----
+
+[[question]]
+id = "sc-shebang"
+type = "choice"
+prompt = "A script uses bash features. What does its first line say?"
+choices = ["A shebang that names bash: #!/bin/bash or #!/usr/bin/env bash", "#!/bin/sh", "Nothing", "#!/bin/dash"]
+answers = ["A shebang that names bash: #!/bin/bash or #!/usr/bin/env bash"]
+explanation = "Never sh for bash features: that only works where sh is a link to bash."
+review = "Your first script"
+
+[[question]]
+id = "sc-at"
+type = "choice"
+prompt = "Which keeps each argument, including ones with spaces, as one word?"
+choices = ["\"$@\"", "$*", "$@", "\"$#\""]
+answers = ["\"$@\""]
+explanation = "./hello.sh \"Mary Ann\" printed one greeting."
+review = "Your first script"
+
+[[question]]
+id = "sc-n"
+type = "short"
+prompt = "Which command checks a script's syntax without running it?"
+answers = ["bash -n", "bash -n script.sh"]
+explanation = "It reported syntax ok."
+review = "Run it, check it, trace it"
+
+[[question]]
+id = "sc-x"
+type = "short"
+prompt = "Which option makes bash print each command, prefixed with +, as it runs?"
+answers = ["-x", "bash -x"]
+explanation = "The + lines show the arguments after expansion."
+review = "Run it, check it, trace it"
+
+[[question]]
+id = "sc-typo"
+type = "choice"
+prompt = "echo \"Hi, $nmae\" (a typo) prints:"
+choices = ["Hi, (silently empty), unless set -u is on", "An error always", "The word nmae", "Nothing at all"]
+answers = ["Hi, (silently empty), unless set -u is on"]
+explanation = "With set -u: nmae: unbound variable."
+review = "Run it, check it, trace it"
+
+[[question]]
+id = "sc-continue"
+type = "choice"
+prompt = "A script line is a mistyped command (lss). What happens to the next line?"
+choices = ["It still runs; by default a script continues", "The script stops", "bash asks", "It is skipped"]
+answers = ["It still runs; by default a script continues"]
+explanation = "Stopping on failure is the subject of bash-robust-scripts."
+review = "Reading the error messages"
+
+[[question]]
+id = "sc-echo"
+type = "choice"
+prompt = "v='-n'; echo \"$v\" prints what?"
+choices = ["Nothing: echo treats -n as an option", "-n", "An error", "n"]
+answers = ["Nothing: echo treats -n as an option"]
+explanation = "printf '%s\\n' \"$v\" prints -n."
+review = "`echo` and `printf`"
+
+[[question]]
+id = "sc-ex10"
+type = "multi"
+prompt = "Which are problems in the exercise-10 script?"
+choices = ["cd /tmp/work is not checked, so rm -rf * may run elsewhere", "sort list.txt > list.txt empties the file", "for f in $(ls) splits names on spaces", "echo -e under a #!/bin/sh shebang is not portable", "the shebang line is missing a space"]
+answers = ["cd /tmp/work is not checked, so rm -rf * may run elsewhere", "sort list.txt > list.txt empties the file", "for f in $(ls) splits names on spaces", "echo -e under a #!/bin/sh shebang is not portable"]
+explanation = "Also rm -rf * versus ./* and unquoted $f."
+review = "Good habits"

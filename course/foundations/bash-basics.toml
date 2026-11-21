@@ -1,16 +1,22 @@
 schema_version = 1
 id = "foundations.bash-basics"
 title = "Linux shell and bash scripting fundamentals"
-summary = "Commands, pipes, redirection, quoting, variables, loops, exit status and writing your first scripts on a Linux server."
+summary = "The first day on the command line, tested on a real machine: help and navigation, copying, moving and removing without destroying data (silent overwrites, leading-dash and space names, links), reading files, permissions, PATH and the environment, redirection order and pipes, exit status, processes and jobs, find and grep, and writing, running, checking and tracing a first bash script."
 content = "bash-basics.md"
-estimated_minutes = 60
+estimated_minutes = 150
 level = 1
 objectives = [
-  "Run commands, read their manual pages, and move around the file system",
-  "Combine commands with pipes and redirect their input and output",
-  "Explain quoting and use variables and command substitution safely",
-  "Write a bash script with arguments, a loop, a condition and an exit status",
-  "Make a script executable and run it, and explain what the first line does",
+  "Run commands, read their manual pages and use help, type and command -v to find out what a name is",
+  "Move around the file system with absolute and relative paths and read ls -l output, including permissions, links and hidden files",
+  "Copy, move and remove files and folders and explain the silent-overwrite, rm -r and cp -r behaviours that destroy data",
+  "Handle file names with spaces or a leading dash safely using quoting, ./ and --",
+  "View and measure files with cat, head, tail, wc, sed -n and cat -A, and follow a log with tail -f",
+  "Explain rwx permissions, chmod symbolic and numeric forms, the umask, and why a script needs the execute bit",
+  "Explain PATH, export, per-command variables and why aliases do not belong in scripts",
+  "Use redirection and pipes correctly, including the 2>&1 order and the sort f > f trap, and chain commands with ; && || without mistaking a && b || c for if/else",
+  "Start, find, stop and wait for background processes and read the statuses 143, 137, 124, 126 and 127",
+  "Find files and text with find, grep and xargs -0, and read grep's exit status",
+  "Write a bash script with arguments, a loop, a condition and an exit status, name bash in the shebang, run it and check or trace it with bash -n and bash -x",
 ]
 prerequisites = ["foundations.troubleshooting-method"]
 windows_features = []
@@ -19,12 +25,48 @@ certifications = ["redhat-rhcsa/essential-tools", "comptia-linux-plus/system-man
 evaluation_criteria = [
   "Learner writes a script that prints a count per file from a folder of logs",
   "Learner explains the difference between single, double and no quotes in a given example",
+  "Learner removes files named -rf.txt and my file.txt safely and shows what the dangerous commands would have done using echo",
+  "Learner demonstrates the 2>&1 order difference and the sort f > f trap on a copy",
+  "Learner finds and stops a background process and reads the statuses",
+  "Learner finds every problem in the exercise-10 script",
 ]
 
 [[references]]
-title = "Bash Reference Manual (GNU)"
-url = "https://www.gnu.org/software/bash/manual/bash.html"
+title = "Bash Reference Manual (Chet Ramey)"
+url = "https://tiswww.case.edu/php/chet/bash/bashref.html"
 
 [[references]]
-title = "man7.org: Linux manual pages"
-url = "https://man7.org/linux/man-pages/"
+title = "bash(1) manual page (man7.org)"
+url = "https://man7.org/linux/man-pages/man1/bash.1.html"
+
+[[references]]
+title = "ls(1) (man7.org)"
+url = "https://man7.org/linux/man-pages/man1/ls.1.html"
+
+[[references]]
+title = "chmod(1) (man7.org)"
+url = "https://man7.org/linux/man-pages/man1/chmod.1.html"
+
+[[references]]
+title = "cp(1) (man7.org)"
+url = "https://man7.org/linux/man-pages/man1/cp.1.html"
+
+[[references]]
+title = "rm(1) (man7.org)"
+url = "https://man7.org/linux/man-pages/man1/rm.1.html"
+
+[[references]]
+title = "find(1) (man7.org)"
+url = "https://man7.org/linux/man-pages/man1/find.1.html"
+
+[[references]]
+title = "grep(1) (man7.org)"
+url = "https://man7.org/linux/man-pages/man1/grep.1.html"
+
+[[references]]
+title = "signal(7): signals and their numbers (man7.org)"
+url = "https://man7.org/linux/man-pages/man7/signal.7.html"
+
+[[references]]
+title = "uutils coreutils (the Rust coreutils used by recent Ubuntu)"
+url = "https://github.com/uutils/coreutils"

@@ -41,7 +41,7 @@ Each line is one lesson; the existing ones are deepened, not replaced. IDs are `
 6. `bash-text-processing`: grep, sed, awk, cut, sort, uniq, tr, find, xargs, regular expressions.
 7. `bash-robust-scripts`: `set -euo pipefail` and its limits, idempotence, ShellCheck, tests, debugging with `set -x` and `PS4`, signals, security.
 8. `bash-advanced`: `mapfile`, namerefs, `printf -v`, `declare`, `shopt`, completion, avoiding forks, bash 3.2 versus 4 and 5.
-9. `posix-sh-scripting`: writing portable POSIX sh on purpose: the allowed constructs, `command -v`, `printf` instead of `echo -e`, no arrays, `$(( ))`, parameter trimming.
+9. **A dedicated POSIX sh section (owner suggestion, 2026-11-21), with dash as the reference shell** and busybox ash as the second check; every command in it is run in dash, and `bash` is never used to "test" a `#!/bin/sh` script. Planned lessons: `posix-sh-basics` (the language subset: quoting, `$( )`, `$(( ))`, `case`, `[ ]`, `${v#..}` family, `set --` instead of arrays, here-documents, `getopts`, `trap`, functions without `function`; what dash does and does not accept, from the tables in `shells-and-posix`), and `posix-sh-scripting` (portable patterns: `command -v`, `printf` not `echo -e`, `. ./file`, `mktemp`, locking, text tools differences GNU/BusyBox/BSD, a project test harness that runs a script under dash and busybox ash, ShellCheck `--shell=sh`). It gets its own learning path (`posix-sh`).
 
 ### Linux system (alongside)
 - `linux.systemd`: units, targets, `systemctl`, `journalctl`, timers, writing and overriding unit files, sandboxing options, `systemd-analyze`.
