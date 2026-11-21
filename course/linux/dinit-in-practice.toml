@@ -1,0 +1,51 @@
+schema_version = 1
+id = "linux.dinit-in-practice"
+title = "dinit in practice on Chimera: boot, your own service, troubleshooting, logs and user services"
+summary = "Putting dinit to work on Chimera Linux 20261103 (dinit 0.22.0, dinit-chimera 0.99.25, turnstile 0.1.11): the boot chain read from Chimera's own service files (early-* to local.target, network.target, login.target, system, boot), recovery and single services, rc.local, networking services, an end-to-end unprivileged service with log file, restart policy and enable, the system log through syslog-ng, a troubleshooting playbook from the failures produced, and user services with turnstile including a measured linger test (gone within 3 seconds without a linger file, kept with one)."
+content = "dinit-in-practice.md"
+estimated_minutes = 150
+level = 4
+objectives = [
+  "Describe the Chimera boot chain from the service files and say what local.target, network.target and login.target are for",
+  "Explain recovery, single and rc.local as documented, and say that they were not booted in the tests",
+  "Enable one network service and explain why a fresh installation has no network",
+  "Write, check, start, log, restart-test and enable an unprivileged service that waits for the network",
+  "Find dinit's messages in the system log by enabling syslog-ng, and map a symptom to a cause with the playbook",
+  "Use dinitctl --user, the user service directories and boot.d, and explain how turnstile starts a user dinit at login",
+  "Explain linger: what happens to user services and the run directory at logout with and without a linger file",
+  "Say what is not known about FenrirOS and how to compare it with this lesson",
+]
+prerequisites = ["linux.dinit-service-files"]
+privilege = "administrator"
+certifications = ["comptia-linux-plus/system-management", "comptia-linux-plus/troubleshooting"]
+evaluation_criteria = [
+  "Learner draws the chain from boot to local.target from the service files",
+  "Learner writes wl-app (or equivalent) and shows each of the seven steps",
+  "Learner finds an exec failure, an unknown setting and a missing service in /var/log/messages",
+  "Learner solves the chimera-service-wont-start and chimera-no-system-log labs using the playbook",
+  "Learner shows user service behaviour at logout with and without a linger file using a root-owned watcher",
+]
+
+[[references]]
+title = "dinit(8)"
+url = "https://davmac.org/projects/dinit/man-pages-html/dinit.8.html"
+
+[[references]]
+title = "dinit-service(5)"
+url = "https://davmac.org/projects/dinit/man-pages-html/dinit-service.5.html"
+
+[[references]]
+title = "dinitctl(8)"
+url = "https://davmac.org/projects/dinit/man-pages-html/dinitctl.8.html"
+
+[[references]]
+title = "Chimera Linux: Service management"
+url = "https://chimera-linux.org/docs/configuration/services"
+
+[[references]]
+title = "dinit-chimera: Chimera's service suite"
+url = "https://github.com/chimera-linux/dinit-chimera"
+
+[[references]]
+title = "turnstile: session and login tracker"
+url = "https://github.com/chimera-linux/turnstile"

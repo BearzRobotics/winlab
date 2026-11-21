@@ -1,0 +1,486 @@
+schema_version = 1
+lesson = "linux.dinit-service-files"
+# Draft for owner review. Every answer comes from the tested output (dn1.sh to dn4.sh, Chimera 20261103, dinit 0.22.0) or the installed manual pages. Each attempt asks 12.
+draw = 12
+
+# ---- format ----
+
+[[question]]
+id = "f-eq"
+type = "choice"
+prompt = "What is the difference between name = value and name: value in a dinit file?"
+choices = ["No functional difference, but = is for settings that replace and : for settings that add (dependencies, options)", "= is for strings, : for numbers", "= runs a command", "They are different file formats"]
+answers = ["No functional difference, but = is for settings that replace and : for settings that add (dependencies, options)"]
+explanation = "From dinit-service(5): the recommendation distinguishes replacing from adding settings."
+review = "The file format"
+
+[[question]]
+id = "f-append"
+type = "choice"
+prompt = "Which operator appends to a command or stop-command set earlier?"
+choices = ["+=", "&=", "<<", "::"]
+answers = ["+="]
+explanation = "It also works for capabilities and securebits."
+review = "The file format"
+
+[[question]]
+id = "f-tokens"
+type = "choice"
+prompt = "How is a command line split into arguments?"
+choices = ["At white space; double quotes group; backslash escapes", "By a shell", "At commas", "At single quotes"]
+answers = ["At white space; double quotes group; backslash escapes"]
+explanation = "The command is not run by a shell."
+review = "The file format"
+
+# ---- types ----
+
+[[question]]
+id = "t-scr"
+type = "choice"
+prompt = "A scripted service has run its start command successfully. What does dinitctl status show?"
+choices = ["STARTED with no Process ID: nothing is running", "STOPPED", "A Process ID", "FAILED"]
+answers = ["STARTED with no Process ID: nothing is running"]
+explanation = "The stop command runs when you stop it."
+review = "process and scripted"
+
+[[question]]
+id = "t-scrfail"
+type = "choice"
+prompt = "A scripted service's command is /bin/sh -c \"exit 3\". The start result is:"
+choices = ["failed to start: service process terminated before ready: exited - status 3", "Started", "Restarting", "Masked"]
+answers = ["failed to start: service process terminated before ready: exited - status 3"]
+explanation = "Status: STOPPED (failed to start; exited - status 3)."
+review = "process and scripted"
+
+[[question]]
+id = "t-bg"
+type = "choice"
+prompt = "For which kind of program is type = bgprocess with pid-file used?"
+choices = ["A daemon that forks into the background and writes its PID to a file", "A script that runs once", "A group of services", "A program waiting for a trigger"]
+answers = ["A daemon that forks into the background and writes its PID to a file"]
+explanation = "dinit reads the PID file and supervises that process."
+review = "bgprocess"
+
+[[question]]
+id = "t-int"
+type = "choice"
+prompt = "What does stopping an internal service wl-int, which depends on wl-int-dep (nobody else needs it), do?"
+choices = ["Stops wl-int-dep too", "Leaves wl-int-dep running", "Fails", "Restarts wl-int-dep"]
+answers = ["Stops wl-int-dep too"]
+explanation = "wl-int-dep was only a dependency."
+review = "internal and triggered"
+
+[[question]]
+id = "t-trig"
+type = "choice"
+prompt = "dinitctl start on a type = triggered service:"
+choices = ["Waits in STARTING until dinitctl trigger is run", "Starts at once", "Fails", "Runs a command"]
+answers = ["Waits in STARTING until dinitctl trigger is run"]
+explanation = "My timeout 4 ended the waiting start with rc 124."
+review = "internal and triggered"
+
+# ---- dependencies ----
+
+[[question]]
+id = "d-hard"
+type = "choice"
+prompt = "What does depends-on mean when the dependency stops?"
+choices = ["This service stops too", "This service keeps running", "This service restarts the dependency", "Nothing"]
+answers = ["This service stops too"]
+explanation = "A hard (need) relationship; stop of the dependency is refused unless --force."
+review = "Dependencies"
+
+[[question]]
+id = "d-ms"
+type = "choice"
+prompt = "A service has depends-ms: wl-db. After both started, wl-db is stopped with --force. What about the service?"
+choices = ["It stays STARTED", "It stops", "It restarts", "It fails"]
+answers = ["It stays STARTED"]
+explanation = "A milestone only has to start successfully once."
+review = "Dependencies"
+
+[[question]]
+id = "d-fail"
+type = "multi"
+prompt = "The dependency's program does not exist. Which results were seen?"
+choices = ["depends-on: the dependent fails to start (rc 1)", "depends-ms: the dependent fails to start (rc 1)", "waits-for: the dependent starts (rc 0)", "waits-for: the dependent fails (rc 1)"]
+answers = ["depends-on: the dependent fails to start (rc 1)", "depends-ms: the dependent fails to start (rc 1)", "waits-for: the dependent starts (rc 0)"]
+explanation = "waits-for only waits for the dependency to finish or fail starting."
+review = "Dependencies"
+
+[[question]]
+id = "d-order"
+type = "choice"
+prompt = "In dinit, does a dependency also order the start?"
+choices = ["Yes: the dependent waits for the dependency (no requirement without ordering)", "No, you need After= as in systemd", "Only for scripted services", "Only with after:"]
+answers = ["Yes: the dependent waits for the dependency (no requirement without ordering)"]
+explanation = "From dinit-service(5): the command of the dependent is not run until the dependency has started."
+review = "Dependencies"
+
+[[question]]
+id = "d-adddep"
+type = "choice"
+prompt = "Is a dependency added with dinitctl add-dep persistent?"
+choices = ["No: it exists only for the running daemon", "Yes: written to the file", "Only with enable", "Only for need"]
+answers = ["No: it exists only for the running daemon"]
+explanation = "The service file is not changed."
+review = "Dependencies"
+
+# ---- after/before ----
+
+[[question]]
+id = "o-after"
+type = "choice"
+prompt = "wl-aft has after: wl-o1. You start wl-aft alone. What happens to wl-o1?"
+choices = ["Nothing: after: adds no dependency, so wl-o1 stays stopped", "wl-o1 is started first", "wl-o1 is started after", "wl-aft fails"]
+answers = ["Nothing: after: adds no dependency, so wl-o1 stays stopped"]
+explanation = "after: only orders services that are both starting."
+review = "Ordering without a dependency"
+
+[[question]]
+id = "o-seq"
+type = "choice"
+prompt = "Three scripted services, started together with no ordering, logged: o2-start o3-start o1-start o3-end o1-end o2-end. What does that show?"
+choices = ["They start in parallel", "They start one after another", "o2 depends on o1", "They failed"]
+answers = ["They start in parallel"]
+explanation = "With after: lines the log was o1-start o1-end o2-start ..."
+review = "Ordering without a dependency"
+
+# ---- restart ----
+
+[[question]]
+id = "r-def"
+type = "choice"
+prompt = "What is dinit's default for restarting a service whose process ends?"
+choices = ["Restart automatically (restart = yes)", "Do not restart", "Restart only on failure", "Ask the administrator"]
+answers = ["Restart automatically (restart = yes)"]
+explanation = "The opposite of systemd's Restart=no; a kill -9 was followed by a new run."
+review = "Restarting: the default is yes"
+
+[[question]]
+id = "r-stop"
+type = "choice"
+prompt = "A service with the default restart setting is stopped with dinitctl stop. Does it restart?"
+choices = ["No: a manual stop inhibits automatic restart", "Yes after restart-delay", "Yes, always", "Only its dependents"]
+answers = ["No: a manual stop inhibits automatic restart"]
+explanation = "The runs log stayed at 2 and is-started said STOPPED."
+review = "Restarting: the default is yes"
+
+[[question]]
+id = "r-onfail"
+type = "multi"
+prompt = "With restart = on-failure, which endings restart the process (from the table)?"
+choices = ["exit 1", "SIGKILL", "SIGABRT", "SIGTERM"]
+answers = ["exit 1", "SIGKILL", "SIGABRT"]
+explanation = "SIGTERM, SIGHUP, SIGINT, SIGUSR1 and SIGUSR2 count as deliberate termination."
+review = "Restarting: the default is yes"
+
+[[question]]
+id = "r-onfail2"
+type = "choice"
+prompt = "With restart = on-failure, an exit 0:"
+choices = ["Stays down", "Restarts", "Restarts after 1 s", "Fails"]
+answers = ["Stays down"]
+explanation = "Only restart = yes restarted exit 0."
+review = "Restarting: the default is yes"
+
+[[question]]
+id = "r-types"
+type = "choice"
+prompt = "restart = on-failure for a scripted service is the same as:"
+choices = ["restart = no", "restart = yes", "restart = always", "An error"]
+answers = ["restart = no"]
+explanation = "on-failure is meaningful only for process and bgprocess services."
+review = "Restarting: the default is yes"
+
+[[question]]
+id = "r-limit"
+type = "short"
+prompt = "With restart-limit-count = 3, how many times did the flaky service run in total (first run plus restarts, number only)?"
+answers = ["4"]
+explanation = "The log had 4 lines; then State: STOPPED (terminated; exited - status 1)."
+review = "Rate limit"
+
+[[question]]
+id = "r-defaults"
+type = "multi"
+prompt = "Which are dinit's documented defaults?"
+choices = ["restart-delay 1.0 seconds", "restart-limit-count 5", "restart-limit-interval 10 seconds", "restart-limit-count 0"]
+answers = ["restart-delay 1.0 seconds", "restart-limit-count 5", "restart-limit-interval 10 seconds"]
+explanation = "A count of 0 disables the limit."
+review = "Rate limit"
+
+[[question]]
+id = "r-smooth"
+type = "choice"
+prompt = "With smooth-recovery = true, the process of a service is killed. What happens to a dependent service?"
+choices = ["It is not restarted (its PID did not change)", "It is restarted", "It is stopped for good", "It is masked"]
+answers = ["It is not restarted (its PID did not change)"]
+explanation = "With smooth-recovery = false the dependent was restarted."
+review = "`smooth-recovery`"
+
+# ---- stopping ----
+
+[[question]]
+id = "s-timeout"
+type = "choice"
+prompt = "A script ignores TERM and stop-timeout = 3. How long did dinitctl stop take and what ended it?"
+choices = ["About 3 seconds; SIGKILL to the process group", "At once", "10 seconds, SIGTERM again", "It never stopped"]
+answers = ["About 3 seconds; SIGKILL to the process group"]
+explanation = "The default stop-timeout is 10 seconds."
+review = "Starting and stopping, timeouts, signals"
+
+[[question]]
+id = "s-signal"
+type = "choice"
+prompt = "Which command sends USR1 to a service's process?"
+choices = ["dinitctl signal USR1 SERVICE", "dinitctl kill USR1 SERVICE", "dinitctl send SERVICE USR1", "kill -USR1 dinit"]
+answers = ["dinitctl signal USR1 SERVICE"]
+explanation = "dinitctl signal --list shows the supported names."
+review = "Starting and stopping, timeouts, signals"
+
+[[question]]
+id = "s-group"
+type = "choice"
+prompt = "By default dinit signals:"
+choices = ["The whole process group of the service", "Only the main process", "Only PID 1", "Nothing"]
+answers = ["The whole process group of the service"]
+explanation = "signal-process-only (not tested) restricts it to the main process."
+review = "Starting and stopping, timeouts, signals"
+
+[[question]]
+id = "s-startto"
+type = "short"
+prompt = "What is the default start-timeout in seconds (number only)?"
+answers = ["60"]
+explanation = "The default stop-timeout is 10."
+review = "Starting and stopping, timeouts, signals"
+
+# ---- readiness ----
+
+[[question]]
+id = "y-ready"
+type = "choice"
+prompt = "A script writes ready to file descriptor 3 after 2 seconds, with ready-notification = pipefd:3. How long did dinitctl start take?"
+choices = ["About 2 seconds", "0 seconds", "60 seconds", "It failed"]
+answers = ["About 2 seconds"]
+explanation = "Without the setting the same script started in 0 seconds."
+review = "Readiness"
+
+[[question]]
+id = "y-var"
+type = "choice"
+prompt = "What does ready-notification = pipevar:NAME do?"
+choices = ["dinit puts the descriptor number in environment variable NAME", "It reads a variable from the service", "It sets NAME to ready", "It names a socket"]
+answers = ["dinit puts the descriptor number in environment variable NAME"]
+explanation = "Chimera's syslog-ng file uses pipevar:SYSLOG_NG_READY_FD."
+review = "Readiness"
+
+# ---- variables ----
+
+[[question]]
+id = "v-when"
+type = "choice"
+prompt = "When does dinit substitute $NAME in a command line?"
+choices = ["When the service is loaded", "Each time the service starts", "At boot only", "When the process runs"]
+answers = ["When the service is loaded"]
+explanation = "After setenv SETVAR_W=two and a restart the output was still substituted:one until the service was unloaded."
+review = "Substitution happens once"
+
+[[question]]
+id = "v-inword"
+type = "choice"
+prompt = "word[$GREETING] with GREETING=hello became:"
+choices = ["word[hello]: dinit substitutes inside words", "word[$GREETING]", "word[]", "An error"]
+answers = ["word[hello]: dinit substitutes inside words"]
+explanation = "In systemd a bare $VAR must be a word by itself."
+review = "Substitution rules"
+
+[[question]]
+id = "v-dollar"
+type = "short"
+prompt = "How do you write a literal $ in a command line (two characters)?"
+answers = ["$$"]
+explanation = "$$HOME printed $HOME."
+review = "Substitution rules"
+
+[[question]]
+id = "v-split"
+type = "choice"
+prompt = "With LIST=a b  c, printf [%s] $/LIST printed:"
+choices = ["[a][b][c]", "[a b  c]", "[a]", "An error"]
+answers = ["[a][b][c]"]
+explanation = "$LIST kept it as one argument: [a b  c]."
+review = "Substitution rules"
+
+[[question]]
+id = "v-default"
+type = "choice"
+prompt = "What does ${UNSETVAR:-fallback} give when UNSETVAR is unset?"
+choices = ["fallback", "An empty string", "An error", "UNSETVAR"]
+answers = ["fallback"]
+explanation = "The :- form also applies when the variable is empty; - applies only when unset."
+review = "Substitution rules"
+
+[[question]]
+id = "v-trap"
+type = "choice"
+prompt = "command = /bin/sh -c \"while read l; do echo consumed:$l; done\" printed consumed: with nothing after it. Why?"
+choices = ["dinit substituted $l at load time (unset, so empty)", "read failed", "The shell was missing", "echo is a builtin"]
+answers = ["dinit substituted $l at load time (unset, so empty)"]
+explanation = "Put shell code in a script file or write $$l. A $((i+1)) even made the description invalid."
+review = "Substitution happens once"
+
+[[question]]
+id = "v-setenv"
+type = "choice"
+prompt = "dinitctl setenv SETVAR_Z=second then a restart: what does a script printing $SETVAR_Z show?"
+choices = ["second: the environment at launch changes", "first", "empty", "An error"]
+answers = ["second: the environment at launch changes"]
+explanation = "Only command-line substitutions already done at load stay fixed."
+review = "Substitution happens once"
+
+# ---- templates ----
+
+[[question]]
+id = "tp-name"
+type = "choice"
+prompt = "A service wl-tpl@alpha uses which file?"
+choices = ["wl-tpl (the base name, no @argument)", "wl-tpl@alpha", "wl-tpl@", "wl-tpl.template"]
+answers = ["wl-tpl (the base name, no @argument)"]
+explanation = "A file named wl-tpl@ was not found."
+review = "Templates"
+
+[[question]]
+id = "tp-arg"
+type = "choice"
+prompt = "Which marker substitutes the template argument?"
+choices = ["$1", "$@", "%i", "${arg}"]
+answers = ["$1"]
+explanation = "${1:-100} gives a default when started without an argument."
+review = "Templates"
+
+[[question]]
+id = "tp-enable"
+type = "choice"
+prompt = "dinitctl enable wl-tpl@gamma creates which link?"
+choices = ["/etc/dinit.d/boot.d/wl-tpl@gamma -> ../wl-tpl", "/etc/dinit.d/wl-tpl@gamma", "/usr/lib/dinit.d/wl-tpl", "None"]
+answers = ["/etc/dinit.d/boot.d/wl-tpl@gamma -> ../wl-tpl"]
+explanation = "The link name carries the argument; it points to the base file."
+review = "Templates"
+
+# ---- logging ----
+
+[[question]]
+id = "g-types"
+type = "multi"
+prompt = "Which of these are valid log-type values?"
+choices = ["file", "buffer", "journal", "syslog"]
+answers = ["file", "buffer"]
+explanation = "The values are file, buffer, pipe and none (the default); there is no journal or syslog type. Setting logfile implies file."
+review = "Logging"
+
+[[question]]
+id = "g-perm"
+type = "choice"
+prompt = "What mode does a logfile get by default?"
+choices = ["600 (-rw-------)", "644", "666", "640"]
+answers = ["600 (-rw-------)"]
+explanation = "logfile-permissions, logfile-uid and logfile-gid change it."
+review = "Logging"
+
+[[question]]
+id = "g-buf"
+type = "choice"
+prompt = "When a log-type = buffer buffer is full:"
+choices = ["Further output is discarded (the first output is kept)", "The oldest lines are dropped", "The service stops", "It switches to a file"]
+answers = ["Further output is discarded (the first output is kept)"]
+explanation = "Use a logfile for long-running output."
+review = "Logging"
+
+[[question]]
+id = "g-cons"
+type = "choice"
+prompt = "Which settings connect one service's output to another service's input?"
+choices = ["log-type = pipe on the producer, consumer-of = NAME on the consumer", "pipe-to and pipe-from", "stdout = service", "chain-to"]
+answers = ["log-type = pipe on the producer, consumer-of = NAME on the consumer"]
+explanation = "The consumer read producer-line-1 and producer-line-2."
+review = "One service logging for another"
+
+[[question]]
+id = "g-none"
+type = "choice"
+prompt = "dinitctl catlog on a log-type = none service:"
+choices = ["cannot cat log for service not configured to buffer output", "Prints nothing", "Prints the file", "Fails silently"]
+answers = ["cannot cat log for service not configured to buffer output"]
+explanation = "Only log-type = buffer can be read with catlog."
+review = "Logging"
+
+# ---- limits ----
+
+[[question]]
+id = "l-cwd"
+type = "choice"
+prompt = "What is the default working directory of a service?"
+choices = ["The directory containing the service file", "/", "/root", "The home of run-as"]
+answers = ["The directory containing the service file"]
+explanation = "The script printed cwd=/etc/dinit.d."
+review = "Limits and privileges"
+
+[[question]]
+id = "l-cap"
+type = "choice"
+prompt = "run-as = nobody with capabilities = ^CAP_NET_BIND_SERVICE gave CapEff:"
+choices = ["0000000000000400: only that capability", "0000000000000000", "000001ffffffffff", "Failed to start"]
+answers = ["0000000000000400: only that capability"]
+explanation = "Without the setting a non-root user had CapEff 0."
+review = "Limits and privileges"
+
+[[question]]
+id = "l-nnp"
+type = "choice"
+prompt = "Which option stops a service from gaining privileges through setuid or file capabilities?"
+choices = ["options: no-new-privs", "options: runs-on-console", "restart = no", "run-as = root"]
+answers = ["options: no-new-privs"]
+explanation = "NoNewPrivs was 1 in the test."
+review = "Limits and privileges"
+
+[[question]]
+id = "l-sand"
+type = "choice"
+prompt = "Does dinit 0.22.0 have an equivalent of systemd's ProtectSystem= and PrivateTmp=?"
+choices = ["No: its manual page lists process settings but no file-system or network namespace settings", "Yes, with the same names", "Yes, as options", "Only on Chimera"]
+answers = ["No: its manual page lists process settings but no file-system or network namespace settings"]
+explanation = "The lesson says it tested no other confinement tool."
+review = "Limits and privileges"
+
+# ---- small features ----
+
+[[question]]
+id = "c-chain"
+type = "choice"
+prompt = "Why did chain-to not fire for a scripted service?"
+choices = ["A scripted service stays started and does not terminate by itself", "scripted does not support chain-to", "The chained service was missing", "restart was yes"]
+answers = ["A scripted service stays started and does not terminate by itself"]
+explanation = "A process service that exited 0 (restart = false) did chain."
+review = "Small features"
+
+[[question]]
+id = "c-inc"
+type = "choice"
+prompt = "A service with an included restart = false crashed once; the same without ran 20 times. What does it show?"
+choices = ["@include applies the included settings (restart = false)", "@include is ignored", "restart = false is the default", "20 is the restart limit"]
+answers = ["@include applies the included settings (restart = false)"]
+explanation = "A missing @include is an error; @include-opt does not mind."
+review = "Small features"
+
+# ---- sed ----
+
+[[question]]
+id = "z-sed"
+type = "choice"
+prompt = "What went wrong with sed -i 's/v1/v2/' file on Chimera?"
+choices = ["BSD sed took the next word as a backup suffix, printed an error, and left the file unchanged", "It edited the file twice", "It deleted the file", "sed does not exist"]
+answers = ["BSD sed took the next word as a backup suffix, printed an error, and left the file unchanged"]
+explanation = "The author drew false conclusions about reload from files that had not changed; the tests were redone with cat and printf."
+review = "A trap from my own tests"

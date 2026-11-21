@@ -1,0 +1,48 @@
+schema_version = 1
+id = "linux.dinit-service-files"
+title = "dinit service files: types, dependencies, restart, readiness, variables, logging and limits"
+summary = "The dinit service description file in depth, tested on Chimera Linux 20261103 with dinit 0.22.0: the five service types, dependency types and what happens when a dependency fails, after and before ordering, restart (the default is yes, and a manual stop inhibits it) with a table for exit codes and signals, rate limits and smooth-recovery, stop timeouts and signals, ready-notification, variable substitution at load time ($VAR inside words, $$, ${X:-w}, $/VAR splitting), templates with $1, logging (file, buffer, pipe and consumer-of), run-as, rlimits, capabilities and no-new-privs, chain-to and @include, and the BSD sed -i trap."
+content = "dinit-service-files.md"
+estimated_minutes = 150
+level = 4
+objectives = [
+  "Write process, scripted, bgprocess, internal and triggered services and say when each counts as started",
+  "Choose between depends-on, depends-ms and waits-for, and predict what happens when the dependency fails or is stopped",
+  "Order starts with after and before and explain why they add no dependency",
+  "Explain that restart defaults to yes, that a manual stop inhibits it, and use the restart table, restart-delay, the restart limit and smooth-recovery",
+  "Use start-timeout, stop-timeout, term-signal, stop-command and dinitctl signal, and explain that the whole process group is signalled",
+  "Use ready-notification so start waits for readiness",
+  "Use variable substitution correctly: load-time substitution, $$, defaults, $/VAR splitting, env-file and setenv, and the trap of shell variables in command lines",
+  "Write a template with $1 and say how its file must be named",
+  "Choose a log type (none, file, buffer, pipe) and use consumer-of",
+  "Apply run-as, working-dir, rlimit-nofile, oom-score-adj, capabilities and no-new-privs, and say what dinit does not provide compared with systemd",
+  "Use chain-to and @include, and avoid sed -i on BSD userland",
+]
+prerequisites = ["linux.dinit-basics"]
+privilege = "administrator"
+certifications = ["comptia-linux-plus/system-management"]
+evaluation_criteria = [
+  "Learner writes one service of each type and records dinitctl status for each",
+  "Learner reproduces the dependency failure table and the after/before ordering runs",
+  "Learner reproduces at least four cells of the restart table using script files and shows the restart limit",
+  "Learner shows a service that ignores TERM being killed after stop-timeout",
+  "Learner reproduces the $LIST versus $/LIST and the substituted-once tests",
+  "Learner writes and starts three instances of a template",
+  "Learner shows the run-as, rlimit, no-new-privs and capability output of a script",
+]
+
+[[references]]
+title = "dinit-service(5)"
+url = "https://davmac.org/projects/dinit/man-pages-html/dinit-service.5.html"
+
+[[references]]
+title = "dinit(8)"
+url = "https://davmac.org/projects/dinit/man-pages-html/dinit.8.html"
+
+[[references]]
+title = "dinitctl(8)"
+url = "https://davmac.org/projects/dinit/man-pages-html/dinitctl.8.html"
+
+[[references]]
+title = "dinit-chimera: Chimera's service suite (examples to read)"
+url = "https://github.com/chimera-linux/dinit-chimera"

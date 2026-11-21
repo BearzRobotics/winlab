@@ -1,0 +1,46 @@
+schema_version = 1
+id = "linux.init-systems-compared"
+title = "systemd and dinit side by side: the same ideas, different defaults"
+summary = "A tested comparison of systemd 259 (Ubuntu 26.04, WSL2) and dinit 0.22.0 (Chimera Linux 20261103): vocabulary and files, variable rules ($VAR in words, $$, quotes), what start and the status commands return (a missing program: rc 0 then failed versus an immediate failure with a Stage line), stopping a dependency (propagated versus refused), the opposite restart defaults and shared clean-signal idea, daemon-reload versus reload/unload, what systemd has that dinit does not show (timers, sockets, conditions, sandboxing, cgroup limits, the journal, mask), what dinit makes simpler, user services and linger, and a command translation table."
+content = "init-systems-compared.md"
+estimated_minutes = 90
+level = 4
+objectives = [
+  "Map systemd units, settings and commands to dinit services, settings and commands",
+  "Explain the differences in $VAR substitution, $$, quoting and when substitution happens",
+  "Contrast what start returns and what is-active and is-started return for the same failures",
+  "Contrast stopping a dependency (systemd propagates the stop, dinit refuses without --force) and explicit activation",
+  "State the opposite restart defaults and use the shared idea that SIGTERM is not a failure",
+  "Contrast daemon-reload with reload and unload, and drop-ins with files in /etc/dinit.d",
+  "Say which systemd features dinit 0.22.0 did not show, and which parts of dinit are simpler",
+  "Contrast user services and the way linger is decided in each system",
+]
+prerequisites = ["linux.systemd", "linux.dinit-basics"]
+privilege = "administrator"
+certifications = ["comptia-linux-plus/system-management"]
+evaluation_criteria = [
+  "Learner translates a service between systemd and dinit in both directions",
+  "Learner records the start result and status of a missing program in both systems",
+  "Learner shows the stop-a-dependency difference in both systems",
+  "Learner names three systemd features missing from dinit 0.22.0 and a way to get each result on Chimera",
+]
+
+[[references]]
+title = "systemd.service(5)"
+url = "https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html"
+
+[[references]]
+title = "systemctl(1)"
+url = "https://www.freedesktop.org/software/systemd/man/latest/systemctl.html"
+
+[[references]]
+title = "dinit-service(5)"
+url = "https://davmac.org/projects/dinit/man-pages-html/dinit-service.5.html"
+
+[[references]]
+title = "dinitctl(8)"
+url = "https://davmac.org/projects/dinit/man-pages-html/dinitctl.8.html"
+
+[[references]]
+title = "Chimera Linux: Service management"
+url = "https://chimera-linux.org/docs/configuration/services"

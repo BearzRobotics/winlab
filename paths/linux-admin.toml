@@ -17,6 +17,11 @@ lessons = ["linux.systemd", "linux.systemd-advanced"]
 labs = []
 
 [[stage]]
+title = "dinit and Chimera"
+lessons = ["linux.dinit-basics", "linux.dinit-service-files", "linux.dinit-in-practice", "linux.init-systems-compared"]
+labs = ["labs.chimera-no-system-log", "labs.chimera-service-wont-start", "labs.chimera-user-not-admin", "labs.chimera-apk-repo-typo"]
+
+[[stage]]
 title = "Storage and containers"
 lessons = ["linux.storage-filesystems", "linux.containers-podman"]
 labs = ["labs.alma-fstab-mount-missing", "labs.alma-lvm-extend", "labs.alma-container-service-fails"]

@@ -30,7 +30,7 @@ $ grep -h "^type" /usr/lib/dinit.d/* | tr -s " " | sort | uniq -c | sort -rn
 
 ## Where service files are
 
-One **plain text file per service**, named for the service. For the system instance the manual lists `/etc/dinit.d`, `/run/dinit.d`, `/usr/local/lib/dinit.d` and `/lib/dinit.d`, searched in that order; on Chimera `/lib` is a link to `usr/lib` (`/lib -> usr/lib`), so the packages' files are in **`/usr/lib/dinit.d`** and **yours go in `/etc/dinit.d`**. A file in `/etc/dinit.d` wins over one of the same name in `/usr/lib/dinit.d`. (This is the same idea as `/etc/systemd/system` and `/usr/lib/systemd/system`.)
+One **plain text file per service**, named for the service. For the system instance the manual lists `/etc/dinit.d`, `/run/dinit.d`, `/usr/local/lib/dinit.d` and `/lib/dinit.d`, searched in that order; on Chimera `/lib` is a link to `usr/lib` (`/lib -> usr/lib`), so the packages' files are in **`/usr/lib/dinit.d`** and **yours go in `/etc/dinit.d`**. By the manual's search order a file in `/etc/dinit.d` is found before one of the same name in `/usr/lib/dinit.d` (I did not test an override). (This is the same idea as `/etc/systemd/system` and `/usr/lib/systemd/system`.)
 
 Two facts about **loading** that surprise people coming from systemd:
 

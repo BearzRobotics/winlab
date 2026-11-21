@@ -1,0 +1,350 @@
+schema_version = 1
+lesson = "linux.init-systems-compared"
+# Draft for owner review. Every answer comes from tests on systemd 259 (Ubuntu 26.04, WSL2) and dinit 0.22.0 (Chimera 20261103). Each attempt asks 12.
+draw = 12
+
+# ---- words ----
+
+[[question]]
+id = "w-map"
+type = "multi"
+prompt = "Which pairs are correct (systemd -> dinit)?"
+choices = ["ExecStart= -> command =", "Requires= -> depends-on:", "Wants= -> waits-for:", "Restart= -> chain-to ="]
+answers = ["ExecStart= -> command =", "Requires= -> depends-on:", "Wants= -> waits-for:"]
+explanation = "Restart= is restart =; chain-to starts another service when this one terminates successfully."
+review = "The file"
+
+[[question]]
+id = "w-target"
+type = "choice"
+prompt = "What is dinit's counterpart of a systemd target?"
+choices = ["An internal service (boot, system, login.target, network.target)", "A drop-in", "A timer", "A socket"]
+answers = ["An internal service (boot, system, login.target, network.target)"]
+explanation = "Both are names for a state that other services attach to."
+review = "The same ideas, different words"
+
+[[question]]
+id = "w-check"
+type = "choice"
+prompt = "Which tool checks a dinit service file (like systemd-analyze verify)?"
+choices = ["dinit-check", "dinitctl verify", "dinit --lint", "dinitctl status"]
+answers = ["dinit-check"]
+explanation = "It reports file, line and reason."
+review = "The same ideas, different words"
+
+[[question]]
+id = "w-enable"
+type = "choice"
+prompt = "How does a service start at boot in dinit, at the file level?"
+choices = ["A link in a waits-for.d directory such as /etc/dinit.d/boot.d", "A WantedBy= line", "A cron @reboot entry", "A line in /etc/fstab"]
+answers = ["A link in a waits-for.d directory such as /etc/dinit.d/boot.d"]
+explanation = "systemd's equivalent is a link in a .wants directory made from [Install]."
+review = "The same ideas, different words"
+
+# ---- variables ----
+
+[[question]]
+id = "v-word"
+type = "choice"
+prompt = "A command contains [$VAR] (the variable inside a word). Which is true?"
+choices = ["systemd left it literal; dinit substituted it", "Both substituted it", "Neither substituted it", "systemd substituted it; dinit left it literal"]
+answers = ["systemd left it literal; dinit substituted it"]
+explanation = "systemd needs a whole-word $VAR; dinit substitutes inside words (word[$GREETING] became word[hello])."
+review = "The file"
+
+[[question]]
+id = "v-dollar"
+type = "choice"
+prompt = "What does $$ mean in BOTH a systemd unit and a dinit service file?"
+choices = ["A literal $", "The shell's PID", "An empty string", "An error"]
+answers = ["A literal $"]
+explanation = "So a shell PID trick with $$ needs a script file."
+review = "The file"
+
+[[question]]
+id = "v-quote"
+type = "choice"
+prompt = "Which quotes work around an argument with spaces in a dinit service file, compared with systemd?"
+choices = ["dinit: only double quotes; systemd: single and double", "Both: only double", "dinit: single and double; systemd: only double", "Neither supports quotes"]
+answers = ["dinit: only double quotes; systemd: single and double"]
+explanation = "With single quotes dinit passed :;: Syntax error: Unterminated quoted string to the shell."
+review = "The file"
+
+[[question]]
+id = "v-when"
+type = "choice"
+prompt = "In dinit, after dinitctl setenv V=two and a restart, a command line containing $V (substituted) shows:"
+choices = ["The old value: substitution is at load time, until unload", "two", "empty", "An error"]
+answers = ["The old value: substitution is at load time, until unload"]
+explanation = "But a process that reads its environment at launch saw the new value."
+review = "The file"
+
+[[question]]
+id = "v-trap"
+type = "choice"
+prompt = "What do kill -9 $$ in a systemd unit and echo consumed:$l in a dinit file have in common?"
+choices = ["The manager substitutes the $ before the shell sees it; use a script file", "They work as written", "They are syntax errors in both", "They are shell builtins"]
+answers = ["The manager substitutes the $ before the shell sees it; use a script file"]
+explanation = "systemd turned $$ into $; dinit substituted the unset $l at load time."
+review = "The file"
+
+# ---- start / status ----
+
+[[question]]
+id = "s-missing"
+type = "choice"
+prompt = "A missing program with the default type: what do systemctl start and dinitctl start return?"
+choices = ["systemd: success (rc 0) then failed later; dinit: failure at once with a Stage line (rc 1)", "Both fail at once", "Both succeed", "systemd fails at once; dinit succeeds"]
+answers = ["systemd: success (rc 0) then failed later; dinit: failure at once with a Stage line (rc 1)"]
+explanation = "With Type=exec systemd also failed at once."
+review = "Starting, stopping, and what the commands return"
+
+[[question]]
+id = "s-enable"
+type = "choice"
+prompt = "What does enable do in each system?"
+choices = ["systemd: link only (use --now to start); dinit: link and start", "Both link only", "Both link and start", "systemd: link and start; dinit: link only"]
+answers = ["systemd: link only (use --now to start); dinit: link and start"]
+explanation = "After systemctl enable, is-active printed inactive."
+review = "Starting, stopping, and what the commands return"
+
+[[question]]
+id = "s-isactive"
+type = "choice"
+prompt = "A service that does not exist: what do the state commands return?"
+choices = ["systemctl is-active: inactive, rc 4; dinitctl is-started: no state printed, rc 1", "Both rc 0", "Both rc 4", "systemctl rc 1, dinitctl rc 4"]
+answers = ["systemctl is-active: inactive, rc 4; dinitctl is-started: no state printed, rc 1"]
+explanation = "An existing stopped unit: is-active rc 3, is-started rc 1."
+review = "Starting, stopping, and what the commands return"
+
+[[question]]
+id = "s-def"
+type = "choice"
+prompt = "How do you read a service's definition in each system?"
+choices = ["systemctl cat X; cat the file in /etc/dinit.d or /usr/lib/dinit.d", "systemctl show; dinitctl show", "journalctl; dinitctl log", "Both use cat only"]
+answers = ["systemctl cat X; cat the file in /etc/dinit.d or /usr/lib/dinit.d"]
+explanation = "dinitctl has no cat command."
+review = "A command translation"
+
+# ---- stop dependency ----
+
+[[question]]
+id = "d-stop"
+type = "choice"
+prompt = "wl-req has Requires=wl-db (systemd) or depends-on: wl-db (dinit). You stop wl-db."
+choices = ["systemd stops wl-req too; dinit refuses unless --force", "Both stop wl-req", "Both refuse", "systemd refuses; dinit stops wl-req"]
+answers = ["systemd stops wl-req too; dinit refuses unless --force"]
+explanation = "The dinit message lists the dependents and warns about --force."
+review = "Stopping a dependency"
+
+[[question]]
+id = "d-expl"
+type = "choice"
+prompt = "In dinit, what does explicit activation change?"
+choices = ["A dependency you started yourself stays up when its dependent stops; one pulled in only as a dependency stops", "Nothing", "It enables the service", "It masks the service"]
+answers = ["A dependency you started yourself stays up when its dependent stops; one pulled in only as a dependency stops"]
+explanation = "Activation: explicitly started versus start due to dependent(s)."
+review = "Stopping a dependency"
+
+[[question]]
+id = "d-fail"
+type = "choice"
+prompt = "Which agree between the systems when a dependency fails to start?"
+choices = ["A hard dependency stops the dependent from starting; a soft one does not", "Both always start the dependent", "Both never start the dependent", "Only systemd fails"]
+answers = ["A hard dependency stops the dependent from starting; a soft one does not"]
+explanation = "Requires/depends-on fail (rc 1); Wants/waits-for start it (rc 0)."
+review = "A failing dependency"
+
+[[question]]
+id = "d-order"
+type = "choice"
+prompt = "Which system orders the start automatically when you declare a hard dependency?"
+choices = ["dinit: the dependent waits for the dependency; systemd needs After= too", "systemd", "Both", "Neither"]
+answers = ["dinit: the dependent waits for the dependency; systemd needs After= too"]
+explanation = "With Requires= alone in systemd both started at the same time."
+review = "A failing dependency"
+
+# ---- restart ----
+
+[[question]]
+id = "r-def"
+type = "choice"
+prompt = "Defaults for restarting a service whose process ends:"
+choices = ["systemd: Restart=no; dinit: restart = yes", "Both no", "Both yes", "systemd: yes; dinit: no"]
+answers = ["systemd: Restart=no; dinit: restart = yes"]
+explanation = "A manual stop keeps a dinit service down."
+review = "Restart: the default is the opposite"
+
+[[question]]
+id = "r-term"
+type = "choice"
+prompt = "What do both systems do when a service with on-failure dies of SIGTERM?"
+choices = ["Do not restart it: SIGTERM is not a failure", "Restart it", "Mask it", "Reboot"]
+answers = ["Do not restart it: SIGTERM is not a failure"]
+explanation = "systemd recorded Result=success; dinit lists SIGTERM among deliberate terminations."
+review = "Restart: the default is the opposite"
+
+[[question]]
+id = "r-limit"
+type = "choice"
+prompt = "After the restart limit, how do you recover?"
+choices = ["systemd: systemctl reset-failed; dinit: no such command (start again; limit duration untested)", "Both: reset-failed", "Both: reload", "Reboot only"]
+answers = ["systemd: systemctl reset-failed; dinit: no such command (start again; limit duration untested)"]
+explanation = "dinitctl's command list has no reset-failed."
+review = "Restart: the default is the opposite"
+
+[[question]]
+id = "r-smooth"
+type = "choice"
+prompt = "Which setting restarts a dying daemon without bouncing its dependents?"
+choices = ["dinit: smooth-recovery = true (the systemd side was not tested)", "systemd: Restart=always", "dinit: restart = no", "systemd: PartOf="]
+answers = ["dinit: smooth-recovery = true (the systemd side was not tested)"]
+explanation = "The dependent's PID did not change with smooth-recovery = true."
+review = "Restart: the default is the opposite"
+
+# ---- changing ----
+
+[[question]]
+id = "c-reload"
+type = "choice"
+prompt = "After editing a service file you run start without reloading. Which messages did you get?"
+choices = ["Both warned that the description changed on disk / may have changed and ran the old definition", "Only systemd warned", "Only dinit warned", "Neither warned"]
+answers = ["Both warned that the description changed on disk / may have changed and ran the old definition"]
+explanation = "The fixes: systemctl daemon-reload; dinitctl reload X (or unload)."
+review = "Changing a file"
+
+[[question]]
+id = "c-dropin"
+type = "choice"
+prompt = "How do you customise a packaged service in each?"
+choices = ["systemd: a drop-in or systemctl edit; dinit: no drop-in mechanism found, a file in /etc/dinit.d or @include", "Both use drop-ins", "Both edit /usr/lib", "systemd: edit /usr/lib; dinit: drop-ins"]
+answers = ["systemd: a drop-in or systemctl edit; dinit: no drop-in mechanism found, a file in /etc/dinit.d or @include"]
+explanation = "The override order for dinit comes from the manual and was not tested."
+review = "Changing a file"
+
+[[question]]
+id = "c-load"
+type = "choice"
+prompt = "When does each manager read service files?"
+choices = ["systemd: at daemon-reload; dinit: on first use, then kept until unload", "Both on every start", "Both only at boot", "systemd: on first use; dinit: at daemon-reload"]
+answers = ["systemd: at daemon-reload; dinit: on first use, then kept until unload"]
+explanation = "dinitctl list did not show wl-hello until it was started."
+review = "Changing a file"
+
+# ---- targets ----
+
+[[question]]
+id = "t-stop"
+type = "choice"
+prompt = "Stopping a group: what happened in the tests?"
+choices = ["systemd: the target's Wants= units kept running; dinit: the internal service's dependency was stopped too", "Both kept them", "Both stopped them", "systemd stopped them; dinit kept them"]
+answers = ["systemd: the target's Wants= units kept running; dinit: the internal service's dependency was stopped too"]
+explanation = "In dinit nothing else had activated the dependency."
+review = "Targets and stages"
+
+[[question]]
+id = "t-repair"
+type = "choice"
+prompt = "Which pair are the repair modes?"
+choices = ["rescue.target and emergency.target; recovery and single (both sulogin); none of them booted in the tests", "multi-user.target and boot", "timers.target and chain-to", "default.target and system"]
+answers = ["rescue.target and emergency.target; recovery and single (both sulogin); none of them booted in the tests"]
+explanation = "Test on a snapshot."
+review = "Targets and stages"
+
+# ---- missing in dinit ----
+
+[[question]]
+id = "m-timer"
+type = "choice"
+prompt = "Does dinit 0.22.0 have timer units like systemd?"
+choices = ["No timer units were found in the manual pages; scheduling is cron's job (not looked for on Chimera)", "Yes, .timer units", "Yes, OnCalendar=", "Only for user services"]
+answers = ["No timer units were found in the manual pages; scheduling is cron's job (not looked for on Chimera)"]
+explanation = "dinit is pre-1.0; this may change."
+review = "What systemd has that dinit (0.22.0) did not show"
+
+[[question]]
+id = "m-sand"
+type = "choice"
+prompt = "Which sandboxing exists in dinit 0.22.0?"
+choices = ["run-as, working-dir, rlimit-*, oom-score-adj, capabilities, no-new-privs; no file system or network namespace settings", "ProtectSystem= and PrivateTmp=", "DynamicUser=", "systemd-analyze security"]
+answers = ["run-as, working-dir, rlimit-*, oom-score-adj, capabilities, no-new-privs; no file system or network namespace settings"]
+explanation = "systemd's score went from 9.6 UNSAFE to 5.2 MEDIUM with its settings."
+review = "What systemd has that dinit (0.22.0) did not show"
+
+[[question]]
+id = "m-mask"
+type = "choice"
+prompt = "Is dinitctl disable the same as systemctl mask?"
+choices = ["No: disable only removes the boot link, and the service can still start as a dependency", "Yes", "Yes, with --force", "mask has no equivalent in systemd"]
+answers = ["No: disable only removes the boot link, and the service can still start as a dependency"]
+explanation = "start --pin on a stopped service is described as blocking starts, untested."
+review = "What systemd has that dinit (0.22.0) did not show"
+
+[[question]]
+id = "m-log"
+type = "choice"
+prompt = "How are logs read in each?"
+choices = ["journalctl; text files, syslog (/var/log/messages with syslog-ng), logfile and catlog", "Both journalctl", "Both text only", "dinitctl journal"]
+answers = ["journalctl; text files, syslog (/var/log/messages with syslog-ng), logfile and catlog"]
+explanation = "There is no journal in dinit."
+review = "What systemd has that dinit (0.22.0) did not show"
+
+[[question]]
+id = "m-cond"
+type = "choice"
+prompt = "What happens when a systemd ConditionPathExists= is unmet, and is there a dinit equivalent?"
+choices = ["The unit is skipped with rc 0 (no equivalent found in dinit)", "The unit fails", "The unit is masked", "dinit has the same"]
+answers = ["The unit is skipped with rc 0 (no equivalent found in dinit)"]
+explanation = "AssertPathExists failed the job with rc 1."
+review = "What systemd has that dinit (0.22.0) did not show"
+
+# ---- simpler ----
+
+[[question]]
+id = "p-simple"
+type = "multi"
+prompt = "Which are listed as things dinit makes simpler?"
+choices = ["Short, readable service files", "Failures that name the Stage", "Explicit activation", "A structured journal"]
+answers = ["Short, readable service files", "Failures that name the Stage", "Explicit activation"]
+explanation = "The journal is a systemd feature."
+review = "What dinit makes simpler"
+
+# ---- user ----
+
+[[question]]
+id = "u-linger"
+type = "choice"
+prompt = "How is lingering decided in dinit with turnstile versus systemd?"
+choices = ["A file in /var/lib/turnstiled/linger/NAME (tested) versus loginctl enable-linger (not tested)", "Both: a file", "Both: loginctl", "dinit never lingers"]
+answers = ["A file in /var/lib/turnstiled/linger/NAME (tested) versus loginctl enable-linger (not tested)"]
+explanation = "Without the file everything was gone 3 seconds after logout."
+review = "User services"
+
+[[question]]
+id = "u-cmd"
+type = "choice"
+prompt = "Which commands manage a user's own services?"
+choices = ["systemctl --user and dinitctl --user", "systemctl --me and dinitctl --me", "systemctl -u and dinitctl -u only", "sudo systemctl"]
+answers = ["systemctl --user and dinitctl --user"]
+explanation = "Files: ~/.config/systemd/user and ~/.config/dinit.d."
+review = "User services"
+
+# ---- translation ----
+
+[[question]]
+id = "x-reset"
+type = "choice"
+prompt = "Which command has no dinit equivalent found, according to the translation table?"
+choices = ["systemctl reset-failed", "systemctl start", "systemctl status", "systemctl enable"]
+answers = ["systemctl reset-failed"]
+explanation = "Neither does systemctl mask have one."
+review = "A command translation"
+
+[[question]]
+id = "x-signal"
+type = "choice"
+prompt = "How do you send HUP to a service in dinit?"
+choices = ["dinitctl signal HUP X", "dinitctl kill HUP X", "dinitctl hup X", "kill dinit"]
+answers = ["dinitctl signal HUP X"]
+explanation = "systemctl kill -s HUP X is the systemd form, which the lessons did not test."
+review = "A command translation"

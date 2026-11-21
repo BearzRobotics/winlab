@@ -1,0 +1,365 @@
+schema_version = 1
+lesson = "linux.dinit-in-practice"
+# Draft for owner review. Every answer comes from the tested output (dn1.sh to dn6.sh, dn5-*.sh) or from Chimera's own service files read on the test machine. Each attempt asks 12.
+draw = 12
+
+# ---- boot ----
+
+[[question]]
+id = "b-chain"
+type = "choice"
+prompt = "Which target does Chimera's login.target depend on?"
+choices = ["local.target", "network.target", "time-sync.target", "recovery"]
+answers = ["local.target"]
+explanation = "login.target: depends-on: local.target, options: runs-on-console."
+review = "How a Chimera system boots"
+
+[[question]]
+id = "b-early"
+type = "choice"
+prompt = "What must finish before pre-local.target (core system init is done)?"
+choices = ["The early-* services: file systems, console, loopback, hostname and so on", "sshd", "turnstiled", "The user services"]
+answers = ["The early-* services: file systems, console, loopback, hostname and so on"]
+explanation = "42 early-* files exist; pre-local.target depends on early-fs-local.target, early-console.target, early-net-lo and early-hostname."
+review = "How a Chimera system boots"
+
+[[question]]
+id = "b-rclocal"
+type = "choice"
+prompt = "What does local.sh, run by local.target, do with /etc/rc.local?"
+choices = ["Runs it if it is executable ([ -x /etc/rc.local ] && /etc/rc.local); the test machine had none", "Deletes it", "Sources it as a service file", "Ignores it"]
+answers = ["Runs it if it is executable ([ -x /etc/rc.local ] && /etc/rc.local); the test machine had none"]
+explanation = "rc.local itself was not tested."
+review = "How a Chimera system boots"
+
+[[question]]
+id = "b-stage"
+type = "choice"
+prompt = "Which setting says a service must be up BEFORE users can log in (as elogind, turnstiled and dbus do)?"
+choices = ["before: login.target", "depends-on: login.target", "before: network.target", "after: boot"]
+answers = ["before: login.target"]
+explanation = "Services that depend ON login.target (like agetty) run after it; those with before: login.target run first."
+review = "How a Chimera system boots"
+
+[[question]]
+id = "b-net"
+type = "choice"
+prompt = "How does dhcpcd's service file place itself relative to network.target?"
+choices = ["before: network.target", "depends-on: network.target", "after: network.target", "It does not mention it"]
+answers = ["before: network.target"]
+explanation = "sshd uses depends-on: network.target; the network service uses before: network.target."
+review = "Networking"
+
+[[question]]
+id = "b-two"
+type = "choice"
+prompt = "Which two files hold the symlinks that decide what starts at boot?"
+choices = ["/usr/lib/dinit.d/boot.d (distribution) and /etc/dinit.d/boot.d (administrator)", "/etc/rc.d and /etc/init.d", "/boot/dinit and /var/dinit", "/etc/dinit.conf"]
+answers = ["/usr/lib/dinit.d/boot.d (distribution) and /etc/dinit.d/boot.d (administrator)"]
+explanation = "system waits-for the first directory; boot waits-for the second."
+review = "How a Chimera system boots"
+
+# ---- recovery ----
+
+[[question]]
+id = "r-sulogin"
+type = "multi"
+prompt = "What do Chimera's recovery and single services have in common?"
+choices = ["Both run /usr/bin/sulogin", "Both have restart = false", "Both start a graphical login", "Both were booted in the lesson's tests"]
+answers = ["Both run /usr/bin/sulogin", "Both have restart = false"]
+explanation = "single also has chain-to: boot. Neither boot path was tested."
+review = "Recovery and single-user"
+
+[[question]]
+id = "r-single"
+type = "choice"
+prompt = "According to dinit(8), how is a kernel command line word single treated?"
+choices = ["As the name of the service to start", "As a mount option", "As a hostname", "Ignored"]
+answers = ["As the name of the service to start"]
+explanation = "The lesson says it did not boot this path and to test it on a snapshot."
+review = "Recovery and single-user"
+
+# ---- networking ----
+
+[[question]]
+id = "n-none"
+type = "choice"
+prompt = "Why does a fresh Chimera base install have no network?"
+choices = ["No network service is linked into a boot.d directory until one is enabled", "The kernel has no driver", "dinit does not support networking", "The firewall blocks it"]
+answers = ["No network service is linked into a boot.d directory until one is enabled"]
+explanation = "The WinLab installer linked dhcpcd and sshd into /etc/dinit.d/boot.d."
+review = "Networking"
+
+[[question]]
+id = "n-one"
+type = "choice"
+prompt = "How many network services should you enable?"
+choices = ["One: dhcpcd for a simple machine or networkmanager for a laptop or desktop, not both", "Both", "None", "All three"]
+answers = ["One: dhcpcd for a simple machine or networkmanager for a laptop or desktop, not both"]
+explanation = "The networkmanager file was read but not run in the tests."
+review = "Networking"
+
+[[question]]
+id = "n-keygen"
+type = "choice"
+prompt = "What does the ssh-keygen service that sshd depends on do?"
+choices = ["Runs ssh-keygen -A to create host keys (scripted)", "Generates user keys", "Starts sshd", "Opens the firewall"]
+answers = ["Runs ssh-keygen -A to create host keys (scripted)"]
+explanation = "It depends on local.target."
+review = "Networking"
+
+[[question]]
+id = "n-stop"
+type = "choice"
+prompt = "dinitctl stop network.target while sshd runs:"
+choices = ["Refused, listing dependents such as chronyd, system and sshd; --force would stop SSH too", "Stops the network at once", "Succeeds silently", "Restarts the network"]
+answers = ["Refused, listing dependents such as chronyd, system and sshd; --force would stop SSH too"]
+explanation = "Do not use --force over SSH."
+review = "Networking"
+
+# ---- end to end ----
+
+[[question]]
+id = "e-first"
+type = "choice"
+prompt = "What is the first command to run on a new service file?"
+choices = ["dinit-check NAME", "dinitctl enable NAME", "reboot", "dinitctl shutdown"]
+answers = ["dinit-check NAME"]
+explanation = "It also checks every service the new one depends on."
+review = "Adding your own service, end to end"
+
+[[question]]
+id = "e-user"
+type = "choice"
+prompt = "wl-app has run-as = nobody and logfile-uid = nobody, logfile-permissions = 640. What did ls -l of the log show?"
+choices = ["-rw-r----- nobody nogroup", "-rw------- root root", "-rw-rw-rw- root wheel", "No file"]
+answers = ["-rw-r----- nobody nogroup"]
+explanation = "The process also ran as nobody (ps showed it)."
+review = "Adding your own service, end to end"
+
+[[question]]
+id = "e-kill"
+type = "choice"
+prompt = "With restart = on-failure and smooth-recovery = true, wl-app's process is killed with kill -9. What happened?"
+choices = ["It was restarted with a new process ID and stayed STARTED", "It stayed down", "The machine rebooted", "dinit exited"]
+answers = ["It was restarted with a new process ID and stayed STARTED"]
+explanation = "SIGKILL counts as a failure for on-failure."
+review = "Adding your own service, end to end"
+
+[[question]]
+id = "e-note"
+type = "choice"
+prompt = "dinitctl disable wl-app printed a note: disabled service may have other dependents. What does it mean?"
+choices = ["Disable only removes the boot link; anything that depends on it could still start it (not an error)", "disable failed", "The service is masked", "dinit crashed"]
+answers = ["Disable only removes the boot link; anything that depends on it could still start it (not an error)"]
+explanation = "The same note appeared for syslog-ng."
+review = "Adding your own service, end to end"
+
+[[question]]
+id = "e-depend"
+type = "choice"
+prompt = "Which dependency should a daemon that needs configured networking use?"
+choices = ["depends-on: network.target (or waits-for if it can run without)", "before: network.target", "after: login.target", "chain-to: network.target"]
+answers = ["depends-on: network.target (or waits-for if it can run without)"]
+explanation = "sshd uses depends-on: network.target."
+review = "Adding your own service, end to end"
+
+[[question]]
+id = "e-sh"
+type = "choice"
+prompt = "Why is wl-app.sh written with #!/bin/sh and POSIX only?"
+choices = ["On Chimera sh is FreeBSD's, and this course uses POSIX sh for #!/bin/sh scripts", "Chimera has no bash", "dinit only runs sh", "It is faster"]
+answers = ["On Chimera sh is FreeBSD's, and this course uses POSIX sh for #!/bin/sh scripts"]
+explanation = "Chimera does install bash, but the lesson keeps the shebang honest."
+review = "Adding your own service, end to end"
+
+# ---- log ----
+
+[[question]]
+id = "g-where"
+type = "choice"
+prompt = "Which line appears in /var/log/messages for a service whose program is missing?"
+choices = ["err dinit[1]: SERVICE: execution failed - executing command: No such file or directory", "kernel: oom", "systemd[1]: failed", "Nothing"]
+answers = ["err dinit[1]: SERVICE: execution failed - executing command: No such file or directory"]
+explanation = "Followed by: service SERVICE failed to start."
+review = "The system log"
+
+[[question]]
+id = "g-level"
+type = "choice"
+prompt = "At what level does dinit log a service start or stop?"
+choices = ["notice", "error", "debug only", "fatal"]
+answers = ["notice"]
+explanation = "Failures are error (or warn for a transitive failure)."
+review = "The system log"
+
+[[question]]
+id = "g-nojournal"
+type = "choice"
+prompt = "How do you read logs on this system?"
+choices = ["Text files: /var/log/messages and per-service files; there is no journal", "journalctl", "dinitctl log", "dmesg only"]
+answers = ["Text files: /var/log/messages and per-service files; there is no journal"]
+explanation = "Rotation was not covered."
+review = "The system log"
+
+# ---- playbook ----
+
+[[question]]
+id = "p-reload"
+type = "choice"
+prompt = "You edited a service file and the old behaviour continues. Which message explains it?"
+choices = ["dinitctl: warning: service description may have changed; use 'dinitctl reload X'", "service masked", "stage: opening log file", "start timed out"]
+answers = ["dinitctl: warning: service description may have changed; use 'dinitctl reload X'"]
+explanation = "reload (or unload) then restart."
+review = "A troubleshooting playbook"
+
+[[question]]
+id = "p-stage"
+type = "choice"
+prompt = "A service fails with Stage: opening log file and Error: No such file or directory. What is the cause?"
+choices = ["The directory of logfile = does not exist", "The command is missing", "The user does not exist", "start-timeout"]
+answers = ["The directory of logfile = does not exist"]
+explanation = "A missing working-dir gives Stage: changing directory."
+review = "A troubleshooting playbook"
+
+[[question]]
+id = "p-back"
+type = "choice"
+prompt = "A service you wanted down keeps coming back. What is the usual cause and the fix?"
+choices = ["restart defaults to yes; set restart = no or dinitctl stop it", "A cron job", "turnstile", "The boot.d link"]
+answers = ["restart defaults to yes; set restart = no or dinitctl stop it"]
+explanation = "A manual stop inhibits automatic restart."
+review = "A troubleshooting playbook"
+
+[[question]]
+id = "p-limit"
+type = "choice"
+prompt = "A service restarted a few times and then stayed down with State: STOPPED (terminated; exited - status 1). What limited it?"
+choices = ["restart-limit-count (default 5 in 10 seconds)", "stop-timeout", "the log buffer", "depends-ms"]
+answers = ["restart-limit-count (default 5 in 10 seconds)"]
+explanation = "Fix the crash; the lesson did not test how long the limit lasts."
+review = "A troubleshooting playbook"
+
+[[question]]
+id = "p-nolog"
+type = "choice"
+prompt = "No /var/log/messages and dinitctl says Check dinit log. What do you do?"
+choices = ["dinitctl enable syslog-ng", "Install systemd", "Reboot into single", "Delete boot.d"]
+answers = ["dinitctl enable syslog-ng"]
+explanation = "The no-system-log lab is this situation."
+review = "A troubleshooting playbook"
+
+[[question]]
+id = "p-sed"
+type = "choice"
+prompt = "You fixed a service file with sed -i on Chimera and nothing changed. Why?"
+choices = ["BSD sed -i takes the next word as a backup suffix, errors, and leaves the file unchanged", "dinit overwrote it", "sed is read-only", "The file is a link"]
+answers = ["BSD sed -i takes the next word as a backup suffix, errors, and leaves the file unchanged"]
+explanation = "Rewrite the file with cat or printf, or write a temp file and mv it."
+review = "A troubleshooting playbook"
+
+# ---- user services ----
+
+[[question]]
+id = "u-start"
+type = "choice"
+prompt = "What starts a user's own dinit instance when labadmin logs in over SSH?"
+choices = ["turnstile (turnstiled, through pam_turnstile)", "systemd --user", "cron", "elogind alone"]
+answers = ["turnstile (turnstiled, through pam_turnstile)"]
+explanation = "ps showed dinit --user --services-dir /run/turnstiled/1000/srv.679 --services-dir /home/labadmin/.config/dinit.d."
+review = "User services and turnstile"
+
+[[question]]
+id = "u-dirs"
+type = "multi"
+prompt = "Which are places the turnstile dinit backend looks for user services?"
+choices = ["~/.config/dinit.d", "/etc/dinit.d/user", "/usr/lib/dinit.d/user", "/var/lib/dinit/user"]
+answers = ["~/.config/dinit.d", "/etc/dinit.d/user", "/usr/lib/dinit.d/user"]
+explanation = "Also /usr/local/lib/dinit.d/user and a generated directory in /run/turnstiled/UID."
+review = "User services and turnstile"
+
+[[question]]
+id = "u-ctl"
+type = "choice"
+prompt = "As a normal user, what does dinitctl --system list print?"
+choices = ["connecting to socket: /run/dinitctl: Permission denied", "The system services", "The user services", "Nothing"]
+answers = ["connecting to socket: /run/dinitctl: Permission denied"]
+explanation = "dinitctl --user is the default for non-root users."
+review = "User services and turnstile"
+
+[[question]]
+id = "u-enable"
+type = "choice"
+prompt = "Where does dinitctl --user enable wl-user create its link?"
+choices = ["~/.config/dinit.d/boot.d/wl-user", "/etc/dinit.d/boot.d/wl-user", "/run/user/1000", "/var/lib/turnstiled"]
+answers = ["~/.config/dinit.d/boot.d/wl-user"]
+explanation = "It also warned about enabling a dependency for a non-started service."
+review = "User services and turnstile"
+
+[[question]]
+id = "u-xdg"
+type = "short"
+prompt = "What was XDG_RUNTIME_DIR for labadmin (uid 1000)?"
+answers = ["/run/user/1000"]
+explanation = "DBUS_SESSION_BUS_ADDRESS was unix:path=/run/user/1000/bus."
+review = "User services and turnstile"
+
+# ---- linger ----
+
+[[question]]
+id = "l-nolinger"
+type = "choice"
+prompt = "Without a linger file, what was left 3 seconds after the last logout?"
+choices = ["Nothing: the user's service, the user dinit and the run directory were gone", "The service only", "Everything", "The run directory only"]
+answers = ["Nothing: the user's service, the user dinit and the run directory were gone"]
+explanation = "With /var/lib/turnstiled/linger/labadmin present all three remained."
+review = "What happens at logout: linger"
+
+[[question]]
+id = "l-file"
+type = "choice"
+prompt = "How do you let a user's services keep running after logout (default linger = maybe)?"
+choices = ["Create a file with the user's name in /var/lib/turnstiled/linger/", "Enable linger in dinit", "Add the user to wheel", "Edit /etc/pam.d"]
+answers = ["Create a file with the user's name in /var/lib/turnstiled/linger/"]
+explanation = "No new login is needed after changing the directory."
+review = "What happens at logout: linger"
+
+[[question]]
+id = "l-trap"
+type = "choice"
+prompt = "Why was the first logout test wrong?"
+choices = ["Checking required logging in as the same user, which kept the user manager alive", "The service crashed", "linger was yes", "The VM was off"]
+answers = ["Checking required logging in as the same user, which kept the user manager alive"]
+explanation = "A root-owned watcher started before logout fixed it."
+review = "What happens at logout: linger"
+
+[[question]]
+id = "l-root"
+type = "choice"
+prompt = "What does turnstiled.conf(5) say about root logins (root_session, default no)?"
+choices = ["They are tracked but get no user service manager; the lesson did not test it", "Root always gets a manager", "Root cannot log in", "root_session is yes"]
+answers = ["They are tracked but get no user service manager; the lesson did not test it"]
+explanation = "From the installed manual page."
+review = "What happens at logout: linger"
+
+# ---- fenriros ----
+
+[[question]]
+id = "f-fen"
+type = "choice"
+prompt = "What does the lesson say about FenrirOS?"
+choices = ["Nothing verified: compare it against the boot section of the lesson rather than assuming", "It is identical to Chimera", "It uses systemd", "It has no init"]
+answers = ["Nothing verified: compare it against the boot section of the lesson rather than assuming"]
+explanation = "The lesson has never seen FenrirOS."
+review = "Where this leaves FenrirOS"
+
+# ---- mistakes ----
+
+[[question]]
+id = "m-stage"
+type = "choice"
+prompt = "Which is listed as a common mistake?"
+choices = ["Enabling two network managers (dhcpcd and networkmanager)", "Using dinit-check", "Reading the log", "Using dinitctl status"]
+answers = ["Enabling two network managers (dhcpcd and networkmanager)"]
+explanation = "Also: forgetting the log daemon, and assuming user services survive logout."
+review = "Common mistakes"
