@@ -191,7 +191,7 @@ gh repo create <owner>/<repo> --private --source . --remote origin --push
 
 Design and every finding are in `docs/decisions/0009-chimera-lab.md`. In short: `winlab image fetch chimera-base` (already downloaded here, SHA-256 verified) then `winlab vm install chimera-base winlab-chimera` installs Chimera from the live ISO by driving its serial console (about 1 minute plus first boot), registers it as a training target with snapshot `winlab-clean`. Guest control uses `doas` (`guest.escalationFor`). Code: `src/vm/chimera.zig` (seed CD, serial state machine, unit-tested), `src/vm/chimera/install.sh` and `chroot.sh` (POSIX sh, run by Chimera's FreeBSD sh), `vmInstallLive` in `main.zig`, `installer` field in the image catalog.
 
-**Labs (distro = "chimera"):** `chimera-no-system-log`, `chimera-service-wont-start`, `chimera-user-not-admin`, `chimera-apk-repo-typo`. Verification status is recorded in section 8 of this file as soon as `lab verify` has run; do not call them done before that.
+**Labs (distro = "chimera"):** `chimera-no-system-log`, `chimera-service-wont-start`, `chimera-user-not-admin`, `chimera-apk-repo-typo`. **Verified 2026-11-21** with `winlab lab build` then `lab verify` on the VM: all four pass every stage (broken before the fix, fixed after the solution, broken again after reset). They are still drafts for owner review.
 
 **Not done:** more Chimera labs, a FreeBSD-userland scripting lab, the dinit lessons (proposed set in `docs/scripting-curriculum.md`), UEFI, and the GNOME or Plasma ISOs. FenrirOS (the owner's distribution, Chimera-influenced, self-rebuilding bootable disk) is an optional future target: it needs a stable image and documented access first (ask the owner).
 
