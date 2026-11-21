@@ -19,7 +19,17 @@ pub const Access = struct {
     cpu: []const u8 = "qemu64",
     /// Linux distribution label from guest.toml (for example "ubuntu", "almalinux"); empty if unspecified.
     distro: []const u8 = "",
+
+    pub fn escalation(self: Access) []const u8 {
+        return escalationFor(self.distro);
+    }
 };
+
+/// The command that runs a script as root for the lab user, by distribution. Chimera Linux has no sudo (its
+/// default is doas); every other supported Linux guest uses sudo.
+pub fn escalationFor(distro: []const u8) []const u8 {
+    return if (std.mem.eql(u8, distro, "chimera")) "doas" else "sudo";
+}
 
 pub const guest_file = "guest.toml";
 pub const key_file = "id_ed25519";
@@ -103,8 +113,9 @@ pub fn sshArgv(arena: std.mem.Allocator, ssh_exe: []const u8, vm_dir: []const u8
             try encodeCommand(arena, try std.fmt.allocPrint(arena, "$ProgressPreference = 'SilentlyContinue'; {s}", .{script})), // no progress records (they arrive as CLIXML noise)
         }),
         // One remote command line: the script travels as base64 so no quoting can break it. It runs as root
-        // (the lab user has passwordless sudo): labs break and fix system state, as an administrator would.
-        .bash => try v.append(arena, try std.fmt.allocPrint(arena, "echo {s} | base64 -d | sudo -n bash -s", .{try encodeBash(arena, script)})),
+        // (the lab user has passwordless sudo, or doas on Chimera Linux): labs break and fix system state, as an
+        // administrator would.
+        .bash => try v.append(arena, try std.fmt.allocPrint(arena, "echo {s} | base64 -d | {s} -n bash -s", .{ try encodeBash(arena, script), a.escalation() })),
     }
     return v.items;
 }
@@ -151,6 +162,17 @@ test "ssh arguments pin the key, known_hosts, loopback and batch mode" {
     try std.testing.expect(std.mem.indexOf(u8, joined, "IdentitiesOnly=yes") != null);
     try std.testing.expect(std.mem.indexOf(u8, joined, "-p 2222") != null);
     try std.testing.expect(std.mem.indexOf(u8, joined, "-EncodedCommand") != null);
+}
+
+test "bash guests escalate with sudo, except Chimera which uses doas" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const ubuntu = try sshArgv(arena.allocator(), "ssh.exe", "D:/vm/x", .{ .port = 2222, .user = "labadmin", .shell = .bash, .distro = "ubuntu" }, "id");
+    const chimera = try sshArgv(arena.allocator(), "ssh.exe", "D:/vm/x", .{ .port = 2222, .user = "labadmin", .shell = .bash, .distro = "chimera" }, "id");
+    const unknown = try sshArgv(arena.allocator(), "ssh.exe", "D:/vm/x", .{ .port = 2222, .user = "labadmin", .shell = .bash }, "id");
+    try std.testing.expect(std.mem.endsWith(u8, ubuntu[ubuntu.len - 1], "| base64 -d | sudo -n bash -s"));
+    try std.testing.expect(std.mem.endsWith(u8, chimera[chimera.len - 1], "| base64 -d | doas -n bash -s"));
+    try std.testing.expect(std.mem.endsWith(u8, unknown[unknown.len - 1], "| base64 -d | sudo -n bash -s"));
 }
 
 test "guest.toml is validated" {

@@ -597,6 +597,14 @@ pub const RunConfig = struct {
     no_reboot: bool = false,
     /// CPU model (see guest.Access.cpu).
     cpu: []const u8 = "qemu64",
+    /// Boot a kernel directly (no boot loader): with `initrd` and `append` (the kernel command line). Used to start a
+    /// Linux live ISO with a serial console, whose own boot loader prints nothing there.
+    kernel: ?[]const u8 = null,
+    initrd: ?[]const u8 = null,
+    append: []const u8 = "",
+    /// Connect the guest's first serial port to a local-only TCP server on this port. QEMU WAITS for one client
+    /// before it starts the guest, so no early console output is lost.
+    serial_port: ?u16 = null,
 };
 
 /// BIOS-boot Windows machine on driver-free virtual hardware (AHCI disk and CD, e1000e
@@ -636,8 +644,28 @@ pub fn buildArgv(arena: std.mem.Allocator, tools: *const Tools, c: RunConfig) ![
     if (!c.show_display) try a.appendSlice(arena, &.{ "-display", "none" });
     if (c.qmp_port) |port| try a.appendSlice(arena, &.{ "-qmp", try std.fmt.allocPrint(arena, "tcp:127.0.0.1:{d},server,nowait", .{port}) });
     if (c.no_reboot) try a.append(arena, "-no-reboot");
+    if (c.kernel) |k| {
+        try a.appendSlice(arena, &.{ "-kernel", k });
+        if (c.initrd) |i| try a.appendSlice(arena, &.{ "-initrd", i });
+        if (c.append.len > 0) try a.appendSlice(arena, &.{ "-append", c.append });
+    }
+    if (c.serial_port) |port| try a.appendSlice(arena, &.{ "-serial", try std.fmt.allocPrint(arena, "tcp:127.0.0.1:{d},server=on,wait=on", .{port}) });
     try a.appendSlice(arena, &.{ "-name", "winlab-vm" });
     return a.items;
+}
+
+test "direct kernel boot and the serial port are added, local-only" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const tools: Tools = .{ .gpa = std.testing.allocator, .qemu_system = @constCast("C:/q/qemu-system-x86_64.exe"), .qemu_img = @constCast("x"), .version = @constCast("v"), .whpx = true };
+    const argv = try buildArgv(arena.allocator(), &tools, .{ .disk = "D:/vm/a.qcow2", .show_display = false, .kernel = "D:/k/vmlinuz", .initrd = "D:/k/initrd", .append = "boot=live console=ttyS0,115200", .serial_port = 5555 });
+    const joined = try std.mem.join(arena.allocator(), " ", argv);
+    try std.testing.expect(std.mem.indexOf(u8, joined, "-kernel D:/k/vmlinuz -initrd D:/k/initrd -append boot=live console=ttyS0,115200") != null);
+    try std.testing.expect(std.mem.indexOf(u8, joined, "-serial tcp:127.0.0.1:5555,server=on,wait=on") != null);
+    // Without the options nothing changes.
+    const plain = try buildArgv(arena.allocator(), &tools, .{ .disk = "D:/vm/a.qcow2" });
+    const pj = try std.mem.join(arena.allocator(), " ", plain);
+    try std.testing.expect(std.mem.indexOf(u8, pj, "-kernel") == null and std.mem.indexOf(u8, pj, "-serial") == null);
 }
 
 test "command line is driver-free, local-only and carries the answer CD" {

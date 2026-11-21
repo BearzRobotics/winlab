@@ -1,0 +1,31 @@
+schema_version = 1
+id = "labs.chimera-user-not-admin"
+target = "linux"
+distro = "chimera"
+title = "Chimera: a user cannot administer the machine"
+summary = "A user was removed from the wheel group, which is the group doas gives administrator rights to."
+lesson = "foundations.troubleshooting-method"
+symptom = "The user labuser used to be able to run administrative commands on this Chimera server. Today doas refuses everything they try. Nothing else about the account seems wrong."
+hints = [
+  "Chimera does not ship sudo. Its default tool is doas, configured in /etc/doas.conf.",
+  "Read /etc/doas.conf: which group is given access? The Chimera default is `permit persist :wheel`.",
+  "id -nG labuser lists the groups of the user. usermod -aG adds a user to a group without removing the others.",
+]
+expected_changes = ["Creates the user labuser in group wheel, then removes them from wheel in the Chimera lab VM"]
+hazards = ["labuser has no administrator rights in the lab VM until they are added back to wheel"]
+scope = "single guest (the registered Chimera training VM only)"
+privilege = "administrator"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+setup = "id labuser >/dev/null 2>&1 || useradd -m -G wheel labuser"
+fault = '''
+id labuser >/dev/null 2>&1 || useradd -m labuser
+gpasswd -d labuser wheel || true
+'''
+solution = "usermod -aG wheel labuser"
+
+[validate]
+script = '''
+if id -nG labuser 2>/dev/null | tr ' ' '\n' | grep -qx wheel; then echo "wheel=yes"; else echo "wheel=no"; fi
+'''
+expect_output_contains = "wheel=yes"

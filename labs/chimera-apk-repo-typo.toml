@@ -1,0 +1,38 @@
+schema_version = 1
+id = "labs.chimera-apk-repo-typo"
+target = "linux"
+distro = "chimera"
+title = "Chimera: apk cannot find any packages"
+summary = "The package repository file has a typo in the release name."
+lesson = "foundations.troubleshooting-method"
+symptom = "apk update on this Chimera server reports errors and no packages can be installed or upgraded. The repository address looks almost right, but the server never returns an index."
+hints = [
+  "On Chimera, apk repository files live in /usr/lib/apk/repositories.d (and /etc/apk/repositories.d for the administrator's own). Read the file for the main repository.",
+  "The file uses variables: `set -default CHIMERA_REPO_URL=...` and `set -default CHIMERA_REPO_RELEASE=...`, and the repository line is built from them. Read both values carefully.",
+  "The release name for the current rolling repository is the word `current`. Fix the value, then run apk update.",
+]
+expected_changes = ["Changes the release name in /usr/lib/apk/repositories.d/01-repo-main.list in the Chimera lab VM"]
+hazards = ["apk cannot reach the main repository in the lab VM until the typo is fixed"]
+scope = "single guest (the registered Chimera training VM only)"
+privilege = "administrator"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+setup = '''
+f=/usr/lib/apk/repositories.d/01-repo-main.list
+printf 'set -default CHIMERA_REPO_URL=https://repo.chimera-linux.org\nset -default CHIMERA_REPO_RELEASE=current\n\nv3 ${CHIMERA_REPO_URL}/${CHIMERA_REPO_RELEASE}/main\n' > "$f"
+'''
+fault = '''
+f=/usr/lib/apk/repositories.d/01-repo-main.list
+printf 'set -default CHIMERA_REPO_URL=https://repo.chimera-linux.org\nset -default CHIMERA_REPO_RELEASE=currnet\n\nv3 ${CHIMERA_REPO_URL}/${CHIMERA_REPO_RELEASE}/main\n' > "$f"
+'''
+solution = '''
+f=/usr/lib/apk/repositories.d/01-repo-main.list
+printf 'set -default CHIMERA_REPO_URL=https://repo.chimera-linux.org\nset -default CHIMERA_REPO_RELEASE=current\n\nv3 ${CHIMERA_REPO_URL}/${CHIMERA_REPO_RELEASE}/main\n' > "$f"
+'''
+
+[validate]
+script = '''
+f=/usr/lib/apk/repositories.d/01-repo-main.list
+if grep -q '^set -default CHIMERA_REPO_RELEASE=current$' "$f"; then echo "release=ok"; else echo "release=broken"; fi
+'''
+expect_output_contains = "release=ok"

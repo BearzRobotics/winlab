@@ -1,0 +1,44 @@
+schema_version = 1
+id = "labs.chimera-service-wont-start"
+target = "linux"
+distro = "chimera"
+title = "Chimera: a custom service will not start"
+summary = "A dinit service file has a mistake in its command path."
+lesson = "foundations.troubleshooting-method"
+symptom = "An administrator added a small service called wl-ticker to this Chimera server. It should run at boot and stay up, but it is stopped and cannot be started."
+hints = [
+  "dinitctl status wl-ticker tells you the state and, for a service that could not be launched, at which stage it failed.",
+  "Service descriptions live in /etc/dinit.d. Read the one for wl-ticker and check the command it runs: does that program exist?",
+  "dinit remembers a service description once it has loaded it. After fixing the file, use dinitctl unload (or reload) so the new description is read, then enable the service again.",
+]
+expected_changes = ["Creates /etc/dinit.d/wl-ticker and enables it, then breaks its command path in the Chimera lab VM"]
+hazards = ["A harmless background process (sleep) runs in the lab VM while the lab is fixed"]
+scope = "single guest (the registered Chimera training VM only)"
+privilege = "administrator"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+setup = '''
+printf 'type = process\ncommand = /usr/bin/sleep 100000\n' > /etc/dinit.d/wl-ticker
+dinitctl enable wl-ticker
+'''
+fault = '''
+dinitctl stop wl-ticker
+dinitctl disable wl-ticker
+dinitctl unload wl-ticker
+printf 'type = process\ncommand = /usr/bin/slepe 100000\n' > /etc/dinit.d/wl-ticker
+dinitctl start wl-ticker || true
+'''
+solution = '''
+printf 'type = process\ncommand = /usr/bin/sleep 100000\n' > /etc/dinit.d/wl-ticker
+dinitctl unload wl-ticker
+dinitctl enable wl-ticker
+'''
+
+[validate]
+script = '''
+started=no; enabled=no
+dinitctl is-started wl-ticker >/dev/null 2>&1 && started=yes
+[ -e /etc/dinit.d/boot.d/wl-ticker ] && enabled=yes
+echo "started=$started;enabled=$enabled"
+'''
+expect_output_contains = "started=yes;enabled=yes"

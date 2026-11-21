@@ -49,3 +49,18 @@ cloud_image = true
 cpu = "max" # RHEL 9 and its rebuilds need x86-64-v2 (SSE4.2, POPCNT); QEMU's default qemu64 model lacks it
 distro = "almalinux"
 note = "AlmaLinux OS Foundation's official cloud image (free software; no key or sign-up). RHEL-compatible: dnf, firewalld, SELinux. The download is checked against AlmaLinux's published CHECKSUM file."
+
+[[image]]
+id = "chimera-base"
+name = "Chimera Linux live ISO, base (x86_64, build 20261103)"
+os = "linux"
+edition = "Chimera Linux: musl libc, FreeBSD userland (chimerautils), dinit, apk; installed by WinLab from the official live ISO"
+url = "https://repo.chimera-linux.org/live/20261103/chimera-linux-x86_64-LIVE-20261103-base.iso"
+sums_url = "https://repo.chimera-linux.org/live/20261103/sha256sums.txt"
+file = "chimera-linux-x86_64-LIVE-20261103-base.iso"
+size_bytes = 1199996928
+sha256 = "869abe5ac1f2384fe14f06b16673e85ff020a92f8e9d6ec9694d33f4707b2a11"
+installer = "chimera"
+cpu = "max"
+distro = "chimera"
+note = "Chimera Linux's official live ISO (free software; no key or sign-up), about 1.2 GB. Chimera publishes no cloud image, so WinLab boots this ISO headless, installs from it following Chimera's own installation steps, then boots the installed disk. The dated build is kept at a stable address, and the download is checked against both the pinned SHA-256 and Chimera's published sha256sums.txt (their minisign signature was not verified)."

@@ -40,6 +40,9 @@ pub const Entry = struct {
     distro: []const u8 = "",
     /// HTTPS address of a SHA256SUMS file that lists this download; if set, the downloaded file must match it.
     sums_url: []const u8 = "",
+    /// A built-in "install from a live ISO" recipe (for example "chimera"): WinLab boots the ISO headless, runs an
+    /// install script from a small seed CD over the serial console, then boots the new disk. Empty for other media.
+    installer: []const u8 = "",
 };
 
 pub const Catalog = struct {
@@ -124,6 +127,8 @@ pub fn parse(gpa: std.mem.Allocator, text: []const u8) ParseError!Catalog {
         const distro = t.getString("distro") orelse "";
         for (cpu) |ch| if (!(std.ascii.isLower(ch) or std.ascii.isDigit(ch) or ch == '-' or ch == '_')) return error.InvalidEntry;
         for (distro) |ch| if (!(std.ascii.isLower(ch) or std.ascii.isDigit(ch) or ch == '-')) return error.InvalidEntry;
+        const installer = t.getString("installer") orelse "";
+        for (installer) |ch| if (!(std.ascii.isLower(ch) or std.ascii.isDigit(ch) or ch == '-')) return error.InvalidEntry;
         const sums = t.getString("sums_url") orelse "";
         if (sums.len != 0 and !std.mem.startsWith(u8, sums, "https://")) return error.InvalidEntry;
         const sha = t.getString("sha256") orelse "";
@@ -146,6 +151,7 @@ pub fn parse(gpa: std.mem.Allocator, text: []const u8) ParseError!Catalog {
             .cpu = try a.dupe(u8, cpu),
             .distro = try a.dupe(u8, distro),
             .sums_url = try a.dupe(u8, sums),
+            .installer = try a.dupe(u8, installer),
             .image_index = if (t.getInt("image_index")) |n| (if (n >= 1 and n <= 64) @as(u32, @intCast(n)) else return error.InvalidEntry) else 1,
         };
     }
@@ -224,6 +230,25 @@ test "catalog parses and validates" {
     defer c.deinit();
     try std.testing.expectEqual(@as(u64, 5044094976), c.find("server-2022-eval").?.size_bytes);
     try std.testing.expect(c.find("nope") == null);
+
+    // The installer recipe name is optional and validated.
+    const live_text =
+        \\schema_version = 1
+        \\[[image]]
+        \\id = "c"
+        \\name = "n"
+        \\os = "linux"
+        \\url = "https://x/c.iso"
+        \\file = "c.iso"
+        \\installer = "chimera"
+        \\
+    ;
+    var live = try parse(gpa, live_text);
+    defer live.deinit();
+    try std.testing.expectEqualStrings("chimera", live.find("c").?.installer);
+    const bad_installer = "schema_version = 1\n[[image]]\nid = \"c\"\nname = \"n\"\nos = \"linux\"\nurl = \"https://x/c.iso\"\nfile = \"c.iso\"\ninstaller = \"Bad Name\"\n";
+    try std.testing.expectError(error.InvalidEntry, parse(gpa, bad_installer));
+
 
     const bad = [_][]const u8{
         "schema_version = 1\n[[image]]\nid=\"a\"\nname=\"n\"\nos=\"o\"\nurl=\"http://x/a.iso\"\nfile=\"a.iso\"\n",

@@ -43,6 +43,15 @@ Each line is one lesson; the existing ones are deepened, not replaced. IDs are `
 8. `bash-advanced`: `mapfile`, namerefs, `printf -v`, `declare`, `shopt`, completion, avoiding forks, bash 3.2 versus 4 and 5.
 9. **A dedicated POSIX sh section (owner suggestion, 2026-11-21), with dash as the reference shell** and busybox ash as the second check; every command in it is run in dash, and `bash` is never used to "test" a `#!/bin/sh` script. Planned lessons: `posix-sh-basics` (the language subset: quoting, `$( )`, `$(( ))`, `case`, `[ ]`, `${v#..}` family, `set --` instead of arrays, here-documents, `getopts`, `trap`, functions without `function`; what dash does and does not accept, from the tables in `shells-and-posix`), and `posix-sh-scripting` (portable patterns: `command -v`, `printf` not `echo -e`, `. ./file`, `mktemp`, locking, text tools differences GNU/BusyBox/BSD, a project test harness that runs a script under dash and busybox ash, ShellCheck `--shell=sh`). It gets its own learning path (`posix-sh`).
 
+### dinit and Chimera (proposed 2026-11-21, owner interest; replaces "dinit is a short aside only")
+
+Taught on the Chimera lab VM (`docs/decisions/0009-chimera-lab.md`), version-pinned because dinit is pre-1.0 (Chimera build 20261103 ships 0.22.0; upstream's newest tag was v0.23.0 when checked):
+1. `linux.dinit-basics`: `dinitctl list/status/start/stop/enable/disable`, what enabling really is (a symlink in `/etc/dinit.d/boot.d`), service states, why a base install has no network until `dhcpcd` is enabled, reading `/var/log/messages` once `syslog-ng` is enabled.
+2. `linux.dinit-service-files`: types (process, bgprocess, scripted, internal), `depends-on` / `waits-for` / `before`, writing a service, why edits need `dinitctl reload` or `unload`, failure messages ("could not be launched").
+3. `linux.dinit-in-practice`: user services and `turnstile`, `rc.local`, targets, troubleshooting boot order; labs `chimera-service-wont-start`, `chimera-no-system-log`.
+4. `linux.init-systems-compared`: the same tasks under systemd (Ubuntu and AlmaLinux VMs) and dinit (Chimera VM).
+Also candidates: a "FreeBSD userland on Linux" lesson (what differs in `ls`, `sed -i`, `grep`, `sh`, `tar` on Chimera, from the real outputs), and a lab for `apk` (lab `chimera-apk-repo-typo` exists).
+
 ### Linux system (alongside)
 - `linux.systemd`: units, targets, `systemctl`, `journalctl`, timers, writing and overriding unit files, sandboxing options, `systemd-analyze`.
 

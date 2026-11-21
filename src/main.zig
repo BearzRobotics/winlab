@@ -917,6 +917,253 @@ fn vmInstallCloud(init: std.process.Init, cfg: *const winlab.settings.Loaded, en
     try superviseUntilReady(init, &tools, vm, null, seed_path, 30);
 }
 
+/// A per-VM lab password and SSH key pair, as for the cloud-image VMs. The key goes in the VM folder.
+const VmCredentials = struct { password: [16]u8, pub_text: []const u8 };
+
+fn makeVmCredentials(init: std.process.Init, vm_folder: std.Io.Dir, vm_dir: []const u8, vm_id: []const u8) !VmCredentials {
+    const gpa = init.gpa;
+    const io = init.io;
+    const arena = init.arena.allocator();
+    const alphabet = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    var raw: [16]u8 = undefined;
+    io.random(&raw);
+    var password: [16]u8 = undefined;
+    for (raw, &password) |r, *p| p.* = alphabet[r % alphabet.len];
+
+    const system_root = init.environ_map.get("SystemRoot") orelse "C:\\Windows";
+    const keygen = try std.fs.path.join(arena, &.{ system_root, "System32", "OpenSSH", "ssh-keygen.exe" });
+    const key_path = try std.fs.path.join(arena, &.{ vm_dir, winlab.vm_guest.key_file });
+    const comment = try std.fmt.allocPrint(arena, "winlab-{s}", .{vm_id});
+    const run = std.process.run(gpa, io, .{ .argv = &.{ keygen, "-q", "-t", "ed25519", "-N", "", "-C", comment, "-f", key_path } }) catch |err| {
+        std.debug.print("cannot run {s}: {t} (the Windows OpenSSH client is required for lab control)\n", .{ keygen, err });
+        std.process.exit(1);
+    };
+    defer gpa.free(run.stdout);
+    defer gpa.free(run.stderr);
+    if (run.term != .exited or run.term.exited != 0) {
+        std.debug.print("ssh-keygen failed:\n{s}\n", .{run.stderr});
+        std.process.exit(1);
+    }
+    const pub_text = std.mem.trim(u8, try vm_folder.readFileAlloc(io, "id_ed25519.pub", arena, .limited(4096)), " \r\n");
+    return .{ .password = password, .pub_text = pub_text };
+}
+
+/// Ends QEMU if the serial conversation takes longer than `limit_s` seconds. Killing the process closes the
+/// serial socket, which unblocks the reader (reads have no timeout of their own).
+const InstallWatchdog = struct {
+    child: *std.process.Child,
+    io: std.Io,
+    limit_s: u32,
+    cancel: std.atomic.Value(bool) = .init(false),
+    fired: std.atomic.Value(bool) = .init(false),
+
+    fn run(self: *InstallWatchdog) void {
+        var s: u32 = 0;
+        while (s < self.limit_s and !self.cancel.load(.acquire)) : (s += 1) std.Io.sleep(self.io, .fromSeconds(1), .real) catch {};
+        if (self.cancel.load(.acquire)) return;
+        self.fired.store(true, .release);
+        self.child.kill(self.io);
+    }
+};
+
+/// `winlab vm install <image-id> <vm-id>` for media with an `installer` recipe (Chimera Linux, which publishes no
+/// cloud image). QEMU boots the live ISO's own kernel with a serial console; WinLab logs in over the serial socket,
+/// has the live system run the install script from a seed CD (the official procedure: partition, chimera-bootstrap,
+/// chimera-chroot, GRUB), powers it off, and then boots the new disk like any other Linux lab VM until SSH answers.
+fn vmInstallLive(init: std.process.Init, cfg: *const winlab.settings.Loaded, entry: winlab.vm_images.Entry, vm_id: []const u8) !void {
+    const gpa = init.gpa;
+    const io = init.io;
+    const arena = init.arena.allocator();
+    if (!std.mem.eql(u8, entry.installer, "chimera")) {
+        std.debug.print("unknown installer recipe '{s}' for {s}\n", .{ entry.installer, entry.id });
+        std.process.exit(1);
+    }
+    const iso = try std.fs.path.join(arena, &.{ try imagesDir(init), entry.file });
+    if (std.Io.Dir.cwd().statFile(io, iso, .{})) |_| {} else |_| {
+        std.debug.print("{s} is not downloaded; run: winlab image fetch {s}\n", .{ entry.file, entry.id });
+        std.process.exit(1);
+    }
+    var tools = (try winlab.vm_qemu.discover(gpa, io, init.environ_map.get("PATH") orelse "", cfg.settings.qemu_path)) orelse {
+        std.debug.print("{s}\n", .{winlab.vm_qemu.install_guidance});
+        std.process.exit(1);
+    };
+    defer tools.deinit();
+    const local = init.environ_map.get("LOCALAPPDATA") orelse {
+        std.debug.print("LOCALAPPDATA is not set\n", .{});
+        std.process.exit(1);
+    };
+    const vm_dir = try std.fs.path.join(arena, &.{ local, "WinLab", "vms", vm_id });
+    if (std.Io.Dir.cwd().statFile(io, vm_dir, .{})) |_| {
+        std.debug.print("{s} already exists; choose another vm-id or remove it with: winlab vm remove {s}\n", .{ vm_dir, vm_id });
+        std.process.exit(1);
+    } else |_| {}
+    const live_dir = try std.fs.path.join(arena, &.{ vm_dir, "live" });
+    try std.Io.Dir.cwd().createDirPath(io, live_dir);
+    var vm_folder = try std.Io.Dir.cwd().openDir(io, vm_dir, .{});
+    defer vm_folder.close(io);
+
+    const creds = try makeVmCredentials(init, vm_folder, vm_dir, vm_id);
+
+    // The ISO's own kernel and initrd, so the live system can be started with a serial console. Windows 10 and
+    // later ship tar.exe (bsdtar), which reads ISO 9660 images.
+    std.debug.print("Extracting the live kernel from {s} ...\n", .{entry.file});
+    const system_root = init.environ_map.get("SystemRoot") orelse "C:\\Windows";
+    const tar = try std.fs.path.join(arena, &.{ system_root, "System32", "tar.exe" });
+    const extract = std.process.run(gpa, io, .{ .argv = &.{ tar, "-xf", iso, "-C", live_dir, winlab.vm_chimera.iso_kernel, winlab.vm_chimera.iso_initrd } }) catch |err| {
+        std.debug.print("cannot run {s}: {t}\n", .{ tar, err });
+        std.process.exit(1);
+    };
+    defer gpa.free(extract.stdout);
+    defer gpa.free(extract.stderr);
+    if (extract.term != .exited or extract.term.exited != 0) {
+        std.debug.print("could not read the kernel out of the ISO:\n{s}\n", .{extract.stderr});
+        std.process.exit(1);
+    }
+    const kernel = try std.fs.path.join(arena, &.{ live_dir, "live", "vmlinuz" });
+    const initrd = try std.fs.path.join(arena, &.{ live_dir, "live", "initrd" });
+
+    // The seed CD: install.sh, chroot.sh and wl.conf (host name, lab user, password, public key).
+    const seed = winlab.vm_chimera.buildSeed(gpa, .{ .hostname = vm_id, .password = &creds.password, .ssh_public_key = creds.pub_text }) catch |err| {
+        std.debug.print("could not build the seed CD: {t}\n", .{err});
+        std.process.exit(1);
+    };
+    defer gpa.free(seed);
+    try vm_folder.writeFile(io, .{ .sub_path = "seed.iso", .data = seed });
+    const seed_path = try std.fs.path.join(arena, &.{ vm_dir, "seed.iso" });
+
+    const disk = try std.fs.path.join(arena, &.{ vm_dir, "disk.qcow2" });
+    const created = try std.process.run(gpa, io, .{ .argv = &.{ tools.qemu_img, "create", "-q", "-f", "qcow2", disk, "12G" } });
+    defer gpa.free(created.stdout);
+    defer gpa.free(created.stderr);
+    if (created.term != .exited or created.term.exited != 0) {
+        std.debug.print("qemu-img could not create the disk:\n{s}\n", .{created.stderr});
+        std.process.exit(1);
+    }
+
+    const ssh_port = try winlab.vm_qemu.pickLoopbackPort(io);
+    const cpu_line = if (entry.cpu.len > 0) try std.fmt.allocPrint(arena, "cpu = \"{s}\"\n", .{entry.cpu}) else "";
+    const distro_line = if (entry.distro.len > 0) try std.fmt.allocPrint(arena, "distro = \"{s}\"\n", .{entry.distro}) else "";
+    const guest_toml = try std.fmt.allocPrint(arena, "ssh_port = {d}\nssh_user = \"labadmin\"\nshell = \"bash\"\n{s}{s}", .{ ssh_port, cpu_line, distro_line });
+    try vm_folder.writeFile(io, .{ .sub_path = winlab.vm_guest.guest_file, .data = guest_toml });
+    const cred_text = try std.fmt.allocPrint(arena, "Throwaway lab VM '{s}' (built from {s}).\nUser: labadmin (administrator through doas; Chimera has no sudo). root has the same password.\nConsole password: {s}\nSSH uses a key (id_ed25519 in this folder); password logins over SSH are off.\nThis file holds a clear-text password for a disposable VM on this PC only.\n", .{ vm_id, entry.name, &creds.password });
+    try vm_folder.writeFile(io, .{ .sub_path = "credentials.txt", .data = cred_text });
+
+    var reg = try winlab.vm_registry.load(gpa, io, try openAppData(init));
+    defer reg.deinit();
+    var vms: std.ArrayList(winlab.vm_registry.Vm) = .empty;
+    try vms.appendSlice(arena, reg.vms);
+    const vm: winlab.vm_registry.Vm = .{ .id = vm_id, .name = vm_id, .provider = "qemu", .disk = disk, .memory_mb = 2048, .cpus = 2, .training_target = true };
+    try vms.append(arena, vm);
+    try winlab.vm_registry.save(gpa, io, try openAppData(init), vms.items);
+
+    std.debug.print(
+        \\Chimera VM '{s}' registered as a training target.
+        \\  folder: {s}
+        \\Installing from the live ISO (about a minute; the screen is not shown, progress is read from the serial console).
+        \\
+    , .{ vm_id, vm_dir });
+
+    // ---- run the live system and drive it over the serial port ----
+    const serial_port = try winlab.vm_qemu.pickLoopbackPort(io);
+    const argv = try winlab.vm_qemu.buildArgv(arena, &tools, .{
+        .disk = disk,
+        .iso = iso,
+        .answer_iso = seed_path,
+        .accel = if (tools.whpx) .whpx else .tcg,
+        .cpu = if (entry.cpu.len > 0) entry.cpu else "max",
+        .show_display = false,
+        .no_reboot = true,
+        .kernel = kernel,
+        .initrd = initrd,
+        .append = winlab.vm_chimera.live_cmdline,
+        .serial_port = serial_port,
+    });
+    var child = std.process.spawn(io, .{ .argv = argv, .stdin = .ignore, .stdout = .ignore, .stderr = .ignore }) catch |err| {
+        std.debug.print("could not start QEMU: {t}\n", .{err});
+        std.process.exit(1);
+    };
+    var dog: InstallWatchdog = .{ .child = &child, .io = io, .limit_s = 20 * 60 };
+    const dog_thread = try std.Thread.spawn(.{}, InstallWatchdog.run, .{&dog});
+
+    const result = driveLiveInstall(gpa, io, serial_port);
+
+    // Let the live system finish powering off (QEMU exits by itself), then make sure it is gone.
+    if (result.ok) {
+        var waited: u32 = 0;
+        while (waited < 90 and winlab.vm_qemu.diskInUse(gpa, disk)) : (waited += 1) std.Io.sleep(io, .fromSeconds(1), .real) catch {};
+    }
+    dog.cancel.store(true, .release);
+    dog_thread.join();
+    if (!dog.fired.load(.acquire)) child.kill(io);
+
+    if (!result.ok) {
+        std.debug.print("\nThe Chimera install did not finish: {s}\n", .{result.why});
+        if (dog.fired.load(.acquire)) std.debug.print("(it ran longer than 20 minutes, so QEMU was stopped)\n", .{});
+        if (result.tail.len > 0) std.debug.print("Last output from the guest:\n{s}\n", .{result.tail});
+        std.debug.print("The VM folder was left in place for inspection: {s}\nRemove it with: winlab vm remove {s}\n", .{ vm_dir, vm_id });
+        std.process.exit(1);
+    }
+    std.debug.print("\nInstalled. Booting the new system until SSH answers ...\n", .{});
+    try superviseUntilReady(init, &tools, vm, null, null, 10);
+}
+
+const LiveInstallResult = struct { ok: bool, why: []const u8 = "", tail: []const u8 = "" };
+
+/// Connects to the guest's serial port and runs the conversation in `winlab.vm_chimera.Driver` until it finishes
+/// or the connection ends. Progress lines ("WL: ...") are printed as they arrive.
+fn driveLiveInstall(gpa: std.mem.Allocator, io: std.Io, port: u16) LiveInstallResult {
+    const addr = std.Io.net.IpAddress.parseIp4("127.0.0.1", port) catch return .{ .ok = false, .why = "internal: bad serial address" };
+    var stream: std.Io.net.Stream = undefined;
+    var tries: u32 = 0;
+    while (true) : (tries += 1) {
+        if (addr.connect(io, .{ .mode = .stream })) |s| {
+            stream = s;
+            break;
+        } else |_| {
+            if (tries >= 100) return .{ .ok = false, .why = "could not connect to the guest's serial port" };
+            std.Io.sleep(io, .fromMilliseconds(100), .real) catch {};
+        }
+    }
+    defer stream.close(io);
+
+    var drv = winlab.vm_chimera.Driver.init(gpa);
+    defer drv.deinit();
+    var reply: std.ArrayList(u8) = .empty;
+    defer reply.deinit(gpa);
+    var progress: std.ArrayList(u8) = .empty;
+    defer progress.deinit(gpa);
+    var wbuf: [512]u8 = undefined;
+    var w = stream.writer(io, &wbuf);
+    var buf: [4096]u8 = undefined;
+    std.debug.print("  (waiting for the live system to boot and show its login prompt)\n", .{});
+    while (!drv.done()) {
+        var iov = [_][]u8{&buf};
+        const n = stream.read(io, &iov) catch break;
+        if (n == 0) break;
+        reply.clearRetainingCapacity();
+        progress.clearRetainingCapacity();
+        drv.feed(buf[0..n], &reply, &progress) catch return .{ .ok = false, .why = "out of memory" };
+        if (progress.items.len > 0) std.debug.print("  {s}", .{progress.items});
+        if (reply.items.len > 0) {
+            w.interface.writeAll(reply.items) catch break;
+            w.interface.flush() catch break;
+        }
+    }
+    // Give the guest a moment to read the final command ("poweroff") before the socket closes.
+    std.Io.sleep(io, .fromSeconds(2), .real) catch {};
+
+    if (drv.step == .finished_ok) return .{ .ok = true };
+    const why: []const u8 = if (drv.failure.len > 0) drv.failure else if (drv.step == .running) "the connection ended while the install was running" else "the live system never reached a login prompt, or the connection ended early";
+    // The last 30 lines of what the install printed, copied into memory that outlives the driver.
+    var lines: usize = 0;
+    var start: usize = drv.log.items.len;
+    while (start > 0 and lines < 30) : (start -= 1) {
+        if (drv.log.items[start - 1] == '\n') lines += 1;
+    }
+    const tail = gpa.dupe(u8, drv.log.items[start..]) catch "";
+    return .{ .ok = false, .why = why, .tail = tail };
+}
+
 /// `winlab vm install <image-id> <vm-id>`: creates a new training VM from downloaded
 /// media with an unattended install, registers it as a training target and starts QEMU
 /// (the window shows the install). The install runs in the VM; nothing on this host changes
@@ -938,6 +1185,7 @@ fn vmInstall(init: std.process.Init, image_id: []const u8, vm_id: []const u8) !v
         std.process.exit(1);
     };
     if (entry.cloud_image) return vmInstallCloud(init, &cfg, entry, vm_id);
+    if (entry.installer.len > 0) return vmInstallLive(init, &cfg, entry, vm_id);
     const kind = entry.unattend orelse {
         std.debug.print("'{s}' cannot be installed unattended by WinLab\n", .{image_id});
         std.process.exit(1);

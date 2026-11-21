@@ -1,0 +1,35 @@
+schema_version = 1
+id = "labs.chimera-no-system-log"
+target = "linux"
+distro = "chimera"
+title = "Chimera: there is no system log"
+summary = "The system logger is installed but not running, so nothing is written to /var/log/messages."
+lesson = "foundations.troubleshooting-method"
+symptom = "A colleague wants to read the system log of this Chimera Linux server to find out why something failed yesterday. /var/log/messages does not exist, and nothing new is being logged."
+hints = [
+  "Chimera uses dinit as its service manager. The tool that controls it is dinitctl.",
+  "dinitctl list shows the services that are running. Is a logging service among them?",
+  "Chimera's default logger is syslog-ng, and it is not enabled on a fresh installation. Enabling a service also starts it.",
+]
+expected_changes = ["Stops and disables the syslog-ng service and removes /var/log/messages in the Chimera lab VM"]
+hazards = ["System log messages are not written in the lab VM until syslog-ng is enabled"]
+scope = "single guest (the registered Chimera training VM only)"
+privilege = "administrator"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+setup = "dinitctl enable syslog-ng"
+fault = '''
+dinitctl stop syslog-ng
+dinitctl disable syslog-ng
+rm -f /var/log/messages
+'''
+solution = "dinitctl enable syslog-ng"
+
+[validate]
+script = '''
+started=no; enabled=no
+dinitctl is-started syslog-ng >/dev/null 2>&1 && started=yes
+[ -e /etc/dinit.d/boot.d/syslog-ng ] && enabled=yes
+echo "started=$started;enabled=$enabled"
+'''
+expect_output_contains = "started=yes;enabled=yes"
