@@ -8,7 +8,7 @@ certifications = ["comptia-a-core2/operating-systems"]
 
 [[stage]]
 title = "Method and shell"
-lessons = ["foundations.architecture", "foundations.troubleshooting-method", "foundations.bash-basics", "foundations.bash-control-flow", "foundations.shells-and-posix", "foundations.bash-variables-and-expansion", "foundations.bash-functions-and-scripts"]
+lessons = ["foundations.architecture", "foundations.troubleshooting-method", "foundations.bash-basics", "foundations.shells-and-posix", "foundations.bash-variables-and-expansion", "foundations.bash-control-flow", "foundations.bash-functions-and-scripts"]
 labs = ["labs.linux-service-disabled", "labs.linux-wrong-time-zone", "labs.linux-cron-file-ignored", "labs.alma-crond-disabled", "labs.alma-dnf-repo-disabled", "labs.alma-journal-volatile", "labs.alma-service-config-error"]
 
 [[stage]]
