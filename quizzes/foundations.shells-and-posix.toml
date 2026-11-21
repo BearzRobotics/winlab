@@ -1,0 +1,446 @@
+schema_version = 1
+lesson = "foundations.shells-and-posix"
+# Draft for owner review. A bank of 49; each attempt asks 10, favouring questions missed last time.
+draw = 10
+
+# ---- How a script starts ----
+
+[[question]]
+id = "st-kernel"
+type = "choice"
+prompt = "Who reads the #! line when you run ./script?"
+choices = ["The kernel", "Your interactive shell only", "The terminal emulator", "The package manager"]
+answers = ["The kernel"]
+explanation = "The kernel runs interpreter script. See execve(2)."
+review = "How a script starts"
+
+[[question]]
+id = "st-typed"
+type = "choice"
+prompt = "You run 'dash script.sh' on a file whose shebang says #!/usr/bin/env bash. Which shell runs it?"
+choices = ["dash; the shell you typed wins", "bash, because of the shebang", "Both, one after the other", "Neither: it is an error"]
+answers = ["dash; the shell you typed wins"]
+explanation = "The shebang only matters when the kernel starts the file."
+review = "How a script starts"
+
+[[question]]
+id = "st-env"
+type = "choice"
+prompt = "What does #!/usr/bin/env bash do that #!/bin/bash does not?"
+choices = ["It finds bash on PATH instead of using one fixed path", "It makes the script run as root", "It makes bash POSIX-compliant", "It disables ~/.bashrc"]
+answers = ["It finds bash on PATH instead of using one fixed path"]
+explanation = "Useful when bash is not in /bin. Neither form is sh."
+review = "How a script starts"
+
+[[question]]
+id = "st-sh"
+type = "choice"
+prompt = "A script starts with #!/bin/sh. What must it be written in?"
+choices = ["POSIX sh", "bash", "Whatever shell you prefer", "PowerShell"]
+answers = ["POSIX sh"]
+explanation = "/bin/sh is whatever POSIX shell the distribution chose; do not assume bash."
+review = "How a script starts"
+
+[[question]]
+id = "st-126"
+type = "short"
+prompt = "Which exit status did I see for 'bad interpreter: No such file or directory' and for a missing execute bit? (number)"
+answers = ["126"]
+explanation = "A missing env target (#!/usr/bin/env nosuchshell) gave 127 instead."
+review = "How a script starts"
+
+[[question]]
+id = "st-127"
+type = "short"
+prompt = "Which exit status did #!/usr/bin/env nosuchshell give? (number)"
+answers = ["127"]
+explanation = "env itself reported 'No such file or directory'; 127 is 'command not found'."
+review = "How a script starts"
+
+[[question]]
+id = "st-crlf"
+type = "choice"
+prompt = "'/bin/bash^M: bad interpreter' means what?"
+choices = ["The file has Windows CR LF line endings", "bash is not installed", "The script has no execute bit", "The disk is full"]
+answers = ["The file has Windows CR LF line endings"]
+explanation = "The kernel looked for a program named bash followed by a carriage return. Convert with sed -i 's/\\r$//' or dos2unix."
+review = "How a script starts"
+
+[[question]]
+id = "st-noexec"
+type = "choice"
+prompt = "A script has no execute bit. './x.sh' says Permission denied. What runs it anyway?"
+choices = ["bash x.sh", "Nothing can", "./x.sh with sudo only", "chmod -x x.sh"]
+answers = ["bash x.sh"]
+explanation = "You are starting bash yourself, so the file only needs to be readable."
+review = "How a script starts"
+
+[[question]]
+id = "st-noshebang"
+type = "choice"
+prompt = "A script has no shebang. What should you do?"
+choices = ["Add one; do not rely on whichever shell happened to start it", "Nothing; it always runs in bash", "Nothing; it always runs in sh", "Rename it to .bash"]
+answers = ["Add one; do not rely on whichever shell happened to start it"]
+explanation = "Which shell ran it depends on how it was started."
+review = "How a script starts"
+
+[[question]]
+id = "st-bashrc"
+type = "choice"
+prompt = "Why must a script not depend on your ~/.bashrc?"
+choices = ["cron, systemd and ssh host command do not read it, so aliases, functions and PATH changes are missing", "~/.bashrc is read only by root", "Scripts are not allowed to read files in the home folder", "It makes the script slower"]
+answers = ["cron, systemd and ssh host command do not read it, so aliases, functions and PATH changes are missing"]
+explanation = "Set PATH and everything else the script needs inside the script."
+review = "Interactive, login and non-interactive shells"
+
+[[question]]
+id = "st-dollar-minus"
+type = "short"
+prompt = "Which letter in $- shows that a bash shell is interactive?"
+answers = ["i"]
+explanation = "bash -c gave hBc; bash -ic gave himBHc."
+review = "Interactive, login and non-interactive shells"
+
+# ---- The shells ----
+
+[[question]]
+id = "sh-what"
+type = "choice"
+prompt = "What is POSIX sh?"
+choices = ["A standard, not a program", "The name of the dash program", "A bash option", "A Linux kernel module"]
+answers = ["A standard, not a program"]
+explanation = "Scripts written to it run on any conforming shell."
+review = "The shells, and what `/bin/sh` is"
+
+[[question]]
+id = "sh-binsh"
+type = "choice"
+prompt = "What is /bin/sh?"
+choices = ["A choice each distribution makes; on my test machine it is dash", "Always bash", "Always dash", "Always busybox"]
+answers = ["A choice each distribution makes; on my test machine it is dash"]
+explanation = "Check with readlink -f /bin/sh."
+review = "The shells, and what `/bin/sh` is"
+
+[[question]]
+id = "sh-readlink"
+type = "short"
+prompt = "Which command shows what /bin/sh really is? (the command, with its flag)"
+answers = ["readlink -f /bin/sh"]
+explanation = "ls -l /bin/sh also shows a symbolic link target."
+review = "The shells, and what `/bin/sh` is"
+
+[[question]]
+id = "sh-dash"
+type = "choice"
+prompt = "Which shell is /bin/sh on Debian and Ubuntu?"
+choices = ["dash", "bash", "zsh", "csh"]
+answers = ["dash"]
+explanation = "I saw /bin/sh -> dash on Ubuntu 26.04."
+review = "The shells, and what `/bin/sh` is"
+
+[[question]]
+id = "sh-asbash"
+type = "choice"
+prompt = "bash is started under the name sh. Do arrays and [[ ]] still work?"
+choices = ["Yes; POSIX mode changes some behaviour but keeps bash's extensions", "No; they are removed", "Only in interactive mode", "Only as root"]
+answers = ["Yes; POSIX mode changes some behaviour but keeps bash's extensions"]
+explanation = "I ran arrays, [[ ]], brace expansion, &>, (( )) and here-strings through an sh -> bash symlink and they worked."
+review = "The trap: bash running as `sh` is still mostly bash"
+
+[[question]]
+id = "sh-whytest"
+type = "choice"
+prompt = "Why is testing a #!/bin/sh script only on a machine where /bin/sh is bash not enough?"
+choices = ["It will 'work' there and then fail on dash or ash", "bash is slower", "bash cannot run sh scripts", "The shebang is ignored"]
+answers = ["It will 'work' there and then fail on dash or ash"]
+explanation = "Test with a real dash and busybox ash."
+review = "The trap: bash running as `sh` is still mostly bash"
+
+# ---- The bashism table ----
+
+[[question]]
+id = "bt-dbl"
+type = "choice"
+prompt = "[[ abc == a* ]] && echo match: what did dash do?"
+choices = ["Failed: [[: not found", "Printed match", "Printed nothing and returned 0", "Hung"]
+answers = ["Failed: [[: not found"]
+explanation = "busybox ash was different: it accepted [[ but printed nothing (no pattern matching)."
+review = "A bashism table, from running it"
+
+[[question]]
+id = "bt-ashdbl"
+type = "choice"
+prompt = "What did busybox ash do with [[ abc == a* ]]?"
+choices = ["Accepted it but did no pattern match, so nothing printed", "Failed with [[: not found", "Matched correctly", "Crashed"]
+answers = ["Accepted it but did no pattern match, so nothing printed"]
+explanation = "A silent wrong result: a script can pass its tests and still be wrong."
+review = "A bashism table, from running it"
+
+[[question]]
+id = "bt-eqeq"
+type = "choice"
+prompt = "Which portable form compares two strings in [ ]?"
+choices = ["[ \"$a\" = \"$b\" ]", "[ \"$a\" == \"$b\" ]", "[ \"$a\" -eq \"$b\" ]", "[[ $a = $b ]]"]
+answers = ["[ \"$a\" = \"$b\" ]"]
+explanation = "dash rejects == with 'unexpected operator'. -eq is for numbers."
+review = "Portable replacements"
+
+[[question]]
+id = "bt-arrays"
+type = "choice"
+prompt = "What happens to a=(x y z) in dash and in busybox ash?"
+choices = ["A syntax error in both", "It works in both", "Works in dash only", "Works in ash only"]
+answers = ["A syntax error in both"]
+explanation = "Arrays are not POSIX. Use positional parameters or one item per line."
+review = "A bashism table, from running it"
+
+[[question]]
+id = "bt-brace"
+type = "choice"
+prompt = "echo {1..3} in dash prints what?"
+choices = ["{1..3}", "1 2 3", "An error", "Nothing"]
+answers = ["{1..3}"]
+explanation = "Silent: brace expansion is a bash feature; other shells pass the text through."
+review = "A bashism table, from running it"
+
+[[question]]
+id = "bt-echoe"
+type = "choice"
+prompt = "echo -e \"a\\tb\" in dash prints what?"
+choices = ["-e a<TAB>b", "a<TAB>b", "An error", "a\\tb"]
+answers = ["-e a<TAB>b"]
+explanation = "dash's echo always interprets backslashes and prints the -e itself. Use printf."
+review = "A bashism table, from running it"
+
+[[question]]
+id = "bt-printf"
+type = "short"
+prompt = "Which command replaces echo -e for text with backslashes in portable scripts? (command name)"
+answers = ["printf"]
+explanation = "printf handles backslash escapes the same way in bash, dash and ash."
+review = "Portable replacements"
+
+[[question]]
+id = "bt-amp"
+type = "choice"
+prompt = "In dash, what does ls /nonexistent &> out actually do?"
+choices = ["Runs ls in the background and creates an empty file out", "Sends both streams to out", "Fails with a syntax error", "Does nothing"]
+answers = ["Runs ls in the background and creates an empty file out"]
+explanation = "The error shows on the terminal, the status is 0 and the log is empty."
+review = "A bashism table, from running it"
+
+[[question]]
+id = "bt-amp-fix"
+type = "short"
+prompt = "Write the POSIX form of 'cmd &> file'."
+answers = ["cmd > file 2>&1", "> file 2>&1"]
+explanation = "Redirect standard output first, then send standard error to it."
+review = "Portable replacements"
+
+[[question]]
+id = "bt-parens"
+type = "choice"
+prompt = "In dash, ((x = 2 + 3)) is read as what?"
+choices = ["Nested subshells running a command named x", "Arithmetic", "A syntax error", "An array"]
+answers = ["Nested subshells running a command named x"]
+explanation = "It printed 'x: not found'. Use x=$((2 + 3))."
+review = "A bashism table, from running it"
+
+[[question]]
+id = "bt-source"
+type = "short"
+prompt = "Which POSIX command replaces 'source file'? (one character)"
+answers = [".", "dot"]
+explanation = "dash says 'source: not found'."
+review = "Portable replacements"
+
+[[question]]
+id = "bt-func"
+type = "choice"
+prompt = "Which function definition is POSIX?"
+choices = ["f() { echo hi; }", "function f { echo hi; }", "function f() { echo hi; }", "def f"]
+answers = ["f() { echo hi; }"]
+explanation = "The function keyword failed in dash."
+review = "Portable replacements"
+
+[[question]]
+id = "bt-case"
+type = "choice"
+prompt = "What replaces [[ $x == a* ]] in POSIX sh?"
+choices = ["case $x in a*) ... ;; esac", "[ $x == a* ]", "test $x -eq a*", "grep a*"]
+answers = ["case $x in a*) ... ;; esac"]
+explanation = "case does pattern matching in every POSIX shell."
+review = "Portable replacements"
+
+[[question]]
+id = "bt-worked"
+type = "choice"
+prompt = "local, echo -n and pipefail worked in bash, dash and ash on my machine. Are they therefore POSIX-portable?"
+choices = ["No; 'worked everywhere I tried' is not 'portable'", "Yes", "Only local is", "Only pipefail is"]
+answers = ["No; 'worked everywhere I tried' is not 'portable'"]
+explanation = "The 2024 POSIX edition adds pipefail and the 2018 text does not mention it; local is in neither."
+review = "A bashism table, from running it"
+
+[[question]]
+id = "bt-random"
+type = "choice"
+prompt = "What did ${RANDOM:+has RANDOM} print in dash?"
+choices = ["Nothing; dash has no $RANDOM", "has RANDOM", "A number", "An error"]
+answers = ["Nothing; dash has no $RANDOM"]
+explanation = "busybox ash and bash have it. It is not POSIX."
+review = "A bashism table, from running it"
+
+[[question]]
+id = "bt-silent"
+type = "multi"
+prompt = "Which of these failed SILENTLY (no error, different result) in dash?"
+choices = ["cmd &> file", "((x = 2 + 3))", "echo -e", "source file"]
+answers = ["cmd &> file", "((x = 2 + 3))", "echo -e"]
+explanation = "'source file' fails loudly (source: not found)."
+review = "A bashism table, from running it"
+
+# ---- Choosing and checking ----
+
+[[question]]
+id = "ch-bash"
+type = "choice"
+prompt = "A script needs arrays and [[ ]]. What should its shebang be?"
+choices = ["#!/usr/bin/env bash", "#!/bin/sh", "No shebang", "#!/bin/dash"]
+answers = ["#!/usr/bin/env bash"]
+explanation = "Say bash when you need bash, and tell the reader."
+review = "Choosing the shell"
+
+[[question]]
+id = "ch-portable"
+type = "choice"
+prompt = "An installer must run on any Unix, including busybox containers. What do you write?"
+choices = ["POSIX sh, tested in dash and ash", "bash only", "zsh", "PowerShell"]
+answers = ["POSIX sh, tested in dash and ash"]
+explanation = "Also start it with #!/bin/sh."
+review = "Choosing the shell"
+
+[[question]]
+id = "ck-n"
+type = "choice"
+prompt = "What does dash -n script.sh do?"
+choices = ["Parses the script without running it", "Runs it without output", "Runs it with a dry run", "Prints the shebang"]
+answers = ["Parses the script without running it"]
+explanation = "It reported Syntax error: \"(\" unexpected for my array script, status 2."
+review = "Syntax only: `bash -n` and `dash -n`"
+
+[[question]]
+id = "ck-nmiss"
+type = "choice"
+prompt = "Why did bash -n pass a script containing the mistyped command lss /tmp?"
+choices = ["The command name is not a syntax error; it only fails when run", "bash -n is broken", "lss exists", "It checks only the first line"]
+answers = ["The command name is not a syntax error; it only fails when run"]
+explanation = "ShellCheck did not flag it either."
+review = "Syntax only: `bash -n` and `dash -n`"
+
+[[question]]
+id = "sc-install"
+type = "choice"
+prompt = "Is ShellCheck installed by default on most systems?"
+choices = ["No; install it (package or static binary)", "Yes", "Only on Ubuntu", "Only with bash"]
+answers = ["No; install it (package or static binary)"]
+explanation = "A static Linux binary can run from your home folder without root."
+review = "ShellCheck (optional, strongly recommended)"
+
+[[question]]
+id = "sc-sc3"
+type = "choice"
+prompt = "What do ShellCheck codes SC3xxx report?"
+choices = ["Constructs that are undefined in POSIX sh (portability)", "Syntax errors", "Security vulnerabilities", "Style only"]
+answers = ["Constructs that are undefined in POSIX sh (portability)"]
+explanation = "They depend on the shell named in the shebang: --shell=bash dropped them."
+review = "ShellCheck (optional, strongly recommended)"
+
+[[question]]
+id = "sc-rc"
+type = "short"
+prompt = "What exit status did ShellCheck return when it reported findings? (number)"
+answers = ["1"]
+explanation = "A clean script returned 0."
+review = "ShellCheck (optional, strongly recommended)"
+
+[[question]]
+id = "sc-2045"
+type = "choice"
+prompt = "ShellCheck SC2045 on 'for f in $(ls)' says what?"
+choices = ["Iterating over ls output is fragile; use globs", "ls is not installed", "f is unused", "Quote ls"]
+answers = ["Iterating over ls output is fragile; use globs"]
+explanation = "It splits on spaces and treats leading dashes as options."
+review = "ShellCheck (optional, strongly recommended)"
+
+[[question]]
+id = "sc-disable"
+type = "choice"
+prompt = "How do you turn off one ShellCheck check on purpose?"
+choices = ["# shellcheck disable=SC2086 on the line before, with a reason", "Delete the line", "Run it twice", "Use --force"]
+answers = ["# shellcheck disable=SC2086 on the line before, with a reason"]
+explanation = "A comment with the reason keeps the exception reviewable."
+review = "ShellCheck (optional, strongly recommended)"
+
+[[question]]
+id = "sc-x"
+type = "short"
+prompt = "Which ShellCheck option follows files you source? (include the dash)"
+answers = ["-x"]
+explanation = "Without it, SC1091 says it did not follow the file."
+review = "ShellCheck (optional, strongly recommended)"
+
+[[question]]
+id = "sc-limit"
+type = "choice"
+prompt = "What does ShellCheck NOT catch, as I tested?"
+choices = ["A mistyped command name", "Unquoted variables", "[[ in a #!/bin/sh script", "Arrays in a #!/bin/sh script"]
+answers = ["A mistyped command name"]
+explanation = "A static checker finds patterns, not every bug. Tests and a dry run are still your job."
+review = "ShellCheck (optional, strongly recommended)"
+
+[[question]]
+id = "ck-real"
+type = "choice"
+prompt = "How should you test a portable script?"
+choices = ["Run it in a real dash and busybox ash", "Only in bash", "Only with ShellCheck", "Do not test it"]
+answers = ["Run it in a real dash and busybox ash"]
+explanation = "A script meant to be portable should behave the same in all of them."
+review = "Test in the real shells"
+
+# ---- Reading unknown scripts ----
+
+[[question]]
+id = "rd-first"
+type = "choice"
+prompt = "What do you read first in an unknown script?"
+choices = ["The shebang", "The last line", "The comments", "The file size"]
+answers = ["The shebang"]
+explanation = "It says which shell's rules apply, and a #!/bin/sh script containing bashisms was tested on bash."
+review = "Reading an unknown script (the shell part)"
+
+[[question]]
+id = "rd-curl"
+type = "choice"
+prompt = "What does 'curl ... | sh' do?"
+choices = ["Runs whatever the server sent, in the system sh, before you have read it", "Downloads to a file only", "Checks the signature", "Runs it in a sandbox"]
+answers = ["Runs whatever the server sent, in the system sh, before you have read it"]
+explanation = "Download first, read, then run."
+review = "Reading an unknown script (the shell part)"
+
+[[question]]
+id = "rd-ex7"
+type = "choice"
+prompt = "The exercise-7 script (set -e, &> log, ((count...)), echo -e) was run in dash and bash. What happened?"
+choices = ["It failed at different places with different exit statuses (127 in dash, 2 in bash)", "Identical output", "It worked in both", "It hung in dash"]
+answers = ["It failed at different places with different exit statuses (127 in dash, 2 in bash)"]
+explanation = "dash: background ls, empty log, 'count: not found', status 127. bash: set -e stopped at the ls line, status 2, error text in the log."
+review = "A bashism table, from running it"
+
+[[question]]
+id = "rd-sources"
+type = "choice"
+prompt = "The lesson did not test FreeBSD sh, zsh or what /bin/sh is on AlmaLinux. What does it tell you to do?"
+choices = ["Check your own machine with readlink -f /bin/sh; do not assume", "Assume it is bash", "Assume it is dash", "Ignore it"]
+answers = ["Check your own machine with readlink -f /bin/sh; do not assume"]
+explanation = "A state-of-knowledge statement: what was and was not tested."
+review = "The shells, and what `/bin/sh` is"

@@ -1,0 +1,83 @@
+schema_version = 1
+id = "foundations.shells-and-posix"
+title = "Shells and POSIX sh: which shell runs your script, and what is portable"
+summary = "How a script really starts (the kernel and the shebang), what bash, dash, busybox ash and /bin/sh are, a bashism table produced by running each snippet in several shells including the silent failures, portable replacements, and checking scripts with bash -n, dash -n and ShellCheck."
+content = "shells-and-posix.md"
+estimated_minutes = 90
+level = 2
+objectives = [
+  "Explain who reads the shebang line, and diagnose the common start-up failures: bad interpreter, a missing env target, CR LF line endings, a missing execute bit",
+  "Say what bash, dash, busybox ash and POSIX sh are, and find out what /bin/sh is on a given machine",
+  "Explain why bash invoked as sh still accepts bash extensions, and why that makes bash-only testing unreliable for POSIX scripts",
+  "Recognise bashisms and name the portable POSIX replacement for each",
+  "Explain the silent failures: &> in dash, (( )) in dash, echo -e, brace expansion, and [[ in busybox ash",
+  "Choose the shebang and the shell for a script and say why",
+  "Check a script with bash -n, dash -n and ShellCheck, read the SC codes, disable a check with a reason, and state what static checks cannot find",
+  "Read an unknown script's shebang and constructs and decide what to test before running it",
+]
+prerequisites = ["foundations.bash-basics"]
+privilege = "standard"
+certifications = ["comptia-a-core2/operating-systems"]
+evaluation_criteria = [
+  "Learner finds what /bin/sh is on a machine and explains the answer",
+  "Learner reproduces the bad interpreter error from a CR LF shebang and fixes it",
+  "Learner rewrites a bashism-filled #!/bin/sh script so dash -n and ShellCheck accept it",
+  "Learner explains why the exercise-7 script behaves differently in dash and bash",
+  "Learner runs ShellCheck, fixes or disables each finding with a stated reason",
+]
+
+[[references]]
+title = "POSIX Shell Command Language, 2024 edition (The Open Group)"
+url = "https://pubs.opengroup.org/onlinepubs/9799919799/utilities/V3_chap02.html"
+
+[[references]]
+title = "POSIX Shell Command Language, 2018 edition (The Open Group)"
+url = "https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html"
+
+[[references]]
+title = "Bash Reference Manual (Chet Ramey)"
+url = "https://tiswww.case.edu/php/chet/bash/bashref.html"
+
+[[references]]
+title = "bash(1) manual page (man7.org)"
+url = "https://man7.org/linux/man-pages/man1/bash.1.html"
+
+[[references]]
+title = "execve(2) manual page, interpreter scripts (man7.org)"
+url = "https://man7.org/linux/man-pages/man2/execve.2.html"
+
+[[references]]
+title = "dash(1) manual page (Debian)"
+url = "https://manpages.debian.org/unstable/dash/dash.1.en.html"
+
+[[references]]
+title = "BusyBox"
+url = "https://busybox.net/"
+
+[[references]]
+title = "FreeBSD sh(1) manual page"
+url = "https://man.freebsd.org/cgi/man.cgi?query=sh&sektion=1"
+
+[[references]]
+title = "ShellCheck"
+url = "https://www.shellcheck.net/"
+
+[[references]]
+title = "ShellCheck source and installation"
+url = "https://github.com/koalaman/shellcheck#installing"
+
+[[references]]
+title = "ShellCheck wiki: SC3010, [[ ]] in POSIX sh"
+url = "https://www.shellcheck.net/wiki/SC3010"
+
+[[references]]
+title = "ShellCheck wiki: SC2086, quote to prevent word splitting"
+url = "https://www.shellcheck.net/wiki/SC2086"
+
+[[references]]
+title = "Bashism (Greg's Wiki)"
+url = "https://mywiki.wooledge.org/Bashism"
+
+[[references]]
+title = "Shell Style Guide (Google)"
+url = "https://google.github.io/styleguide/shellguide.html"
