@@ -7,5 +7,5 @@ order = 51
 
 [[stage]]
 title = "Bash"
-lessons = ["foundations.bash-basics", "foundations.shells-and-posix", "foundations.bash-variables-and-expansion", "foundations.bash-control-flow", "foundations.bash-functions-and-scripts", "foundations.bash-text-processing"]
+lessons = ["foundations.bash-basics", "foundations.shells-and-posix", "foundations.bash-variables-and-expansion", "foundations.bash-control-flow", "foundations.bash-functions-and-scripts", "foundations.bash-text-processing", "foundations.bash-robust-scripts"]
 labs = ["labs.script-bash-count-errors", "labs.script-bash-largest-files", "labs.script-bash-arguments", "labs.script-bash-backup-rotate", "labs.script-bash-case-count", "labs.script-bash-exit-status", "labs.script-bash-read-functions", "labs.script-bash-user-report"]

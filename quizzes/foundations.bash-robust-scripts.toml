@@ -1,0 +1,569 @@
+schema_version = 1
+lesson = "foundations.bash-robust-scripts"
+# Draft for owner review. Every answer comes from the tested output in the lesson (rb1.sh, rb2.sh, rb3.sh). Each attempt asks 10.
+draw = 10
+
+# ---- set -e ----
+
+[[question]]
+id = "e-andleft"
+type = "choice"
+prompt = "Under set -e, what happens with: false && echo x; echo after ?"
+choices = ["The script continues and prints after", "The script exits with status 1", "It prints x", "A syntax error"]
+answers = ["The script continues and prints after"]
+explanation = "A failure on the left of && does not trigger set -e; rc was 0 and the output was after."
+review = "`set -e` (errexit): useful, with exceptions"
+
+[[question]]
+id = "e-andlast"
+type = "choice"
+prompt = "Under set -e, what happens with: true && false; echo NOT-REACHED ?"
+choices = ["The script exits with status 1 and prints nothing", "It prints NOT-REACHED", "It prints false", "The failure is ignored because of &&"]
+answers = ["The script exits with status 1 and prints nothing"]
+explanation = "The failing command is the last of the && list, so it counts; the left side is the part that is exempt."
+review = "`set -e` (errexit): useful, with exceptions"
+
+[[question]]
+id = "e-exempt"
+type = "multi"
+prompt = "Where does set -e NOT stop the script on a failing command?"
+choices = ["In the condition of an if", "On the left of &&", "Before ||", "A bare command on its own line"]
+answers = ["In the condition of an if", "On the left of &&", "Before ||"]
+explanation = "A bare failing command stops it (rc 1). Conditions, the left of &&, and the command before || are exempt."
+review = "`set -e` (errexit): useful, with exceptions"
+
+[[question]]
+id = "e-func"
+type = "choice"
+prompt = "set -e; f() { false; echo inside; }; if f; then echo yes; fi. What is printed?"
+choices = ["inside, then yes", "Nothing; the script exits at false", "yes only", "inside only"]
+answers = ["inside, then yes"]
+explanation = "In a function called as an if condition, set -e is ignored for every command in it, so false did not stop it."
+review = "The function trap"
+
+[[question]]
+id = "e-func2"
+type = "choice"
+prompt = "What is the safe way to make a function stop at a failing command when you cannot control how it is called?"
+choices = ["Check inside it: cmd || return 1", "Put set -e at the top of the script", "Call it with &&", "Nothing works"]
+answers = ["Check inside it: cmd || return 1"]
+explanation = "set -e is ignored inside a function used as a condition; explicit checks always work."
+review = "The function trap"
+
+[[question]]
+id = "e-lasttest"
+type = "choice"
+prompt = "Under set -e, f() { [ -f /nonexistent ] && echo yes; }; f; echo NOT-REACHED. What happens?"
+choices = ["The script exits with status 1 after f", "It prints NOT-REACHED", "It prints yes", "It prints an error message"]
+answers = ["The script exits with status 1 after f"]
+explanation = "f's last command is a false test, so f returns 1, which is a failure at the call. An if (or || true) avoids it."
+review = "`set -e` (errexit): useful, with exceptions"
+
+[[question]]
+id = "e-incr"
+type = "choice"
+prompt = "Under set -e, what does ((i++)) do when i is 0?"
+choices = ["Exits the script, because the expression's value is 0 (status 1)", "Increments i quietly", "Prints 0", "Is a syntax error"]
+answers = ["Exits the script, because the expression's value is 0 (status 1)"]
+explanation = "The status of (( )) is 1 when the result is 0. i=$((i+1)) did not have the problem."
+review = "`set -e` (errexit): useful, with exceptions"
+
+[[question]]
+id = "e-grep"
+type = "choice"
+prompt = "Why can grep -q zzz file stop a set -e script?"
+choices = ["No match is exit status 1, which counts as a failure", "grep -q is a syntax error", "grep always returns 2", "set -e makes grep slower"]
+answers = ["No match is exit status 1, which counts as a failure"]
+explanation = "Guard with || true or put it in an if when no match is acceptable."
+review = "`set -e` (errexit): useful, with exceptions"
+
+[[question]]
+id = "e-local"
+type = "choice"
+prompt = "Under set -e, f() { local x=$(false); echo survived; }; f. What happens?"
+choices = ["It prints survived: local succeeded and hid the failure", "The script exits at local", "It prints nothing", "local is not allowed under set -e"]
+answers = ["It prints survived: local succeeded and hid the failure"]
+explanation = "The status is that of local, not of the substitution. Declare first (local x), then assign (x=$(false)), and that form did exit with rc 1."
+review = "Subshells, command substitution, `local`"
+
+[[question]]
+id = "e-localfix"
+type = "choice"
+prompt = "Which form lets set -e see a failure in the command substitution?"
+choices = ["local x; x=$(cmd)", "local x=$(cmd)", "export X=$(cmd)", "echo \"$(cmd)\""]
+answers = ["local x; x=$(cmd)"]
+explanation = "A plain assignment keeps the substitution's status. local, export and an echo around it did not stop the script."
+review = "Subshells, command substitution, `local`"
+
+[[question]]
+id = "e-inherit"
+type = "choice"
+prompt = "What does set -e; shopt -s inherit_errexit; x=$(false; echo ran) do in bash 5.3.9?"
+choices = ["The substitution stops at false and the script exits with status 1", "x is ran", "Nothing; the option does not exist", "x is empty and the script continues"]
+answers = ["The substitution stops at false and the script exits with status 1"]
+explanation = "Without the shopt, x was ran: command substitutions did not inherit -e."
+review = "Subshells, command substitution, `local`"
+
+[[question]]
+id = "e-source"
+type = "choice"
+prompt = "A sourced library file contains set -u. What does that do to the script that sourced it?"
+choices = ["The sourcing shell is now in set -u mode too", "Nothing; it only affects the library", "It is ignored", "It causes a syntax error"]
+answers = ["The sourcing shell is now in set -u mode too"]
+explanation = "Sourced code runs in your shell. The caller then died on an unset variable. A library should not change the caller's options."
+review = "Does the setting reach other scripts?"
+
+[[question]]
+id = "e-child"
+type = "choice"
+prompt = "set -e is on and the script runs: bash child.sh (the child runs false; echo child-continued). What happens?"
+choices = ["The child continues; it is a new bash with its own options", "The child stops at false", "The parent never runs the child", "set -e is always inherited"]
+answers = ["The child continues; it is a new bash with its own options"]
+explanation = "Only an exported SHELLOPTS passes -e to child bash processes; sourced code obeys it because it is the same shell."
+review = "Does the setting reach other scripts?"
+
+[[question]]
+id = "e-rule"
+type = "choice"
+prompt = "What is the best summary of how to treat set -e?"
+choices = ["A last line of defence; check the commands that matter explicitly", "Always enough on its own", "Useless", "Only for POSIX sh"]
+answers = ["A last line of defence; check the commands that matter explicitly"]
+explanation = "You cannot predict from one line whether it will stop it; cd \"$dir\" || die is explicit and works either way."
+review = "What to do about all this"
+
+# ---- set -u ----
+
+[[question]]
+id = "u-typo"
+type = "choice"
+prompt = "What does set -u do for: name=Bob; echo \"Hi $nmae\" ?"
+choices = ["Stops with nmae: unbound variable", "Prints Hi", "Prints Hi Bob", "Prints Hi nmae"]
+answers = ["Stops with nmae: unbound variable"]
+explanation = "Without -u the typo expanded to an empty string."
+review = "`set -u` (nounset): catch typos and missing arguments"
+
+[[question]]
+id = "u-default"
+type = "multi"
+prompt = "Which expansions are safe under set -u when the variable may be unset?"
+choices = ["${v-}", "${v:-default}", "${v:?message}  (aborts deliberately with a message)", "$v"]
+answers = ["${v-}", "${v:-default}"]
+explanation = "$v fails; ${v:?message} aborts on purpose, which is the point of using it for paths, not a safe read."
+review = "`set -u` (nounset): catch typos and missing arguments"
+
+[[question]]
+id = "u-local"
+type = "choice"
+prompt = "set -u; f() { local x; echo \"[$x]\"; }; f. What happens?"
+choices = ["x: unbound variable (declared is not set)", "It prints []", "It prints [x]", "local sets x to 0"]
+answers = ["x: unbound variable (declared is not set)"]
+explanation = "local x= (with the =) sets it to empty and printed []."
+review = "`set -u` (nounset): catch typos and missing arguments"
+
+[[question]]
+id = "u-test"
+type = "choice"
+prompt = "Which test reads whether a variable is set without triggering set -u?"
+choices = ["[[ -v name ]]", "[ -z \"$name\" ]", "[ \"$name\" = '' ]", "echo $name"]
+answers = ["[[ -v name ]]"]
+explanation = "The other forms expand the variable and died with unbound variable."
+review = "`set -u` (nounset): catch typos and missing arguments"
+
+[[question]]
+id = "u-empty"
+type = "choice"
+prompt = "Which guard stops rm -rf \"$dir\"/* from becoming rm -rf /* when dir is EMPTY (but set)?"
+choices = ["${dir:?refusing: dir is empty}", "set -u alone", "${dir-}", "quoting $dir"]
+answers = ["${dir:?refusing: dir is empty}"]
+explanation = "set -u only catches an UNSET variable; :? catches unset or empty."
+review = "`set -u` (nounset): catch typos and missing arguments"
+
+[[question]]
+id = "u-array"
+type = "choice"
+prompt = "In the lesson's test, what did set -u; a=(); echo \"[${a[@]}]\" do on bash 5.3.9?"
+choices = ["Printed [] with no error (older bash versions were not tested)", "Failed with unbound variable", "Printed [a]", "Crashed bash"]
+answers = ["Printed [] with no error (older bash versions were not tested)"]
+explanation = "The lesson does not claim anything about older versions because they were not tested."
+review = "`set -u` (nounset): catch typos and missing arguments"
+
+# ---- pipefail ----
+
+[[question]]
+id = "p-basic"
+type = "choice"
+prompt = "What is the status of: false | true  (without pipefail)?"
+choices = ["0", "1", "141", "2"]
+answers = ["0"]
+explanation = "Only the last command counts. With pipefail it was 1."
+review = "`set -o pipefail`: do not hide a failing stage"
+
+[[question]]
+id = "p-pipestatus"
+type = "short"
+prompt = "What does echo \"${PIPESTATUS[*]}\" print right after: false | true | false (three numbers separated by spaces)?"
+answers = ["1 0 1"]
+explanation = "PIPESTATUS holds each stage's status; the next command overwrites it, so copy it at once."
+review = "`set -o pipefail`: do not hide a failing stage"
+
+[[question]]
+id = "p-141"
+type = "choice"
+prompt = "Under pipefail, yes | head -1 returns 141. What does 141 mean?"
+choices = ["128 + 13: the writer was killed by SIGPIPE", "A syntax error", "128 + 15: TERM", "The pipeline ran out of memory"]
+answers = ["128 + 13: the writer was killed by SIGPIPE"]
+explanation = "head exited early after one line; yes got SIGPIPE. PIPESTATUS was 141 0."
+review = "The SIGPIPE surprise"
+
+[[question]]
+id = "p-fix"
+type = "multi"
+prompt = "Which are fixes for a healthy pipeline failing with 141 under pipefail?"
+choices = ["Let the reader consume everything (or capture the output first)", "Accept it for that one line with || true", "Add 2>/dev/null", "Remove the quotes"]
+answers = ["Let the reader consume everything (or capture the output first)", "Accept it for that one line with || true"]
+explanation = "2>/dev/null hides messages but does not change the status."
+review = "The SIGPIPE surprise"
+
+# ---- ERR trap and cleanup ----
+
+[[question]]
+id = "t-errfn"
+type = "choice"
+prompt = "Without set -E, does an ERR trap fire for a failing command inside a function?"
+choices = ["No, it needs set -E (errtrace)", "Yes, always", "Only with set -e", "Only for builtins"]
+answers = ["No, it needs set -E (errtrace)"]
+explanation = "With set -E the trap fired inside the function too (the output showed it twice)."
+review = "Reporting failures: `trap ... ERR`"
+
+[[question]]
+id = "t-errvars"
+type = "multi"
+prompt = "Which are useful in an ERR trap that reports where the script failed?"
+choices = ["$LINENO", "$BASH_COMMAND", "caller", "$RANDOM"]
+answers = ["$LINENO", "$BASH_COMMAND", "caller"]
+explanation = "caller 0 printed line, function and file; $RANDOM is a random number."
+review = "Reporting failures: `trap ... ERR`"
+
+[[question]]
+id = "t-errcond"
+type = "choice"
+prompt = "Does an ERR trap fire for if false; then :; fi ?"
+choices = ["No, conditions are exempt, as with set -e", "Yes", "Only in a function", "Only with -u"]
+answers = ["No, conditions are exempt, as with set -e"]
+explanation = "The same exceptions as set -e apply: if conditions and the commands before ||."
+review = "Reporting failures: `trap ... ERR`"
+
+[[question]]
+id = "c-bug"
+type = "choice"
+prompt = "A script has set -Eeuo pipefail, an ERR trap and cleanup() { [ -n \"$tmp\" ] && rm -f \"$tmp\"; } as an EXIT trap, with tmp empty. The script reaches exit 2. What exit status did the lesson's test see?"
+choices = ["1: the failing cleanup overwrote it", "2", "0", "127"]
+answers = ["1: the failing cleanup overwrote it"]
+explanation = "The false test was cleanup's last command; under set -e it failed inside the EXIT trap. The fix is if [ -n \"$tmp\" ]; then rm ...; fi."
+review = "The cleanup trap that changes your exit status"
+
+[[question]]
+id = "c-bugfix"
+type = "choice"
+prompt = "Which cleanup function cannot change the exit status when tmp is empty?"
+choices = ["cleanup() { if [ -n \"$tmp\" ]; then rm -f -- \"$tmp\"; fi; }", "cleanup() { [ -n \"$tmp\" ] && rm -f -- \"$tmp\"; }", "cleanup() { [ -z \"$tmp\" ] || exit 1; }", "cleanup() { false; }"]
+answers = ["cleanup() { if [ -n \"$tmp\" ]; then rm -f -- \"$tmp\"; fi; }"]
+explanation = "An if with no else returns 0 when the condition is false."
+review = "The cleanup trap that changes your exit status"
+
+[[question]]
+id = "c-found"
+type = "choice"
+prompt = "How was the cleanup bug found in the lesson?"
+choices = ["By a test that checked the exit status, not just the output", "By ShellCheck", "By set -x", "By reading the manual"]
+answers = ["By a test that checked the exit status, not just the output"]
+explanation = "The output looked right. ShellCheck reported no findings on the buggy template."
+review = "A test harness in fifteen lines"
+
+# ---- signals ----
+
+[[question]]
+id = "s-kill"
+type = "choice"
+prompt = "What happened to the EXIT trap when the script was sent kill -KILL?"
+choices = ["It did not run (rc 137)", "It ran (rc 137)", "It ran (rc 143)", "It ran and cleaned up"]
+answers = ["It did not run (rc 137)"]
+explanation = "SIGKILL cannot be trapped. Design for a stale temp file at the next start."
+review = "Cleanup, signals and exit codes"
+
+[[question]]
+id = "s-codes"
+type = "short"
+prompt = "What exit status does a shell report for a process ended by SIGTERM (number only)?"
+answers = ["143"]
+explanation = "128 + 15."
+review = "Cleanup, signals and exit codes"
+
+[[question]]
+id = "s-timeout"
+type = "short"
+prompt = "What status does timeout return when the command is killed for taking too long (number only)?"
+answers = ["124"]
+explanation = "timeout 1 sleep 5 returned 124."
+review = "Cleanup, signals and exit codes"
+
+[[question]]
+id = "s-bgint"
+type = "choice"
+prompt = "In the test, a trapped SIGINT was sent to a worker the script started with & in a non-interactive shell. What happened?"
+choices = ["The worker ignored it and finished normally", "The trap ran and printed got INT", "The worker died with 130", "bash refused to send it"]
+answers = ["The worker ignored it and finished normally"]
+explanation = "Background jobs of a non-interactive script ignore SIGINT; if you rely on Ctrl+C reaching workers, test it."
+review = "Cleanup, signals and exit codes"
+
+# ---- idempotence ----
+
+[[question]]
+id = "i-ln"
+type = "choice"
+prompt = "Which command creates a symbolic link without failing when the link already exists?"
+choices = ["ln -sfn target link", "ln -s target link", "ln target link", "mkdir link"]
+answers = ["ln -sfn target link"]
+explanation = "ln -s printed Already exists and returned 1 on the second run."
+review = "Idempotent scripts"
+
+[[question]]
+id = "i-append"
+type = "choice"
+prompt = "Which line appends a setting to a file only if the exact line is missing?"
+choices = ["grep -qxF \"$line\" f || echo \"$line\" >> f", "echo \"$line\" >> f", "grep \"$line\" f && echo \"$line\" >> f", "echo \"$line\" > f"]
+answers = ["grep -qxF \"$line\" f || echo \"$line\" >> f"]
+explanation = "-x whole line, -F fixed string, -q quiet. A blind append left two copies after two runs."
+review = "Idempotent scripts"
+
+[[question]]
+id = "i-atomic"
+type = "choice"
+prompt = "Why is the temporary file created in the SAME directory as the target?"
+choices = ["So that mv replaces it by a rename inside one file system", "mktemp requires it", "It is faster to type", "So that cp works"]
+answers = ["So that mv replaces it by a rename inside one file system"]
+explanation = "The lesson states this is meant to be atomic and says it did not test an interrupted rename."
+review = "Write files atomically"
+
+[[question]]
+id = "i-mktemp"
+type = "short"
+prompt = "What file mode (three digits) did mktemp give the file it created?"
+answers = ["600"]
+explanation = "stat printed 600: private to the owner."
+review = "Write files atomically"
+
+[[question]]
+id = "i-dry"
+type = "choice"
+prompt = "A dry-run switch only works if..."
+choices = ["every change goes through the one run function", "the script uses set -e", "it is written in POSIX sh", "it never prints anything"]
+answers = ["every change goes through the one run function"]
+explanation = "One stray rm outside run defeats it."
+review = "A dry-run switch"
+
+# ---- debugging ----
+
+[[question]]
+id = "d-ps4"
+type = "choice"
+prompt = "Which variable sets the prefix printed in front of each line of a set -x trace?"
+choices = ["PS4", "PS1", "IFS", "PS2"]
+answers = ["PS4"]
+explanation = "The default is +; a PS4 with ${BASH_SOURCE##*/}:${LINENO}:${FUNCNAME[0]:-main} shows file, line and function."
+review = "`set -x` and `PS4`"
+
+[[question]]
+id = "d-secret"
+type = "choice"
+prompt = "What did set -x show for: pw=hunter2; curl_stub --user \"bob:$pw\" ?"
+choices = ["The password in clear text, twice", "Asterisks", "Nothing", "Only the first command"]
+answers = ["The password in clear text, twice"]
+explanation = "+ pw=hunter2 and + curl_stub --user bob:hunter2. Never trace around credentials."
+review = "`set -x` and `PS4`"
+
+[[question]]
+id = "d-xtracefd"
+type = "choice"
+prompt = "What does BASH_XTRACEFD=9 do (with exec 9>trace.log)?"
+choices = ["Sends the set -x trace to the file instead of standard error", "Turns tracing off", "Traces only functions", "Closes descriptor 9"]
+answers = ["Sends the set -x trace to the file instead of standard error"]
+explanation = "The test wrote two lines to trace.log and hi to the screen."
+review = "`set -x` and `PS4`"
+
+[[question]]
+id = "d-n"
+type = "multi"
+prompt = "What is true of bash -n script.sh?"
+choices = ["It only parses; nothing is run", "It exits non-zero on a syntax error", "It says whether the script is safe", "It found rm -rf / dangerous"]
+answers = ["It only parses; nothing is run", "It exits non-zero on a syntax error"]
+explanation = "A valid file containing rm -rf / returned 0. It checks syntax, not safety."
+review = "`bash -n`: parse, do not run"
+
+[[question]]
+id = "d-v"
+type = "choice"
+prompt = "How does bash -v differ from bash -x?"
+choices = ["-v prints each line as read, before expansion", "-v prints after expansion", "-v validates syntax", "They are the same"]
+answers = ["-v prints each line as read, before expansion"]
+explanation = "The output was a=1, echo \"$a\", then 1."
+review = "`bash -n`: parse, do not run"
+
+# ---- ShellCheck ----
+
+[[question]]
+id = "sc-what"
+type = "multi"
+prompt = "Which problems did ShellCheck flag in the flawed script?"
+choices = ["cd without || exit", "Iterating over ls output", "Unquoted variables", "A missing shebang"]
+answers = ["cd without || exit", "Iterating over ls output", "Unquoted variables"]
+explanation = "The script had a shebang; it reported SC2164, SC2045 and SC2086 among others."
+review = "ShellCheck: a second pair of eyes"
+
+[[question]]
+id = "sc-limit"
+type = "choice"
+prompt = "ShellCheck 0.11.0 on the template with the buggy cleanup function reported:"
+choices = ["No findings: it does not catch every bug", "The failing cleanup", "A syntax error", "SC2086"]
+answers = ["No findings: it does not catch every bug"]
+explanation = "The exit-status bug was only found by a test."
+review = "ShellCheck: a second pair of eyes"
+
+[[question]]
+id = "sc-dialect"
+type = "choice"
+prompt = "What did ShellCheck say about [[ ]] in a #!/bin/sh file?"
+choices = ["In POSIX sh, [[ ]] is undefined (SC3010)", "Nothing", "It is fine", "Use (("]
+answers = ["In POSIX sh, [[ ]] is undefined (SC3010)"]
+explanation = "It also flagged arrays (SC3030, SC3054)."
+review = "ShellCheck: a second pair of eyes"
+
+# ---- security ----
+
+[[question]]
+id = "x-dash"
+type = "choice"
+prompt = "A directory contains files named -rf and -n. Which command removes them safely?"
+choices = ["rm -- -rf -n", "rm *", "rm -rf *", "rm -n -rf"]
+answers = ["rm -- -rf -n"]
+explanation = "echo * showed -n -rf a b: a plain rm * would pass them as options. -- ends the options (so does the ./ prefix)."
+review = "Security traps"
+
+[[question]]
+id = "x-test"
+type = "choice"
+prompt = "x=\"-f /etc/passwd\"; [ $x ]  (unquoted) returned true. Why?"
+choices = ["The unquoted value was split into a file test chosen by the user", "-f always succeeds", "[ ] ignores arguments", "/etc/passwd is empty"]
+answers = ["The unquoted value was split into a file test chosen by the user"]
+explanation = "Quoted as [ -n \"$x\" ] it is only a string."
+review = "Security traps"
+
+[[question]]
+id = "x-eval"
+type = "choice"
+prompt = "in=\"x; echo INJECTED\"; eval \"echo $in\" prints:"
+choices = ["x, then INJECTED (the data ran as a command)", "x; echo INJECTED", "Nothing", "An error"]
+answers = ["x, then INJECTED (the data ran as a command)"]
+explanation = "printf '%s\\n' \"$in\" printed the string as data."
+review = "Security traps"
+
+[[question]]
+id = "x-echo"
+type = "choice"
+prompt = "in=\"-n\"; echo \"$in\" prints:"
+choices = ["Nothing: echo took it as an option", "-n", "A newline only after -n", "An error"]
+answers = ["Nothing: echo took it as an option"]
+explanation = "printf '%s\\n' \"$in\" printed -n."
+review = "Security traps"
+
+[[question]]
+id = "x-read"
+type = "choice"
+prompt = "Reading the line C:\\temp\\new with read x (no -r) stored:"
+choices = ["C:tempnew", "C:\\temp\\new", "C:", "An empty string"]
+answers = ["C:tempnew"]
+explanation = "With read -r it stored C:\\temp\\new."
+review = "Security traps"
+
+[[question]]
+id = "x-path"
+type = "choice"
+prompt = "Which command shows which program a name will run, including a hijacked one?"
+choices = ["command -v ls", "echo ls", "ls --which", "which -a is the only way"]
+answers = ["command -v ls"]
+explanation = "It printed the hijack path. A privileged script should set PATH=/usr/bin:/bin first."
+review = "Security traps"
+
+[[question]]
+id = "x-secret"
+type = "multi"
+prompt = "Where can a secret leak from a script? (as shown in the lesson)"
+choices = ["The set -x trace", "The environment of every child process", "The command line, readable in /proc/PID/cmdline", "Only the screen at the time it is typed"]
+answers = ["The set -x trace", "The environment of every child process", "The command line, readable in /proc/PID/cmdline"]
+explanation = "Pass secrets by a mode-600 file, standard input or a descriptor."
+review = "Security traps"
+
+[[question]]
+id = "x-tmp"
+type = "choice"
+prompt = "Why is /tmp/myscript.$$ a poor temporary file name?"
+choices = ["It is guessable: someone else can create it first", "$$ is empty", "/tmp is read-only", "It is too long"]
+answers = ["It is guessable: someone else can create it first"]
+explanation = "mktemp gives a random name and mode 600."
+review = "Security traps"
+
+# ---- unknown scripts and the template ----
+
+[[question]]
+id = "r-first"
+type = "choice"
+prompt = "What is the first safe step with a script you did not write?"
+choices = ["Read it (bash -n and shellcheck help, but do not run it)", "Run it as an administrator to see what it does", "Pipe it to a shell", "Delete the shebang"]
+answers = ["Read it (bash -n and shellcheck help, but do not run it)"]
+explanation = "Then run it only as a normal user in a throw-away VM."
+review = "Reading an unknown script before you run it"
+
+[[question]]
+id = "r-look"
+type = "multi"
+prompt = "Which are red flags to look for when reading an unknown script?"
+choices = ["rm -rf with a variable that could be empty", "curl or wget output piped to a shell", "eval", "A comment explaining a step"]
+answers = ["rm -rf with a variable that could be empty", "curl or wget output piped to a shell", "eval"]
+explanation = "Also chmod 777, writes to /etc or crontab, and base64 -d piped to a shell."
+review = "Reading an unknown script before you run it"
+
+[[question]]
+id = "tp-exit"
+type = "multi"
+prompt = "In the template, which statuses did it return?"
+choices = ["2 for a usage error", "1 for a bad setting or missing file", "0 for a dry run", "5 for a read-only file"]
+answers = ["2 for a usage error", "1 for a bad setting or missing file", "0 for a dry run"]
+explanation = "A read-only file gave 1 with not writable."
+review = "A robust script template, tested"
+
+[[question]]
+id = "tp-grep"
+type = "choice"
+prompt = "In the template, why grep -qxF -- \"$setting\" \"$file\"?"
+choices = ["-x whole line, -F fixed string (not a regex), -- guards a value starting with a dash", "-x means extended regex", "-- means quiet", "-F follows symlinks"]
+answers = ["-x whole line, -F fixed string (not a regex), -- guards a value starting with a dash"]
+explanation = "Each flag has a reason."
+review = "A robust script template, tested"
+
+[[question]]
+id = "tp-awk"
+type = "choice"
+prompt = "Why does the template pass values to awk with -v key=... and not inside the program text?"
+choices = ["So the data cannot become code (injection)", "-v is faster", "awk needs it", "To save a variable"]
+answers = ["So the data cannot become code (injection)"]
+explanation = "The text-processing lesson reproduced the injection."
+review = "A robust script template, tested"
+
+[[question]]
+id = "tp-harness"
+type = "choice"
+prompt = "Why does the lesson's harness include a deliberately wrong test?"
+choices = ["A suite that has never failed has not been shown to work", "To annoy the learner", "bash requires one failure", "To test ShellCheck"]
+answers = ["A suite that has never failed has not been shown to work"]
+explanation = "It printed FAIL and 7 passed, 1 failed, as intended."
+review = "A test harness in fifteen lines"

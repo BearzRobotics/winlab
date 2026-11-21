@@ -1,0 +1,74 @@
+schema_version = 1
+id = "foundations.bash-robust-scripts"
+title = "Robust bash scripts: set -e, set -u, pipefail, cleanup, debugging and security"
+summary = "How bash scripts fail and how to make them safe, tested on a real machine: what set -e, set -u and pipefail really do and where they silently do nothing (functions in conditions, local x=$(...), SIGPIPE 141), traps and signals, an EXIT-trap bug that overwrote exit statuses, idempotent and atomic scripts, dry runs, set -x with PS4, ShellCheck, security traps (dash-named files, [ $x ], eval, PATH, secrets), how to read an unknown script, and a tested template with a 15-line test harness."
+content = "bash-robust-scripts.md"
+estimated_minutes = 150
+level = 4
+objectives = [
+  "Explain what set -e, set -u and set -o pipefail do, and name where set -e is ignored (conditions, left of &&, before ||, functions called that way)",
+  "Avoid the traps local x=$(cmd), ((i++)) with i=0, and a function or cleanup whose last command is a failing test",
+  "Explain why yes | head -1 returns 141 under pipefail and give fixes",
+  "Use an ERR trap with set -E, $LINENO and $BASH_COMMAND to report where a script failed",
+  "Clean up with an EXIT trap, write cleanup functions that cannot change the exit status, and state what cannot be trapped (SIGKILL)",
+  "Read exit statuses 128 + signal number, and use timeout and a retry function",
+  "Make a script idempotent and write files atomically with mktemp and mv in the same directory",
+  "Add a dry-run switch that routes every change through one function",
+  "Debug with set -x, a PS4 that shows file, line and function, BASH_XTRACEFD, bash -n and bash -v, and say what a trace leaks",
+  "Run ShellCheck, read its codes and dialect warnings, and say what it does not catch",
+  "Defend against dash-named files, unquoted [ ] operands, eval, printf format injection, read without -r, a hijackable PATH, guessable temp files and secrets on command lines",
+  "Read an unknown script safely before running it, and write and test a robust script with a small harness",
+]
+prerequisites = ["foundations.bash-functions-and-scripts"]
+privilege = "standard"
+certifications = ["redhat-rhcsa/essential-tools", "comptia-linux-plus/scripting-containers-automation"]
+evaluation_criteria = [
+  "Learner predicts the set -e outcome of the function, local x=$(false) and ((i++)) snippets and then confirms them",
+  "Learner reproduces the yes | head -1 status 141 under pipefail and applies two fixes",
+  "Learner reproduces the failing-cleanup exit-status bug and fixes it with an if",
+  "Learner makes a script idempotent and shows two runs give the same state",
+  "Learner shows that a killed script leaves no temporary file",
+  "Learner traces a script with a PS4 showing file, line and function",
+  "Learner fixes every ShellCheck finding on the flawed script",
+  "Learner lists what an unknown script touches without running it",
+]
+
+[[references]]
+title = "Bash Reference Manual: The Set Builtin"
+url = "https://tiswww.case.edu/php/chet/bash/bashref.html#The-Set-Builtin"
+
+[[references]]
+title = "Bash Reference Manual: Bash Variables (PS4, BASH_XTRACEFD)"
+url = "https://tiswww.case.edu/php/chet/bash/bashref.html#Bash-Variables"
+
+[[references]]
+title = "POSIX Shell Command Language (The Open Group)"
+url = "https://pubs.opengroup.org/onlinepubs/9799919799/utilities/V3_chap02.html"
+
+[[references]]
+title = "BashFAQ/105: why set -e does not do what you expect (Greg's Wiki)"
+url = "https://mywiki.wooledge.org/BashFAQ/105"
+
+[[references]]
+title = "BashPitfalls (Greg's Wiki)"
+url = "https://mywiki.wooledge.org/BashPitfalls"
+
+[[references]]
+title = "ShellCheck"
+url = "https://www.shellcheck.net/"
+
+[[references]]
+title = "ShellCheck wiki: SC2086, double quote to prevent globbing and word splitting"
+url = "https://github.com/koalaman/shellcheck/wiki/SC2086"
+
+[[references]]
+title = "signal(7) manual page (man7.org)"
+url = "https://man7.org/linux/man-pages/man7/signal.7.html"
+
+[[references]]
+title = "mktemp(1) manual page (man7.org)"
+url = "https://man7.org/linux/man-pages/man1/mktemp.1.html"
+
+[[references]]
+title = "timeout(1) manual page (man7.org)"
+url = "https://man7.org/linux/man-pages/man1/timeout.1.html"
