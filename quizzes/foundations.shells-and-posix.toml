@@ -305,8 +305,8 @@ review = "A bashism table, from running it"
 id = "ch-bash"
 type = "choice"
 prompt = "A script needs arrays and [[ ]]. What should its shebang be?"
-choices = ["#!/usr/bin/env bash", "#!/bin/sh", "No shebang", "#!/bin/dash"]
-answers = ["#!/usr/bin/env bash"]
+choices = ["Name bash: #!/bin/bash or #!/usr/bin/env bash", "#!/bin/sh", "No shebang", "#!/bin/dash"]
+answers = ["Name bash: #!/bin/bash or #!/usr/bin/env bash"]
 explanation = "Say bash when you need bash, and tell the reader."
 review = "Choosing the shell"
 

@@ -112,7 +112,7 @@ Why the **silent** ones happen, because each is a parsing fact, not luck:
 
 ## Choosing the shell
 
-1. **Needs bash features** (arrays, `[[ ]]`, `mapfile`, process substitution)? Say `#!/usr/bin/env bash` and be proud of it. Tell the reader that bash is required.
+1. **Needs bash features** (arrays, `[[ ]]`, `mapfile`, process substitution)? **Name bash in the shebang**: `#!/bin/bash` or `#!/usr/bin/env bash` (both are correct; `env` helps where bash is not in `/bin`). Tell the reader that bash is required. **Never put `sh` in the shebang of a script that uses bash features**, and do not rely on `/bin/sh` being a symlink to bash: it works by accident on some systems (as the symlink experiment above showed) and is exactly the habit this lesson exists to break.
 2. **Must run on any Unix** (installers, boot scripts, containers with busybox, scripts in an unknown environment)? Write **POSIX sh**, start with `#!/bin/sh`, and test it in a real dash and busybox ash.
 3. **Interactive use**: whatever you like; keep the habits out of scripts.
 4. **Too complex** (data structures, parsing, many files)? Consider a language built for it: the shell's strength is gluing programs together.
