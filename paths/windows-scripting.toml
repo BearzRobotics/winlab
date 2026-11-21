@@ -1,0 +1,19 @@
+schema_version = 1
+id = "windows-scripting"
+title = "Windows scripting: CMD and PowerShell"
+goal = "Write, read and audit scripts on Windows in both shells, and understand why they behave as they do."
+audience = "Anyone who administers Windows machines; also those who must maintain old batch files."
+order = 40
+certifications = ["comptia-a-core2/operating-systems"]
+
+[[stage]]
+title = "Command Prompt"
+entry_hint = "Already comfortable with CMD, or only need PowerShell? Skip to the next stage. Only maintain old batch files? This stage alone is a complete path."
+lessons = ["foundations.cmd-basics", "foundations.cmd-variables-and-expansion", "foundations.cmd-control-flow", "foundations.cmd-batch-files", "foundations.cmd-text-and-files", "foundations.cmd-advanced"]
+labs = ["labs.script-cmd-args-sum", "labs.script-cmd-count-files", "labs.script-cmd-backup", "labs.script-cmd-exit-code", "labs.script-cmd-number-lines", "labs.script-cmd-subroutine", "labs.script-cmd-total-size"]
+
+[[stage]]
+title = "PowerShell"
+entry_hint = "New to PowerShell? Start here; no CMD needed."
+lessons = ["foundations.powershell-basics", "foundations.ps-variables-types-operators", "foundations.powershell-control-flow", "foundations.ps-functions-and-scripts", "foundations.ps-errors-and-debugging", "foundations.ps-working-with-data", "foundations.ps-modules-and-remoting", "foundations.ps-system-admin-scripting", "foundations.ps-advanced"]
+labs = ["labs.script-count-errors", "labs.script-ps-csv-summary", "labs.script-ps-rename-files", "labs.script-ps-switch-classify", "labs.script-ps-parameters", "labs.script-ps-error-handling", "labs.script-ps-json-features"]

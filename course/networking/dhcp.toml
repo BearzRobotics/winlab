@@ -4,6 +4,7 @@ title = "DHCP: how machines get their addresses"
 summary = "The four-step DHCP exchange, leases and renewal, what a scope and its options hand out, relay agents, and how to read a lease and recover from a missing or wrong one on Windows and Linux."
 content = "dhcp.md"
 estimated_minutes = 45
+level = 2
 objectives = [
   "Describe the Discover, Offer, Request and Acknowledge exchange and the ports it uses",
   "Read a client's lease: address, mask, gateway, DNS, server, obtained and expires",

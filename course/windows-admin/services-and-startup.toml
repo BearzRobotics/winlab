@@ -4,6 +4,7 @@ title = "Windows services, startup types and scheduled tasks"
 summary = "Read and change services and their startup type with PowerShell and sc.exe, find the account and program behind a service, follow dependencies and recovery actions, diagnose a service that will not start, and create and troubleshoot scheduled tasks."
 content = "services-and-startup.md"
 estimated_minutes = 70
+level = 3
 objectives = [
   "Explain the difference between a service's status and its startup type, and check both",
   "List, start, stop and reconfigure services with PowerShell, sc.exe and net, including the sc.exe syntax traps",

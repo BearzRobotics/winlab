@@ -4,6 +4,7 @@ title = "IP addressing and subnetting"
 summary = "Read an IPv4 address and prefix, find the network, broadcast and usable range, decide whether two hosts share a network, plus the special ranges and the basics of IPv6."
 content = "subnetting.md"
 estimated_minutes = 60
+level = 3
 objectives = [
   "Convert between dotted decimal, binary and prefix length",
   "Work out the network address, broadcast address and usable host range of any IPv4 address and prefix",

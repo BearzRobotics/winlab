@@ -4,6 +4,7 @@ title = "The Windows registry, startup locations and file systems"
 summary = "Hives, keys and values, safe registry editing, where programs start from, NTFS versus other file systems, and finding what fills a disk."
 content = "registry-and-filesystems.md"
 estimated_minutes = 40
+level = 3
 objectives = [
   "Name the registry hives and the types of value",
   "Read, create and remove a value with PowerShell and export a key first",

@@ -4,6 +4,7 @@ title = "Security fundamentals for administrators"
 summary = "Least privilege, permissions, accounts, firewalls, patching and SELinux, with the built-in tools on Windows and Linux."
 content = "security-fundamentals.md"
 estimated_minutes = 45
+level = 2
 objectives = [
   "Explain least privilege and apply it to accounts and groups",
   "Read file permissions on Windows (icacls) and Linux (ls -l, chmod)",

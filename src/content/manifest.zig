@@ -5,6 +5,7 @@ const std = @import("std");
 const toml = @import("toml");
 
 pub const schema_version: i64 = 1;
+pub const max_level = 5;
 
 pub const Privilege = enum { standard, administrator };
 
@@ -22,7 +23,10 @@ pub const Lesson = struct {
     /// Markdown file, relative to the manifest's directory (validated: no `..`, no absolute path).
     content: []const u8,
     estimated_minutes: u32,
+    /// Difficulty 1 (first contact) to 5 (expert, open-book); 0 when the manifest does not say.
+    level: u8,
     objectives: []const []const u8,
+    /// Lessons this one assumes. Advice, never a gate: the app warns and offers a link (docs/learning-paths.md).
     prerequisites: []const []const u8,
     windows_features: []const []const u8,
     privilege: Privilege,
@@ -79,6 +83,14 @@ pub fn parse(gpa: std.mem.Allocator, text: []const u8, failure: *Failure) Error!
     const minutes = t.getInt("estimated_minutes") orelse return fail(failure, "estimated_minutes", "missing or not an integer");
     if (minutes < 1 or minutes > 24 * 60) return fail(failure, "estimated_minutes", "must be between 1 and 1440");
     lesson.estimated_minutes = @intCast(minutes);
+
+    if (t.get("level") == null) {
+        lesson.level = 0;
+    } else {
+        const level = t.getInt("level") orelse return fail(failure, "level", "not an integer");
+        if (level < 1 or level > max_level) return fail(failure, "level", "must be between 1 and 5");
+        lesson.level = @intCast(level);
+    }
 
     lesson.objectives = try stringList(a, t, "objectives", failure);
     if (lesson.objectives.len == 0) return fail(failure, "objectives", "at least one measurable objective is required");
@@ -239,6 +251,7 @@ const sample =
     \\title = "Sample"
     \\content = "sample.md"
     \\estimated_minutes = 15
+    \\level = 3
     \\objectives = ["Explain X", "Perform Y"]
     \\prerequisites = ["foundations.intro"]
     \\privilege = "administrator"
@@ -255,6 +268,7 @@ test "parses a valid manifest" {
     defer l.deinit();
     try std.testing.expectEqualStrings("foundations.sample", l.id);
     try std.testing.expectEqual(@as(u32, 15), l.estimated_minutes);
+    try std.testing.expectEqual(@as(u8, 3), l.level);
     try std.testing.expectEqual(@as(usize, 2), l.objectives.len);
     try std.testing.expectEqual(Privilege.administrator, l.privilege);
     try std.testing.expectEqualStrings("none", l.vm_topology);
@@ -275,6 +289,9 @@ test "rejects bad manifests with the offending key" {
     try expectRejected(base ++ "content = \"C:/x.md\"\n", "content");
     try expectRejected("schema_version = 1\nid = \"a.b\"\ntitle = \"t\"\ncontent = \"x.md\"\nestimated_minutes = 5\nobjectives = []\n", "objectives");
     try expectRejected(base ++ "content = \"x.md\"\nprivilege = \"root\"\n", "privilege");
+    try expectRejected(base ++ "content = \"x.md\"\nlevel = 0\n", "level");
+    try expectRejected(base ++ "content = \"x.md\"\nlevel = 6\n", "level");
+    try expectRejected(base ++ "content = \"x.md\"\nlevel = \"hard\"\n", "level");
     try expectRejected(base ++ "content = \"x.md\"\n[[references]]\ntitle = \"t\"\nurl = \"javascript:alert(1)\"\n", "references.url");
 }
 

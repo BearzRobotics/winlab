@@ -1,0 +1,33 @@
+schema_version = 1
+id = "windows-admin"
+title = "Windows administrator"
+goal = "Manage Windows clients and servers: accounts, services, the registry, networking, updates and policy."
+audience = "Support staff growing into administration."
+order = 30
+certifications = ["comptia-a-core2/operating-systems", "microsoft-md-102/manage-maintain-devices"]
+
+[[stage]]
+title = "Foundations"
+lessons = ["foundations.architecture", "foundations.troubleshooting-method", "foundations.cmd-basics", "foundations.powershell-basics"]
+labs = ["labs.rename-server"]
+
+[[stage]]
+title = "Core administration"
+lessons = ["windows-admin.accounts-and-permissions", "windows-admin.services-and-startup", "windows-admin.registry-and-filesystems"]
+labs = ["labs.folder-permissions", "labs.user-account-disabled", "labs.spooler-stopped", "labs.scheduled-task-disabled", "labs.time-service-disabled", "labs.policy-blocks-task-manager"]
+
+[[stage]]
+title = "Networking for administrators"
+lessons = ["networking.addressing-and-names", "networking.dns", "networking.ports-and-firewalls"]
+labs = ["labs.dns-broken", "labs.hosts-file-entry", "labs.rdp-firewall", "labs.gateway-route-override"]
+
+[[stage]]
+title = "Endpoints"
+lessons = ["endpoints.update-and-policy", "endpoints.protect-devices", "endpoints.endpoint-management"]
+labs = ["labs.windows-updates-blocked", "labs.firewall-profiles-off"]
+
+[[stage]]
+title = "Automate it"
+entry_hint = "Optional: the scripting paths go much deeper."
+lessons = ["foundations.ps-variables-types-operators", "foundations.powershell-control-flow", "foundations.ps-functions-and-scripts"]
+optional = ["foundations.ps-system-admin-scripting"]

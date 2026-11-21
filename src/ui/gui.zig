@@ -31,6 +31,32 @@ pub const Page = struct {
     root: *winlab.md.Node,
     /// The parsed document, for the plain-text view and "copy as text". Null when not kept.
     doc: ?*const winlab.md.Document = null,
+    /// Difficulty 1 to 5 (0 unknown) and estimated minutes, shown in the header and the list.
+    level: u8 = 0,
+    minutes: u32 = 0,
+    /// Lesson ids this lesson recommends first. Advice, never a gate.
+    prerequisites: []const []const u8 = &.{},
+};
+
+/// One stage of a learning path: lessons as indices into the page list.
+pub const PathStage = struct {
+    title: []const u8,
+    entry_hint: []const u8 = "",
+    pages: []const usize,
+    /// Worth doing on this path but not needed to finish it.
+    optional: []const usize = &.{},
+};
+
+/// A learning path for the window (docs/learning-paths.md). Memory is borrowed like `Page`.
+pub const PathView = struct {
+    id: []const u8,
+    title: []const u8,
+    goal: []const u8,
+    audience: []const u8 = "",
+    stages: []const PathStage,
+    minutes: u32 = 0,
+    level_min: u8 = 0,
+    level_max: u8 = 0,
 };
 
 /// Progress tracking hooks. `save` persists `progress` and returns false on failure.
@@ -96,6 +122,8 @@ pub const Options = struct {
     lab_engine: ?LabEngine = null,
     /// Quizzes (one per lesson at most); each attempt draws a subset of its bank.
     quizzes: []const winlab.quiz.Quiz = &.{},
+    /// Learning paths (goal-based lesson lists); empty hides the path picker.
+    paths: []const PathView = &.{},
     /// If set and no lab can run, shown when a lab is requested (for example "no training VM registered").
     lab_note: []const u8 = "",
     /// Shells offered by the Practice menu; empty hides the entry.
@@ -189,6 +217,9 @@ const App = struct {
     groups: [max_groups]GroupInfo = undefined,
     group_count: usize = 0,
     collapsed: [max_groups]bool = @splat(false),
+    /// The learning path being followed (index into `o.paths`); null shows all lessons by area.
+    path: ?usize = null,
+    show_picker: bool = false,
     lab: LabUi = .{},
     qz: QuizUi = .{},
     /// Frame-local message for a modal that needs only text.
@@ -247,6 +278,7 @@ pub fn run(gpa: std.mem.Allocator, title: [:0]const u8, pages: []const Page, o: 
     // Open on the first lesson in the list, not the first in directory order.
     if (a.visible.items.len > 0) a.current = a.visible.items[0];
     loadNotes(a);
+    restorePath(a);
 
     while (!a.quit) switch (Dx11.serviceMessageQueue()) {
         .queue_empty => {
@@ -376,9 +408,22 @@ fn rebuildList(a: *App) void {
         return;
     }
     a.visible.clearRetainingCapacity();
+    if (a.path) |pi| {
+        // A path: its lessons in stage order, each lesson once (required, then optional, per stage).
+        for (a.o.paths[pi].stages) |st| {
+            for (st.pages) |p| appendUnique(a, p);
+            for (st.optional) |p| appendUnique(a, p);
+        }
+        return;
+    }
     for (0..a.group_count) |g| {
         if (!a.collapsed[g]) appendGroup(a, g);
     }
+}
+
+fn appendUnique(a: *App, page: usize) void {
+    for (a.visible.items) |v| if (v == page) return;
+    a.visible.append(a.gpa, page) catch {};
 }
 
 fn statusOf(a: *const App, i: usize) winlab.progress.Status {
@@ -392,14 +437,76 @@ fn selectPage(a: *App, index: usize) void {
     a.current = index;
     a.reader_scroll.scrollToOffset(.vertical, 0);
     loadNotes(a);
+    rememberPosition(a);
     dvui.refresh(null, @src(), null);
+}
+
+/// Stores the open lesson as the last position on the active path, so the next start resumes there.
+fn rememberPosition(a: *App) void {
+    const pi = a.path orelse return;
+    const t = a.o.tracking orelse return;
+    const id = a.pages[a.current].id;
+    if (std.mem.eql(u8, t.progress.lastOnPath(a.o.paths[pi].id), id)) return;
+    t.progress.setLastOnPath(a.o.paths[pi].id, id) catch return;
+    _ = t.save(t.save_ctx, t.progress);
+}
+
+/// Index of the page with this lesson id, or null.
+fn pageById(a: *const App, id: []const u8) ?usize {
+    for (a.pages, 0..) |p, i| if (std.mem.eql(u8, p.id, id)) return i;
+    return null;
+}
+
+/// The special stored value for "I chose to see every lesson", so the first-run picker does not return.
+const all_lessons_key = "all";
+
+/// Follows path `pi` (null: all lessons by area), remembers the choice, and opens the learner's place:
+/// the last lesson they had open on that path, else the first lesson not yet done.
+fn choosePath(a: *App, pi: ?usize) void {
+    a.path = pi;
+    a.search_buf = @splat(0);
+    rebuildList(a);
+    if (a.o.tracking) |t| {
+        t.progress.setActivePath(if (pi) |i| a.o.paths[i].id else all_lessons_key) catch {};
+        _ = t.save(t.save_ctx, t.progress);
+    }
+    if (a.visible.items.len == 0) return;
+    var target = a.visible.items[0];
+    if (pi) |i| if (a.o.tracking) |t| {
+        const last = t.progress.lastOnPath(a.o.paths[i].id);
+        if (pageById(a, last)) |lp| {
+            target = lp;
+        } else for (a.visible.items) |p| {
+            if (!statusOf(a, p).isDone() and statusOf(a, p) != .skipped) {
+                target = p;
+                break;
+            }
+        }
+    };
+    a.current = a.pages.len; // force the switch even when the lesson is already open
+    selectPage(a, target);
+}
+
+/// Restores the path from the last session (or, on a first run with no progress, offers the picker).
+fn restorePath(a: *App) void {
+    if (a.o.paths.len == 0) return;
+    const t = a.o.tracking orelse return;
+    const id = t.progress.active_path;
+    if (id.len == 0) {
+        if (t.progress.map.count() == 0) a.show_picker = true;
+        return;
+    }
+    for (a.o.paths, 0..) |p, i| if (std.mem.eql(u8, p.id, id)) {
+        choosePath(a, i);
+        return;
+    };
 }
 
 fn nextStatus(s: winlab.progress.Status) winlab.progress.Status {
     return switch (s) {
         .not_started => .in_progress,
         .in_progress => .completed,
-        .completed => .not_started,
+        .completed, .known, .skipped => .not_started,
     };
 }
 
@@ -469,7 +576,7 @@ fn menuBar(a: *App) void {
         var fw = dvui.floatingMenu(@src(), .{ .from = r }, .{});
         defer fw.deinit();
         if (a.o.tracking != null) {
-            for ([_]winlab.progress.Status{ .not_started, .in_progress, .completed }, 0..) |s, i| {
+            for ([_]winlab.progress.Status{ .not_started, .in_progress, .completed, .known, .skipped }, 0..) |s, i| {
                 var buf: [64]u8 = undefined;
                 const label = std.fmt.bufPrint(&buf, "Mark as {s}", .{s.label()}) catch "Mark";
                 if (dvui.menuItemLabel(@src(), label, .{}, .{ .expand = .horizontal, .id_extra = i }) != null) {
@@ -506,6 +613,7 @@ fn menuBar(a: *App) void {
         }
     }
 
+    if (a.o.paths.len > 0) pathsMenu(a, m);
     if (a.o.shells.len > 0 or a.o.labs.len > 0 or a.o.lab_note.len > 0) practiceMenu(a, m);
 
     if (dvui.menuItemLabel(@src(), "View", .{ .submenu = true }, .{})) |r| {
@@ -536,6 +644,92 @@ fn menuBar(a: *App) void {
             a.show_about = true;
             m.close();
         }
+    }
+}
+
+/// Switching between learning paths and the all-lessons view.
+fn pathsMenu(a: *App, m: *dvui.MenuWidget) void {
+    const r = dvui.menuItemLabel(@src(), "Paths", .{ .submenu = true }, .{}) orelse return;
+    var fw = dvui.floatingMenu(@src(), .{ .from = r }, .{});
+    defer fw.deinit();
+    if (dvui.menuItemLabel(@src(), "Choose a learning path...", .{}, .{ .expand = .horizontal }) != null) {
+        a.show_picker = true;
+        m.close();
+    }
+    _ = dvui.separator(@src(), .{ .expand = .horizontal });
+    if (dvui.menuItemLabel(@src(), if (a.path == null) "All lessons (by area)   (current)" else "All lessons (by area)", .{}, .{ .expand = .horizontal }) != null) {
+        choosePath(a, null);
+        m.close();
+    }
+    for (a.o.paths, 0..) |p, i| {
+        var buf: [200]u8 = undefined;
+        const current = a.path != null and a.path.? == i;
+        const label = std.fmt.bufPrint(&buf, "{s}{s}", .{ p.title, if (current) "   (current)" else "" }) catch p.title;
+        if (dvui.menuItemLabel(@src(), label, .{}, .{ .expand = .horizontal, .id_extra = i }) != null) {
+            choosePath(a, i);
+            m.close();
+        }
+    }
+}
+
+/// The track picker: each goal with its size, levels and your progress.
+fn pickerWindow(a: *App) void {
+    var open = true;
+    var fw = dvui.floatingWindow(@src(), .{ .modal = true, .open_flag = &open }, .{ .rect = .{ .x = 120, .y = 40, .w = 820, .h = 640 }, .min_size_content = .{ .w = 520, .h = 360 } });
+    defer fw.deinit();
+    _ = dvui.windowHeader(.{ .title = "Choose a learning path", .open_flag = &open });
+
+    var body = dvui.box(@src(), .{}, .{ .expand = .both, .padding = .all(14) });
+    defer body.deinit();
+    const dim: dvui.Color = dvui.themeGet().text.opacity(0.7);
+    {
+        var tl = dvui.textLayout(@src(), .{}, .{ .expand = .horizontal, .background = false, .padding = .all(0), .margin = .{ .h = 8 } });
+        tl.addText("Pick the goal you want to reach. A path is advice, not a lock: start anywhere on it, take a lesson's quiz to skip what you already know, and switch paths whenever you like. Your progress belongs to each lesson, so it counts on every path.", .{});
+        tl.deinit();
+    }
+    if (dvui.button(@src(), if (a.path == null) "Show all lessons by area (current)" else "Show all lessons by area", .{}, .{ .margin = .{ .h = 8 } })) {
+        choosePath(a, null);
+        a.show_picker = false;
+    }
+    var scroll = dvui.scrollArea(@src(), .{}, .{ .expand = .both, .background = false });
+    defer scroll.deinit();
+    for (a.o.paths, 0..) |p, i| {
+        var card = dvui.box(@src(), .{}, .{ .expand = .horizontal, .background = true, .style = .window, .corners = .all(6), .padding = .all(10), .margin = .{ .y = 4, .h = 4 }, .id_extra = i });
+        defer card.deinit();
+        const following = a.path != null and a.path.? == i;
+        dvui.labelNoFmt(@src(), p.title, .{}, .{ .font = dvui.Font.theme(.heading), .id_extra = i });
+        {
+            var tl = dvui.textLayout(@src(), .{}, .{ .expand = .horizontal, .background = false, .padding = .all(0), .margin = .{ .y = 2, .h = 2 }, .id_extra = i });
+            tl.addText(p.goal, .{});
+            tl.deinit();
+        }
+        if (p.audience.len > 0) {
+            var tl = dvui.textLayout(@src(), .{}, .{ .expand = .horizontal, .background = false, .padding = .all(0), .id_extra = i });
+            tl.addText(p.audience, .{ .font = dvui.Font.theme(.body).withStyle(.italic), .color_text = .{ .color = dim } });
+            tl.deinit();
+        }
+        var lessons: usize = 0;
+        for (p.stages) |st| lessons += st.pages.len;
+        const c = pathCounts(a, i);
+        var line: [160]u8 = undefined;
+        const hours = std.fmt.bufPrint(&line, "{d} lessons, about {d}.{d} h, level {d}-{d}, {d} stage(s)", .{ lessons, p.minutes / 60, (p.minutes % 60) * 10 / 60, p.level_min, p.level_max, p.stages.len }) catch "";
+        dvui.labelNoFmt(@src(), hours, .{}, .{ .color_text = .{ .color = dim }, .margin = .{ .y = 4 }, .id_extra = i });
+        if (a.o.tracking != null) {
+            dvui.label(@src(), "{d} of {d} done", .{ c.done, c.total }, .{ .color_text = .{ .color = dim }, .id_extra = i });
+            dvui.progress(@src(), .{ .percent = if (c.total == 0) 0 else @as(f32, @floatFromInt(c.done)) / @as(f32, @floatFromInt(c.total)) }, .{ .expand = .horizontal, .margin = .{ .y = 4, .h = 4 }, .id_extra = i });
+        }
+        if (dvui.button(@src(), if (following) "Following this path" else "Follow this path", .{}, .{ .style = if (following) null else .highlight, .id_extra = i })) {
+            choosePath(a, i);
+            a.show_picker = false;
+        }
+    }
+    if (!open or escapePressed()) {
+        // Closing without a choice still counts as an answer on a first run, so the picker does not return.
+        if (a.path == null) if (a.o.tracking) |t| if (t.progress.active_path.len == 0) {
+            t.progress.setActivePath(all_lessons_key) catch {};
+            _ = t.save(t.save_ctx, t.progress);
+        };
+        a.show_picker = false;
     }
 }
 
@@ -610,13 +804,25 @@ fn sidebar(a: *App) void {
     defer col.deinit();
 
     dvui.labelNoFmt(@src(), "WinLab", .{}, .{ .font = dvui.Font.theme(.title) });
+    if (a.o.paths.len > 0) {
+        var pb = dvui.box(@src(), .{ .dir = .horizontal }, .{ .expand = .horizontal, .margin = .{ .y = 2, .h = 2 } });
+        defer pb.deinit();
+        const name: []const u8 = if (a.path) |pi| a.o.paths[pi].title else "All lessons";
+        dvui.labelNoFmt(@src(), name, .{}, .{ .font = dvui.Font.theme(.heading), .expand = .horizontal, .gravity_y = 0.5 });
+        if (dvui.button(@src(), "Paths...", .{}, .{ .gravity_y = 0.5 })) a.show_picker = true;
+    }
     if (a.o.tracking != null) {
         var done: usize = 0;
-        for (a.pages, 0..) |_, i| {
-            if (statusOf(a, i) == .completed) done += 1;
+        var total: usize = a.pages.len;
+        if (a.path) |pi| {
+            const c = pathCounts(a, pi);
+            done = c.done;
+            total = c.total;
+        } else for (a.pages, 0..) |_, i| {
+            if (statusOf(a, i).isDone()) done += 1;
         }
-        dvui.label(@src(), "{d} of {d} lessons completed", .{ done, a.pages.len }, .{ .color_text = .{ .color = dvui.themeGet().text.opacity(0.7) } });
-        dvui.progress(@src(), .{ .percent = @as(f32, @floatFromInt(done)) / @as(f32, @floatFromInt(a.pages.len)) }, .{ .expand = .horizontal, .margin = .{ .y = 4, .h = 8 } });
+        dvui.label(@src(), "{d} of {d} lessons done", .{ done, total }, .{ .color_text = .{ .color = dvui.themeGet().text.opacity(0.7) } });
+        dvui.progress(@src(), .{ .percent = if (total == 0) 0 else @as(f32, @floatFromInt(done)) / @as(f32, @floatFromInt(total)) }, .{ .expand = .horizontal, .margin = .{ .y = 4, .h = 8 } });
     } else {
         _ = dvui.spacer(@src(), .{ .min_size_content = .{ .h = 8 } });
     }
@@ -653,6 +859,10 @@ fn sidebar(a: *App) void {
         for (a.visible.items, 0..) |page_index, row| lessonRow(a, page_index, row);
         return;
     }
+    if (a.path) |pi| {
+        pathBody(a, pi);
+        return;
+    }
     // Grouped by area. A collapsed area has a header and no rows (rebuildList left them out).
     var row: usize = 0;
     for (0..a.group_count) |g| {
@@ -666,13 +876,67 @@ fn sidebar(a: *App) void {
     }
 }
 
+const Counts = struct { done: usize = 0, total: usize = 0 };
+
+/// Required lessons of a path and how many are done (studied or Known). Skipped ones count as neither.
+fn pathCounts(a: *const App, pi: usize) Counts {
+    var c: Counts = .{};
+    for (a.o.paths[pi].stages) |st| for (st.pages) |p| {
+        c.total += 1;
+        if (statusOf(a, p).isDone()) c.done += 1;
+    };
+    return c;
+}
+
+/// The sidebar body in path mode: each stage with its hint, then its lessons in order.
+fn pathBody(a: *App, pi: usize) void {
+    const dim: dvui.Color = dvui.themeGet().text.opacity(0.7);
+    var row: usize = 0;
+    for (a.o.paths[pi].stages, 0..) |st, si| {
+        var done: usize = 0;
+        for (st.pages) |p| if (statusOf(a, p).isDone()) {
+            done += 1;
+        };
+        {
+            var hb = dvui.box(@src(), .{ .dir = .horizontal }, .{ .expand = .horizontal, .id_extra = si, .padding = .{ .x = 4, .y = 10, .w = 4, .h = 2 } });
+            defer hb.deinit();
+            dvui.label(@src(), "{d}. {s}", .{ si + 1, st.title }, .{ .font = dvui.Font.theme(.heading), .expand = .horizontal, .gravity_y = 0.5, .id_extra = si });
+            if (a.o.tracking != null) dvui.label(@src(), "{d}/{d}", .{ done, st.pages.len }, .{ .gravity_y = 0.5, .color_text = .{ .color = dim }, .id_extra = si });
+        }
+        if (st.entry_hint.len > 0) {
+            var tl = dvui.textLayout(@src(), .{}, .{ .expand = .horizontal, .background = false, .padding = .{ .x = 4, .w = 6, .h = 4 }, .id_extra = si });
+            tl.addText(st.entry_hint, .{ .font = dvui.Font.theme(.body).withStyle(.italic), .color_text = .{ .color = dim } });
+            tl.deinit();
+        }
+        for (st.pages) |p| {
+            lessonRow(a, p, row);
+            row += 1;
+        }
+        for (st.optional) |p| {
+            if (pageAlreadyListed(a, pi, si, p)) continue;
+            lessonRow(a, p, row);
+            row += 1;
+        }
+    }
+}
+
+/// True when an optional lesson was already shown earlier on the path (so its row would repeat).
+fn pageAlreadyListed(a: *const App, pi: usize, stage: usize, page: usize) bool {
+    for (a.o.paths[pi].stages, 0..) |st, si| {
+        if (si > stage) break;
+        for (st.pages) |p| if (p == page) return true;
+        if (si < stage) for (st.optional) |p| if (p == page) return true;
+    }
+    return false;
+}
+
 fn groupHeader(a: *App, g: usize) void {
     var total: usize = 0;
     var done: usize = 0;
     for (a.pages, 0..) |_, i| {
         if (groupOf(a, i) != g) continue;
         total += 1;
-        if (statusOf(a, i) == .completed) done += 1;
+        if (statusOf(a, i).isDone()) done += 1;
     }
     var bw: dvui.ButtonWidget = undefined;
     bw.init(@src(), .{}, .{ .expand = .horizontal, .id_extra = g, .background = false, .padding = .{ .x = 4, .y = 8, .w = 4, .h = 4 }, .margin = .{ .w = 6 } });
@@ -724,10 +988,19 @@ fn lessonRow(a: *App, page_index: usize, row: usize) void {
         const text_style = bw.style();
         dvui.labelNoFmt(@src(), a.pages[page_index].title, .{}, text_style.strip().override(.{ .expand = .horizontal, .id_extra = page_index, .font = dvui.Font.theme(.body).withWeight(if (selected) .bold else .normal) }));
         const status = statusOf(a, page_index);
+        const small = dvui.Font.theme(.body).withSize(dvui.Font.theme(.body).size * 0.85);
+        const p = a.pages[page_index];
         if (status != .not_started) {
             // Words, not just colour, so the state reads without seeing it.
-            const tint: dvui.Color = if (selected) theme.highlight.text orelse theme.text else if (status == .completed) .{ .r = 0x2e, .g = 0x9e, .b = 0x5b } else theme.focus;
-            dvui.labelNoFmt(@src(), status.label(), .{}, .{ .font = dvui.Font.theme(.body).withSize(dvui.Font.theme(.body).size * 0.85), .color_text = .{ .color = tint }, .id_extra = page_index });
+            const tint: dvui.Color = if (selected) theme.highlight.text orelse theme.text else if (status.isDone()) .{ .r = 0x2e, .g = 0x9e, .b = 0x5b } else if (status == .skipped) theme.text.opacity(0.6) else theme.focus;
+            dvui.labelNoFmt(@src(), status.label(), .{}, .{ .font = small, .color_text = .{ .color = tint }, .id_extra = page_index });
+        } else if (p.level != 0 or p.minutes != 0) {
+            const dim: dvui.Color = if (selected) theme.highlight.text orelse theme.text else theme.text.opacity(0.6);
+            if (p.level != 0) {
+                dvui.label(@src(), "Level {d}  -  {d} min", .{ p.level, p.minutes }, .{ .font = small, .color_text = .{ .color = dim }, .id_extra = page_index });
+            } else {
+                dvui.label(@src(), "{d} min", .{p.minutes}, .{ .font = small, .color_text = .{ .color = dim }, .id_extra = page_index });
+            }
         }
     }
     bw.drawFocus();
@@ -762,6 +1035,7 @@ fn content(a: *App) void {
     defer col.deinit();
 
     header(a);
+    prerequisiteNotice(a);
     if (a.o.tracking == null) {
         reader(a);
         return;
@@ -773,11 +1047,39 @@ fn content(a: *App) void {
     if (split.showSecond()) notesPane(a);
 }
 
+/// A soft warning under the header: lessons this one recommends first that are not done yet, each with a
+/// button to open it. Never blocks anything. Prerequisites outside the loaded course are ignored.
+fn prerequisiteNotice(a: *App) void {
+    if (a.o.tracking == null) return;
+    var missing: [8]usize = undefined;
+    var n: usize = 0;
+    for (a.pages[a.current].prerequisites) |pre| {
+        const pi = pageById(a, pre) orelse continue;
+        const st = statusOf(a, pi);
+        if (st.isDone() or st == .skipped) continue;
+        if (n < missing.len) {
+            missing[n] = pi;
+            n += 1;
+        }
+    }
+    if (n == 0) return;
+    var bar = dvui.box(@src(), .{ .dir = .horizontal }, .{ .expand = .horizontal, .background = true, .style = .control, .padding = .{ .x = 16, .y = 4, .w = 12, .h = 4 } });
+    defer bar.deinit();
+    dvui.labelNoFmt(@src(), "Recommended first (not required):", .{}, .{ .gravity_y = 0.5, .margin = .{ .w = 8 } });
+    for (missing[0..n], 0..) |pi, i| {
+        if (dvui.button(@src(), a.pages[pi].title, .{}, .{ .gravity_y = 0.5, .id_extra = i, .margin = .{ .w = 6 }, .style = .highlight })) selectPage(a, pi);
+    }
+}
+
 fn header(a: *App) void {
     var bar = dvui.box(@src(), .{ .dir = .horizontal }, .{ .expand = .horizontal, .background = true, .style = .window, .padding = .{ .x = 16, .y = 8, .w = 12, .h = 8 } });
     defer bar.deinit();
 
     dvui.labelNoFmt(@src(), a.pages[a.current].title, .{}, .{ .font = dvui.Font.theme(.heading).withSize(dvui.Font.theme(.body).size * 1.15), .expand = .horizontal, .gravity_y = 0.5 });
+    const cur = a.pages[a.current];
+    if (cur.level != 0) {
+        dvui.label(@src(), "Level {d}  -  {d} min", .{ cur.level, cur.minutes }, .{ .gravity_y = 0.5, .margin = .{ .w = 12 }, .color_text = .{ .color = dvui.themeGet().text.opacity(0.7) } });
+    }
 
     if (a.o.tracking != null) {
         var buf: [96]u8 = undefined;
@@ -789,7 +1091,12 @@ fn header(a: *App) void {
     if (quizFor(a, a.pages[a.current].id)) |qi| {
         var qbuf: [96]u8 = undefined;
         const best = if (a.o.tracking) |t| t.progress.get(a.pages[a.current].id) else winlab.progress.Entry{};
-        const label = if (best.quiz_attempts > 0)
+        const st = statusOf(a, a.current);
+        // Not started: the quiz doubles as a placement test (80% or more marks the lesson Known).
+        const placement = a.o.tracking != null and (st == .not_started or st == .skipped);
+        const label = if (placement)
+            "I already know this (quiz)"
+        else if (best.quiz_attempts > 0)
             (std.fmt.bufPrint(&qbuf, "Quiz (best {d}%)", .{best.quiz_best}) catch "Quiz")
         else
             "Take the quiz";
@@ -836,13 +1143,24 @@ fn reader(a: *App) void {
     }
     if (a.view.clicked) |url| a.pending_url = url;
 
-    // Reading order: a clear way to the next lesson at the end of the page.
-    if (a.current + 1 < a.pages.len) {
+    // Reading order: a clear way to the next lesson at the end of the page (the next on the path, if any).
+    if (nextPage(a)) |next| {
         _ = dvui.separator(@src(), .{ .expand = .horizontal, .margin = .{ .y = 16, .h = 12 } });
         var buf: [300]u8 = undefined;
-        const label = std.fmt.bufPrint(&buf, "Next: {s}", .{a.pages[a.current + 1].title}) catch "Next lesson";
-        if (dvui.button(@src(), label, .{}, .{ .gravity_x = 1.0 })) selectPage(a, a.current + 1);
+        const label = std.fmt.bufPrint(&buf, "Next: {s}", .{a.pages[next].title}) catch "Next lesson";
+        if (dvui.button(@src(), label, .{}, .{ .gravity_x = 1.0 })) selectPage(a, next);
     }
+}
+
+/// The lesson after the open one: on a path, the next on that path; otherwise the next in course order.
+fn nextPage(a: *const App) ?usize {
+    if (a.path != null) {
+        for (a.visible.items, 0..) |p, row| {
+            if (p == a.current) return if (row + 1 < a.visible.items.len) a.visible.items[row + 1] else null;
+        }
+        return null;
+    }
+    return if (a.current + 1 < a.pages.len) a.current + 1 else null;
 }
 
 fn notesPane(a: *App) void {
@@ -908,6 +1226,7 @@ fn dialogs(a: *App) void {
     if (a.info) |msg| infoDialog(a, msg);
     if (a.show_about) aboutDialog(a);
     if (a.show_keys) keysDialog(a);
+    if (a.show_picker) pickerWindow(a);
     if (a.lab.open) labWindow(a);
     if (a.qz.open) quizWindow(a);
     if (a.lab.confirm_close) closeLabDialog(a);
@@ -1319,6 +1638,8 @@ const QuizUi = struct {
     missed_n: usize = 0,
     prng: std.Random.DefaultPrng = std.Random.DefaultPrng.init(0),
     focus_entry: bool = false,
+    /// This attempt passed the placement threshold and marked the lesson Known.
+    marked_known: bool = false,
 };
 
 fn quizFor(a: *const App, lesson_id: []const u8) ?usize {
@@ -1340,6 +1661,7 @@ fn startQuiz(a: *App, qi: usize) void {
     z.pos = 0;
     z.correct = 0;
     z.missed_n = 0;
+    z.marked_known = false;
     z.phase = .answering;
     startQuestion(a);
 }
@@ -1415,10 +1737,13 @@ fn quizNext(a: *App) void {
         @memcpy(ids[len..][0..id.len], id);
         len += id.len;
     }
-    t.progress.setQuizResult(quiz.lesson, quiz_lib.percent(z.correct, z.count), ids[0..len]) catch {
+    const pct = quiz_lib.percent(z.correct, z.count);
+    t.progress.setQuizResult(quiz.lesson, pct, ids[0..len]) catch {
         a.info = "Your quiz result could not be stored.";
         return;
     };
+    // Placement: a good score on a lesson not started yet marks it Known.
+    z.marked_known = t.progress.markKnownIfPassed(quiz.lesson, pct) catch false;
     if (!t.save(t.save_ctx, t.progress)) a.info = "Your quiz result could not be saved to disk.";
 }
 
@@ -1609,6 +1934,9 @@ fn quizResults(a: *App) void {
     if (a.o.tracking) |t| {
         const e = t.progress.get(quiz.lesson);
         dvui.label(@src(), "Best score {d}%, attempts {d}. The bank has {d} questions; each attempt draws {d}.", .{ e.quiz_best, e.quiz_attempts, quiz.questions.len, quiz.draw }, .{ .color_text = .{ .color = dvui.themeGet().text.opacity(0.7) }, .margin = .{ .y = 4 } });
+    }
+    if (z.marked_known) {
+        dvui.labelNoFmt(@src(), "You passed the placement threshold: this lesson is now marked Known and counts as done. You can still read it any time.", .{}, .{ .font = dvui.Font.theme(.heading), .margin = .{ .y = 8 }, .color_text = .{ .color = .{ .r = 0x2e, .g = 0x9e, .b = 0x5b } } });
     }
     if (z.missed_n > 0) {
         dvui.labelNoFmt(@src(), "To review (these come back first next time):", .{}, .{ .font = dvui.Font.theme(.heading), .margin = .{ .y = 12, .h = 4 } });

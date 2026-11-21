@@ -1,0 +1,11 @@
+schema_version = 1
+id = "bash-scripting"
+title = "Shell scripting on Linux: bash"
+goal = "Write and read bash scripts. The deeper bash and POSIX sh lessons are planned; this path grows as they are written."
+audience = "Anyone who works in a Linux terminal."
+order = 51
+
+[[stage]]
+title = "Bash"
+lessons = ["foundations.bash-basics", "foundations.bash-control-flow"]
+labs = ["labs.script-bash-count-errors", "labs.script-bash-largest-files", "labs.script-bash-arguments", "labs.script-bash-backup-rotate", "labs.script-bash-case-count", "labs.script-bash-exit-status", "labs.script-bash-read-functions", "labs.script-bash-user-report"]

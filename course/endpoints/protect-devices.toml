@@ -4,6 +4,7 @@ title = "Protecting Windows devices: firewall, Defender, encryption"
 summary = "Check and restore the firewall and malware protection, understand BitLocker and device compliance, with built-in tools."
 content = "protect-devices.md"
 estimated_minutes = 35
+level = 3
 objectives = [
   "Read and restore Windows Defender Firewall profile state",
   "Check Microsoft Defender Antivirus status and update signatures",

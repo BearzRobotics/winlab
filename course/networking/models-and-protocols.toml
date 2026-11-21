@@ -4,6 +4,7 @@ title = "How networks work: layers, protocols and ports"
 summary = "The OSI and TCP/IP models, how data is wrapped on its way out, TCP versus UDP, the ports and protocols you meet daily, and how MAC addresses, ARP and switches fit in."
 content = "models-and-protocols.md"
 estimated_minutes = 50
+level = 1
 objectives = [
   "Name the layers of the OSI and TCP/IP models and place a protocol or device at its layer",
   "Describe encapsulation and name the unit of data at each layer",

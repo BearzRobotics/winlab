@@ -9,13 +9,24 @@ pub const Status = enum {
     not_started,
     in_progress,
     completed,
+    /// Passed the lesson's quiz before studying it (a placement test): counts as done without the lesson being read.
+    known,
+    /// Left out on purpose; stays one click away.
+    skipped,
 
     pub fn label(self: Status) []const u8 {
         return switch (self) {
             .not_started => "Not started",
             .in_progress => "In progress",
             .completed => "Completed",
+            .known => "Known",
+            .skipped => "Skipped",
         };
+    }
+
+    /// Counts toward "done": studied, or shown by the quiz to be already known.
+    pub fn isDone(self: Status) bool {
+        return self == .completed or self == .known;
     }
 };
 
@@ -42,6 +53,10 @@ pub const Progress = struct {
     map: std.StringArrayHashMapUnmanaged(Entry) = .empty,
     /// Entries in the file that could not be used.
     dropped: usize = 0,
+    /// Id of the learning path the learner is following; empty for "all lessons". Owned.
+    active_path: []const u8 = "",
+    /// Per path id: the lesson last open on that path. Keys and values owned.
+    last_on_path: std.StringArrayHashMapUnmanaged([]const u8) = .empty,
 
     pub fn init(gpa: std.mem.Allocator) Progress {
         return .{ .gpa = gpa };
@@ -54,6 +69,12 @@ pub const Progress = struct {
             self.gpa.free(v.quiz_missed);
         }
         self.map.deinit(self.gpa);
+        self.gpa.free(self.active_path);
+        for (self.last_on_path.keys(), self.last_on_path.values()) |k, v| {
+            self.gpa.free(k);
+            self.gpa.free(v);
+        }
+        self.last_on_path.deinit(self.gpa);
         self.* = undefined;
     }
 
@@ -106,6 +127,43 @@ pub const Progress = struct {
         return n;
     }
 
+    /// A full quiz attempt at or above this percent, on a lesson not yet started, marks it Known.
+    pub const placement_percent: u8 = 80;
+
+    /// Placement test rule: a lesson the learner has not started (or skipped) and then passes the quiz for
+    /// is Known. Returns true when the status changed. A lesson already in progress or completed is left
+    /// alone: a good score there is revision, not placement.
+    pub fn markKnownIfPassed(self: *Progress, id: []const u8, percent: u8) !bool {
+        if (percent < placement_percent) return false;
+        const current = self.get(id).status;
+        if (current != .not_started and current != .skipped) return false;
+        try self.setStatus(id, .known);
+        return true;
+    }
+
+    pub fn setActivePath(self: *Progress, path_id: []const u8) !void {
+        const copy = try self.gpa.dupe(u8, path_id);
+        self.gpa.free(self.active_path);
+        self.active_path = copy;
+    }
+
+    pub fn lastOnPath(self: *const Progress, path_id: []const u8) []const u8 {
+        return self.last_on_path.get(path_id) orelse "";
+    }
+
+    pub fn setLastOnPath(self: *Progress, path_id: []const u8, lesson_id: []const u8) !void {
+        const val = try self.gpa.dupe(u8, lesson_id);
+        errdefer self.gpa.free(val);
+        const gop = try self.last_on_path.getOrPut(self.gpa, path_id);
+        if (gop.found_existing) {
+            self.gpa.free(gop.value_ptr.*);
+        } else {
+            errdefer _ = self.last_on_path.swapRemove(path_id);
+            gop.key_ptr.* = try self.gpa.dupe(u8, path_id);
+        }
+        gop.value_ptr.* = val;
+    }
+
     pub const ParseError = error{ InvalidToml, UnsupportedSchema, OutOfMemory };
 
     pub fn parse(gpa: std.mem.Allocator, text: []const u8) ParseError!Progress {
@@ -119,6 +177,28 @@ pub const Progress = struct {
 
         var p = init(gpa);
         errdefer p.deinit();
+        if (doc.root.getTable("state")) |st| {
+            if (st.getString("path")) |id| if (id.len <= 64) try p.setActivePath(id) else {
+                p.dropped += 1;
+            };
+        }
+        if (doc.root.getTable("paths")) |pt| {
+            for (pt.entries.keys(), pt.entries.values()) |pid, val| {
+                const t = switch (val) {
+                    .table => |t| t,
+                    else => {
+                        p.dropped += 1;
+                        continue;
+                    },
+                };
+                const last = t.getString("last") orelse continue;
+                if (pid.len > 64 or last.len > 128) {
+                    p.dropped += 1;
+                    continue;
+                }
+                try p.setLastOnPath(pid, last);
+            }
+        }
         const lessons = doc.root.getTable("lessons") orelse return p;
         for (lessons.entries.keys(), lessons.entries.values()) |id, val| {
             const t = switch (val) {
@@ -165,6 +245,18 @@ pub const Progress = struct {
 
     pub fn write(self: *const Progress, w: *std.Io.Writer) std.Io.Writer.Error!void {
         try w.print("schema_version = {d}\n", .{schema_version});
+        if (self.active_path.len != 0) {
+            try w.writeAll("\n[state]\npath = ");
+            try writeQuoted(w, self.active_path);
+            try w.writeByte('\n');
+        }
+        for (self.last_on_path.keys(), self.last_on_path.values()) |pid, last| {
+            try w.writeAll("\n[paths.");
+            try writeQuoted(w, pid);
+            try w.writeAll("]\nlast = ");
+            try writeQuoted(w, last);
+            try w.writeByte('\n');
+        }
         for (self.map.keys(), self.map.values()) |id, e| {
             if (e.status == .not_started and e.notes.len == 0 and e.quiz_attempts == 0) continue;
             try w.writeAll("\n[lessons.");
@@ -271,4 +363,59 @@ test "notes limit" {
     defer std.testing.allocator.free(big);
     @memset(big, 'x');
     try std.testing.expectError(error.NotesTooLong, p.setNotes("a.b", big));
+}
+
+test "placement: passing the quiz first marks Known, revision does not" {
+    const gpa = std.testing.allocator;
+    var p = Progress.init(gpa);
+    defer p.deinit();
+    try std.testing.expect(!try p.markKnownIfPassed("a.b", 70));
+    try std.testing.expectEqual(Status.not_started, p.get("a.b").status);
+    try std.testing.expect(try p.markKnownIfPassed("a.b", 80));
+    try std.testing.expectEqual(Status.known, p.get("a.b").status);
+    try std.testing.expect(Status.known.isDone() and Status.completed.isDone());
+    try std.testing.expect(!Status.skipped.isDone());
+    // A lesson in progress or completed is not re-marked.
+    try p.setStatus("c.d", .in_progress);
+    try std.testing.expect(!try p.markKnownIfPassed("c.d", 100));
+    try p.setStatus("e.f", .completed);
+    try std.testing.expect(!try p.markKnownIfPassed("e.f", 100));
+    // A skipped lesson can become Known.
+    try p.setStatus("g.h", .skipped);
+    try std.testing.expect(try p.markKnownIfPassed("g.h", 90));
+}
+
+test "active path and last position round trip, bad values are dropped" {
+    const gpa = std.testing.allocator;
+    var p = Progress.init(gpa);
+    defer p.deinit();
+    try p.setActivePath("windows-scripting");
+    try p.setActivePath("networking"); // replaces
+    try p.setLastOnPath("networking", "networking.dns");
+    try p.setLastOnPath("networking", "networking.dhcp"); // replaces
+    try p.setLastOnPath("windows-scripting", "foundations.cmd-basics");
+    try p.setStatus("a.b", .known);
+    try p.setStatus("c.d", .skipped);
+
+    var out: std.Io.Writer.Allocating = .init(gpa);
+    defer out.deinit();
+    try p.write(&out.writer);
+    var q = try Progress.parse(gpa, out.written());
+    defer q.deinit();
+    try std.testing.expectEqualStrings("networking", q.active_path);
+    try std.testing.expectEqualStrings("networking.dhcp", q.lastOnPath("networking"));
+    try std.testing.expectEqualStrings("foundations.cmd-basics", q.lastOnPath("windows-scripting"));
+    try std.testing.expectEqualStrings("", q.lastOnPath("none"));
+    try std.testing.expectEqual(Status.known, q.get("a.b").status);
+    try std.testing.expectEqual(Status.skipped, q.get("c.d").status);
+
+    const long = try gpa.alloc(u8, 65);
+    defer gpa.free(long);
+    @memset(long, 'x');
+    const text = try std.fmt.allocPrint(gpa, "schema_version = 1\n[state]\npath = \"{s}\"\n[paths]\nbroken = 3\n", .{long});
+    defer gpa.free(text);
+    var bad = try Progress.parse(gpa, text);
+    defer bad.deinit();
+    try std.testing.expectEqual(@as(usize, 2), bad.dropped);
+    try std.testing.expectEqualStrings("", bad.active_path);
 }

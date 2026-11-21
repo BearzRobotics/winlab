@@ -4,6 +4,7 @@ title = "Operational procedures: documentation, change and recovery"
 summary = "Problem records, change management, backups, communication and safety habits for IT support and administration."
 content = "operational-procedures.md"
 estimated_minutes = 30
+level = 1
 objectives = [
   "Write a problem record with the problem, evidence, change and verification",
   "Describe the steps of a change request including risk and a back-out plan",

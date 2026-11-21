@@ -13,6 +13,7 @@ const usage =
     \\       winlab browse [course-dir] open the course browser
     \\       winlab check <course-dir>  validate lesson manifests, content files and prerequisites
     \\       winlab coverage [exam-id]  show certification domains covered by lessons and labs
+    \\       winlab paths               list the learning paths with size and level
     \\       winlab view <file.md>      show one Markdown file in the reader
     \\       winlab terminal <shell>    open a real shell (cmd, powershell or pwsh) in a terminal window
     \\       winlab image list          show installation media WinLab can download
@@ -57,6 +58,7 @@ pub fn main(init: std.process.Init) !void {
     if (args.len == 4 and std.mem.eql(u8, args[1], "vm") and std.mem.eql(u8, args[2], "remove")) return vmRemove(init, args[3]);
     if (args.len == 4 and std.mem.eql(u8, args[1], "vm") and std.mem.eql(u8, args[2], "reboot-test")) return vmRebootTest(init, args[3]);
     if (args.len == 3 and std.mem.eql(u8, args[1], "vm") and std.mem.eql(u8, args[2], "list")) return vmList(init);
+    if (args.len == 2 and std.mem.eql(u8, args[1], "paths")) return pathsCmd(init);
     if (args.len == 2 and std.mem.eql(u8, args[1], "coverage")) return coverageCmd(init, null);
     if (args.len == 3 and std.mem.eql(u8, args[1], "coverage")) return coverageCmd(init, args[2]);
     if (args.len == 5 and std.mem.eql(u8, args[1], "lab") and std.mem.eql(u8, args[2], "selftest")) return labSelfTest(init, args[3], args[4]);
@@ -422,7 +424,17 @@ fn browse(init: std.process.Init, dir_arg: ?[]const u8) !void {
         page.id = try arena.dupe(u8, entry.lesson.id);
         page.summary = entry.lesson.summary;
         page.body = body;
+        page.level = entry.lesson.level;
+        page.minutes = entry.lesson.estimated_minutes;
+        page.prerequisites = entry.lesson.prerequisites;
     }
+
+    // Learning paths (paths/*.toml), with lesson ids resolved to page indices. A path that names a lesson
+    // the course does not have still loads (`winlab check` reports it); the missing lesson is left out.
+    var path_set = try openPaths(gpa, io, rootOfCourse(dir));
+    defer path_set.deinit();
+    for (path_set.problems) |p| std.debug.print("warning: paths/{s}\n", .{p});
+    const path_views = try pathViews(arena, &path_set, cat);
 
     var store = ProgressStore.open(init);
     defer store.close();
@@ -447,6 +459,7 @@ fn browse(init: std.process.Init, dir_arg: ?[]const u8) !void {
         .io = io,
         .fonts_dir = fontsDir(init),
         .quizzes = openQuizzes(arena, io, rootOfCourse(dir)),
+        .paths = path_views,
         .shells = shells.items,
         .start_dir = init.environ_map.get("USERPROFILE"),
         .text_scale = cfg.settings.text_scale,
@@ -1931,6 +1944,139 @@ fn openQuizzes(arena: std.mem.Allocator, io: std.Io, root: []const u8) []winlab.
     return list.items;
 }
 
+/// Ids of the labs in `<root>/labs/*.toml`. Unreadable or invalid files are left out (check reports them).
+fn labIds(arena: std.mem.Allocator, io: std.Io, root: []const u8) []const []const u8 {
+    const path = std.fs.path.join(arena, &.{ root, "labs" }) catch return &.{};
+    var dir = std.Io.Dir.cwd().openDir(io, path, .{ .iterate = true }) catch return &.{};
+    defer dir.close(io);
+    var ids: std.ArrayList([]const u8) = .empty;
+    var it = dir.iterate();
+    while (it.next(io) catch null) |e| {
+        if (e.kind != .file or !std.mem.endsWith(u8, e.name, ".toml")) continue;
+        const text = dir.readFileAlloc(io, e.name, arena, .limited(256 * 1024)) catch continue;
+        const p = winlab.lab.parse(arena, text, null) catch continue;
+        ids.append(arena, p.lab.id) catch continue;
+    }
+    return ids.items;
+}
+
+/// Learning paths from `<root>/paths`. A missing folder gives an empty set.
+fn openPaths(gpa: std.mem.Allocator, io: std.Io, root: []const u8) !winlab.paths.Set {
+    const dir_path = try std.fs.path.join(gpa, &.{ root, "paths" });
+    defer gpa.free(dir_path);
+    var dir = std.Io.Dir.cwd().openDir(io, dir_path, .{ .iterate = true }) catch {
+        var arena = std.heap.ArenaAllocator.init(gpa);
+        const none = try arena.allocator().alloc(winlab.paths.Path, 0);
+        _ = none;
+        return .{ .gpa = gpa, .paths = try gpa.alloc(winlab.paths.Path, 0), .problems = &.{}, .arena = arena };
+    };
+    defer dir.close(io);
+    return winlab.paths.loadDir(gpa, io, dir);
+}
+
+/// Index of the lesson `id` in `cat.entries` (the same order as the GUI pages), or null.
+fn entryIndex(cat: *const winlab.catalog.Catalog, id: []const u8) ?usize {
+    for (cat.entries, 0..) |e, i| if (std.mem.eql(u8, e.lesson.id, id)) return i;
+    return null;
+}
+
+/// Converts loaded paths for the window. Lessons are page indices; a lesson never appears twice on a path
+/// (an optional lesson already listed as required, or earlier, is dropped).
+fn pathViews(arena: std.mem.Allocator, set: *const winlab.paths.Set, cat: *const winlab.catalog.Catalog) ![]const gui.PathView {
+    const views = try arena.alloc(gui.PathView, set.paths.len);
+    for (set.paths, views) |*p, *v| {
+        var seen: std.ArrayList(usize) = .empty;
+        const stages = try arena.alloc(gui.PathStage, p.stages.len);
+        // Required lessons first, so an optional repeat in an earlier stage never hides a required one.
+        for (p.stages) |st| for (st.lessons) |id| if (entryIndex(cat, id)) |i| try seen.append(arena, i);
+        var listed: std.ArrayList(usize) = .empty;
+        for (p.stages, stages) |st, *out| {
+            var req: std.ArrayList(usize) = .empty;
+            for (st.lessons) |id| {
+                const i = entryIndex(cat, id) orelse continue;
+                try req.append(arena, i);
+                try listed.append(arena, i);
+            }
+            var opt: std.ArrayList(usize) = .empty;
+            for (st.optional) |id| {
+                const i = entryIndex(cat, id) orelse continue;
+                if (std.mem.indexOfScalar(usize, seen.items, i) != null or std.mem.indexOfScalar(usize, listed.items, i) != null) continue;
+                try opt.append(arena, i);
+                try listed.append(arena, i);
+            }
+            out.* = .{ .title = st.title, .entry_hint = st.entry_hint, .pages = req.items, .optional = opt.items };
+        }
+        const s = winlab.paths.summarize(p, cat);
+        v.* = .{ .id = p.id, .title = p.title, .goal = p.goal, .audience = p.audience, .stages = stages, .minutes = s.minutes, .level_min = s.level_min, .level_max = s.level_max };
+    }
+    return views;
+}
+
+/// Validates `<root>/paths/*.toml` against the course: every lesson and lab exists, nothing repeats, tags
+/// exist. A lesson that recommends something not earlier on its path is a warning, not a failure.
+fn checkPaths(gpa: std.mem.Allocator, io: std.Io, course_dir: []const u8, cat: *const winlab.catalog.Catalog, certs_cat: ?*const winlab.certs.Catalog) !usize {
+    var arena_state = std.heap.ArenaAllocator.init(gpa);
+    defer arena_state.deinit();
+    const arena = arena_state.allocator();
+    const root = rootOfCourse(course_dir);
+    var set = try openPaths(gpa, io, root);
+    defer set.deinit();
+    var problems: usize = 0;
+    for (set.problems) |p| {
+        std.debug.print("paths/{s}\n", .{p});
+        problems += 1;
+    }
+    const labs = labIds(arena, io, root);
+    var warnings: usize = 0;
+    for (set.paths) |*p| {
+        var findings: std.ArrayList(winlab.paths.Finding) = .empty;
+        try winlab.paths.validate(arena, p, cat, labs, &findings);
+        for (findings.items) |f| switch (f.severity) {
+            .problem => {
+                std.debug.print("paths/{s}.toml: {s}\n", .{ f.path_id, f.message });
+                problems += 1;
+            },
+            .warning => {
+                std.debug.print("paths/{s}.toml: warning: {s}\n", .{ f.path_id, f.message });
+                warnings += 1;
+            },
+        };
+        for (p.certifications) |tag| {
+            const ok = if (certs_cat) |c| c.resolve(tag) != null else false;
+            if (!ok) {
+                std.debug.print("paths/{s}.toml: certification tag '{s}' is not in certs/catalog.toml\n", .{ p.id, tag });
+                problems += 1;
+            }
+        }
+    }
+    std.debug.print("{d} path(s), {d} problem(s), {d} warning(s)\n", .{ set.paths.len, problems, warnings });
+    return problems;
+}
+
+/// `winlab paths`: the learning paths, with size and level range.
+fn pathsCmd(init: std.process.Init) !void {
+    const gpa = init.gpa;
+    const io = init.io;
+    const arena = init.arena.allocator();
+    var cfg = loadSettings(init);
+    defer cfg.deinit();
+    const root = contentRoot(init, cfg.settings.content_path);
+    const course_dir = try std.fs.path.join(arena, &.{ root, "course" });
+    var course = try openCourse(gpa, io, course_dir);
+    defer course.root.close(io);
+    defer course.catalog.deinit();
+    var set = try openPaths(gpa, io, root);
+    defer set.deinit();
+    if (set.paths.len == 0) {
+        std.debug.print("no learning paths found under {s}\\paths\n", .{root});
+        return;
+    }
+    for (set.paths) |*p| {
+        const s = winlab.paths.summarize(p, &course.catalog);
+        std.debug.print("{s}\n  {s}\n  {d} lessons, about {d}.{d} h, level {d}-{d}, {d} stage(s)\n", .{ p.id, p.title, s.lessons, s.minutes / 60, (s.minutes % 60) * 10 / 60, s.level_min, s.level_max, p.stages.len });
+    }
+}
+
 fn check(gpa: std.mem.Allocator, io: std.Io, dir: []const u8) !void {
     var course = try openCourse(gpa, io, dir);
     defer course.root.close(io);
@@ -1954,7 +2100,8 @@ fn check(gpa: std.mem.Allocator, io: std.Io, dir: []const u8) !void {
     }
     const lab_problems = try checkLabs(gpa, io, dir, cat, if (certs_cat) |*c| c else null);
     const quiz_problems = try checkQuizzes(gpa, io, dir, course.root, cat, if (certs_cat) |*c| c else null);
-    if (cat.problems.len != 0 or lab_problems != 0 or cert_problems != 0 or quiz_problems != 0) std.process.exit(1);
+    const path_problems = try checkPaths(gpa, io, dir, cat, if (certs_cat) |*c| c else null);
+    if (cat.problems.len != 0 or lab_problems != 0 or cert_problems != 0 or quiz_problems != 0 or path_problems != 0) std.process.exit(1);
 }
 
 /// certs/catalog.toml next to the course folder, or null if absent or unreadable.

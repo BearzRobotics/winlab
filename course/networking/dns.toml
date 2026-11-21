@@ -4,6 +4,7 @@ title = "DNS: how names become addresses"
 summary = "The DNS hierarchy, resolvers, caching and TTL, the common record types, and how to query, read and troubleshoot name resolution with nslookup, Resolve-DnsName, resolvectl and getent."
 content = "dns.md"
 estimated_minutes = 55
+level = 3
 objectives = [
   "Explain what a stub resolver, a recursive resolver and an authoritative server each do",
   "Name the common record types (A, AAAA, CNAME, MX, NS, PTR, TXT, SOA) and what each holds",

@@ -4,6 +4,7 @@ title = "Networking basics: addresses, names and ports"
 summary = "The overview of the networking track: a layered model and a bottom-up routine that tells no address, wrong gateway, wrong DNS and blocked port apart, using built-in tools on Windows and Linux."
 content = "addressing-and-names.md"
 estimated_minutes = 45
+level = 2
 objectives = [
   "Read an IPv4 address and prefix and say whether two hosts share a network",
   "Explain what DHCP, a default gateway and DNS each do",

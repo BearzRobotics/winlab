@@ -4,6 +4,7 @@ title = "Writing dependable batch files"
 summary = "A script template, argument parsing and validation, logging with locale-independent timestamps, configuration files, elevation checks, starting and calling programs, running unattended, debugging, security, and a complete worked backup script."
 content = "cmd-batch-files.md"
 estimated_minutes = 90
+level = 3
 objectives = [
   "Start every script from a template with setlocal, pushd and an explicit exit code",
   "Save batch files with correct line endings and encoding",

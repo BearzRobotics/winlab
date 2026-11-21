@@ -4,6 +4,7 @@ title = "Advanced PowerShell: classes, .NET, performance, logging and constraine
 summary = "Classes and enums and their traps, calling .NET directly and compiling C# with Add-Type, measured performance habits (array +=, foreach versus pipeline, Where, -Parallel), script block logging and constrained language mode, and a map of Windows PowerShell 5.1 versus PowerShell 7, with a checklist for reading obfuscated or risky scripts."
 content = "ps-advanced.md"
 estimated_minutes = 120
+level = 5
 objectives = [
   "Write a class and an enum, and explain typed properties, hidden, static members, return rules and why a live session cannot redefine a class",
   "Call .NET types and generic collections from PowerShell and explain :: versus . and silent type coercion",

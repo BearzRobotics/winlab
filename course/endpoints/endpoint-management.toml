@@ -4,6 +4,7 @@ title = "Endpoint management concepts: provisioning, enrollment and apps"
 summary = "Provisioning approaches, join versus enroll, policy targeting, application deployment and update rings, with local equivalents."
 content = "endpoint-management.md"
 estimated_minutes = 35
+level = 3
 objectives = [
   "Compare manual install, imaging, provisioning packages and Autopilot",
   "Distinguish joining a device to an identity from enrolling it in management",

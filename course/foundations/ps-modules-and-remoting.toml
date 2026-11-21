@@ -4,6 +4,7 @@ title = "PowerShell modules, signing, secrets, jobs and remoting"
 summary = "Writing and versioning modules, how PSModulePath differs between 5.1 and 7, the PowerShell Gallery as a trust decision, Authenticode signing, credentials and SecureString limits, background and thread jobs with $using and serialization, and remoting over WinRM and SSH including the default access error and the second hop."
 content = "ps-modules-and-remoting.md"
 estimated_minutes = 120
+level = 4
 objectives = [
   "Explain where PowerShell finds modules and how 5.1 and 7 differ, and use auto-loading and Import-Module",
   "Write a module with a manifest, private helpers, exported commands and side-by-side versions",

@@ -4,6 +4,7 @@ title = "Routing: how packets find their way"
 summary = "How a host decides where to send a packet: the routing table, longest-prefix match, the default gateway, metrics, TTL and traceroute, with the Windows and Linux commands to read and change routes safely."
 content = "routing-and-gateways.md"
 estimated_minutes = 55
+level = 3
 objectives = [
   "Explain what a router does and how a host chooses between on-link delivery and its gateway",
   "Read a routing table on Windows and Linux and pick the route a destination will use",

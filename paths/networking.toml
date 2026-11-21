@@ -1,0 +1,23 @@
+schema_version = 1
+id = "networking"
+title = "Networking fundamentals"
+goal = "Explain how data moves between machines, and diagnose addressing, name, routing and firewall problems from the bottom up."
+audience = "Anyone who works with networks, from beginner to the CompTIA Network+ style of skills."
+order = 20
+certifications = ["comptia-network-plus/networking-concepts"]
+
+[[stage]]
+title = "Models and addressing"
+entry_hint = "Already know the OSI model? Start at addressing and names."
+lessons = ["networking.models-and-protocols", "networking.addressing-and-names"]
+labs = ["labs.hosts-file-entry", "labs.dns-broken"]
+
+[[stage]]
+title = "Subnets and automatic addressing"
+entry_hint = "Already subnet in your head? Take the subnetting quiz and move on."
+lessons = ["networking.subnetting", "networking.dhcp"]
+
+[[stage]]
+title = "Names, routes and ports"
+lessons = ["networking.dns", "networking.routing-and-gateways", "networking.ports-and-firewalls"]
+labs = ["labs.gateway-route-override", "labs.linux-service-loopback-only", "labs.linux-name-resolution"]

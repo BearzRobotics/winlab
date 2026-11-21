@@ -4,6 +4,7 @@ title = "CMD variables, arithmetic and expansion"
 summary = "Setting and reading variables safely, set /a arithmetic and its traps, string substitution and slicing, immediate versus delayed expansion, setlocal scope, parameters and their modifiers, and the variables Windows provides."
 content = "cmd-variables-and-expansion.md"
 estimated_minutes = 75
+level = 2
 objectives = [
   "Set variables with the quoted form and explain the hidden-space trap of set x = 1",
   "Do integer arithmetic with set /a, including bitwise operators, octal and hex literals, and 32-bit overflow",

@@ -4,6 +4,7 @@ title = "Mobile devices: types, connectivity, management and troubleshooting"
 summary = "Laptops, tablets and phones, wireless connectivity, mobile device management and a troubleshooting routine."
 content = "mobile-devices.md"
 estimated_minutes = 25
+level = 1
 objectives = [
   "Name the device types and what distinguishes each",
   "Compare Wi-Fi, Bluetooth, cellular and NFC and the first checks for each",

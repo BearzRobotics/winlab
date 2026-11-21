@@ -4,6 +4,7 @@ title = "Linux shell and bash scripting fundamentals"
 summary = "Commands, pipes, redirection, quoting, variables, loops, exit status and writing your first scripts on a Linux server."
 content = "bash-basics.md"
 estimated_minutes = 60
+level = 1
 objectives = [
   "Run commands, read their manual pages, and move around the file system",
   "Combine commands with pipes and redirect their input and output",

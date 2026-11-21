@@ -1,0 +1,34 @@
+schema_version = 1
+id = "it-support"
+title = "IT support and troubleshooting"
+goal = "Fix everyday computer, network and account problems on Windows machines, and know how to find out why."
+audience = "Beginners aiming at help-desk work or the CompTIA A+ style of skills."
+order = 10
+certifications = ["comptia-a-core2/operating-systems", "comptia-a-core2/software-troubleshooting"]
+
+[[stage]]
+title = "Think like a troubleshooter"
+entry_hint = "Everyone starts here; the method is used in every later lesson."
+lessons = ["foundations.architecture", "foundations.troubleshooting-method"]
+labs = ["labs.rename-server", "labs.wrong-time-zone"]
+
+[[stage]]
+title = "Hardware"
+entry_hint = "Already built or repaired PCs? Take the quizzes and move on."
+lessons = ["hardware.hardware-concepts", "hardware.mobile-devices"]
+
+[[stage]]
+title = "The command line"
+entry_hint = "Comfortable in a terminal? Take both quizzes to skip."
+lessons = ["foundations.cmd-basics", "foundations.powershell-basics"]
+labs = ["labs.script-cmd-count-files", "labs.script-count-errors"]
+
+[[stage]]
+title = "Windows in practice"
+lessons = ["windows-admin.accounts-and-permissions", "windows-admin.services-and-startup", "windows-admin.registry-and-filesystems"]
+labs = ["labs.folder-permissions", "labs.user-account-disabled", "labs.spooler-stopped", "labs.scheduled-task-disabled", "labs.time-service-disabled", "labs.policy-blocks-task-manager"]
+
+[[stage]]
+title = "Network, security and procedure"
+lessons = ["networking.addressing-and-names", "security.security-fundamentals", "operations.operational-procedures", "endpoints.update-and-policy"]
+labs = ["labs.dns-broken", "labs.hosts-file-entry", "labs.rdp-firewall", "labs.windows-updates-blocked"]

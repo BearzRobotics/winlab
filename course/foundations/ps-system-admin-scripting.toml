@@ -4,6 +4,7 @@ title = "PowerShell for system administration: CIM, registry, services, event lo
 summary = "Query Windows with CIM and WQL, read and change the registry with the right types, control services, filter and write event logs, build scheduled tasks, and make every change previewable (-WhatIf) and repeatable (idempotent), with a checklist for reading an unknown administration script."
 content = "ps-system-admin-scripting.md"
 estimated_minutes = 120
+level = 4
 objectives = [
   "Query system information with Get-CimInstance, filter at the source with WQL, and discover classes and methods",
   "Read and change registry values with the right type, and explain the traps: no overwrite, guessed types, wildcard paths, Test-Path on values",

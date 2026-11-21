@@ -4,6 +4,7 @@ title = "Hardware concepts and reading what a machine reports"
 summary = "CPU, RAM, storage, RAID, firmware and virtualization concepts, plus built-in commands that report hardware on Windows and Linux."
 content = "hardware-concepts.md"
 estimated_minutes = 35
+level = 1
 objectives = [
   "Name the main hardware parts and the symptom each produces when it fails",
   "Explain why running out of RAM makes a machine slow",

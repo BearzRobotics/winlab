@@ -25,6 +25,7 @@ pub const search = @import("content/search.zig");
 pub const lesson_view = @import("content/lesson_view.zig");
 pub const certs = @import("content/certs.zig");
 pub const quiz = @import("content/quiz.zig");
+pub const paths = @import("content/paths.zig");
 pub const md = @import("md");
 
 test {

@@ -1,0 +1,17 @@
+schema_version = 1
+id = "endpoint-management"
+title = "Endpoint management"
+goal = "Keep a fleet of Windows devices updated, protected and under policy (the MD-102 style of skills)."
+audience = "Administrators of client devices."
+order = 60
+certifications = ["microsoft-md-102/manage-maintain-devices"]
+
+[[stage]]
+title = "Prepare"
+lessons = ["foundations.powershell-basics", "windows-admin.accounts-and-permissions"]
+labs = ["labs.script-count-errors", "labs.folder-permissions", "labs.user-account-disabled"]
+
+[[stage]]
+title = "Manage endpoints"
+lessons = ["endpoints.update-and-policy", "endpoints.protect-devices", "endpoints.endpoint-management"]
+labs = ["labs.windows-updates-blocked", "labs.firewall-profiles-off"]

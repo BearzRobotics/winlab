@@ -4,6 +4,7 @@ title = "PowerShell errors, debugging and testing"
 summary = "Terminating versus non-terminating errors and why catch misses some, ErrorAction and preference variables, try/catch/finally and the ErrorRecord, throw and Write-Error, native exit codes, output streams, exit codes, StrictMode, debugging, logging, static analysis and Pester testing."
 content = "ps-errors-and-debugging.md"
 estimated_minutes = 110
+level = 3
 objectives = [
   "Explain terminating and non-terminating errors, and why try/catch misses the second kind",
   "Use -ErrorAction and $ErrorActionPreference, and state the difference between SilentlyContinue and Ignore",

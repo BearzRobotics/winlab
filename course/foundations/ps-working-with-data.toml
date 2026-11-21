@@ -4,6 +4,7 @@ title = "PowerShell: files, text, CSV, JSON, XML and the web"
 summary = "Paths and the -LiteralPath trap, reading and writing text with the encoding differences between 5.1 and 7 and Linux, Select-String, CSV and its all-strings trap, JSON depth and one-element-array traps, XML, comparing data, and Invoke-RestMethod and Invoke-WebRequest including HTTP errors."
 content = "ps-working-with-data.md"
 estimated_minutes = 120
+level = 3
 objectives = [
   "Build and take apart paths portably, and use -LiteralPath for names that come from data",
   "Read text as lines or one string, stream large files, and avoid the one-line-file indexing bug",

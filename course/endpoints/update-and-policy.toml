@@ -4,6 +4,7 @@ title = "Windows updates and policy settings"
 summary = "How Windows Update works, where policy values live, how to find the setting that is winning, and how to edit registry policy safely."
 content = "update-and-policy.md"
 estimated_minutes = 35
+level = 2
 objectives = [
   "Explain the update services and name the update types and deployment rings",
   "Check the Windows Update service, installed updates and update log",

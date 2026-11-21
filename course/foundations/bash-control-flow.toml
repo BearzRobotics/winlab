@@ -4,6 +4,7 @@ title = "Bash scripting: tests, loops, case, functions and error handling"
 summary = "Conditions with [ ] and [[ ]], if/case, the loop forms, functions, arrays, reading files safely and failing safely."
 content = "bash-control-flow.md"
 estimated_minutes = 75
+level = 2
 objectives = [
   "Write conditions with test operators for strings, numbers and files, and combine them with && and ||",
   "Choose between if/elif/else and case, and write patterns for case",

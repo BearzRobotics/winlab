@@ -1,0 +1,18 @@
+schema_version = 1
+id = "security-fundamentals"
+title = "Security fundamentals"
+goal = "Understand and apply basic defences, and read and audit scripts and configuration instead of trusting them. A fuller defensive security track is planned."
+audience = "Anyone who administers systems."
+order = 70
+certifications = ["comptia-a-core2/security"]
+
+[[stage]]
+title = "Core security"
+lessons = ["security.security-fundamentals", "windows-admin.accounts-and-permissions", "networking.ports-and-firewalls"]
+labs = ["labs.rdp-firewall", "labs.folder-permissions", "labs.linux-file-permissions", "labs.alma-ssh-root-login"]
+
+[[stage]]
+title = "Protect and audit"
+lessons = ["endpoints.protect-devices", "foundations.ps-errors-and-debugging"]
+optional = ["foundations.ps-advanced"]
+labs = ["labs.firewall-profiles-off"]

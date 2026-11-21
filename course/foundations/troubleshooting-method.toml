@@ -4,6 +4,7 @@ title = "A troubleshooting method"
 summary = "Reproduce, scope, observe, hypothesize, test, repair, verify, document, with the built-in Windows and Linux tools for each step, safety nets for changes, and worked examples."
 content = "troubleshooting-method.md"
 estimated_minutes = 45
+level = 1
 objectives = [
   "List the eight steps of the method in order",
   "Explain why each step exists and what goes wrong when it is skipped",

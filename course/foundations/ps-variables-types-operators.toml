@@ -4,6 +4,7 @@ title = "PowerShell variables, types, strings and operators"
 summary = "Variables and scope, automatic and preference variables, .NET types and numeric traps, quoting and interpolation, here-strings and -f formatting, comparison and logical operators, truthiness and $null, arrays, hashtables and custom objects, dates, and what is PowerShell 7 only."
 content = "ps-variables-types-operators.md"
 estimated_minutes = 100
+level = 2
 objectives = [
   "Create typed, read-only and scoped variables, and name the important automatic and preference variables",
   "Identify the type of a value and convert between types, including the rounding and overflow behaviour of numbers",

@@ -4,6 +4,7 @@ title = "How Windows is organized"
 summary = "Kernel mode and user mode, processes, services, sessions, users, SIDs and where things live on disk, each observed from both the graphical tools and the command line, plus a terminal-first working setup."
 content = "architecture.md"
 estimated_minutes = 50
+level = 1
 objectives = [
   "Explain the difference between kernel mode and user mode and why it matters when troubleshooting",
   "Distinguish a program, a process, a thread and a service",

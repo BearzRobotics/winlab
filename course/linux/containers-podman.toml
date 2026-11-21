@@ -4,6 +4,7 @@ title = "Containers with Podman"
 summary = "Images, containers, registries, rootless operation, volumes and SELinux labels, and running containers as systemd services with Quadlet."
 content = "containers-podman.md"
 estimated_minutes = 45
+level = 3
 objectives = [
   "Explain images, containers, registries and tags, and how a container differs from a virtual machine",
   "Pull an image, run a container, list, read logs from, enter and remove containers",

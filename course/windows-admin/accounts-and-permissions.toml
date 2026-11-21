@@ -4,6 +4,7 @@ title = "Windows accounts, groups and NTFS permissions"
 summary = "Manage local users and groups from PowerShell and the command line, understand the access token and UAC, read and repair NTFS permissions with icacls, and see how share and NTFS permissions combine."
 content = "accounts-and-permissions.md"
 estimated_minutes = 75
+level = 2
 objectives = [
   "Create, disable, enable, rename and remove local accounts with PowerShell and net user",
   "Manage group membership and name the common built-in groups and their purpose",

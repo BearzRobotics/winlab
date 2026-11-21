@@ -4,6 +4,7 @@ title = "CMD text and file tools"
 summary = "type, more, find, findstr and its regex dialect, sort, fc, copy, xcopy, robocopy with its exit-code bit mask, forfiles, attrib and mklink, for /f over command output, and the same jobs in PowerShell and bash."
 content = "cmd-text-and-files.md"
 estimated_minutes = 80
+level = 3
 objectives = [
   "Search text with find and findstr, and use findstr's switches and regular-expression subset",
   "Name what findstr cannot do and recognise a silent no-match caused by an unsupported feature",

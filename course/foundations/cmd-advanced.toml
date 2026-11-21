@@ -4,6 +4,7 @@ title = "Advanced CMD: parsing, arrays, strings, system tools and knowing when t
 summary = "How cmd parses a line in phases, double expansion with call, the ! character and delayed expansion, emulated arrays and string functions, recursion, menus, parallel jobs, reg and process tools, mixing in PowerShell, performance, and when to move to PowerShell."
 content = "cmd-advanced.md"
 estimated_minutes = 90
+level = 4
 objectives = [
   "Predict surprises by the order in which cmd expands percent variables, handles special characters and expands !var!",
   "Use call for double expansion and explain its cost",

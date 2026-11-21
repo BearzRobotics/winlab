@@ -4,6 +4,7 @@ title = "Ports, services and host firewalls"
 summary = "TCP and UDP ports, listening versus connecting, how to see what is listening and who owns it, how to tell refused from filtered, and how to read and change the Windows Defender Firewall and the Linux firewalld and ufw."
 content = "ports-and-firewalls.md"
 estimated_minutes = 60
+level = 3
 objectives = [
   "Explain what a port is and the difference between TCP and UDP",
   "Name the well-known ports for common services and where the official list lives",

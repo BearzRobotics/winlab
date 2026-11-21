@@ -4,7 +4,7 @@ Read this first. It says what the project is, what was done in the long scriptin
 
 ## 1. One-paragraph status
 
-WinLab is an offline-first Windows and Linux administration course app (Zig 0.17.1, DVUI on the dx11 backend). The GUI migration to DVUI is finished. This session added, in depth and with verified output: the **networking track** (7 lessons), the **core foundations and Windows lessons**, the **whole CMD series** (6 lessons), and **all 9 planned PowerShell lessons**, each with a **large quiz bank**. The course validates with **38 lessons, 54 labs and 26 quiz files with 1,239 questions, 0 problems** (`winlab check course`), and `zig build test` passes. All lessons are **drafts for the owner's review**; the owner has not read them through in the GUI.
+WinLab is an offline-first Windows and Linux administration course app (Zig 0.17.1, DVUI on the dx11 backend). The GUI migration to DVUI is finished. This session added, in depth and with verified output: the **networking track** (7 lessons), the **core foundations and Windows lessons**, the **whole CMD series** (6 lessons), and **all 9 planned PowerShell lessons**, each with a **large quiz bank**. The course validates with **38 lessons, 54 labs, 9 learning paths and 26 quiz files with 1,239 questions, 0 problems** (`winlab check course`), and `zig build test` passes. All lessons are **drafts for the owner's review**; the owner has not read them through in the GUI.
 
 ## 2. Where things are
 
@@ -119,11 +119,11 @@ The commit **author identity is set locally** (`git config user.name` and `user.
 
 ## 10. What to do next, in order
 
-0. **Learning paths** (section 12, `docs/learning-paths.md`): add `level` to manifests as lessons are written; build the `paths` folder, validator and track picker. Do this alongside the lessons, not after.
+0. **Learning paths: built (2026-11-21)**, see "Status" at the end of `docs/learning-paths.md`. New lessons need a `level` (1-5) in their manifest and a place in `paths/*.toml` (`winlab check` validates both; `winlab paths` lists them). Remaining: show stage labs in the sidebar, home-lab and cybersecurity paths, drive the placement quiz and path keyboard navigation in the window, DPI check.
 1. **PowerShell series is complete (9 of 9)**: `ps-advanced` is written (2026-11-21, draft; battery `adv1.ps1` on 5.1, 7 Windows and 7 Linux; `adv2.ps1` script block logging in the VM; 50-question quiz). Untested and said so: App Control or AppLocker enforcing CLM, module logging, transcription by policy, macOS. Possible follow-ups: re-point the labs `script-ps-rename-files` and `script-ps-switch-classify` if they fit better elsewhere; a Linux SSH-remoting target.
 2. **Bash and POSIX sh series** (nine lessons, outline in `docs/scripting-curriculum.md`): deepen `bash-basics` and `bash-control-flow`; write `shells-and-posix` (bash vs dash/yash/util-core sh/FreeBSD sh, shebang rule, bashism checklist, testing against dash, ShellCheck), variables and expansion, functions and scripts, text processing, robust scripts, advanced bash, portable POSIX `sh`. Add `linux.systemd`. Test in the WSL Ubuntu (check which of bash, dash and shellcheck exist) and the Linux lab VMs. Re-point the bash labs when lessons exist.
 3. **Windows admin lessons**: deepen `windows-admin.registry-and-filesystems`; then event logs and monitoring, updates and manual patching, storage and disks, remote management, automated Windows install (answer files; `vm/unattend.zig` exists), program installs (msi, exe, winget, DISM), OpenSSH on Windows and Linux, System Internals (advanced, Sysinternals only in the labelled advanced track), Active Directory (needs the multi-VM lab, ADR 0008, and a Server eval ISO).
-4. **App work**: `level` (1-5) in lesson manifests, shown in the sidebar, and a **track picker** (goal-based paths); a GUI **Lab machines** page (image catalog, download and build with progress, QEMU hint with winget first); FreeBSD and OPNsense catalog entries (verify image names first); optional WSL "build from ISO" path.
+4. **App work**: a GUI **Lab machines** page (image catalog, download and build with progress, QEMU hint with winget first); FreeBSD and OPNsense catalog entries (verify image names first); optional WSL "build from ISO" path.
 5. **Content still planned**: remaining core lessons (`linux.*`, `security.*`, `operations.*`, `hardware.*`, `endpoints.*`), the stretch cybersecurity and home-lab tracks, generated (fresh-number) and ordering questions for quizzes, a weak-domain view, assessments and mastery tracking.
 6. **Housekeeping**: `git init`; update `reference\gen_manifest.ps1` so the docs cited by the new lessons are cached if wanted (section C of `MANIFEST.md` lists unstored URLs; downloads cost internet).
 
@@ -135,9 +135,9 @@ The commit **author identity is set locally** (`git config user.name` and `user.
 - Windows 10 depth, Server 2025 as a second target, which certifications matter most (still open from `outline.md`).
 - Which of the "Windows tackle" items in the owner's last message was meant: the owner wrote "tackle windows" after the bash note; I read it as the Linux and bash side. Confirm.
 
-## 12. Learning paths: do not force every learner through every lesson
+## 12. Learning paths (built 2026-11-21)
 
-The course is already about **39 hours** of estimated lesson time across 38 lessons, and far more is planned. A learner with a goal (help desk, networking, Windows admin, scripting, Linux, MD-102, security, home lab) should not have to do every lesson in order, and may already know some of it. The owner asked for this to be recorded; it is **designed but not implemented**.
+The course is already about **39 hours** of estimated lesson time across 38 lessons (about 76 hours is the sum for all nine paths with overlap; a single path is 2 to 25 hours), and far more is planned. A learner with a goal (help desk, networking, Windows admin, scripting, Linux, MD-102, security, home lab) should not have to do every lesson in order, and may already know some of it. The owner asked for this to be recorded; it is **designed but not implemented**.
 
 Full design and the first ten path definitions (real lesson ids, estimated hours, entry points, planned additions) are in **`docs/learning-paths.md`**. In short:
 
@@ -148,7 +148,7 @@ Full design and the first ten path definitions (real lesson ids, estimated hours
 - **Data and code to build:** a `paths\<id>.toml` content folder validated by `winlab check`; a track picker; a sidebar switch between "all lessons by area" and "a path by stage"; per-lesson status (Not started, In progress, Completed, Known, Skipped); an "I already know this" button that opens the quiz.
 - **Paths defined so far:** IT support (about 11 h), Networking (6 h), Windows administrator (12 h), Windows scripting CMD and PowerShell (21 h), PowerShell only (12 h), Linux administrator (8 h), bash and POSIX scripting, Endpoint management (4.5 h), Security (5.5 h), Home lab (stretch).
 
-Do this soon: it is the app's main answer to the course's size, and the `level` field should be added **while** lessons are still being written, so new lessons get a level from the start.
+The design and what was built vs. changed are in `docs/learning-paths.md`. Statuses are now Not started, In progress, Completed, Known (quiz 80% or more before starting) and Skipped. The GUI was verified with screenshots using a throwaway profile (`APPDATA` pointed at a temp folder so the real progress file is untouched; the script is easy to recreate: `Start-Process`, `PostMessage` mouse messages to the main window, `PrintWindow`).
 
 ## 13. Creating the remote repository
 

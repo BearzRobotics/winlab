@@ -4,6 +4,7 @@ title = "Linux storage: block devices, file systems and mounts"
 summary = "See the storage on a Linux server, mount and unmount file systems, and make mounts persistent with /etc/fstab."
 content = "storage-filesystems.md"
 estimated_minutes = 40
+level = 3
 objectives = [
   "List block devices, file systems and mounts with lsblk, blkid, df and findmnt",
   "Mount and unmount a file system and explain why a manual mount does not survive a restart",

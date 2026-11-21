@@ -1,0 +1,26 @@
+schema_version = 1
+id = "powershell-only"
+title = "PowerShell only (fast track)"
+goal = "Become productive in PowerShell without going through the Command Prompt first."
+audience = "Anyone who wants PowerShell now."
+order = 41
+certifications = ["comptia-a-core2/operating-systems"]
+
+[[stage]]
+title = "The shell and the language"
+lessons = ["foundations.powershell-basics", "foundations.ps-variables-types-operators", "foundations.powershell-control-flow"]
+labs = ["labs.script-count-errors", "labs.script-ps-csv-summary", "labs.script-ps-rename-files", "labs.script-ps-switch-classify"]
+
+[[stage]]
+title = "Writing real scripts"
+lessons = ["foundations.ps-functions-and-scripts", "foundations.ps-errors-and-debugging"]
+labs = ["labs.script-ps-parameters", "labs.script-ps-error-handling"]
+
+[[stage]]
+title = "Data, modules and remoting"
+lessons = ["foundations.ps-working-with-data", "foundations.ps-modules-and-remoting"]
+labs = ["labs.script-ps-json-features"]
+
+[[stage]]
+title = "Administration and depth"
+lessons = ["foundations.ps-system-admin-scripting", "foundations.ps-advanced"]

@@ -2,7 +2,7 @@
 
 The course is years of material. Nobody should have to do every lesson in order. A learner picks a **goal**, gets a **path** (an ordered, trimmed list of lessons and labs for that goal), and can **start anywhere** on it, **skip what they already know**, and see what they would miss. Paths are advice, not locks.
 
-This document is the design and the first path definitions. Nothing here is implemented in the app yet; the lesson ids below are real (as of 2026-11-21) except where marked *planned*.
+This document is the design and the first path definitions. **Implemented 2026-11-21** (see "Status" at the end): `level` in manifests, `paths/*.toml` with a validator, the track picker, the path sidebar, Known and Skipped statuses, the placement quiz and soft prerequisite advice. The lesson ids below are real except where marked *planned*.
 
 ## Principles
 
@@ -31,7 +31,7 @@ id = "windows-scripting"
 title = "Windows scripting: CMD and PowerShell"
 goal = "Write and maintain scripts on Windows with confidence, in both shells."
 audience = "Anyone who administers Windows machines, from beginner to experienced."
-level_range = [1, 5]
+order = 40                                               # picker order, lowest first
 certifications = ["comptia-a-core2/operating-systems"]   # optional
 
 [[stage]]
@@ -113,3 +113,25 @@ The seven PowerShell lessons in order, plus the two planned ones. This is path 4
 - Whether quizzes taken as placement tests record attempts the same way as normal attempts.
 - How to show paths for stretch goals that depend on lessons not yet written (hide until a minimum number exist, or show with "coming soon").
 - Whether the track picker should be the default front page of the app.
+
+## Status (2026-11-21): what is built, and where it differs from the design
+
+**Built and checked** (unit tests, `winlab check course`, and screenshots of the running window with a throwaway profile):
+- `level = 1..5` in every lesson manifest (`manifest.zig`; optional, validated). Shown in the sidebar and the lesson header.
+- `paths/<id>.toml` (nine paths: it-support, networking, windows-admin, windows-scripting, powershell-only, linux-admin, bash-scripting, endpoint-management, security-fundamentals), parsed and validated by `src/content/paths.zig`. `winlab check` reports unknown lesson or lab ids, repeats and unknown certification tags as problems, and a lesson whose prerequisite is not earlier on the path as a **warning**. `winlab paths` lists them with lesson count, hours and level range.
+- Prerequisites are now **advice**: the header shows "Recommended first (not required)" with a button for each lesson not yet done. `foundations.powershell-basics` no longer requires `foundations.cmd-basics` (it recommends `foundations.architecture`).
+- **Track picker** (first run when there is no progress, and under *Paths*): goal, audience, lesson count, hours, levels, progress. **Path sidebar**: stages with their hints and done counts. The choice and the last lesson open on each path are saved in `progress.toml` (`[state] path`, `[paths.<id>] last`) and restored on start. `all` means "I chose to see every lesson".
+- **Statuses** `known` and `skipped` join the old three. `known` counts as done. **Placement:** the quiz button on a lesson not yet started (or skipped) reads "I already know this (quiz)"; a finished attempt of **80% or more** marks the lesson Known (`Progress.markKnownIfPassed`). A lesson already in progress or completed is not re-marked.
+
+**Differences from the design above**
+- `level_range` is not in the file; it is computed from the lessons on the path, so it cannot drift.
+- A stage may list `optional` lessons (shown in the stage, not counted toward "done") and `labs` (validated; not yet shown in the sidebar).
+- Path files use `order` (not file name) for the picker order.
+- "Skip" is a status chosen from the Lesson menu or by cycling the status button; there is no separate Skip button.
+
+**Not built yet**
+- Showing a stage's labs in the sidebar, and a path-level "next lesson" button on the picker.
+- The home-lab path (no lessons for it yet) and the cybersecurity path.
+- The "all lessons" view still orders lessons inside an area by lesson id (so `bash-basics` sorts before `cmd-basics`); paths give the teaching order. A prerequisite-based order for that view would fix it.
+- Not driven in the running window: the placement quiz end to end (the rule is unit-tested and the button opens the quiz as before), keyboard navigation in path mode, 150% and 200% DPI.
+- Open questions below (threshold, whether Known counts toward certification coverage, whether placement attempts are recorded as normal attempts) are still open; today a placement attempt is an ordinary attempt.

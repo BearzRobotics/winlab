@@ -4,6 +4,7 @@ title = "PowerShell functions and scripts"
 summary = "Writing functions and scripts that other people can rely on: parameters, validation, pipeline input, parameter sets, splatting, what a function returns and how output pollution happens, -WhatIf support, help, script parameters and exit codes, dot-sourcing, and command precedence."
 content = "ps-functions-and-scripts.md"
 estimated_minutes = 110
+level = 3
 objectives = [
   "Call functions with the correct syntax and explain the comma and parentheses trap",
   "Predict command resolution (alias, function, cmdlet, program) and avoid shadowing aliases",

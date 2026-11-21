@@ -4,6 +4,7 @@ title = "PowerShell fundamentals"
 summary = "Windows PowerShell 5.1 versus PowerShell 7, starting it, Verb-Noun cmdlets, aliases and parameters, common parameters and -WhatIf, help, objects and the pipeline, formatting versus data, providers and drives, running scripts, execution policy and profiles."
 content = "powershell-basics.md"
 estimated_minutes = 90
+level = 1
 objectives = [
   "Tell Windows PowerShell 5.1 from PowerShell 7, and say which to target for a given job",
   "Find a command with Get-Command and learn it with Get-Help, reading the syntax block",
@@ -15,7 +16,7 @@ objectives = [
   "Navigate the file system, registry, environment and certificate stores with the same cmdlets",
   "Run a script, explain the execution policy and what it is not, and find and use your profile",
 ]
-prerequisites = ["foundations.cmd-basics"]
+prerequisites = ["foundations.architecture"]
 windows_features = ["Windows PowerShell", "Windows Terminal"]
 privilege = "standard"
 certifications = ["comptia-a-core2/operating-systems"]
