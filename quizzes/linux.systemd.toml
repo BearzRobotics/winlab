@@ -1,0 +1,576 @@
+schema_version = 1
+lesson = "linux.systemd"
+# Draft for owner review. Every answer comes from the tested output (sd1.sh to sd5.sh) on systemd 259, Ubuntu 26.04 in WSL2. Each attempt asks 12.
+draw = 12
+
+# ---- units ----
+
+[[question]]
+id = "u-dir"
+type = "choice"
+prompt = "Where should an administrator put their own unit files and overrides?"
+choices = ["/etc/systemd/system", "/usr/lib/systemd/system", "/run/systemd/transient", "/var/lib/systemd"]
+answers = ["/etc/systemd/system"]
+explanation = "Packages use /usr/lib/systemd/system; a unit of the same name in /etc wins and survives updates."
+review = "Unit files are looked for in this order"
+
+[[question]]
+id = "u-types"
+type = "multi"
+prompt = "Which of these are systemd unit types?"
+choices = ["service", "target", "timer", "daemonset"]
+answers = ["service", "target", "timer"]
+explanation = "The type is the file extension: .service, .target, .timer, .socket, .path, .mount, .slice and others."
+review = "Units"
+
+[[question]]
+id = "u-isactive"
+type = "choice"
+prompt = "What does systemctl is-active no-such-unit print, and with what exit status?"
+choices = ["inactive, status 4", "failed, status 1", "active, status 0", "Nothing, status 0"]
+answers = ["inactive, status 4"]
+explanation = "A unit that does not exist gave inactive and status 4; an inactive existing unit gave status 3."
+review = "For scripts, use the exact commands"
+
+[[question]]
+id = "u-isfailed"
+type = "choice"
+prompt = "systemctl is-failed systemd-journald printed active with status 1. Why status 1?"
+choices = ["is-failed succeeds only when the unit has failed", "journald is broken", "is-failed always returns 1", "A permissions problem"]
+answers = ["is-failed succeeds only when the unit has failed"]
+explanation = "For a failed unit it printed failed and returned 0."
+review = "For scripts, use the exact commands"
+
+[[question]]
+id = "u-show"
+type = "choice"
+prompt = "Which command is best for a script that needs a unit's state?"
+choices = ["systemctl show UNIT -p ActiveState --value", "systemctl status UNIT | grep Active", "journalctl -u UNIT", "systemctl list-units"]
+answers = ["systemctl show UNIT -p ActiveState --value"]
+explanation = "show prints properties meant for scripts; status is for people."
+review = "For scripts, use the exact commands"
+
+# ---- states ----
+
+[[question]]
+id = "s-static"
+type = "choice"
+prompt = "What does a file state of static mean?"
+choices = ["There is no [Install] section, so it cannot be enabled; it runs only when pulled in or started by hand", "It never changes", "It is masked", "It is enabled at boot"]
+answers = ["There is no [Install] section, so it cannot be enabled; it runs only when pulled in or started by hand"]
+explanation = "systemd-journald was static."
+review = "The install states: enabled, disabled, static, masked"
+
+[[question]]
+id = "s-enable"
+type = "choice"
+prompt = "After systemctl enable wl-hello (without --now), is-active prints:"
+choices = ["inactive: enable only makes the symlink", "active", "failed", "enabled"]
+answers = ["inactive: enable only makes the symlink"]
+explanation = "enable --now does both."
+review = "Start is not enable"
+
+[[question]]
+id = "s-symlink"
+type = "choice"
+prompt = "What does enable create for a unit with WantedBy=multi-user.target?"
+choices = ["A symlink in /etc/systemd/system/multi-user.target.wants/", "A copy of the unit in /boot", "A cron entry", "A line in /etc/fstab"]
+answers = ["A symlink in /etc/systemd/system/multi-user.target.wants/"]
+explanation = "disable --now removed the symlink and stopped the unit."
+review = "Start is not enable"
+
+[[question]]
+id = "s-reboot"
+type = "choice"
+prompt = "A service works after systemctl start but is gone after a reboot. The likely cause is:"
+choices = ["It was started but never enabled", "It was masked", "It is static", "Its Type= is simple"]
+answers = ["It was started but never enabled"]
+explanation = "start runs it now; enable makes it start at boot."
+review = "Start is not enable"
+
+[[question]]
+id = "s-mask"
+type = "choice"
+prompt = "What does systemctl mask create?"
+choices = ["A symlink from the unit name to /dev/null in /etc/systemd/system", "A copy of the unit with a different name", "A drop-in with Restart=no", "A firewall rule"]
+answers = ["A symlink from the unit name to /dev/null in /etc/systemd/system"]
+explanation = "A masked unit cannot be started, not even as a dependency."
+review = "Masking"
+
+[[question]]
+id = "s-maskfail"
+type = "choice"
+prompt = "Why did systemctl mask wl-hello fail?"
+choices = ["The unit's own file is in /etc/systemd/system, so the link cannot be created", "Masking needs a reboot", "wl-hello was running", "Only vendor units can be disabled"]
+answers = ["The unit's own file is in /etc/systemd/system, so the link cannot be created"]
+explanation = "Error: File '/etc/systemd/system/wl-hello.service' already exists. Delete or disable your own unit instead."
+review = "Masking"
+
+[[question]]
+id = "s-runtime"
+type = "choice"
+prompt = "What does mask --runtime do differently?"
+choices = ["The link is in /run, so the mask is lost at reboot", "It masks only for root", "It masks the runtime directory", "It deletes the unit"]
+answers = ["The link is in /run, so the mask is lost at reboot"]
+explanation = "is-enabled printed masked-runtime."
+review = "Masking"
+
+# ---- writing, ExecStart ----
+
+[[question]]
+id = "w-sections"
+type = "multi"
+prompt = "Which are the sections of a typical service unit file?"
+choices = ["[Unit]", "[Service]", "[Install]", "[Boot]"]
+answers = ["[Unit]", "[Service]", "[Install]"]
+explanation = "[Install] is what enable uses (WantedBy=)."
+review = "Writing a service"
+
+[[question]]
+id = "w-pipe"
+type = "choice"
+prompt = "In ExecStart=/bin/echo hello | wc -l, what happens to | wc -l?"
+choices = ["It is passed to echo as arguments: ExecStart is not a shell", "It pipes the output", "It is an error", "It is ignored"]
+answers = ["It is passed to echo as arguments: ExecStart is not a shell"]
+explanation = "echo printed hello | wc -l. Use /bin/sh -c '...' when you need a shell."
+review = "What `ExecStart` is, and is not"
+
+[[question]]
+id = "w-var"
+type = "choice"
+prompt = "With Environment=QUOTED=\"two words\", ExecStart=/bin/echo [$QUOTED] printed:"
+choices = ["[$QUOTED]: a bare $VAR is only substituted when it is a word by itself", "[two words]", "[]", "An error"]
+answers = ["[$QUOTED]: a bare $VAR is only substituted when it is a word by itself"]
+explanation = "${NAME} works inside a word; through /bin/sh -c the shell expanded it."
+review = "What `ExecStart` is, and is not"
+
+[[question]]
+id = "w-dollar"
+type = "short"
+prompt = "In a unit file ExecStart=/bin/sh -c 'echo \"pid $$\"' prints pid followed by what single character?"
+answers = ["$"]
+explanation = "systemd turns $$ into a literal $ before the shell sees it."
+review = "What `ExecStart` is, and is not"
+
+[[question]]
+id = "w-percent"
+type = "short"
+prompt = "In ExecStart, how do you write a literal percent sign (two characters)?"
+answers = ["%%"]
+explanation = "100%% printed 100%."
+review = "What `ExecStart` is, and is not"
+
+[[question]]
+id = "w-envfile"
+type = "choice"
+prompt = "What does EnvironmentFile=-/path mean?"
+choices = ["The leading - means it is not an error if the file is missing", "Read it in reverse", "Ignore comments", "Run it as a script"]
+answers = ["The leading - means it is not an error if the file is missing"]
+explanation = "The file lists NAME=value lines; it is not a shell script."
+review = "What `ExecStart` is, and is not"
+
+# ---- failures ----
+
+[[question]]
+id = "f-simple"
+type = "choice"
+prompt = "A Type=simple service has ExecStart=/usr/bin/slepe (no such program). What does systemctl start print and return?"
+choices = ["Nothing and 0: it reports success, then the unit shows failed a moment later", "An error and 1", "Unit not found and 4", "It waits"]
+answers = ["Nothing and 0: it reports success, then the unit shows failed a moment later"]
+explanation = "With Type=exec the start itself failed with rc 1."
+review = "Type=simple says"
+
+[[question]]
+id = "f-203"
+type = "short"
+prompt = "Which exit status code in the journal means systemd could not execute the program (number only)?"
+answers = ["203"]
+explanation = "status=203/EXEC, 'Failed at step EXEC spawning ...'."
+review = "Type=simple says"
+
+[[question]]
+id = "f-exec"
+type = "choice"
+prompt = "Which Type= makes systemctl start fail immediately when the program cannot be executed?"
+choices = ["exec", "simple", "oneshot only", "none"]
+answers = ["exec"]
+explanation = "The manual: simple reports success even if the binary cannot be invoked; exec reports failure."
+review = "Type=simple says"
+
+[[question]]
+id = "f-reload"
+type = "choice"
+prompt = "You edit a unit file and run systemctl start. What does systemd do?"
+choices = ["Warns that the unit changed on disk and keeps the old definition until daemon-reload", "Applies the change at once", "Refuses to start", "Restarts everything"]
+answers = ["Warns that the unit changed on disk and keeps the old definition until daemon-reload"]
+explanation = "The warning reads: Run 'systemctl daemon-reload' to reload units."
+review = "Edits are not applied until you reload"
+
+[[question]]
+id = "f-pre"
+type = "choice"
+prompt = "ExecStartPre=/bin/false with a normal ExecStart: what happens on start?"
+choices = ["The start fails (rc 1, Result=exit-code); the main command never runs", "The main command runs anyway", "It is ignored", "systemd retries forever"]
+answers = ["The start fails (rc 1, Result=exit-code); the main command never runs"]
+explanation = "A failing ExecStartPre stops the start."
+review = "Other failures worth recognising"
+
+[[question]]
+id = "f-exit"
+type = "choice"
+prompt = "What does SuccessExitStatus=3 do?"
+choices = ["Exit code 3 also counts as success", "Retries three times", "Waits three seconds", "Kills after three tries"]
+answers = ["Exit code 3 also counts as success"]
+explanation = "Without it a oneshot that exits 3 failed (rc 1)."
+review = "Other failures worth recognising"
+
+[[question]]
+id = "f-degraded"
+type = "choice"
+prompt = "systemctl is-system-running prints degraded. What does it mean?"
+choices = ["At least one unit is in the failed state", "The disk is full", "The machine is shutting down", "The kernel is old"]
+answers = ["At least one unit is in the failed state"]
+explanation = "It stayed degraded until every failed unit was cleared or fixed."
+review = "`degraded` and `reset-failed`"
+
+# ---- restart ----
+
+[[question]]
+id = "r-limit"
+type = "choice"
+prompt = "With StartLimitBurst=3 and StartLimitIntervalSec=10, the flaky service ended up:"
+choices = ["failed, with 'Start request repeated too quickly' in the journal, until reset-failed", "running forever", "disabled", "masked"]
+answers = ["failed, with 'Start request repeated too quickly' in the journal, until reset-failed"]
+explanation = "NRestarts=3; reset-failed set it back to 0."
+review = "Keeping a service running"
+
+[[question]]
+id = "r-sigterm"
+type = "choice"
+prompt = "A service dies of SIGTERM with Restart=on-failure. Is it restarted, and what is its Result?"
+choices = ["No: SIGTERM is a clean signal and the Result is success", "Yes, signals are failures", "Yes, Result=signal", "No, Result=timeout"]
+answers = ["No: SIGTERM is a clean signal and the Result is success"]
+explanation = "Only on-success and always restarted the SIGTERM case."
+review = "Which exits restart, for each `Restart=` value"
+
+[[question]]
+id = "r-onsuccess"
+type = "multi"
+prompt = "With Restart=on-success, which endings restart the service (from the test table)?"
+choices = ["exit 0", "SIGTERM", "exit 1", "SIGKILL"]
+answers = ["exit 0", "SIGTERM"]
+explanation = "SIGTERM is recorded as success, so on-success restarts it; exit 1 and SIGKILL are failures."
+review = "Which exits restart, for each `Restart=` value"
+
+[[question]]
+id = "r-abnormal"
+type = "multi"
+prompt = "With Restart=on-abnormal, which endings restart the service?"
+choices = ["SIGKILL", "SIGABRT", "exit 1", "exit 0"]
+answers = ["SIGKILL", "SIGABRT"]
+explanation = "A plain non-zero exit code is not abnormal; on-failure covers it."
+review = "Which exits restart, for each `Restart=` value"
+
+[[question]]
+id = "r-no"
+type = "choice"
+prompt = "What is the default Restart= value and what does it do after any ending?"
+choices = ["no: the service stays down", "always", "on-failure", "on-abort"]
+answers = ["no: the service stays down"]
+explanation = "The first row of the table: nothing restarted."
+review = "Which exits restart, for each `Restart=` value"
+
+[[question]]
+id = "r-reset"
+type = "choice"
+prompt = "Which command clears the failed state and the restart counter?"
+choices = ["systemctl reset-failed UNIT", "systemctl unmask UNIT", "systemctl daemon-reload", "systemctl revert UNIT"]
+answers = ["systemctl reset-failed UNIT"]
+explanation = "After it, Result=success and NRestarts=0."
+review = "Keeping a service running"
+
+# ---- types ----
+
+[[question]]
+id = "t-oneshot"
+type = "choice"
+prompt = "How long did systemctl start take for a Type=oneshot unit whose command sleeps 1 second?"
+choices = ["About 1 second: start waits for the command to end", "0.03 seconds", "Until reboot", "30 seconds"]
+answers = ["About 1 second: start waits for the command to end"]
+explanation = "It measured 1.07 s. Type=simple returned in 0.033 s."
+review = "Service types"
+
+[[question]]
+id = "t-remain"
+type = "choice"
+prompt = "What does RemainAfterExit=yes change for a oneshot?"
+choices = ["The unit stays active (exited) after the command ends", "It restarts the command", "It keeps the log", "It disables the unit"]
+answers = ["The unit stays active (exited) after the command ends"]
+explanation = "Without it the state went back to inactive (dead)."
+review = "Service types"
+
+[[question]]
+id = "t-notify"
+type = "choice"
+prompt = "When does start return for Type=notify?"
+choices = ["When the service sends READY=1 (for example with systemd-notify --ready)", "At once", "When the process exits", "After 90 seconds"]
+answers = ["When the service sends READY=1 (for example with systemd-notify --ready)"]
+explanation = "The test took 2.0 s for a service that notified after 2 s."
+review = "Service types"
+
+# ---- overrides ----
+
+[[question]]
+id = "o-dropin"
+type = "choice"
+prompt = "Where does a drop-in for wl-app.service go?"
+choices = ["/etc/systemd/system/wl-app.service.d/anything.conf", "/etc/systemd/wl-app.conf", "/usr/lib/systemd/system/wl-app.service", "~/.wl-app"]
+answers = ["/etc/systemd/system/wl-app.service.d/anything.conf"]
+explanation = "systemctl edit creates override.conf there; --drop-in=fr.conf chooses another name."
+review = "Overrides: change a unit without editing the package's file"
+
+[[question]]
+id = "o-tty"
+type = "choice"
+prompt = "How can a script install a drop-in with systemctl edit, which needs a terminal?"
+choices = ["Pipe the text in with systemctl edit --stdin UNIT", "It cannot be scripted", "Set TERM=dumb", "Use --force"]
+answers = ["Pipe the text in with systemctl edit --stdin UNIT"]
+explanation = "Without --stdin: Cannot edit units interactively if not on a tty."
+review = "Overrides: change a unit without editing the package's file"
+
+[[question]]
+id = "o-revert"
+type = "choice"
+prompt = "What does systemctl revert wl-app do?"
+choices = ["Removes the drop-ins (and any /etc override) so the original unit applies", "Restarts the unit", "Reverts the last journal entry", "Unmasks it"]
+answers = ["Removes the drop-ins (and any /etc override) so the original unit applies"]
+explanation = "It printed Removed ... for each drop-in file and directory."
+review = "Overrides: change a unit without editing the package's file"
+
+[[question]]
+id = "o-empty"
+type = "choice"
+prompt = "A drop-in adds ExecStart=/new/command to a normal service. What happens on restart?"
+choices = ["Failure: the unit has a bad setting (two ExecStart lines); add an empty ExecStart= first", "It replaces the old command", "It runs both", "It is ignored"]
+answers = ["Failure: the unit has a bad setting (two ExecStart lines); add an empty ExecStart= first"]
+explanation = "An empty assignment clears the list; then the new ExecStart replaces the old."
+review = "Lists must be emptied first"
+
+[[question]]
+id = "o-delta"
+type = "choice"
+prompt = "Which command lists the units that have overrides?"
+choices = ["systemd-delta --type=extended,overridden", "systemctl list-overrides", "journalctl --delta", "systemd-analyze delta"]
+answers = ["systemd-delta --type=extended,overridden"]
+explanation = "It printed [EXTENDED] /etc/systemd/system/wl-app.service → ...override.conf."
+review = "Overrides: change a unit without editing the package's file"
+
+# ---- dependencies ----
+
+[[question]]
+id = "d-requires"
+type = "choice"
+prompt = "wl-req has Requires=wl-db and After=wl-db. You stop wl-db. What happens to wl-req?"
+choices = ["It is stopped too", "It keeps running", "It is restarted", "It is masked"]
+answers = ["It is stopped too"]
+explanation = "With Wants= the dependent kept running."
+review = "Dependencies and ordering"
+
+[[question]]
+id = "d-wants"
+type = "choice"
+prompt = "wl-wants has Wants=wl-db. You start wl-wants, then stop wl-db."
+choices = ["wl-wants keeps running", "wl-wants stops", "wl-wants restarts", "wl-wants is masked"]
+answers = ["wl-wants keeps running"]
+explanation = "Wants is a weak dependency: start it if possible, do not stop with it."
+review = "Dependencies and ordering"
+
+[[question]]
+id = "d-order"
+type = "choice"
+prompt = "Which setting controls the ORDER in which two units start?"
+choices = ["After= and Before=", "Requires=", "Wants=", "PartOf="]
+answers = ["After= and Before="]
+explanation = "Requirement and ordering are independent; Requires= without After= started both at once."
+review = "Dependencies and ordering"
+
+[[question]]
+id = "d-fail"
+type = "multi"
+prompt = "When the dependency's program does not exist, which is true?"
+choices = ["Requires: the dependent's start fails (dependency job failed, rc 1)", "Wants: the dependent starts anyway (rc 0)", "Both are stopped by systemd with rc 4", "Wants: start fails with rc 1"]
+answers = ["Requires: the dependent's start fails (dependency job failed, rc 1)", "Wants: the dependent starts anyway (rc 0)"]
+explanation = "The journal showed Job ... failed with result 'dependency' for Requires."
+review = "A failing dependency"
+
+[[question]]
+id = "d-conflicts"
+type = "choice"
+prompt = "wl-ca and wl-cb each have Conflicts= the other. You start wl-ca, then wl-cb. Result?"
+choices = ["wl-ca stopped, wl-cb active", "Both active", "Both inactive", "wl-cb fails"]
+answers = ["wl-ca stopped, wl-cb active"]
+explanation = "Starting one stops the other."
+review = "Other relationships"
+
+[[question]]
+id = "d-partof"
+type = "choice"
+prompt = "wl-part has PartOf=wl-parent. You restart wl-parent. What happens to wl-part?"
+choices = ["It is restarted too (new PID)", "Nothing", "It is stopped for good", "It is masked"]
+answers = ["It is restarted too (new PID)"]
+explanation = "PartOf propagates stop and restart from the parent."
+review = "Other relationships"
+
+[[question]]
+id = "d-cycle"
+type = "choice"
+prompt = "Which command finds an ordering cycle between two units?"
+choices = ["systemd-analyze verify UNIT", "systemctl cycle UNIT", "journalctl --cycle", "systemctl list-jobs"]
+answers = ["systemd-analyze verify UNIT"]
+explanation = "It printed Found ordering cycle and said a job was deleted to break it, so something silently does not start."
+review = "Ordering cycles"
+
+# ---- conditions ----
+
+[[question]]
+id = "c-cond"
+type = "choice"
+prompt = "A unit has ConditionPathExists=/tmp/flag and the file is missing. What does systemctl start do?"
+choices = ["Returns 0, the unit stays inactive; the journal says skipped, unmet condition", "Fails with rc 1", "Creates the file", "Starts anyway"]
+answers = ["Returns 0, the unit stays inactive; the journal says skipped, unmet condition"]
+explanation = "AssertPathExists failed with Assertion failed on job and rc 1."
+review = "Conditions and assertions"
+
+[[question]]
+id = "c-onfail"
+type = "choice"
+prompt = "What does OnFailure=wl-handler.service do?"
+choices = ["Starts the handler unit when this unit fails", "Restarts this unit", "Disables this unit", "Mails the administrator"]
+answers = ["Starts the handler unit when this unit fails"]
+explanation = "The handler saw MONITOR_UNIT=wl-watched.service and result=exit-code."
+review = "`OnFailure=` and `OnSuccess=`"
+
+# ---- targets ----
+
+[[question]]
+id = "g-target"
+type = "choice"
+prompt = "What is a target?"
+choices = ["A unit without a process: a named group or state of other units", "A network address", "A kind of timer", "A log destination"]
+answers = ["A unit without a process: a named group or state of other units"]
+explanation = "multi-user.target, graphical.target, rescue.target ..."
+review = "Targets"
+
+[[question]]
+id = "g-default"
+type = "choice"
+prompt = "How is the default target defined?"
+choices = ["default.target is a symlink to the chosen target", "A line in /etc/fstab", "A kernel setting only", "A cron entry"]
+answers = ["default.target is a symlink to the chosen target"]
+explanation = "default.target -> graphical.target on the test machine."
+review = "Targets"
+
+[[question]]
+id = "g-stop"
+type = "choice"
+prompt = "You stop wl-grp.target, which Wants wl-db and wl-wants. What happens to them?"
+choices = ["They keep running", "They stop", "They are masked", "They are restarted"]
+answers = ["They keep running"]
+explanation = "Stopping a target does not stop what it Wants."
+review = "Targets"
+
+# ---- stop and kill ----
+
+[[question]]
+id = "k-seq"
+type = "choice"
+prompt = "In what order does systemd stop a service?"
+choices = ["SIGTERM, then SIGKILL after TimeoutStopSec", "SIGKILL at once", "SIGHUP only", "It only closes stdin"]
+answers = ["SIGTERM, then SIGKILL after TimeoutStopSec"]
+explanation = "The stubborn service ignored TERM; stop took 3.1 s and ended with Result=timeout."
+review = "Stopping and killing"
+
+[[question]]
+id = "k-default"
+type = "multi"
+prompt = "Which are the defaults shown by systemctl show for a normal service?"
+choices = ["KillMode=control-group", "KillSignal=15", "TimeoutStopUSec=1min 30s", "SendSIGKILL=no"]
+answers = ["KillMode=control-group", "KillSignal=15", "TimeoutStopUSec=1min 30s"]
+explanation = "SendSIGKILL was yes."
+review = "Stopping and killing"
+
+[[question]]
+id = "k-reload"
+type = "choice"
+prompt = "What does systemctl reload UNIT run?"
+choices = ["The unit's ExecReload= command", "daemon-reload", "A restart", "Nothing"]
+answers = ["The unit's ExecReload= command"]
+explanation = "ExecReload=/bin/kill -HUP $MAINPID made the service print got-HUP."
+review = "Reload"
+
+# ---- journal ----
+
+[[question]]
+id = "j-prio"
+type = "choice"
+prompt = "journalctl -p warning shows which entries?"
+choices = ["Warning and more serious", "Only warnings", "Everything", "Only info"]
+answers = ["Warning and more serious"]
+explanation = "-p 0..4 gives a range of priorities (0 emerg to 7 debug)."
+review = "The journal"
+
+[[question]]
+id = "j-unit"
+type = "choice"
+prompt = "Which command follows one unit's log live?"
+choices = ["journalctl -u UNIT -f", "journalctl -b", "systemctl log UNIT", "tail /var/log/UNIT"]
+answers = ["journalctl -u UNIT -f"]
+explanation = "-f follows; -u selects the unit."
+review = "The journal"
+
+[[question]]
+id = "j-field"
+type = "choice"
+prompt = "How do you filter the journal by any field, such as _SYSTEMD_UNIT?"
+choices = ["journalctl _SYSTEMD_UNIT=cron.service", "journalctl --field cron", "journalctl -F cron", "journalctl grep cron"]
+answers = ["journalctl _SYSTEMD_UNIT=cron.service"]
+explanation = "-F lists the values a field has had (journalctl -F _TRANSPORT gave driver journal kernel stdout syslog)."
+review = "The journal"
+
+[[question]]
+id = "j-persist"
+type = "choice"
+prompt = "How can you tell that the journal is stored on disk across reboots?"
+choices = ["/var/log/journal exists (and --list-boots shows more than boot 0)", "/run/log/journal exists", "journalctl is installed", "/etc/systemd/journald.conf exists"]
+answers = ["/var/log/journal exists (and --list-boots shows more than boot 0)"]
+explanation = "Without /var/log/journal the journal lives in /run and is lost at reboot."
+review = "Persistent or not"
+
+[[question]]
+id = "j-cat"
+type = "choice"
+prompt = "What does journalctl -o cat print?"
+choices = ["Only the message text", "JSON", "Everything with all fields", "Kernel messages"]
+answers = ["Only the message text"]
+explanation = "-o json and -o verbose show the fields."
+review = "The journal"
+
+# ---- mistakes ----
+
+[[question]]
+id = "m-edit"
+type = "choice"
+prompt = "Why should you not edit /usr/lib/systemd/system/foo.service directly?"
+choices = ["The next package update overwrites it; use a drop-in in /etc", "It is read-only", "systemd ignores it", "It needs a reboot"]
+answers = ["The next package update overwrites it; use a drop-in in /etc"]
+explanation = "A drop-in or an /etc copy survives updates."
+review = "Common mistakes"
+
+[[question]]
+id = "m-wants"
+type = "choice"
+prompt = "Which dependency should most units use for something they merely prefer to have running?"
+choices = ["Wants= with After=", "Requires= only", "Conflicts=", "BindsTo="]
+answers = ["Wants= with After="]
+explanation = "Keep Requires= for true hard dependencies."
+review = "Common mistakes"

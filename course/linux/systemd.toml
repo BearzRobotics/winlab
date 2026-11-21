@@ -1,0 +1,64 @@
+schema_version = 1
+id = "linux.systemd"
+title = "systemd: units, services, dependencies, overrides and the journal"
+summary = "How systemd runs a Linux system, tested on systemd 259 (Ubuntu 26.04 in WSL2): unit types and where unit files live, status/show/cat and the enabled/disabled/static/masked states, writing a service, what ExecStart is and is not, Type=simple versus Type=exec (start returns success for a missing program), daemon-reload, the Restart= table for exit codes and signals, start limits and reset-failed, service types, drop-in overrides and the empty-assignment rule, Requires versus Wants versus ordering, conditions, OnFailure, targets, stop and kill behaviour, and the journal."
+content = "systemd.md"
+estimated_minutes = 150
+level = 3
+objectives = [
+  "Find, read and explain a unit with systemctl status, show and cat, and use is-active, is-enabled and is-failed exit statuses in scripts",
+  "Explain enabled, disabled, static and masked, the difference between start and enable, and how mask works and when it fails",
+  "Write a service unit and read its output in the journal",
+  "Say what ExecStart is not (no shell, no pipes), and explain $VAR, ${VAR}, $$ and %% in a unit file",
+  "Diagnose a service that will not start: 203/EXEC, Type=simple versus Type=exec, Failed at step EXEC, ExecStartPre, and the need for daemon-reload",
+  "Choose a Restart= policy using the table for exit codes and signals, and handle the start limit and reset-failed",
+  "Choose the right Type= (simple, exec, forking, oneshot, notify) and explain when start returns",
+  "Override a unit with drop-ins, systemctl edit --stdin and revert, and reset list settings with an empty assignment",
+  "Explain Requires, Wants, After, Conflicts and PartOf, what happens when a dependency fails, and find ordering cycles",
+  "Explain targets and conditions, and the stop, SIGTERM, SIGKILL and TimeoutStopSec sequence",
+  "Query the journal by unit, priority, time, boot, tag and field, and say when the journal is persistent",
+]
+prerequisites = ["foundations.troubleshooting-method"]
+privilege = "administrator"
+certifications = ["redhat-rhcsa/running-systems", "comptia-linux-plus/system-management"]
+evaluation_criteria = [
+  "Learner writes, starts, enables, breaks and fixes a service, reading status, show and the journal each time",
+  "Learner shows the Type=simple start success for a missing program and the Type=exec failure",
+  "Learner shows the daemon-reload warning and the effect of the reload",
+  "Learner replaces an ExecStart with a drop-in, including the empty assignment",
+  "Learner reproduces three rows of the Restart= table and explains SIGTERM",
+  "Learner shows Requires versus Wants when the dependency is stopped",
+  "Learner reads a journal for one unit and for one priority range",
+]
+
+[[references]]
+title = "systemd.unit(5)"
+url = "https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html"
+
+[[references]]
+title = "systemd.service(5)"
+url = "https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html"
+
+[[references]]
+title = "systemd.exec(5)"
+url = "https://www.freedesktop.org/software/systemd/man/latest/systemd.exec.html"
+
+[[references]]
+title = "systemd.special(7): targets"
+url = "https://www.freedesktop.org/software/systemd/man/latest/systemd.special.html"
+
+[[references]]
+title = "systemd.kill(5)"
+url = "https://www.freedesktop.org/software/systemd/man/latest/systemd.kill.html"
+
+[[references]]
+title = "systemctl(1)"
+url = "https://www.freedesktop.org/software/systemd/man/latest/systemctl.html"
+
+[[references]]
+title = "journalctl(1)"
+url = "https://www.freedesktop.org/software/systemd/man/latest/journalctl.html"
+
+[[references]]
+title = "journald.conf(5)"
+url = "https://www.freedesktop.org/software/systemd/man/latest/journald.conf.html"
