@@ -153,3 +153,38 @@ choices = ["On a separate signing machine, not on the web server, with a passphr
 answers = ["On a separate signing machine, not on the web server, with a passphrase and a rotation plan"]
 explanation = "A compromised web server can then delete or corrupt files but cannot sign new ones."
 review = "Where the signing key lives"
+
+[[question]]
+id = "dnf-signed-file"
+type = "choice"
+prompt = "In the dnf repository check, which file carries the signature that is verified first?"
+choices = ["repomd.xml, against its detached signature repomd.xml.asc", "Each package against InRelease", "primary.xml.gz against Packages.adb", "The .repo file"]
+answers = ["repomd.xml, against its detached signature repomd.xml.asc"]
+explanation = "repomd.xml lists the sizes and hashes of every other metadata file, so signing it covers them."
+review = "The same check for a dnf repository"
+
+[[question]]
+id = "dnf-parse-bug"
+type = "choice"
+prompt = "The first dnf checker reported six failures on a healthy repository, although every hash matched. What was wrong?"
+choices = ["Each metadata file was compared with the size of the entry before it, because <size> comes after <location>", "The hashes were truncated", "The signature was invalid", "The server was too slow"]
+answers = ["Each metadata file was compared with the size of the entry before it, because <size> comes after <location>"]
+explanation = "The fix was to print each entry at the closing </data> tag."
+review = "The same check for a dnf repository"
+
+[[question]]
+id = "apk-unsigned"
+type = "choice"
+prompt = "An unsigned package sits inside a signed apk index. Which check catches it?"
+choices = ["The deep mode (WL_DEEP=1), which downloads each package and runs apk verify", "The size check alone", "The index signature check", "Neither; nothing can"]
+answers = ["The deep mode (WL_DEEP=1), which downloads each package and runs apk verify"]
+explanation = "The size and index checks passed in the test; apk verify reported UNTRUSTED signature."
+review = "The same check for an apk repository"
+
+[[question]]
+id = "apk-noarch-dir"
+type = "short"
+prompt = "In the apk layout the checker assumes, which directory name holds the noarch packages? Type the name only."
+answers = ["noarch", "BASE/noarch"]
+explanation = "The index is at BASE/ARCH/Packages.adb, but noarch packages are fetched from BASE/noarch/."
+review = "The same check for an apk repository"

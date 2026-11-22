@@ -1,6 +1,6 @@
 *Draft for owner review.* Hosting a package repository sounds like a big infrastructure problem and is, at its core, a small one: **serve a directory of files over HTTP, update it without ever showing clients a half-finished state, keep the signing key away from the web server, and have enough disk.** This lesson takes the storage question first, with **measured** sizes of real repositories (Chimera, AlmaLinux, Ubuntu), then serving, publishing, mirroring and checking. It builds on the three format lessons (`packaging.apt-repository`, `packaging.dnf-repository`, `packaging.apk-repository`) and on the backup lesson (`homelab.backups`). The owner is building a repository for FenrirOS and choosing storage for it; I know nothing about FenrirOS, so everything here is general and tested on Ubuntu, AlmaLinux and Chimera only.
 
-**What was tested, and where.** **Ubuntu 24.04.5** with **nginx 1.24.0**, **rsync 3.2.7**, **curl 8.5.0** and **gpgv 2.4.4** (`tests/verification/repo/rp4.sh`, `rp4b.sh`, `rp6.sh`, `rp7.sh`); **AlmaLinux 9.8** and **Chimera Linux** for the size measurements (`rp5.sh`, `rp6.sh`). Output is real. **Not tested:** **object storage** (S3-compatible or others) or a **CDN** in front of a repository; **HTTPS** and certificate renewal; **load**, bandwidth, or how many clients one machine can serve; **ZFS or btrfs snapshots** and filesystem choice; geographic mirrors; `reprepro`, `aptly`, `pulp` and other repository managers; and anything about FenrirOS.
+**What was tested, and where.** **Ubuntu 24.04.5** with **nginx 1.24.0**, **rsync 3.2.7**, **curl 8.5.0** and **gpgv 2.4.4** (`tests/verification/repo/rp4.sh`, `rp4b.sh`, `rp6.sh`, `rp7.sh`); **AlmaLinux 9.8** for the size measurements (`rp5.sh`, `rp6.sh`) and the dnf checker (`rp8.sh`), **Chimera Linux** for the size measurements and the apk checker (`rp9.sh`, apk-tools 3.0.8). Output is real. **Not tested:** **object storage** (S3-compatible or others) or a **CDN** in front of a repository; **HTTPS** and certificate renewal; **load**, bandwidth, or how many clients one machine can serve; **ZFS or btrfs snapshots** and filesystem choice; geographic mirrors; `reprepro`, `aptly`, `pulp` and other repository managers; and anything about FenrirOS.
 
 ## What a repository host has to do
 
@@ -204,7 +204,167 @@ signed by another key:    FAIL  InRelease signature: gpgv: Can't check signature
 wrong usage:              usage: ...  (exit status 2)      missing keyring: wl-aptcheck: cannot read keyring ...  (exit status 2)
 ```
 
-Note `1 package file(s)` for a pool holding **two** package versions (1.0 and 1.1): `dpkg-scanpackages` lists only the newest by default, so the checker checks what clients can ask for, not every file in the pool. The checker is apt-specific, and checks one suite, one component and one architecture; a dnf or apk version would follow the same three steps with that format's files (not written). It does **not** verify the package signatures or contents, only presence and size.
+Note `1 package file(s)` for a pool holding **two** package versions (1.0 and 1.1): `dpkg-scanpackages` lists only the newest by default, so the checker checks what clients can ask for, not every file in the pool. The checker checks one suite, one component and one architecture. It does **not** verify the package signatures or contents, only presence and size.
+
+### The same check for a dnf repository
+
+The three steps are the same with different files: **`repomd.xml` against its detached signature** `repomd.xml.asc`, **every metadata file against the size and SHA-256 `repomd.xml` lists**, and **every package in the primary metadata against its promised size**. This one uses `gpg` with a private temporary keyring (so it never touches the machine's own keys) and plain `awk`; it avoids `curl -w '%header{...}'` because **AlmaLinux 9.8's curl is 7.76.1, too old for it** (the apt version above ran on curl 8.5).
+
+```bash
+#!/bin/bash
+# wl-dnfcheck.sh BASEURL KEYFILE
+# Health check for a dnf/rpm repository, from the outside, the way a client sees it:
+#   1. repomd.xml verifies against repomd.xml.asc with the public key in KEYFILE (ASCII-armored)
+#   2. every metadata file named in repomd.xml has the size and SHA-256 that repomd.xml promises
+#   3. every package listed in the primary metadata exists on the server with the size it promises
+# Prints ok/FAIL lines; exit status 0 if everything is fine, 1 if anything failed, 2 on a usage error.
+[ $# -eq 2 ] || { echo "usage: wl-dnfcheck.sh BASEURL KEYFILE" >&2; exit 2; }
+base=${1%/} key=$2
+[ -r "$key" ] || { echo "wl-dnfcheck: cannot read key file $key" >&2; exit 2; }
+tmp=$(mktemp -d) || exit 2; trap 'rm -rf "$tmp"' EXIT
+fails=0
+ok()  { printf 'ok    %s\n' "$*"; }
+bad() { printf 'FAIL  %s\n' "$*"; fails=$((fails + 1)); }
+
+# 1. the signed repomd.xml (a private keyring, so the check never touches the machine's own)
+curl -fsS -o "$tmp/repomd.xml" "$base/repodata/repomd.xml" 2>"$tmp/curl.err" || { bad "cannot fetch repomd.xml: $(tr -d '\n' < "$tmp/curl.err")"; exit 1; }
+curl -fsS -o "$tmp/repomd.xml.asc" "$base/repodata/repomd.xml.asc" 2>"$tmp/curl.err" || { bad "cannot fetch repomd.xml.asc: $(tr -d '\n' < "$tmp/curl.err")"; exit 1; }
+export GNUPGHOME=$tmp/gnupg; mkdir -m 700 "$GNUPGHOME"
+gpg --batch --quiet --import "$key" 2>/dev/null || { echo "wl-dnfcheck: $key is not a usable public key" >&2; exit 2; }
+if gpg --batch --verify "$tmp/repomd.xml.asc" "$tmp/repomd.xml" 2>"$tmp/gpg.err"; then
+  ok "repomd.xml signature: $(grep -m1 -o 'using [A-Z0-9]* key [0-9A-F]*' "$tmp/gpg.err")"
+else
+  bad "repomd.xml signature: $(grep -m1 -iE 'BAD|no public key|can.t check' "$tmp/gpg.err")"; exit 1
+fi
+
+# 2. each metadata file: type, location, sha256 checksum, size
+awk '/<data type=/ {match($0, /type="[^"]*"/); t = substr($0, RSTART + 6, RLENGTH - 7)}
+     /<checksum type="sha256"/ {gsub(/.*">|<\/checksum>.*/, ""); h = $0}
+     /<size>/ {gsub(/.*<size>|<\/size>.*/, ""); s = $0}
+     /<location href=/ {match($0, /href="[^"]*"/); l = substr($0, RSTART + 6, RLENGTH - 7)}
+     /<\/data>/ {print t, l, h, s}' "$tmp/repomd.xml" > "$tmp/data.txt"
+[ -s "$tmp/data.txt" ] || { bad "repomd.xml lists no metadata files"; exit 1; }
+primary=
+while read -r type loc want_hash want_size; do
+  f="$tmp/$(basename "$loc")"
+  if ! curl -fsS -o "$f" "$base/$loc" 2>"$tmp/curl.err"; then bad "$loc: cannot fetch ($(tr -d '\n' < "$tmp/curl.err"))"; continue; fi
+  got_hash=$(sha256sum "$f" | cut -d' ' -f1); got_size=$(stat -c %s "$f")
+  if [ "$got_hash" = "$want_hash" ] && [ "$got_size" = "$want_size" ]; then ok "$type matches repomd.xml ($got_size bytes)"
+  else bad "$type differs from repomd.xml: size $got_size (repomd.xml says $want_size), hash ${got_hash:0:12} (repomd.xml says ${want_hash:0:12})"; fi
+  [ "$type" = primary ] && primary=$f
+done < "$tmp/data.txt"
+[ -n "$primary" ] || { bad "no primary metadata"; exit 1; }
+(( fails == 0 )) || { printf '%d check(s) failed\n' "$fails"; exit 1; }
+
+# 3. every package named in the primary metadata, with the promised size
+case $primary in
+  *.gz)  unpack="gzip -dc" ;;
+  *.zst) unpack="zstd -dc" ;;
+  *.xz)  unpack="xz -dc" ;;
+  *.bz2) unpack="bzip2 -dc" ;;
+  *)     unpack="cat" ;;
+esac
+n=0
+while read -r file size; do
+  n=$((n + 1))
+  code_len=$(curl -sI "$base/$file" | tr -d '\r' | awk 'NR == 1 {c = $2} tolower($1) == "content-length:" {l = $2} END {print c, l}')
+  code=${code_len%% *}; len=${code_len#* }
+  if [ "$code" != 200 ]; then bad "$file: HTTP $code"
+  elif [ "$len" != "$size" ]; then bad "$file: $len bytes on the server, the metadata says $size"
+  fi
+done < <($unpack "$primary" | awk '/<size package=/ {match($0, /package="[0-9]*"/); s = substr($0, RSTART + 9, RLENGTH - 10)}
+                                    /<location href=/ {match($0, /href="[^"]*"/); print substr($0, RSTART + 6, RLENGTH - 7), s}')
+(( fails == 0 )) && ok "$n package file(s) present with the right size"
+(( fails == 0 )) || printf '%d check(s) failed\n' "$fails"
+exit $(( fails > 0 ))
+```
+
+Tested on AlmaLinux 9.8 (curl 7.76.1, GnuPG 2.3.3, gawk 5.1.0) with a repository built by `createrepo_c` and signed with a detached signature as in `packaging.dnf-repository` (`tests/verification/repo/rp8.sh`):
+
+```text
+healthy:              ok    repomd.xml signature: using EDDSA key DE6B894D...
+                      ok    primary matches repomd.xml (645 bytes)         (and filelists, other, primary_db, filelists_db, other_db)
+                      ok    2 package file(s) present with the right size            exit status 0
+package file missing: FAIL  x86_64/wl-hello-1.1-1.noarch.rpm: HTTP 404               exit status 1
+file truncated:       FAIL  x86_64/wl-hello-1.1-1.noarch.rpm: 300 bytes on the server, the metadata says 6467    exit status 1
+metadata changed:     FAIL  primary differs from repomd.xml: size 676 (repomd.xml says 645), hash 1a41e19fad06 (repomd.xml says ace1df2e3f48)
+repomd.xml changed:   FAIL  repomd.xml signature: gpg: BAD signature from "WinLab Test Repo <repo@lab.test>" [unknown]
+other key:            FAIL  repomd.xml signature: gpg: Can't check signature: No public key
+no .asc file:         FAIL  cannot fetch repomd.xml.asc: curl: (22) The requested URL returned error: 404
+usage errors:         usage: ...  /  cannot read key file ...  /  ... is not a usable public key   (exit status 2 each)
+```
+
+My first version of the metadata parser was wrong: in `repomd.xml` the `<size>` line comes **after** `<location>`, so each file was compared with the previous file's size and a healthy repository reported six failures. The hashes matched all along. The fix was to print each entry at `</data>`. A checker needs its own test against a repository known to be good, and I only found this because I ran one. I did not run it against a real distribution mirror, and a repository that uses `zstd` or `xz` metadata is handled by the `case` on the file suffix but I only tested the `gz` that `createrepo_c` produced here.
+
+### The same check for an apk repository
+
+For apk the tool that knows the format is `apk` itself: **`apk verify`** checks a signature against a keys directory (it accepted the index, rejected an unsigned package with `UNTRUSTED signature`, and reported a truncated file with `unexpected end of file`), and **`apk adbdump`** prints each package's `name`, `version`, `arch` and `file-size`. The layout it assumes is the one from `packaging.apk-repository`: the index at `BASE/ARCH/Packages.adb`, and **`noarch` packages under `BASE/noarch/`** (a finding from that lesson). Chimera has no `curl` by default, so the battery ran `apk add curl` first. This script also has an optional **deep mode** (`WL_DEEP=1`) that downloads each package and runs `apk verify` on it, because, as the tests below show, the size check alone cannot catch an unsigned package in a signed index.
+
+```bash
+#!/bin/bash
+# wl-apkcheck.sh BASEURL ARCH KEYSDIR
+# Health check for an apk (v3) repository laid out as BASEURL/ARCH/Packages.adb with noarch packages in BASEURL/noarch/,
+# from the outside, the way a client sees it:
+#   1. Packages.adb verifies against the public keys in KEYSDIR (apk verify)
+#   2. every package listed in the index exists on the server with the file-size the index promises
+#   3. with WL_DEEP=1 in the environment, each package is also downloaded and verified (signature and structure)
+# Prints ok/FAIL lines; exit status 0 if everything is fine, 1 if anything failed, 2 on a usage error.
+[ $# -eq 3 ] || { echo "usage: wl-apkcheck.sh BASEURL ARCH KEYSDIR   (WL_DEEP=1 also downloads and verifies every package)" >&2; exit 2; }
+base=${1%/} arch=$2 keys=$3
+[ -d "$keys" ] || { echo "wl-apkcheck: $keys is not a directory" >&2; exit 2; }
+tmp=$(mktemp -d) || exit 2; trap 'rm -rf "$tmp"' EXIT
+fails=0
+ok()  { printf 'ok    %s\n' "$*"; }
+bad() { printf 'FAIL  %s\n' "$*"; fails=$((fails + 1)); }
+
+# 1. the signed index
+curl -fsS -o "$tmp/Packages.adb" "$base/$arch/Packages.adb" 2>"$tmp/curl.err" || { bad "cannot fetch $arch/Packages.adb: $(tr -d '\n' < "$tmp/curl.err")"; exit 1; }
+if out=$(apk --keys-dir "$keys" verify "$tmp/Packages.adb" 2>&1); then ok "$arch/Packages.adb signature: ${out#*: }"
+else bad "$arch/Packages.adb: ${out#*: }"; exit 1; fi
+
+# 2. every package in the index
+n=0
+while read -r parch file size; do
+  n=$((n + 1))
+  dir=$arch; [ "$parch" = noarch ] && dir=noarch
+  url="$base/$dir/$file"
+  code_len=$(curl -sI "$url" | tr -d '\r' | awk 'NR == 1 {c = $2} tolower($1) == "content-length:" {l = $2} END {print c, l}')
+  code=${code_len%% *}; len=${code_len#* }
+  if [ "$code" != 200 ]; then bad "$dir/$file: HTTP $code"; continue
+  elif [ "$len" != "$size" ]; then bad "$dir/$file: $len bytes on the server, the index says $size"; continue
+  fi
+  # 3. optional: the package itself
+  if [ -n "$WL_DEEP" ]; then
+    curl -fsS -o "$tmp/pkg.apk" "$url" 2>/dev/null
+    if out=$(apk --keys-dir "$keys" verify "$tmp/pkg.apk" 2>&1); then :
+    else bad "$dir/$file: ${out#*: }"; fi
+  fi
+done < <(apk adbdump "$tmp/Packages.adb" | awk '/^  - name:/ {n = $3} /^    version:/ {v = $2} /^    arch:/ {a = $2} /^    file-size:/ {print a, n "-" v ".apk", $2}')
+(( n > 0 )) || bad "the index lists no packages"
+if (( fails == 0 )); then
+  ok "$n package file(s) present with the right size${WL_DEEP:+, each verified}"
+else printf '%d check(s) failed\n' "$fails"; fi
+exit $(( fails > 0 ))
+```
+
+Tested on Chimera Linux with apk-tools 3.0.8 and curl 8.23.0 (`tests/verification/repo/rp9.sh`):
+
+```text
+healthy:              ok    x86_64/Packages.adb signature: OK
+                      ok    2 package file(s) present with the right size            exit status 0
+healthy, WL_DEEP=1:   ok    2 package file(s) present with the right size, each verified    exit status 0
+package file missing: FAIL  noarch/wl-hello-1.1-r0.apk: HTTP 404                     exit status 1
+file truncated:       FAIL  noarch/wl-hello-1.1-r0.apk: 300 bytes on the server, the index says 564    exit status 1
+index changed:        FAIL  x86_64/Packages.adb: file format is invalid or inconsistent    exit status 1
+checker's wrong keys: FAIL  x86_64/Packages.adb: UNTRUSTED signature                 exit status 1
+unsigned package in a signed index (index built with --allow-untrusted):
+  size check only:    ok    3 package file(s) present with the right size            exit status 0   <- not caught
+  WL_DEEP=1:          FAIL  noarch/wl-unsigned-1-r0.apk: UNTRUSTED signature        exit status 1
+index missing:        FAIL  cannot fetch x86_64/Packages.adb: curl: (22) The requested URL returned error: 404
+usage errors:         exit status 2 each
+```
+
+The unsigned-package row matters: it is the case where, in `packaging.apk-repository`, a client **installed** the package, so the cheap check passing on it is not good enough for a repository you publish. A deep check downloads every package on every run, which for a 15 GiB repository is a lot of traffic; run the cheap one after every publish and the deep one occasionally or on the publishing machine.
 
 ## Where the signing key lives
 
@@ -242,4 +402,4 @@ The pool is **immutable once published** (a changed package is a new file), so a
 
 ## Not tested, and honest limits
 
-Object storage and CDNs; HTTPS and certificates; load and bandwidth; filesystem features (ZFS, btrfs, inodes); geographic mirrors; repository managers; the checker for dnf and apk; a restore of the whole repository from backup; key rotation; and FenrirOS. The size table mixes different tools and different kinds of count and is a guide to the order of magnitude, not a comparison.
+Object storage and CDNs; HTTPS and certificates; load and bandwidth; filesystem features (ZFS, btrfs, inodes); geographic mirrors; repository managers; a restore of the whole repository from backup; the dnf and apk checkers against a real distribution mirror; key rotation; and FenrirOS. The size table mixes different tools and different kinds of count and is a guide to the order of magnitude, not a comparison.
