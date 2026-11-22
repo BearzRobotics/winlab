@@ -1,6 +1,6 @@
 *Draft for owner review.* **systemd** is the service manager (PID 1) on nearly every major Linux distribution: Debian, Ubuntu, the Red Hat family including AlmaLinux, SUSE, Arch. It starts the system, keeps services running, logs what they say, and gives you one tool (`systemctl`) to control them and another (`journalctl`) to read the logs. This lesson teaches units and services, how to write and break and fix one, dependencies and targets, overrides, and the journal. The next lesson (`linux.systemd-advanced`) covers timers, sockets, sandboxing, resource limits and analysis. (This course's lessons on other init systems, such as `dinit` on Chimera, come after this one.)
 
-**What was tested, and where.** Everything below was run as **root** on **Ubuntu 26.04 LTS in WSL2** with **systemd 259 (259.5-0ubuntu3.4)** as PID 1, kernel 6.18 (`tests/verification/systemd/sd1.sh` to `sd5.sh`). Test units are named `wl-*` and were removed afterwards. Output is real; times, process IDs and host names are replaced with `<time>`, `<pid>` and `<host>` where they would only distract. **Not tested:** AlmaLinux or any Red Hat family system (where SELinux can change behaviour), other systemd versions, a real boot, the boot targets themselves (`isolate`, `rescue`, `emergency`: I read their properties but did not switch to them), `BindsTo=`, `systemctl edit` in an interactive editor, and anything that needs a physical machine. WSL has no real boot loader and no real hardware, so `systemd-analyze blame` numbers and the "degraded" state in WSL are not representative of a server. Documentation: the freedesktop.org man pages ([systemd.unit](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html), [systemd.service](https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html), [systemd.exec](https://www.freedesktop.org/software/systemd/man/latest/systemd.exec.html), [systemd.special](https://www.freedesktop.org/software/systemd/man/latest/systemd.special.html), [systemctl](https://www.freedesktop.org/software/systemd/man/latest/systemctl.html), [journalctl](https://www.freedesktop.org/software/systemd/man/latest/journalctl.html), [journald.conf](https://www.freedesktop.org/software/systemd/man/latest/journald.conf.html), [systemd.kill](https://www.freedesktop.org/software/systemd/man/latest/systemd.kill.html)). All of these pages load (checked 2026-11-21); the long pages were read only in part, so **every behaviour claim below rests on my test output**, with a doc quote only where I say so.
+**What was tested, and where.** Everything below was run as **root** on **Ubuntu 26.04 LTS in WSL2** with **systemd 259 (259.5-0ubuntu3.4)** as PID 1, kernel 6.18 (`tests/verification/systemd/sd1.sh` to `sd5.sh`). Test units are named `wl-*` and were removed afterwards. Output is real; times, process IDs and host names are replaced with `<time>`, `<pid>` and `<host>` where they would only distract. **Also run on two real VMs (added 2026-11-22):** the same five batteries ran as root on **Ubuntu 24.04.5 LTS with systemd 255 (255.4-1ubuntu8.18, kernel 6.8)** and on **AlmaLinux 9.8 with systemd 252 (252-67.el9_8.6.alma.1, kernel 5.14, SELinux enforcing)**, both booted by QEMU from the course's lab images. Behaviour matched the 259 output for every core idea in this lesson (`Type=simple` start returns 0 for a missing program and `Type=exec` fails at once; `mask` of a vendor unit, `enable` refused on a masked unit, `mask` refused when the file is in `/etc`; empty `ExecStart=` clears the list; `$$`; restart and stop behaviour). **Differences you will meet, all observed:** (1) **`systemctl edit --stdin` does not exist on 252 or 255** (`systemctl: unrecognized option '--stdin'`); the systemd NEWS file lists it under "CHANGES WITH 256". On those systems write the drop-in file yourself and run `systemctl daemon-reload` (the lesson shows both below). (2) **On AlmaLinux, SELinux blocks units that run a script from, or read an `EnvironmentFile` in, `/tmp`**: see the section "SELinux and files in `/tmp`" near the end. (3) `systemctl status` on 259 prints an extra `Invocation:` line that 252 and 255 do not, and the wording of a few journal messages differs (for example 259: "The kernel OOM killer killed some processes in this unit." versus 252/255: "A process of this unit has been killed by the OOM killer."). (4) A service killed by `SIGABRT` shows `Result=signal` on 259 in WSL but `Result=core-dump` on both VMs (I did not investigate why), so a restart matrix that depends on that case can differ between machines. **Still not tested:** other Red Hat family or SUSE systems, the boot targets themselves (`isolate`, `rescue`, `emergency`: I read their properties but did not switch to them; a boot with `systemd.unit=rescue.target` on the kernel command line was not run), `BindsTo=`, `systemctl edit` in an interactive editor, and anything that needs a physical machine. WSL has no real boot loader and no real hardware, so `systemd-analyze blame` numbers and the "degraded" state in WSL are not representative of a server. Documentation: the freedesktop.org man pages ([systemd.unit](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html), [systemd.service](https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html), [systemd.exec](https://www.freedesktop.org/software/systemd/man/latest/systemd.exec.html), [systemd.special](https://www.freedesktop.org/software/systemd/man/latest/systemd.special.html), [systemctl](https://www.freedesktop.org/software/systemd/man/latest/systemctl.html), [journalctl](https://www.freedesktop.org/software/systemd/man/latest/journalctl.html), [journald.conf](https://www.freedesktop.org/software/systemd/man/latest/journald.conf.html), [systemd.kill](https://www.freedesktop.org/software/systemd/man/latest/systemd.kill.html)). All of these pages load (checked 2026-11-21); the long pages were read only in part, so **every behaviour claim below rests on my test output**, with a doc quote only where I say so.
 
 ## Units
 
@@ -343,7 +343,16 @@ $ systemctl revert wl-app        (deletes every drop-in and any /etc copy)
   Removed '/etc/systemd/system/wl-app.service.d/fr.conf'.   Removed '/etc/systemd/system/wl-app.service.d/override.conf'.   Removed '/etc/systemd/system/wl-app.service.d'.
 ```
 
-(`edit --stdin` ran the reload for me and the next start printed `greeting=hola`.) `systemd-delta --type=extended,overridden` lists every unit that has overrides on the machine: `[EXTENDED]  /etc/systemd/system/wl-app.service → /etc/systemd/system/wl-app.service.d/override.conf`.
+(`edit --stdin` ran the reload for me and the next start printed `greeting=hola`.) **`--stdin` needs systemd 256 or newer** (NEWS, "CHANGES WITH 256"); on Ubuntu 24.04 (255) and AlmaLinux 9 (252) it fails with `systemctl: unrecognized option '--stdin'` and creates nothing. The version-independent way to script it is to write the file and reload (tested on 252 and 255 with the same result as above):
+
+```text
+$ mkdir -p /etc/systemd/system/wl-app.service.d
+$ printf '[Service]\nEnvironment=GREETING=hola\n' > /etc/systemd/system/wl-app.service.d/override.conf
+$ systemctl daemon-reload
+$ systemctl cat wl-app ; systemctl revert wl-app        (the same cat and revert as above)
+```
+
+`systemd-delta --type=extended,overridden` lists every unit that has overrides on the machine: `[EXTENDED]  /etc/systemd/system/wl-app.service → /etc/systemd/system/wl-app.service.d/override.conf`.
 
 ### Lists must be emptied first
 
@@ -535,6 +544,38 @@ $ grep -E "^#?(Storage|SystemMaxUse|...)" /etc/systemd/journald.conf
 ```
 
 If **`/var/log/journal` exists**, the journal is stored on disk and survives reboots; if not, it lives in `/run/log/journal` and is **lost at reboot** (the common reason for "the logs from before the crash are gone"). Settings go in `/etc/systemd/journald.conf` or a drop-in in `/etc/systemd/journald.conf.d/` (the same override idea as units; this machine had a vendor drop-in `/usr/lib/systemd/journald.conf.d/syslog.conf`). `journalctl --list-boots` showing only boot `0` tells you the journal is not persistent. (I did not change journald's configuration in the tests.)
+
+## SELinux and files in `/tmp` (AlmaLinux)
+
+Every unit in this lesson that pointed at a script or an `EnvironmentFile` in `/tmp` worked on Ubuntu and **failed on AlmaLinux 9.8 with SELinux enforcing**, although the same script runs fine by hand as root. Output from `tests/verification/systemd/sd8.sh` (AlmaLinux 9.8, systemd 252):
+
+```text
+$ getenforce                                  ->  Enforcing
+$ systemctl start wl-tmp                      (ExecStart=/tmp/wl-script.sh, mode 755)
+  Job for wl-tmp.service failed because the control process exited with error code.
+  start rc=1     Result=exit-code     ExecMainStatus=203
+$ journalctl -u wl-tmp -o cat
+  wl-tmp.service: Failed to locate executable /tmp/wl-script.sh: Permission denied
+  wl-tmp.service: Failed at step EXEC spawning /tmp/wl-script.sh: Permission denied
+  wl-tmp.service: Main process exited, code=exited, status=203/EXEC
+$ /tmp/wl-script.sh                           ->  hello-from-script      (as root, by hand: rc=0)
+$ ls -Z /tmp/wl-script.sh                     ->  unconfined_u:object_r:user_tmp_t:s0 /tmp/wl-script.sh
+$ ausearch -m avc -ts recent
+  avc:  denied  { open } for  pid=1 comm="systemd" path="/tmp/wl-env" ... scontext=system_u:system_r:init_t:s0 tcontext=unconfined_u:object_r:user_tmp_t:s0 tclass=file permissive=0
+```
+
+`Permission denied` with the file mode correct and root able to run it is the signature of **SELinux**: PID 1 runs in the `init_t` domain, and policy does not let `init_t` execute or open files labelled `user_tmp_t` (what a file created in `/tmp` gets). The same script copied to `/usr/local/bin` (label `bin_t`) ran, an `EnvironmentFile` in `/etc` was read, and the `/tmp` unit worked after `setenforce 0` (permissive), which is a **diagnostic, not a fix**; I put enforcing back afterwards:
+
+```text
+$ cp /tmp/wl-script.sh /usr/local/bin/ ; ls -Z /usr/local/bin/wl-script.sh   ->  ...:object_r:bin_t:s0
+$ systemctl start wl-bin                       ->  start rc=0     hello-from-script
+$ systemctl start wl-envtmp                    (EnvironmentFile=/tmp/wl-env)
+  wl-envtmp.service: Failed to load environment files: Permission denied
+$ systemctl start wl-envetc                    (EnvironmentFile=/etc/wl-env)        ->  FOO=bar
+$ setenforce 0 ; systemctl start wl-tmp        ->  start rc=0     hello-from-script      ; setenforce 1
+```
+
+So on a Red Hat family machine, **put service scripts and environment files in the places packages use** (`/usr/local/bin`, `/etc`, `/opt`), and when a unit gets `Permission denied` with correct file permissions, look for an AVC denial (`ausearch -m avc -ts recent`, or `journalctl` for `avc:`) before you change anything. (The AlmaLinux lab `alma-selinux-context` in this course practises the file-label side of this; this lesson did not test `restorecon` or `semanage fcontext`.)
 
 ## Common mistakes
 

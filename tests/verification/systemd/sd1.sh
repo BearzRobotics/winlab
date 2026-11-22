@@ -151,8 +151,8 @@ echo '-- oneshot: start blocks until the command ends'
 sh_ 'time -p systemctl start wl-oneshot 2>&1 | head -1; systemctl is-active wl-oneshot; systemctl show wl-oneshot -p SubState,Result'
 sh_ 'systemctl start wl-oneshot2; systemctl is-active wl-oneshot2; systemctl show wl-oneshot2 -p SubState,Result'
 echo '-- notify: start blocks until READY=1 (about 2 s); simple: returns at once'
-sh_ 's=$(date +%s.%N); systemctl start wl-notify; e=$(date +%s.%N); echo "notify start took $(echo "$e - $s" | bc -l | cut -c1-3) s"; systemctl show wl-notify -p Type,SubState'
-sh_ 's=$(date +%s.%N); systemctl start wl-simple; e=$(date +%s.%N); echo "simple start took $(echo "$e - $s" | bc -l | cut -c1-4) s"; systemctl show wl-simple -p Type,SubState'
+sh_ 's=$(date +%s.%N); systemctl start wl-notify; e=$(date +%s.%N); echo "notify start took $(awk "BEGIN{print $e - $s}" | cut -c1-3) s"; systemctl show wl-notify -p Type,SubState'
+sh_ 's=$(date +%s.%N); systemctl start wl-simple; e=$(date +%s.%N); echo "simple start took $(awk "BEGIN{print $e - $s}" | cut -c1-4) s"; systemctl show wl-simple -p Type,SubState'
 sh_ 'systemctl start wl-forking; systemctl show wl-forking -p Type,SubState,MainPID | sed "s/MainPID=[0-9]*/MainPID=<pid>/"; cat /run/wl-forking.pid | grep -c "^[0-9]"'
 r systemctl stop wl-notify wl-simple wl-forking wl-oneshot
 

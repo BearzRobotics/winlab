@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Battery 2 for linux.systemd: follow-ups, dependencies, targets, timers, the journal. Run as root (tested: Ubuntu 26.04 WSL2, systemd 259).
+# NOTE: on AlmaLinux with SELinux enforcing, units that use files in /tmp fail with "Permission denied" (see sd8.sh); run "setenforce 0" for the duration of this battery and "setenforce 1" afterwards.
 export SYSTEMD_PAGER=cat SYSTEMD_COLORS=0 PAGER=cat
 U=/etc/systemd/system
 cleanup() { systemctl stop 'wl-*' >/dev/null 2>&1; systemctl reset-failed 'wl-*' >/dev/null 2>&1; rm -rf "$U"/wl-* "$U"/*.wants/wl-* "$U"/*.requires/wl-* /usr/lib/systemd/system/wl-* /run/systemd/system/wl-* /tmp/wl-*; systemctl daemon-reload; }

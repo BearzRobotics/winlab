@@ -1,6 +1,6 @@
 *Draft for owner review.* `linux.systemd` taught units, services, dependencies and the journal. This lesson covers the rest of the everyday systemd toolbox: **timers** (the replacement for most cron jobs), **transient units** with `systemd-run`, **socket and path activation**, **templates and instances**, **sandboxing** a service, **resource limits**, **`systemd-analyze`** to find mistakes and slow boots, and **user units**. Read `linux.systemd` first: this lesson uses its vocabulary.
 
-**What was tested, and where.** Everything below was run as **root** on **Ubuntu 26.04 LTS in WSL2** with **systemd 259 (259.5-0ubuntu3.4)** (`tests/verification/systemd/sd2.sh` to `sd4.sh`), test units named `wl-*` and removed afterwards. **Not tested:** AlmaLinux or other systemd versions, `Persistent=` timers across a reboot (I did not reboot), `RandomizedDelaySec=`, `Accept=no` sockets, the `DynamicUser` state directories, `systemd-analyze security` on real production units, cgroup behaviour under a real container runtime, and `loginctl enable-linger` (I only read `Linger=no`). WSL2 is a virtual environment (`Virtualization=wsl`, `Chassis: container`), so boot-time numbers from `systemd-analyze` and sandbox-capability results may differ on a real server. Documentation (all pages load; the long ones were read only in part, so behaviour below is from my test output): [systemd.timer](https://www.freedesktop.org/software/systemd/man/latest/systemd.timer.html), [systemd.time](https://www.freedesktop.org/software/systemd/man/latest/systemd.time.html), [systemd.socket](https://www.freedesktop.org/software/systemd/man/latest/systemd.socket.html), [systemd.path](https://www.freedesktop.org/software/systemd/man/latest/systemd.path.html), [systemd.exec](https://www.freedesktop.org/software/systemd/man/latest/systemd.exec.html), [systemd.resource-control](https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html), [systemd-run](https://www.freedesktop.org/software/systemd/man/latest/systemd-run.html), [systemd-analyze](https://www.freedesktop.org/software/systemd/man/latest/systemd-analyze.html).
+**What was tested, and where.** Everything below was run as **root** on **Ubuntu 26.04 LTS in WSL2** with **systemd 259 (259.5-0ubuntu3.4)** (`tests/verification/systemd/sd2.sh` to `sd4.sh`), test units named `wl-*` and removed afterwards. **Also run on two real VMs (added 2026-11-22):** sd2 to sd4 ran again as root on **Ubuntu 24.04.5 (systemd 255)** and **AlmaLinux 9.8 (systemd 252, SELinux enforcing)**, and two new batteries ran there: `sd6a.sh`/`sd6b.sh` (user units and linger across a real logout) and `sd7a.sh`/`sd7b.sh` (a real power-off and boot with `Persistent=` timers, enabled/disabled/masked units and a lingering user service). Results are in the sections they belong to. Differences between the versions that the batteries showed: the OOM-kill message wording (259 "The kernel OOM killer killed some processes in this unit.", 252/255 "A process of this unit has been killed by the OOM killer."), the `systemd-analyze security` rule list (a `CapabilityBoundingSet=~CAP_BPF` row exists on 255 and 259 but not on 252, and 252 lists a `MemoryDenyWriteExecute=` row that the 255 and 259 runs did not show), and on the VMs `MemoryMax=` killed the process at once because **those VMs have no swap** (the WSL result of 286 MB swapped is a swap effect, as taught below). **Not tested:** other Red Hat family or SUSE systems, `RandomizedDelaySec=`, `Accept=no` sockets, the `DynamicUser` state directories, `systemd-analyze security` on real production units, and cgroup behaviour under a real container runtime. WSL2 is a virtual environment (`Virtualization=wsl`, `Chassis: container`), so boot-time numbers from `systemd-analyze` and sandbox-capability results may differ on a real server. Documentation (all pages load; the long ones were read only in part, so behaviour below is from my test output): [systemd.timer](https://www.freedesktop.org/software/systemd/man/latest/systemd.timer.html), [systemd.time](https://www.freedesktop.org/software/systemd/man/latest/systemd.time.html), [systemd.socket](https://www.freedesktop.org/software/systemd/man/latest/systemd.socket.html), [systemd.path](https://www.freedesktop.org/software/systemd/man/latest/systemd.path.html), [systemd.exec](https://www.freedesktop.org/software/systemd/man/latest/systemd.exec.html), [systemd.resource-control](https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html), [systemd-run](https://www.freedesktop.org/software/systemd/man/latest/systemd-run.html), [systemd-analyze](https://www.freedesktop.org/software/systemd/man/latest/systemd-analyze.html).
 
 ## Timers
 
@@ -81,7 +81,18 @@ The format is `DayOfWeek Year-Month-Day Hour:Minute:Second`, with `*` for any, `
 
 The default **`AccuracySec` is 1 minute** (the manual says so verbatim: "Defaults to 1min"; `systemctl show` printed `AccuracyUSec=1min`): systemd may delay a timer by up to that long to wake the machine less often. In my test I started two timers with `OnActiveSec=2`, one with the default accuracy and one with `AccuracySec=1s`, and **both ran 3.1 seconds after they were started**: I did **not** reproduce a delay on this lightly loaded machine, so do not expect it every time. For exact timing, set `AccuracySec=1s` (or smaller). A calendar timer `OnCalendar=*:*:0/10` fired about **0.94 s after** the scheduled second with both settings.
 
-`Persistent=yes` (not tested here, since I did not reboot) makes a calendar timer run **once after boot if it missed a run while the machine was off**; it is the usual choice for daily and weekly jobs on laptops.
+`Persistent=yes` makes a calendar timer run **once after boot if it missed a run while the machine was off**; it is the usual choice for daily and weekly jobs on laptops. **Tested across a real power-off** (`sd7a.sh`, `sd7b.sh`; Ubuntu 24.04 with systemd 255 and AlmaLinux 9.8 with systemd 252, same result on both): two timers with `OnCalendar` three minutes ahead, one `Persistent=true` and one `Persistent=false`; the VM was powered off with `systemctl poweroff` before that time and started again after it.
+
+```text
+(before)   NextElapseUSecRealtime=Sun 2026-11-22 05:14:00 UTC
+(after boot at 05:15:10)
+  fired-persist 05:15:16                                 <- the file the Persistent=true service appends to
+  wl-persist.timer     LastTriggerUSec=Sun 2026-11-22 05:15:16 UTC    Persistent=yes
+  wl-nopersist.timer   LastTriggerUSec=                                Persistent=no      <- never ran
+  journal: Starting WinLab timer persist... / Finished WinLab timer persist.
+```
+
+The missed run happened about **6 seconds into the boot** (05:15:10 up, 05:15:16 run); the `Persistent=false` timer did not run at all and simply waited for its next calendar time. (A caution from my own test: when I repeated it with the same timer names after a clean-up, `LastTriggerUSec` already showed the time from the first run before the timer had fired. systemd keeps the last run time of a `Persistent=` timer in a stamp file under `/var/lib/systemd/timers/` (the directory exists and holds `stamp-*.timer` files on the Ubuntu VM); I did not work out why this one survived my clean-up, so use fresh timer names when you repeat the test.)
 
 ### Cron versus timers
 
@@ -327,7 +338,27 @@ $ systemctl --user daemon-reload ; systemctl --user start wl-user ; systemctl --
 $ loginctl show-user root -p Linger          ->  Linger=no
 ```
 
-A user manager is the service `user@UID.service` (`user@0.service` was in the running list). I did **not** test what happens to it at logout. The setting that decides is **linger** (`loginctl show-user root -p Linger` gave `Linger=no`); `loginctl enable-linger USER` is the documented way to keep a user's services running without a login, and I did not test it. I ran this as root, where the user manager was already running; for an ordinary user on a desktop or SSH login the commands are the same but set `XDG_RUNTIME_DIR` yourself when you use `su` or `sudo` instead of a real login.
+A user manager is the service `user@UID.service` (`user@0.service` was in the running list in WSL). **It exists because a login session started it.** On the two VMs, where root had no login session, the same commands failed: `systemctl --user is-system-running` printed `Failed to connect to bus: No medium found` (Ubuntu 24.04), `XDG_RUNTIME_DIR` was unset and `/run/user/0` did not exist. As the normal admin user over SSH (a real login) it works, so run user units as the user who logs in, not as root.
+
+**Logout and linger, tested on a real logind** (Ubuntu 24.04 with systemd 255 and AlmaLinux 9.8 with systemd 252, `sd6a.sh` and `sd6b.sh`, same result on both). The test logs in over SSH as the normal user, enables a user service (`ExecStart=/bin/sleep 3000`), then ends the session while a root-owned watcher (`systemd-run`, so it outlives the login) logs once a second whether the user manager, `/run/user/1000` and the process are still there:
+
+```text
+$ systemctl --user enable --now wl-user ; systemctl --user is-active wl-user      ->  active
+$ loginctl show-user labadmin -p Linger State RuntimePath   ->  Linger=no  State=active  RuntimePath=/run/user/1000
+
+Linger=no, then the session ends:
+  t=10 user-manager=active   rundir=/run/user/1000  sleep=1
+  t=11 user-manager=inactive rundir=/run/user/1000  sleep=0        <- the user manager stopped and took the service with it
+  t=12 user-manager=inactive rundir=gone            sleep=0
+  ...t=25 user-manager=inactive rundir=gone sleep=0
+
+$ sudo loginctl enable-linger labadmin ; loginctl show-user labadmin -p Linger   ->  Linger=yes
+  (the file /var/lib/systemd/linger/labadmin exists)
+Linger=yes, then the session ends:
+  t=1 ... t=25  user-manager=active  rundir=/run/user/1000  sleep=1        <- still running 25 seconds after the logout
+```
+
+(The watcher starts a few seconds before the session closes, so "t=11" is not "11 seconds after logout"; the point is that it ended within the watch window without linger and never ended with linger.) **With linger the user manager also starts at boot, before anyone logs in:** after a real power-off and boot (`sd7a.sh`, `sd7b.sh`, same on both VMs) `user@1000.service` had `ActiveEnterTimestamp=05:15:19`, the SSH login session started at `05:15:23`, and the enabled `wl-user` service was already `active`. For an ordinary user's services that must survive logout or run at boot, `loginctl enable-linger USER` is the tested answer on systemd. The `systemctl --user` commands are the same on a desktop or SSH login; when you use `su` or `sudo` instead of a real login, set `XDG_RUNTIME_DIR` yourself (I did not test that on the VMs).
 
 ## Misc status
 

@@ -91,7 +91,7 @@ type = "choice"
 prompt = "What does Persistent=yes do for a calendar timer?"
 choices = ["Runs it once after boot if a run was missed while the machine was off", "Keeps the log forever", "Runs it twice", "Makes the unit static"]
 answers = ["Runs it once after boot if a run was missed while the machine was off"]
-explanation = "Not tested in the lesson because no reboot was done."
+explanation = "Tested across a real power-off on both VMs: the Persistent=true timer ran about 6 seconds into the boot; the Persistent=false timer did not run."
 review = "`AccuracySec`, `Persistent` and a test that did not show what I expected"
 
 # ---- systemd-run ----
@@ -361,10 +361,10 @@ review = "User units"
 [[question]]
 id = "w-linger"
 type = "choice"
-prompt = "What did the lesson show about linger for root?"
-choices = ["Linger=no; enable-linger is the documented way to keep a user's services running, but it was not tested", "Linger=yes", "It was tested at logout", "Linger does not exist"]
-answers = ["Linger=no; enable-linger is the documented way to keep a user's services running, but it was not tested"]
-explanation = "The lesson says it did not test logout behaviour."
+prompt = "On the Ubuntu 24.04 and AlmaLinux 9 VMs, what happened to a user service after the login session ended?"
+choices = ["Without linger the user manager stopped and the service ended; with linger enabled both kept running", "It always kept running", "It always stopped, linger changes nothing", "It restarted every 10 seconds"]
+answers = ["Without linger the user manager stopped and the service ended; with linger enabled both kept running"]
+explanation = "A root-owned watcher logged user-manager state each second: inactive and gone without linger, active with linger."
 review = "User units"
 
 # ---- mistakes ----
@@ -386,3 +386,32 @@ choices = ["On a machine with swap the excess can be swapped instead of killed",
 answers = ["On a machine with swap the excess can be swapped instead of killed"]
 explanation = "Use MemorySwapMax=0 too for a hard limit."
 review = "Common mistakes"
+
+# ---- tested on real VMs ----
+
+[[question]]
+id = "w-user-session"
+type = "choice"
+prompt = "On the VMs, why did `systemctl --user` fail for root with 'Failed to connect to bus: No medium found'?"
+choices = ["Root had no login session, so no user manager or /run/user/0 existed", "Root may not use systemctl", "The unit file was missing", "systemd was too old"]
+answers = ["Root had no login session, so no user manager or /run/user/0 existed"]
+explanation = "As the normal user over SSH (a real login) the same commands worked."
+review = "User units"
+
+[[question]]
+id = "w-linger-boot"
+type = "choice"
+prompt = "After enabling linger for a user and rebooting a VM, when did that user's manager (user@1000.service) start?"
+choices = ["At boot, before any login, and the enabled user service was already running", "Only when the user logged in", "Only after an hour", "Never"]
+answers = ["At boot, before any login, and the enabled user service was already running"]
+explanation = "ActiveEnterTimestamp 05:15:19 was before the login session at 05:15:23."
+review = "User units"
+
+[[question]]
+id = "t-persist-no"
+type = "choice"
+prompt = "In the reboot test, what did the Persistent=false timer do when its calendar time passed while the VM was off?"
+choices = ["Nothing; it waited for its next calendar time", "It ran at boot", "It ran twice", "It failed the boot"]
+answers = ["Nothing; it waited for its next calendar time"]
+explanation = "LastTriggerUSec stayed empty for the Persistent=false timer."
+review = "`AccuracySec`, `Persistent` and a test that did not show what I expected"

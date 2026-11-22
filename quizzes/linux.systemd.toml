@@ -333,9 +333,9 @@ review = "Overrides: change a unit without editing the package's file"
 id = "o-tty"
 type = "choice"
 prompt = "How can a script install a drop-in with systemctl edit, which needs a terminal?"
-choices = ["Pipe the text in with systemctl edit --stdin UNIT", "It cannot be scripted", "Set TERM=dumb", "Use --force"]
-answers = ["Pipe the text in with systemctl edit --stdin UNIT"]
-explanation = "Without --stdin: Cannot edit units interactively if not on a tty."
+choices = ["Pipe the text in with systemctl edit --stdin UNIT (systemd 256 or newer)", "It cannot be scripted", "Set TERM=dumb", "Use --force"]
+answers = ["Pipe the text in with systemctl edit --stdin UNIT (systemd 256 or newer)"]
+explanation = "Without --stdin: Cannot edit units interactively if not on a tty. On 252 and 255 --stdin is an unrecognized option; write the drop-in file and run daemon-reload."
 review = "Overrides: change a unit without editing the package's file"
 
 [[question]]
@@ -574,3 +574,41 @@ choices = ["Wants= with After=", "Requires= only", "Conflicts=", "BindsTo="]
 answers = ["Wants= with After="]
 explanation = "Keep Requires= for true hard dependencies."
 review = "Common mistakes"
+
+# ---- SELinux and /tmp (AlmaLinux) ----
+
+[[question]]
+id = "se-tmp-signature"
+type = "choice"
+prompt = "On AlmaLinux a unit with ExecStart=/tmp/script.sh (mode 755) fails with status=203/EXEC and Permission denied, yet root can run the script by hand. What is the most likely cause?"
+choices = ["SELinux: PID 1 (init_t) may not execute a file labelled user_tmp_t", "The script has no shebang", "systemd cannot run scripts", "The file is too large"]
+answers = ["SELinux: PID 1 (init_t) may not execute a file labelled user_tmp_t"]
+explanation = "ausearch -m avc showed the denial; the same script in /usr/local/bin (bin_t) ran."
+review = "SELinux and files in `/tmp` (AlmaLinux)"
+
+[[question]]
+id = "se-tmp-fix"
+type = "choice"
+prompt = "What is the right way to handle the SELinux denial from the previous question?"
+choices = ["Keep the script and environment files where packages put them (/usr/local/bin, /etc, /opt) and read the AVC denial first; setenforce 0 is only a diagnostic", "Disable SELinux permanently", "chmod 777 the file", "Run the service as a different user"]
+answers = ["Keep the script and environment files where packages put them (/usr/local/bin, /etc, /opt) and read the AVC denial first; setenforce 0 is only a diagnostic"]
+explanation = "Permissive mode made the /tmp unit work, which proves SELinux was the cause, but it is not the fix."
+review = "SELinux and files in `/tmp` (AlmaLinux)"
+
+[[question]]
+id = "se-tmp-where"
+type = "choice"
+prompt = "Which command lists recent SELinux denials in the audit log?"
+choices = ["ausearch -m avc -ts recent", "systemctl list-avc", "journalctl --selinux-off", "getenforce -v"]
+answers = ["ausearch -m avc -ts recent"]
+explanation = "The lesson used it to show the init_t denial for /tmp/wl-env."
+review = "SELinux and files in `/tmp` (AlmaLinux)"
+
+[[question]]
+id = "o-stdin-version"
+type = "choice"
+prompt = "On Ubuntu 24.04 (systemd 255) and AlmaLinux 9 (systemd 252) what happens with `systemctl edit --stdin`?"
+choices = ["unrecognized option '--stdin'; write the drop-in file yourself and run daemon-reload", "It works the same", "It opens an editor", "It deletes the unit"]
+answers = ["unrecognized option '--stdin'; write the drop-in file yourself and run daemon-reload"]
+explanation = "The NEWS file lists edit --stdin under CHANGES WITH 256."
+review = "Overrides: change a unit without editing the package's file"

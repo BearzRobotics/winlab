@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Battery 4 for linux.systemd: re-tests and the Restart= matrix, conditions, OnFailure. Run as root (tested: Ubuntu 26.04 WSL2, systemd 259).
+# NOTE: on AlmaLinux with SELinux enforcing, units that use files in /tmp fail with "Permission denied" (see sd8.sh); run "setenforce 0" for the duration of this battery and "setenforce 1" afterwards.
 export SYSTEMD_PAGER=cat SYSTEMD_COLORS=0 PAGER=cat
 U=/etc/systemd/system
 cleanup() { systemctl stop 'wl-*' >/dev/null 2>&1; systemctl reset-failed 'wl-*' >/dev/null 2>&1; rm -rf "$U"/wl-* "$U"/*.wants/wl-* /etc/systemd/system.control/wl-* /run/systemd/system/wl-* /tmp/wl-*; systemctl daemon-reload; }
@@ -38,7 +39,7 @@ TimeoutStopSec=3
 EOF
 systemctl daemon-reload
 systemctl start wl-stubborn; sleep 0.5
-sh_ 'systemctl is-active wl-stubborn; s=$(date +%s.%N); systemctl stop wl-stubborn; e=$(date +%s.%N); printf "stop took %.1f s\n" $(echo "$e - $s" | bc -l)'
+sh_ 'systemctl is-active wl-stubborn; s=$(date +%s.%N); systemctl stop wl-stubborn; e=$(date +%s.%N); printf "stop took %.1f s\n" $(awk "BEGIN{print $e - $s}")'
 sh_ 'journalctl -u wl-stubborn --no-pager -o cat | cut -c1-130'
 sh_ 'systemctl show wl-stubborn -p Result,ActiveState'
 

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Battery 3 for linux.systemd: timer accuracy, sandboxing, resource control, socket/path activation, templates, stop/kill, analyze, user units.
+# NOTE: on AlmaLinux with SELinux enforcing, units that use files in /tmp fail with "Permission denied" (see sd8.sh); run "setenforce 0" for the duration of this battery and "setenforce 1" afterwards.
 # Run as root (tested: Ubuntu 26.04 WSL2, systemd 259).
 export SYSTEMD_PAGER=cat SYSTEMD_COLORS=0 PAGER=cat
 U=/etc/systemd/system
@@ -30,7 +31,7 @@ sh_ 'systemctl show wl-acca.timer -p AccuracyUSec; systemctl show wl-accb.timer 
 rm -f /tmp/wl-acca.ran /tmp/wl-accb.ran
 t0=$(date +%s.%N); systemctl start wl-acca.timer wl-accb.timer
 for i in $(seq 1 80); do [ -e /tmp/wl-acca.ran ] && [ -e /tmp/wl-accb.ran ] && break; sleep 1; done
-for n in a b; do [ -e /tmp/wl-acc$n.ran ] && printf '  timer %s: ran %.1f s after it was started (OnActiveSec=2)\n' "$n" "$(echo "$(cat /tmp/wl-acc$n.ran) - $t0" | bc -l)" || echo "  timer $n: did not run within 80 s"; done
+for n in a b; do [ -e /tmp/wl-acc$n.ran ] && printf '  timer %s: ran %.1f s after it was started (OnActiveSec=2)\n' "$n" "$(awk "BEGIN{print $(cat /tmp/wl-acc$n.ran) - $t0}")" || echo "  timer $n: did not run within 80 s"; done
 systemctl stop wl-acca.timer wl-accb.timer 2>/dev/null
 
 echo '### 2. Sandboxing'
@@ -147,8 +148,8 @@ cat > $U/wl-polite.service <<'EOF'
 ExecStart=/bin/sleep 1000
 EOF
 systemctl daemon-reload
-sh_ 'systemctl start wl-stubborn; s=$(date +%s.%N); systemctl stop wl-stubborn; e=$(date +%s.%N); printf "stop took %.0f s\n" $(echo "$e - $s" | bc -l); journalctl -u wl-stubborn --no-pager -o cat | grep -i "timed out\|killing\|SIGKILL\|Failed with" | cut -c1-120'
-sh_ 'systemctl start wl-polite; s=$(date +%s.%N); systemctl stop wl-polite; e=$(date +%s.%N); printf "polite stop took %.1f s\n" $(echo "$e - $s" | bc -l)'
+sh_ 'systemctl start wl-stubborn; sleep 0.5; s=$(date +%s.%N); systemctl stop wl-stubborn; e=$(date +%s.%N); printf "stop took %.0f s\n" $(awk "BEGIN{print $e - $s}"); journalctl -u wl-stubborn --no-pager -o cat | grep -i "timed out\|killing\|SIGKILL\|Failed with" | cut -c1-120'
+sh_ 'systemctl start wl-polite; s=$(date +%s.%N); systemctl stop wl-polite; e=$(date +%s.%N); printf "polite stop took %.1f s\n" $(awk "BEGIN{print $e - $s}")'
 sh_ 'systemctl show -p KillMode,KillSignal,TimeoutStopUSec,SendSIGKILL wl-polite'
 cat > $U/wl-reload.service <<'EOF'
 [Service]
