@@ -388,6 +388,66 @@ fn openLabs(init: std.process.Init, cfg: *const winlab.settings.Loaded, root: []
     return try arena.dupe(gui.Lab, entries.items);
 }
 
+
+/// Backs the setup window: runs the same discovery as `winlab status` and records that the window was seen.
+const SetupBackend = struct {
+    init: std.process.Init,
+    settings: winlab.settings.Settings,
+    content_dir: []const u8,
+    arena: std.heap.ArenaAllocator,
+
+    fn check(ctx: *anyopaque, out: *[gui.setup_max_items]gui.SetupItem) usize {
+        const self: *SetupBackend = @ptrCast(@alignCast(ctx));
+        _ = self.arena.reset(.retain_capacity);
+        const a = self.arena.allocator();
+        const io = self.init.io;
+        const path = self.init.environ_map.get("PATH") orelse "";
+        var n: usize = 0;
+        out[n] = .{ .name = "Lessons and quizzes", .ok = true, .optional = false, .detail = std.fmt.allocPrint(a, "Course folder: {s}", .{self.content_dir}) catch "Course folder found." };
+        n += 1;
+        inline for (std.meta.tags(winlab.shell_discovery.Shell)) |sh| {
+            if (n < out.len) {
+                const found = winlab.shell_discovery.findOnPath(io, path, sh.executable());
+                out[n] = .{
+                    .name = sh.displayName(),
+                    .ok = found,
+                    .optional = sh.isOptional(),
+                    .detail = if (found) "Offered in the Practice menu for typing commands from the lessons." else "Not installed. Lessons that use it still read fine; install it to practise in the app.",
+                };
+                n += 1;
+            }
+        }
+        const system_root = self.init.environ_map.get("SystemRoot") orelse "C:\\Windows";
+        const ssh = std.fs.path.join(a, &.{ system_root, "System32", "OpenSSH", "ssh.exe" }) catch "";
+        const ssh_ok = ssh.len > 0 and blk: {
+            const st = std.Io.Dir.cwd().statFile(io, ssh, .{}) catch break :blk false;
+            break :blk st.kind == .file;
+        };
+        out[n] = .{ .name = "OpenSSH client", .ok = ssh_ok, .optional = true, .detail = if (ssh_ok) "Labs use it to control the virtual machine." else "Labs use it to control the virtual machine. It is an optional Windows feature: Settings > System > Optional features > Add a feature > OpenSSH Client." };
+        n += 1;
+        // WINLAB_SETUP_DEMO_NOQEMU=1 pretends QEMU is missing, to see the install choices without uninstalling it.
+        const pretend_missing = self.init.environ_map.get("WINLAB_SETUP_DEMO_NOQEMU") != null;
+        if (if (pretend_missing) null else winlab.vm_qemu.discover(self.init.gpa, io, path, self.settings.qemu_path) catch null) |found| {
+            var tools = found;
+            defer tools.deinit();
+            out[n] = .{ .name = "QEMU", .ok = true, .optional = true, .detail = std.fmt.allocPrint(a, "{s}. Location: {s}. Hardware acceleration (WHPX): {s}.", .{ tools.version, tools.qemu_system, if (tools.whpx) "available" else "not available, so labs run in slow software emulation; turn on Windows Hypervisor Platform in Windows Features" }) catch "Found." };
+        } else {
+            out[n] = .{ .name = "QEMU", .ok = false, .optional = true, .detail = "Needed only for the hands-on labs. Not found in your settings, PATH, Program Files or MSYS2." };
+        }
+        n += 1;
+        return n;
+    }
+
+    fn finish(ctx: *anyopaque) void {
+        const self: *SetupBackend = @ptrCast(@alignCast(ctx));
+        if (self.settings.setup_done) return;
+        self.settings.setup_done = true;
+        const appdata = self.init.environ_map.get("APPDATA") orelse return;
+        var base = std.Io.Dir.cwd().openDir(self.init.io, appdata, .{}) catch return;
+        defer base.close(self.init.io);
+        winlab.settings_file.save(self.init.io, base, self.settings) catch |e| std.debug.print("warning: could not save settings: {t}\n", .{e});
+    }
+};
 fn browse(init: std.process.Init, dir_arg: ?[]const u8) !void {
     const gpa = init.gpa;
     const io = init.io;
@@ -455,6 +515,10 @@ fn browse(init: std.process.Init, dir_arg: ?[]const u8) !void {
     var lab_note: []const u8 = "";
     const lab_entries = try openLabs(init, &cfg, rootOfCourse(dir), &store, &lab_backend, &lab_backend_ready, &lab_note);
 
+    var setup_backend: SetupBackend = .{ .init = init, .settings = cfg.settings, .content_dir = dir, .arena = std.heap.ArenaAllocator.init(gpa) };
+    defer setup_backend.arena.deinit();
+    const settings_path = if (init.environ_map.get("APPDATA")) |ad| std.fs.path.join(arena, &.{ ad, winlab.settings_file.sub_dir, winlab.settings_file.file_name }) catch "" else "";
+
     try gui.run(gpa, "WinLab - Course", pages, .{
         .io = io,
         .fonts_dir = fontsDir(init),
@@ -468,6 +532,7 @@ fn browse(init: std.process.Init, dir_arg: ?[]const u8) !void {
         .labs = lab_entries,
         .lab_engine = if (lab_backend_ready) .{ .ctx = &lab_backend, .run = LabBackend.run, .fixed = LabBackend.fixed } else null,
         .lab_note = lab_note,
+        .setup = .{ .ctx = &setup_backend, .check = SetupBackend.check, .finish = SetupBackend.finish, .show_first = !cfg.settings.setup_done, .settings_path = settings_path },
     });
 }
 

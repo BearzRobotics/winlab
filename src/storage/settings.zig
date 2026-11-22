@@ -20,6 +20,8 @@ pub const Settings = struct {
     qemu_path: []const u8 = "",
     /// Id of the registered training VM the Lab button uses (empty: the first usable one).
     lab_vm: []const u8 = "",
+    /// The first-run setup window has been shown and closed; it does not open by itself again.
+    setup_done: bool = false,
 };
 
 pub const Loaded = struct {
@@ -68,6 +70,9 @@ pub fn parse(gpa: std.mem.Allocator, text: []const u8, diag: ?*toml.Diagnostic) 
     if (t.get("lab-vm")) |_| {
         if (t.getString("lab-vm")) |s| loaded.settings.lab_vm = try a.dupe(u8, s) else try ignored.append(a, "lab-vm");
     }
+    if (t.get("setup-done")) |_| {
+        if (t.getBool("setup-done")) |b| loaded.settings.setup_done = b else try ignored.append(a, "setup-done");
+    }
     loaded.ignored = try ignored.toOwnedSlice(a);
     return loaded;
 }
@@ -91,6 +96,7 @@ pub fn write(s: Settings, w: *std.Io.Writer) std.Io.Writer.Error!void {
     try writeQuoted(w, s.qemu_path);
     try w.writeAll("\nlab-vm = ");
     try writeQuoted(w, s.lab_vm);
+    try w.print("\nsetup-done = {s}", .{if (s.setup_done) "true" else "false"});
     try w.writeByte('\n');
 }
 
@@ -114,7 +120,7 @@ test "round trip" {
     const gpa = std.testing.allocator;
     var out: std.Io.Writer.Allocating = .init(gpa);
     defer out.deinit();
-    try write(.{ .theme = .light, .text_scale = 150, .content_path = "C:\\WinLab \"x\"" }, &out.writer);
+    try write(.{ .theme = .light, .text_scale = 150, .content_path = "C:\\WinLab \"x\"", .setup_done = true }, &out.writer);
     var l = try parse(gpa, out.written(), null);
     defer l.deinit();
     try std.testing.expectEqual(Theme.light, l.settings.theme);
@@ -122,6 +128,7 @@ test "round trip" {
     try std.testing.expectEqualStrings("C:\\WinLab \"x\"", l.settings.content_path);
     try std.testing.expectEqualStrings("", l.settings.qemu_path);
     try std.testing.expectEqualStrings("", l.settings.lab_vm);
+    try std.testing.expect(l.settings.setup_done);
 }
 
 test "invalid toml" {

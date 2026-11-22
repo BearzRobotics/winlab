@@ -68,6 +68,31 @@ pub const Tracking = struct {
     save: *const fn (ctx: ?*anyopaque, p: *const winlab.progress.Progress) bool,
 };
 
+/// One line of the setup window: something WinLab or the labs use, and whether it was found.
+pub const SetupItem = struct {
+    name: []const u8,
+    ok: bool,
+    /// Missing is fine (the lessons still work); the line says what it would unlock.
+    optional: bool,
+    detail: []const u8,
+};
+pub const setup_max_items = 10;
+
+/// Implemented by main.zig. `check` fills `out` and returns how many lines it wrote; the strings stay valid
+/// until the next call. `finish` records that the setup window has been seen (so it does not open by itself again).
+pub const Setup = struct {
+    ctx: *anyopaque,
+    check: *const fn (ctx: *anyopaque, out: *[setup_max_items]SetupItem) usize,
+    finish: *const fn (ctx: *anyopaque) void,
+    /// Open the window at start (first run).
+    show_first: bool = false,
+    /// Where the settings file lives, shown so a learner can set qemu-path by hand.
+    settings_path: []const u8 = "",
+};
+
+pub const qemu_winget_command = "winget install --id SoftwareFreedomConservancy.QEMU --exact";
+pub const qemu_download_url = "https://www.qemu.org/download/#windows";
+
 /// A shell the learner can open from a lesson.
 pub const ShellChoice = struct {
     /// Menu and title text, for example "Command Prompt".
@@ -136,6 +161,8 @@ pub const Options = struct {
     text_scale: u32 = 100,
     /// When set, the window shows lesson status, a progress summary and a notes box.
     tracking: ?Tracking = null,
+    /// First-run setup and requirements window; null hides it.
+    setup: ?Setup = null,
     dark: bool = false,
     /// Where Segoe UI and Consolas live (`%SystemRoot%\Fonts`). Empty: DVUI's bundled font.
     fonts_dir: []const u8 = "",
@@ -222,6 +249,9 @@ const App = struct {
     /// The learning path being followed (index into `o.paths`); null shows all lessons by area.
     path: ?usize = null,
     show_picker: bool = false,
+    show_setup: bool = false,
+    setup_items: [setup_max_items]SetupItem = undefined,
+    setup_n: usize = 0,
     lab: LabUi = .{},
     qz: QuizUi = .{},
     /// Frame-local message for a modal that needs only text.
@@ -281,6 +311,10 @@ pub fn run(gpa: std.mem.Allocator, title: [:0]const u8, pages: []const Page, o: 
     if (a.visible.items.len > 0) a.current = a.visible.items[0];
     loadNotes(a);
     restorePath(a);
+    if (o.setup) |s| {
+        runSetupCheck(a);
+        if (s.show_first) a.show_setup = true;
+    }
 
     while (!a.quit) switch (Dx11.serviceMessageQueue()) {
         .queue_empty => {
@@ -638,6 +672,11 @@ fn menuBar(a: *App) void {
     if (dvui.menuItemLabel(@src(), "Help", .{ .submenu = true }, .{})) |r| {
         var fw = dvui.floatingMenu(@src(), .{ .from = r }, .{});
         defer fw.deinit();
+        if (a.o.setup != null and dvui.menuItemLabel(@src(), "Setup and requirements...", .{}, .{ .expand = .horizontal }) != null) {
+            runSetupCheck(a);
+            a.show_setup = true;
+            m.close();
+        }
         if (dvui.menuItemLabel(@src(), "Keyboard shortcuts", .{}, .{ .expand = .horizontal }) != null) {
             a.show_keys = true;
             m.close();
@@ -674,6 +713,104 @@ fn pathsMenu(a: *App, m: *dvui.MenuWidget) void {
     }
 }
 
+
+// ---------------------------------------------------------------------------------------------
+// Setup and requirements
+// ---------------------------------------------------------------------------------------------
+
+fn runSetupCheck(a: *App) void {
+    const s = a.o.setup orelse return;
+    a.setup_n = s.check(s.ctx, &a.setup_items);
+}
+
+fn closeSetup(a: *App) void {
+    if (a.o.setup) |s| s.finish(s.ctx);
+    a.show_setup = false;
+}
+
+/// What is installed and what is not, with the choices for anything missing. WinLab never installs software:
+/// it shows the command, copies it, or opens the download page, and the learner decides.
+fn setupWindow(a: *App) void {
+    var open = true;
+    var fw = dvui.floatingWindow(@src(), .{ .modal = true, .open_flag = &open }, .{ .rect = .{ .x = 140, .y = 40, .w = 760, .h = 620 }, .min_size_content = .{ .w = 520, .h = 360 } });
+    defer fw.deinit();
+    _ = dvui.windowHeader(.{ .title = "Set up WinLab", .open_flag = &open });
+
+    var body = dvui.box(@src(), .{}, .{ .expand = .both, .padding = .all(14) });
+    defer body.deinit();
+    const dim: dvui.Color = dvui.themeGet().text.opacity(0.7);
+    {
+        var tl = dvui.textLayout(@src(), .{}, .{ .expand = .horizontal, .background = false, .padding = .all(0), .margin = .{ .h = 8 } });
+        tl.addText("The lessons need nothing else: read, search, take quizzes and track your progress right away. The hands-on labs run in a virtual machine and need QEMU. WinLab never installs anything by itself; below you see what it found and your choices for what is missing. You can open this window again from the Help menu.", .{});
+        tl.deinit();
+    }
+
+    var qemu_missing = false;
+    for (a.setup_items[0..a.setup_n]) |it| {
+        if (!it.ok and std.mem.eql(u8, it.name, "QEMU")) qemu_missing = true;
+    }
+    {
+        var row = dvui.box(@src(), .{ .dir = .horizontal }, .{ .expand = .horizontal, .margin = .{ .h = 8 }, .gravity_x = 1.0 });
+        defer row.deinit();
+        if (dvui.button(@src(), "Check again", .{}, .{})) runSetupCheck(a);
+        if (dvui.button(@src(), if (qemu_missing) "Continue without labs" else "Continue", .{}, .{ .margin = .{ .x = 8 }, .style = .highlight })) open = false;
+    }
+    if (!open or escapePressed()) closeSetup(a);
+
+    var scroll = dvui.scrollArea(@src(), .{}, .{ .expand = .both, .background = false });
+    defer scroll.deinit();
+
+    for (a.setup_items[0..a.setup_n], 0..) |it, i| {
+        var row = dvui.box(@src(), .{}, .{ .expand = .horizontal, .background = true, .style = .window, .corners = .all(6), .padding = .all(8), .margin = .{ .y = 3, .h = 3 }, .id_extra = i });
+        defer row.deinit();
+        const mark = if (it.ok) "Found" else if (it.optional) "Not found (optional)" else "NOT FOUND";
+        var head: [160]u8 = undefined;
+        const line = std.fmt.bufPrint(&head, "{s}: {s}", .{ it.name, mark }) catch it.name;
+        dvui.labelNoFmt(@src(), line, .{}, .{ .font = dvui.Font.theme(.heading), .id_extra = i });
+        var tl = dvui.textLayout(@src(), .{}, .{ .expand = .horizontal, .background = false, .padding = .all(0), .id_extra = i });
+        tl.addText(it.detail, .{ .color_text = .{ .color = dim } });
+        tl.deinit();
+    }
+
+    if (qemu_missing) {
+        var card = dvui.box(@src(), .{}, .{ .expand = .horizontal, .background = true, .style = .window, .corners = .all(6), .padding = .all(10), .margin = .{ .y = 8 } });
+        defer card.deinit();
+        dvui.labelNoFmt(@src(), "To use the labs, choose one:", .{}, .{ .font = dvui.Font.theme(.heading) });
+        {
+            var tl = dvui.textLayout(@src(), .{}, .{ .expand = .horizontal, .background = false, .padding = .all(0), .margin = .{ .y = 4 } });
+            tl.addText("1. Install with winget (Windows 10 version 1809 or newer, and Windows 11). Run this in a terminal:", .{});
+            tl.deinit();
+        }
+        {
+            var tl = dvui.textLayout(@src(), .{}, .{ .expand = .horizontal, .background = true, .style = .window, .padding = .all(6), .font = dvui.Font.theme(.mono) });
+            tl.addText(qemu_winget_command, .{});
+            tl.deinit();
+        }
+        if (dvui.button(@src(), "Copy the command", .{}, .{ .margin = .{ .y = 4 } })) dvui.clipboardTextSet(qemu_winget_command);
+        {
+            var tl = dvui.textLayout(@src(), .{}, .{ .expand = .horizontal, .background = false, .padding = .all(0), .margin = .{ .y = 8 } });
+            tl.addText("2. Or download the installer from the QEMU website and run it:", .{});
+            tl.deinit();
+        }
+        if (dvui.button(@src(), "Open the QEMU download page", .{}, .{ .margin = .{ .y = 4 } })) a.pending_url = qemu_download_url;
+        {
+            var tl = dvui.textLayout(@src(), .{}, .{ .expand = .horizontal, .background = false, .padding = .all(0), .margin = .{ .y = 8 } });
+            tl.addText("3. Already installed somewhere else? Set qemu-path (the folder that holds qemu-system-x86_64.exe) in your settings file, then choose Check again:", .{});
+            tl.deinit();
+        }
+        if (a.o.setup.?.settings_path.len > 0) {
+            var tl = dvui.textLayout(@src(), .{}, .{ .expand = .horizontal, .background = true, .style = .window, .padding = .all(6), .font = dvui.Font.theme(.mono) });
+            tl.addText(a.o.setup.?.settings_path, .{});
+            tl.deinit();
+        }
+        {
+            var tl = dvui.textLayout(@src(), .{}, .{ .expand = .horizontal, .background = false, .padding = .all(0), .margin = .{ .y = 8 } });
+            tl.addText("4. Or skip the labs for now. Everything else works without QEMU.", .{});
+            tl.deinit();
+        }
+    }
+
+}
 /// The track picker: each goal with its size, levels and your progress.
 fn pickerWindow(a: *App) void {
     var open = true;
@@ -1260,11 +1397,12 @@ fn scrollReader(a: *App, unit: enum { line, page }, dir: f32) void {
 // ---------------------------------------------------------------------------------------------
 
 fn dialogs(a: *App) void {
+    if (a.show_setup) setupWindow(a); // first, so the link dialog it can open sits above it
     if (a.pending_url) |url| linkDialog(a, url);
     if (a.info) |msg| infoDialog(a, msg);
     if (a.show_about) aboutDialog(a);
     if (a.show_keys) keysDialog(a);
-    if (a.show_picker) pickerWindow(a);
+    if (a.show_picker and !a.show_setup) pickerWindow(a);
     if (a.lab.open) labWindow(a);
     if (a.qz.open) quizWindow(a);
     if (a.lab.confirm_close) closeLabDialog(a);
