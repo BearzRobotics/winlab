@@ -4,6 +4,11 @@ schema_version = 1
 # the objective wording is not copied. The `url` is the vendor's page for the current objectives, which is
 # the authority (exams are revised, so check it). A tag on a lesson or lab means "supports this domain",
 # never "passes this exam". Verify each entry against the vendor's current outline before relying on it.
+#
+# Checked 2026-11-22 against the vendors' own pages (read by script, not by eye): Network+ N10-009 (five domain titles match), MD-102
+# (updated: the fourth domain is now "Manage and secure applications"), Red Hat RHCSA EX200 (the eight listed objective groups match),
+# Linux+ (updated to V8, XK0-006: five domains, one added, one renamed). NOT checked: A+ Core 1 and Core 2 (the page is rendered by
+# script and gave no domain names); check 220-1201 and 220-1202 by hand.
 
 [[exam]]
 id = "comptia-a-core1"
@@ -82,7 +87,7 @@ id = "manage-maintain-devices"
 title = "Manage and maintain devices"
 [[exam.domain]]
 id = "manage-applications"
-title = "Manage applications"
+title = "Manage and secure applications"
 [[exam.domain]]
 id = "protect-devices"
 title = "Protect devices"
@@ -125,7 +130,7 @@ title = "Manage containers"
 id = "comptia-linux-plus"
 name = "CompTIA Linux+"
 vendor = "CompTIA"
-code = "XK0-005"
+code = "XK0-006"
 url = "https://www.comptia.org/en-us/certifications/linux/"
 [[exam.domain]]
 id = "system-management"
@@ -135,7 +140,10 @@ id = "security"
 title = "Security"
 [[exam.domain]]
 id = "scripting-containers-automation"
-title = "Scripting, Containers and Automation"
+title = "Automation, Orchestration, and Scripting"
 [[exam.domain]]
 id = "troubleshooting"
 title = "Troubleshooting"
+[[exam.domain]]
+id = "services-user-management"
+title = "Services and User Management"
