@@ -862,18 +862,6 @@ fn setupWindow(a: *App) void {
     var scroll = dvui.scrollArea(@src(), .{}, .{ .expand = .both, .background = false });
     defer scroll.deinit();
 
-    for (a.setup_items[0..a.setup_n], 0..) |it, i| {
-        var row = dvui.box(@src(), .{}, .{ .expand = .horizontal, .background = true, .style = .window, .corners = .all(6), .padding = .all(8), .margin = .{ .y = 3, .h = 3 }, .id_extra = i });
-        defer row.deinit();
-        const mark = if (it.ok) "Found" else if (it.optional) "Not found (optional)" else "NOT FOUND";
-        var head: [160]u8 = undefined;
-        const line = std.fmt.bufPrint(&head, "{s}: {s}", .{ it.name, mark }) catch it.name;
-        dvui.labelNoFmt(@src(), line, .{}, .{ .font = dvui.Font.theme(.heading), .id_extra = i });
-        var tl = dvui.textLayout(@src(), .{}, .{ .expand = .horizontal, .background = false, .padding = .all(0), .id_extra = i });
-        tl.addText(it.detail, .{ .color_text = .{ .color = dim } });
-        tl.deinit();
-    }
-
     if (qemu_missing) {
         var card = dvui.box(@src(), .{}, .{ .expand = .horizontal, .background = true, .style = .window, .corners = .all(6), .padding = .all(10), .margin = .{ .y = 8 } });
         defer card.deinit();
@@ -911,6 +899,18 @@ fn setupWindow(a: *App) void {
             tl.deinit();
         }
     }
+    for (a.setup_items[0..a.setup_n], 0..) |it, i| {
+        var row = dvui.box(@src(), .{}, .{ .expand = .horizontal, .background = true, .style = .window, .corners = .all(6), .padding = .all(8), .margin = .{ .y = 3, .h = 3 }, .id_extra = i });
+        defer row.deinit();
+        const mark = if (it.ok) "Found" else if (it.optional) "Not found (optional)" else "NOT FOUND";
+        var head: [160]u8 = undefined;
+        const line = std.fmt.bufPrint(&head, "{s}: {s}", .{ it.name, mark }) catch it.name;
+        dvui.labelNoFmt(@src(), line, .{}, .{ .font = dvui.Font.theme(.heading), .id_extra = i });
+        var tl = dvui.textLayout(@src(), .{}, .{ .expand = .horizontal, .background = false, .padding = .all(0), .id_extra = i });
+        tl.addText(it.detail, .{ .color_text = .{ .color = dim } });
+        tl.deinit();
+    }
+
 
 }
 /// The track picker: each goal with its size, levels and your progress.
