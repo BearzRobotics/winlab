@@ -108,6 +108,7 @@ Quiz authoring rules (`docs/quizzes.md`): every question has an `explanation`; `
 5. **Unverified in the lessons** (state of knowledge, not tested): Linux commands in the networking lessons (`ss`, `firewall-cmd`, `ufw`, `resolvectl`); the GUI Environment Variables dialog steps; the cmd admin-check elevated branch; PSScriptAnalyzer and Pester runs; the debugger commands (`s`, `v`, `o`, `c`); `New-NetRoute`'s default store; whether restore points are rate limited.
 6. Old lab verification backlog (appendix B): five Windows and AlmaLinux labs were never verified.
 7. Certification domain titles in `certs\catalog.toml` were never checked against the vendors' current objectives.
+8. **OPNsense under QEMU (2026-11-22, not resolved):** OPNsense 26.7 `serial-amd64.img` (SHA-256 matched the mirror's checksum file; the `.sig` was not verified) boots over the serial console, but with `-cpu max` (WHPX) `python3` and `php` die with signal 8 and "Generating configuration: templates" fails; with `-cpu Haswell` and `-cpu host` the kernel panics in `unionfs_create_uppervattr` during an `nmount`. Not tried: TCG (no WHPX), the DVD installer ISO, or another hypervisor. No OPNsense lesson is written. Scratch files (not in the repo): the image and a start script were in the session scratchpad.
 
 ## 9. Version control
 
