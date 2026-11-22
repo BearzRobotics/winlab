@@ -1,0 +1,156 @@
+schema_version = 1
+lesson = "security.linux-hardening-checks"
+# Draft for owner review. Answers come from the tested output (sc2.sh, sc3.sh and an extra run) on Ubuntu 24.04 and AlmaLinux 9.8.
+draw = 12
+
+[[question]]
+id = "sshd-dash-t"
+type = "choice"
+prompt = "Which command prints the sshd settings the daemon would actually use?"
+choices = ["sshd -T", "sshd -t", "cat /etc/ssh/sshd_config", "ssh -V"]
+answers = ["sshd -T"]
+explanation = "-T (capital) prints the effective configuration; -t only checks syntax."
+review = "A checker you can read in one sitting"
+
+[[question]]
+id = "sshd-t-ok"
+type = "choice"
+prompt = "sshd -t said 'ok' for a configuration that allowed root login and passwords. Why?"
+choices = ["It checks syntax, not whether the settings are wise", "It was wrong", "It only checks the first file", "Because root login is the default"]
+answers = ["It checks syntax, not whether the settings are wise"]
+explanation = "A weak but valid configuration passes the syntax check."
+review = "Plant weaknesses, then find them"
+
+[[question]]
+id = "first-wins"
+type = "choice"
+prompt = "A drop-in named 00-wl-weak.conf set PasswordAuthentication yes, while 50-cloud-init.conf said no. Which won, and why?"
+choices = ["The 00 file: sshd uses the first value it reads and 00 sorts first", "The 50 file: later files override earlier ones", "Neither: sshd refuses conflicts", "The one with the longer name"]
+answers = ["The 00 file: sshd uses the first value it reads and 00 sorts first"]
+explanation = "sshd_config says that for each keyword the first obtained value is used; Include reads the files in name order."
+review = "Plant weaknesses, then find them"
+
+[[question]]
+id = "userdel-f"
+type = "choice"
+prompt = "'userdel -r wl-rootalias' printed 'currently used by process 1' and did not remove the account. Why?"
+choices = ["The alias has UID 0, the same user id as root, which owns process 1", "The alias is logged in over SSH", "-r is not allowed", "The home directory was missing"]
+answers = ["The alias has UID 0, the same user id as root, which owns process 1"]
+explanation = "userdel -f -r removed it (and still printed the warning). A second UID 0 account is a classic backdoor."
+review = "Plant weaknesses, then find them"
+
+[[question]]
+id = "uid0-check"
+type = "short"
+prompt = "Which numeric user id should only the root account have? Number only."
+answers = ["0"]
+explanation = "A second account with UID 0 has full root powers under another name."
+review = "Plant weaknesses, then find them"
+
+[[question]]
+id = "maxauth-policy"
+type = "choice"
+prompt = "The checker failed 'sshd maxauthtries = 6' on a clean image. What does that tell you?"
+choices = ["6 is OpenSSH's default; the 'want 4 or less' rule is the author's own policy, not a standard", "The image is broken", "6 is illegal", "sshd is not running"]
+answers = ["6 is OpenSSH's default; the 'want 4 or less' rule is the author's own policy, not a standard"]
+explanation = "A check is only as good as the rule behind it; write the reason next to each rule."
+review = "A checker you can read in one sitting"
+
+[[question]]
+id = "shadow-mode"
+type = "choice"
+prompt = "On AlmaLinux /etc/shadow had mode 0 (000) and the checker still passed. Why is the rule 'not more permissive than 640' better than 'must be 640'?"
+choices = ["Red Hat systems ship it more restrictive and root bypasses the permission bits", "Ubuntu uses 777", "640 is not valid", "Because stat cannot print 640"]
+answers = ["Red Hat systems ship it more restrictive and root bypasses the permission bits"]
+explanation = "A strict equality test would fail a machine that is tighter than the rule."
+review = "A checker you can read in one sitting"
+
+[[question]]
+id = "xdev"
+type = "choice"
+prompt = "What does 'find / -xdev' do in the checker?"
+choices = ["Stays on the root filesystem and does not cross into other mounts", "Excludes dev files", "Executes each result", "Follows links"]
+answers = ["Stays on the root filesystem and does not cross into other mounts"]
+explanation = "Without it find wanders into network mounts and /proc."
+review = "A checker you can read in one sitting"
+
+[[question]]
+id = "rpcbind"
+type = "choice"
+prompt = "Why was port 111 on the AlmaLinux VM listed as INFO rather than FAIL?"
+choices = ["It is a decision to make: nothing was said to need it, but the checker cannot know", "Port 111 is always safe", "INFO means the test crashed", "Because it is bound to loopback"]
+answers = ["It is a decision to make: nothing was said to need it, but the checker cannot know"]
+explanation = "The lesson treats unexplained listeners as findings to decide on, not defects to fix blindly."
+review = "A checker you can read in one sitting"
+
+[[question]]
+id = "setuid-diff"
+type = "choice"
+prompt = "Why keep the list of setuid files and compare it over time?"
+choices = ["Installing packages can add setuid programs, as mount.cifs appeared after installing cifs-utils", "setuid files never change", "The list is needed to run sshd", "It speeds up find"]
+answers = ["Installing packages can add setuid programs, as mount.cifs appeared after installing cifs-utils"]
+explanation = "Diffing the list shows what changed since you last looked."
+review = "A checker you can read in one sitting"
+
+[[question]]
+id = "sticky"
+type = "choice"
+prompt = "A directory with mode 777 and no sticky bit lets:"
+choices = ["Any user delete or rename other users' files in it", "Only root write", "Nobody list it", "Only the owner delete files"]
+answers = ["Any user delete or rename other users' files in it"]
+explanation = "The sticky bit (as on /tmp) restricts deletion to the file's owner; the checker flags world-writable directories without it."
+review = "Plant weaknesses, then find them"
+
+[[question]]
+id = "listen-addr"
+type = "choice"
+prompt = "A service listening on 0.0.0.0:8080 versus 127.0.0.1:8080: what is the difference?"
+choices = ["0.0.0.0 accepts connections on every interface; 127.0.0.1 only from this machine", "No difference", "0.0.0.0 is IPv6", "127.0.0.1 is the router"]
+answers = ["0.0.0.0 accepts connections on every interface; 127.0.0.1 only from this machine"]
+explanation = "Binding to loopback keeps a service local, which is often the right default."
+review = "Look at what is exposed"
+
+[[question]]
+id = "sysctl-differ"
+type = "choice"
+prompt = "The two images differed in four of six sysctl values (for example dmesg_restrict). The right conclusion is:"
+choices = ["Hardening is not a single list: the right values depend on your threat model", "Ubuntu is always right", "AlmaLinux is broken", "sysctl values do not matter"]
+answers = ["Hardening is not a single list: the right values depend on your threat model"]
+explanation = "The lesson changed none of them and says to decide per setting."
+review = "Look at what is exposed"
+
+[[question]]
+id = "lynis-index"
+type = "choice"
+prompt = "Lynis gave Ubuntu 60 and AlmaLinux 66. What can you conclude?"
+choices = ["Nothing about which is safer: different tests ran, so compare a machine only with itself over time", "AlmaLinux is six points safer", "Ubuntu failed", "Lynis is unreliable"]
+answers = ["Nothing about which is safer: different tests ran, so compare a machine only with itself over time"]
+explanation = "258 tests ran on Ubuntu and 240 on AlmaLinux, with different Lynis versions."
+review = "Lynis, a ready-made auditor"
+
+[[question]]
+id = "lynis-files"
+type = "multi"
+prompt = "Where does Lynis write its results?"
+choices = ["/var/log/lynis.log", "/var/log/lynis-report.dat", "/etc/lynis.conf", "/var/log/secure"]
+answers = ["/var/log/lynis.log", "/var/log/lynis-report.dat"]
+explanation = "The log is the full trail; the report is key=value text that is easy to script against."
+review = "Lynis, a ready-made auditor"
+
+[[question]]
+id = "suggestion-not-defect"
+type = "choice"
+prompt = "Lynis suggests 'Install fail2ban'. How should you treat that?"
+choices = ["As a tool choice to weigh, not a defect that must be fixed", "As a vulnerability", "As an order", "As proof of compromise"]
+answers = ["As a tool choice to weigh, not a defect that must be fixed"]
+explanation = "A suggestion is not a defect; decide per finding and write down accepted risks."
+review = "Lynis, a ready-made auditor"
+
+[[question]]
+id = "exit-count"
+type = "choice"
+prompt = "Why does wl-baseline.sh exit with the number of failed checks?"
+choices = ["So cron, a systemd timer or a monitor can test the status", "Because bash requires it", "To hide the output", "It does not"]
+answers = ["So cron, a systemd timer or a monitor can test the status"]
+explanation = "0 means everything passed; anything else is a count a scheduler can act on."
+review = "A checker you can read in one sitting"

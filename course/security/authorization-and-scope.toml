@@ -1,0 +1,36 @@
+schema_version = 1
+id = "security.authorization-and-scope"
+title = "Authorization and scope: permission before any test"
+summary = "Why security tools need permission, what a rules-of-engagement document contains (NIST SP 800-115 Appendix B), a home-lab scope in one page, and a tested bash guard (wl-scope.sh) that refuses targets outside a written scope. Run on Ubuntu 24.04 and AlmaLinux 9."
+content = "authorization-and-scope.md"
+estimated_minutes = 40
+level = 2
+objectives = [
+  "Explain why the same command is a defence in one case and an offence in another, and name the two properties that matter: authorization and scope",
+  "Write a one-page scope for a home lab: owners, in-scope addresses, exclusions, allowed actions, time window, contacts, data handling",
+  "Use a scope file and a guard script so a mistyped or out-of-scope address stops a scan before it starts",
+  "Explain why names are refused, why deny wins over allow, and what a scope guard does not protect against",
+]
+prerequisites = ["foundations.bash-basics"]
+privilege = "standard"
+certifications = ["comptia-a-core2/security", "comptia-linux-plus/security"]
+evaluation_criteria = [
+  "Learner writes a scope file for their own lab and runs the guard on in-scope and out-of-scope addresses, explaining each result",
+  "Learner states what is excluded from a home network scope and why (ISP router, other people's devices)",
+]
+
+[[references]]
+title = "NIST SP 800-115, Technical Guide to Information Security Testing and Assessment (Appendix B: Rules of Engagement template)"
+url = "https://csrc.nist.gov/pubs/sp/800/115/final"
+
+[[references]]
+title = "Nmap Network Scanning: Legal Issues"
+url = "https://nmap.org/book/legal-issues.html"
+
+[[references]]
+title = "18 U.S.C. § 1030, Fraud and related activity in connection with computers (Cornell LII)"
+url = "https://www.law.cornell.edu/uscode/text/18/1030"
+
+[[references]]
+title = "Computer Misuse Act 1990, section 1 (legislation.gov.uk)"
+url = "https://www.legislation.gov.uk/ukpga/1990/18/section/1"

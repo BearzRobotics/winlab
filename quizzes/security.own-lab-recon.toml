@@ -1,0 +1,147 @@
+schema_version = 1
+lesson = "security.own-lab-recon"
+# Draft for owner review. Answers come from the tested output of sc3.sh on Ubuntu 24.04 (nmap 7.94SVN) and AlmaLinux 9.8 (nmap 7.92), scanning 127.0.0.1 only.
+draw = 12
+
+[[question]]
+id = "ss-flags"
+type = "choice"
+prompt = "What does the combination 'ss -tlnp' show?"
+choices = ["TCP sockets that are listening, with numbers instead of names and the owning process", "All UDP traffic", "Only established connections", "Firewall rules"]
+answers = ["TCP sockets that are listening, with numbers instead of names and the owning process"]
+explanation = "t = TCP, l = listening, n = numeric, p = process (needs root)."
+review = "The question: what is listening?"
+
+[[question]]
+id = "local-address"
+type = "choice"
+prompt = "In the Local Address column, 0.0.0.0:22 means:"
+choices = ["The service accepts connections on every interface", "Only this machine can connect", "The port is closed", "The service is IPv6 only"]
+answers = ["The service accepts connections on every interface"]
+explanation = "127.0.0.1 would mean this machine only; 0.0.0.0 and [::] mean all interfaces."
+review = "The question: what is listening?"
+
+[[question]]
+id = "pid1-sshd"
+type = "choice"
+prompt = "ss showed (\"sshd\",pid=950) and also (\"systemd\",pid=1) on the same listening socket on Ubuntu. What does the second entry mean?"
+choices = ["systemd holds the socket too (socket activation)", "systemd is attacking sshd", "Two sshd servers are running", "The port is forwarded"]
+answers = ["systemd holds the socket too (socket activation)"]
+explanation = "The lesson ties this to the socket units in the systemd-advanced lesson."
+review = "The question: what is listening?"
+
+[[question]]
+id = "kill-job"
+type = "choice"
+prompt = "Why did 'kill %1' leave the Python test listener running?"
+choices = ["Non-interactive shells have no job control, so %1 means nothing; use kill $!", "Python ignores signals", "%1 is the wrong signal", "The listener was on loopback"]
+answers = ["Non-interactive shells have no job control, so %1 means nothing; use kill $!"]
+explanation = "The orphan was found by ss in the next run before the new listener started."
+review = "The question: what is listening?"
+
+[[question]]
+id = "dev-tcp"
+type = "choice"
+prompt = "What is /dev/tcp/127.0.0.1/22 in bash?"
+choices = ["A special redirection path that makes bash open a TCP connection", "A real file", "A device driver", "A POSIX sh feature"]
+answers = ["A special redirection path that makes bash open a TCP connection"]
+explanation = "It is a bash feature; dash and busybox ash do not have it, so #!/bin/sh scripts cannot use it."
+review = "Do it with only bash"
+
+[[question]]
+id = "dev-tcp-sh"
+type = "choice"
+prompt = "Can a script starting with #!/bin/sh rely on /dev/tcp?"
+choices = ["No, it is bash only", "Yes, everywhere", "Only on AlmaLinux", "Only as root"]
+answers = ["No, it is bash only"]
+explanation = "This follows the course rule: #!/bin/sh means POSIX only."
+review = "Do it with only bash"
+
+[[question]]
+id = "connect-scan"
+type = "choice"
+prompt = "What kind of scan is the bash loop over /dev/tcp?"
+choices = ["A TCP connect scan: it completes the full handshake for each port", "A SYN scan", "A UDP scan", "A ping sweep"]
+answers = ["A TCP connect scan: it completes the full handshake for each port"]
+explanation = "nmap -sT does the same thing with parallelism and better reporting."
+review = "Do it with only bash"
+
+[[question]]
+id = "scope-gate"
+type = "choice"
+prompt = "Why was the scan function gated with wl-scope.sh?"
+choices = ["So a typo or an out-of-scope address stops the scan before it starts", "To make scans faster", "Because nmap requires it", "To hide the scan from logs"]
+answers = ["So a typo or an out-of-scope address stops the scan before it starts"]
+explanation = "A guard protects against accidents; it does not replace permission."
+review = "Do it with only bash"
+
+[[question]]
+id = "st-privilege"
+type = "choice"
+prompt = "Why does 'nmap -sT' need no special privilege?"
+choices = ["It uses the normal connect() system call", "It is disabled for root", "It scans only loopback", "It sends raw packets"]
+answers = ["It uses the normal connect() system call"]
+explanation = "A SYN scan (-sS) builds raw packets and needs root; the lesson did not run it."
+review = "Do it with nmap"
+
+[[question]]
+id = "http-proxy"
+type = "choice"
+prompt = "Without -sV, nmap called the Python web server on 8080 'http-proxy'. Why?"
+choices = ["It names the port from a table; it did not look at the service", "The server was a proxy", "Python is a proxy", "nmap detected HTTP/2"]
+answers = ["It names the port from a table; it did not look at the service"]
+explanation = "With -sV it reported SimpleHTTPServer 0.6 (Python)."
+review = "Do it with nmap"
+
+[[question]]
+id = "sv-cost"
+type = "choice"
+prompt = "Adding -sV made the scan take about 6 seconds instead of 0.05. Why?"
+choices = ["It connects and talks to each open port to identify the service", "It scans UDP too", "It disables parallelism for closed ports", "It downloads updates"]
+answers = ["It connects and talks to each open port to identify the service"]
+explanation = "It is slower, louder and more intrusive than a plain connect scan."
+review = "Do it with nmap"
+
+[[question]]
+id = "reason"
+type = "short"
+prompt = "With --reason, what did nmap print as the REASON for an open TCP port in a connect scan? (one word)"
+answers = ["syn-ack"]
+explanation = "syn-ack means the target answered the connection request; closed ports showed conn-refused."
+review = "Do it with nmap"
+
+[[question]]
+id = "closed-filtered"
+type = "choice"
+prompt = "What is the difference between a closed and a filtered port?"
+choices = ["Closed: the host answers 'nothing here'. Filtered: no answer, something dropped the packet", "No difference", "Filtered means open", "Closed means filtered by SELinux"]
+answers = ["Closed: the host answers 'nothing here'. Filtered: no answer, something dropped the packet"]
+explanation = "Loopback never filters, so the lesson could not demonstrate filtered."
+review = "Common mistakes"
+
+[[question]]
+id = "inside-outside"
+type = "choice"
+prompt = "ss shows a listener on 0.0.0.0:9000 but nmap run from another machine does not see it. What is the most likely explanation?"
+choices = ["A firewall between them is filtering the port", "ss is wrong", "nmap cannot scan port 9000", "The service is IPv6"]
+answers = ["A firewall between them is filtering the port"]
+explanation = "The difference between inside and outside views is itself a finding. The lesson tested only loopback, where they agree."
+review = "Compare the three views"
+
+[[question]]
+id = "views-table"
+type = "multi"
+prompt = "Which of these does ss -tlnp give you that a bash /dev/tcp check and nmap do not?"
+choices = ["The process that owns the listener", "A view from inside the machine", "What a remote host would see", "A guess at the service version"]
+answers = ["The process that owns the listener", "A view from inside the machine"]
+explanation = "ss reads the kernel's socket table; the other two methods connect from outside the program."
+review = "Compare the three views"
+
+[[question]]
+id = "version-info"
+type = "choice"
+prompt = "Why is the version nmap -sV reports useful to a defender?"
+choices = ["It tells you which package version to patch, and tells an attacker the same", "It proves the service is secure", "It lowers the load", "It is only cosmetic"]
+answers = ["It tells you which package version to patch, and tells an attacker the same"]
+explanation = "The same information serves both sides."
+review = "Do it with nmap"

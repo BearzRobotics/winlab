@@ -1,0 +1,34 @@
+schema_version = 1
+id = "security.threat-modelling"
+title = "Threat modelling for a home lab: three questions, STRIDE and a threat table you can run"
+summary = "Decide what could go wrong before hardening: assets, data flows and trust boundaries; OWASP's plain questions; the six STRIDE categories (Microsoft); and a tested bash/awk ranker (wl-threats.sh, run on Ubuntu 24.04 and AlmaLinux 9.8) that scores likelihood times impact and fails when an open threat is too serious. Mostly reasoning; only the script was run."
+content = "threat-modelling.md"
+estimated_minutes = 45
+level = 3
+objectives = [
+  "Describe a system as assets, data flows and trust boundaries on one page",
+  "Apply STRIDE to a component and give one threat per letter or say why none applies",
+  "Choose between mitigate, avoid, transfer and accept for a threat and write the decision down",
+  "Keep a threat table as a text file, rank it, and use its exit status as a gate",
+  "Explain why done does not mean safe and why likelihood and impact are judgements",
+]
+prerequisites = ["security.authorization-and-scope"]
+privilege = "standard"
+certifications = ["comptia-a-core2/security", "comptia-linux-plus/security"]
+evaluation_criteria = [
+  "Learner writes a one-page model of their own lab with assets and trust boundaries",
+  "Learner produces a threat table, runs the ranker and explains the top three rows",
+  "Learner picks one open threat and states the control and how to test it",
+]
+
+[[references]]
+title = "OWASP: Threat Modeling"
+url = "https://owasp.org/www-community/Threat_Modeling"
+
+[[references]]
+title = "Microsoft: threats in the Threat Modeling Tool (STRIDE)"
+url = "https://learn.microsoft.com/en-us/azure/security/develop/threat-modeling-tool-threats"
+
+[[references]]
+title = "NIST SP 800-115 (risk and planning for technical security testing)"
+url = "https://csrc.nist.gov/pubs/sp/800/115/final"

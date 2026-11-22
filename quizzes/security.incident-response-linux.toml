@@ -1,0 +1,147 @@
+schema_version = 1
+lesson = "security.incident-response-linux"
+# Draft for owner review. Answers come from RFC 3227 (read) and the tested output of sc4.sh / wl-triage.sh on Ubuntu 24.04 and AlmaLinux 9.8.
+draw = 12
+
+[[question]]
+id = "volatile-first"
+type = "choice"
+prompt = "According to RFC 3227, in what order should evidence be collected?"
+choices = ["From the most volatile to the least volatile", "From the least volatile to the most", "Alphabetically", "Disk first, memory last"]
+answers = ["From the most volatile to the least volatile"]
+explanation = "Memory, process table and network state vanish first; disk and archives last."
+review = "Order matters: volatile first"
+
+[[question]]
+id = "no-shutdown"
+type = "choice"
+prompt = "Why does RFC 3227 say not to shut down before evidence is collected?"
+choices = ["Much evidence is lost, and the attacker may have altered shutdown scripts to destroy it", "Shutting down is slow", "Because the BIOS needs power", "Shutdown deletes logs by law"]
+answers = ["Much evidence is lost, and the attacker may have altered shutdown scripts to destroy it"]
+explanation = "Memory and process state are lost at power-off."
+review = "Order matters: volatile first"
+
+[[question]]
+id = "trust-programs"
+type = "choice"
+prompt = "Why is running the lesson's collector from the suspect machine's own disk a limitation?"
+choices = ["On a rooted host the programs it uses (ps, ss, find) can lie, and writing evidence changes the disk", "Bash cannot read /proc", "It needs a GUI", "It is too fast"]
+answers = ["On a rooted host the programs it uses (ps, ss, find) can lie, and writing evidence changes the disk"]
+explanation = "RFC 3227 says not to trust the programs on the system and to run tools from protected media. The lesson's collector is a practice tool for the shape of triage."
+review = "Order matters: volatile first"
+
+[[question]]
+id = "nist-phases"
+type = "multi"
+prompt = "Which were phases of the previous NIST incident response life cycle mentioned in the lesson?"
+choices = ["Preparation", "Detection and analysis", "Containment, eradication and recovery", "Post-incident activity", "Marketing review"]
+answers = ["Preparation", "Detection and analysis", "Containment, eradication and recovery", "Post-incident activity"]
+explanation = "Rev. 3 maps these onto the CSF 2.0 functions (Govern, Identify, Protect, Detect, Respond, Recover)."
+review = "Order matters: volatile first"
+
+[[question]]
+id = "odd-exe"
+type = "choice"
+prompt = "readlink /proc/PID/exe prints '/tmp/.wl-gone (deleted)'. What does that tell you?"
+choices = ["The process is running a program whose file was deleted after it started", "The process is a kernel thread", "The file is encrypted", "The process is zombie"]
+answers = ["The process is running a program whose file was deleted after it started"]
+explanation = "A program run from /tmp, or from a deleted file, is a classic warning sign."
+review = "What the collector showed"
+
+[[question]]
+id = "recover-deleted"
+type = "choice"
+prompt = "How did the lesson recover the deleted running program?"
+choices = ["cp /proc/PID/exe to the evidence directory while the process was still running", "Restoring from the recycle bin", "Reading /var/log/lastlog", "Re-downloading it"]
+answers = ["cp /proc/PID/exe to the evidence directory while the process was still running"]
+explanation = "The kernel keeps the executable open through /proc until the process exits."
+review = "Recover a deleted program from memory"
+
+[[question]]
+id = "copy-before-kill"
+type = "choice"
+prompt = "When must you copy a deleted-but-running binary out of /proc?"
+choices = ["Before killing the process, because once it exits the data is gone", "After a reboot", "Only after deleting the account", "Never"]
+answers = ["Before killing the process, because once it exits the data is gone"]
+explanation = "Containment comes after collection."
+review = "Recover a deleted program from memory"
+
+[[question]]
+id = "uniq-c"
+type = "choice"
+prompt = "'sha256sum recovered /bin/sleep | awk ... | uniq -c' printed '2 8ac2...'. What does the 2 mean?"
+choices = ["Both files have the identical hash", "There are two processes", "Two bytes differ", "The hash is 2 characters"]
+answers = ["Both files have the identical hash"]
+explanation = "uniq -c collapsed two identical lines; the recovered binary was a copy of /bin/sleep."
+review = "Recover a deleted program from memory"
+
+[[question]]
+id = "dangling-cron"
+type = "choice"
+prompt = "The planted cron line ran /tmp/.wl-update, a file that did not exist. What is still true?"
+choices = ["It shows what the intruder intended even though it would do nothing", "It proves nothing", "It runs anyway", "It means cron is broken"]
+answers = ["It shows what the intruder intended even though it would do nothing"]
+explanation = "A real intruder's files are often incomplete; the entry is still evidence."
+review = "What the collector showed"
+
+[[question]]
+id = "negative-finding"
+type = "choice"
+prompt = "11-uid0.txt said only 'root'. How should that result be treated?"
+choices = ["As a negative finding worth recording: no second UID 0 account", "As a failure of the collector", "As proof of no compromise", "It should be deleted"]
+answers = ["As a negative finding worth recording: no second UID 0 account"]
+explanation = "It rules out one persistence method, not the whole compromise."
+review = "What the collector showed"
+
+[[question]]
+id = "self-contamination"
+type = "choice"
+prompt = "Why did 30-recent-etc list /root/wl-evidence/...?"
+choices = ["The evidence directory was under /root, which the find also searched", "The attacker created it", "find lists directories by default", "cron wrote it"]
+answers = ["The evidence directory was under /root, which the find also searched"]
+explanation = "Write evidence to another disk or share, and exclude that path."
+review = "What the collector showed"
+
+[[question]]
+id = "seal"
+type = "choice"
+prompt = "A SHA256SUMS file proves the evidence files did not change after sealing only if:"
+choices = ["The list itself is protected (stored elsewhere, signed or recorded)", "It is named SHA256SUMS", "It is in the same directory", "It is empty"]
+answers = ["The list itself is protected (stored elsewhere, signed or recorded)"]
+explanation = "Someone who can edit the files can edit the sums beside them."
+review = "Seal the evidence"
+
+[[question]]
+id = "lock-not-delete"
+type = "choice"
+prompt = "Why lock the intruder's account (usermod -L) instead of deleting it?"
+choices = ["You keep its files as evidence", "Locking is faster", "Deleting is impossible", "Locked accounts cannot log in remotely at all and nothing else is needed"]
+answers = ["You keep its files as evidence"]
+explanation = "Containment stops harm without destroying evidence; eradication comes later."
+review = "Contain, then clean up"
+
+[[question]]
+id = "passwd-status"
+type = "short"
+prompt = "'passwd -S wl-svc' printed one letter on Ubuntu after locking and 'LK' on AlmaLinux. Which letter did Ubuntu print?"
+answers = ["l"]
+explanation = "Ubuntu printed L for a locked password; AlmaLinux printed LK (Password locked)."
+review = "Contain, then clean up"
+
+[[question]]
+id = "rebuild"
+type = "choice"
+prompt = "After a real compromise, why consider rebuilding the machine rather than just removing what you found?"
+choices = ["You cannot prove you found everything", "Rebuilding is always faster", "Removal is illegal", "Logs cannot be read after cleaning"]
+answers = ["You cannot prove you found everything"]
+explanation = "Also assume exposed keys and passwords and rotate them."
+review = "Contain, then clean up"
+
+[[question]]
+id = "timestamps"
+type = "choice"
+prompt = "How should file timestamps be treated in an investigation?"
+choices = ["As hints, because an intruder can change them", "As proof", "As irrelevant", "As encrypted"]
+answers = ["As hints, because an intruder can change them"]
+explanation = "touch can set any time."
+review = "Common mistakes"

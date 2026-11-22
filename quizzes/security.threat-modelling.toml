@@ -1,0 +1,135 @@
+schema_version = 1
+lesson = "security.threat-modelling"
+# Draft for owner review. Method answers come from the lesson text and the two cited pages; the script answers come from the tested output (sc7.sh) on Ubuntu 24.04 and AlmaLinux 9.8.
+draw = 12
+
+[[question]]
+id = "three-questions"
+type = "multi"
+prompt = "Which are the plain questions the lesson takes from OWASP?"
+choices = ["What are we working on?", "What can go wrong?", "What are we going to do about it?", "Which scanner is fastest?"]
+answers = ["What are we working on?", "What can go wrong?", "What are we going to do about it?"]
+explanation = "The lesson adds a fourth of its own: did we do a good enough job?"
+review = "Three questions"
+
+[[question]]
+id = "stride-letters"
+type = "short"
+prompt = "STRIDE has six letters. Which letter stands for 'Repudiation'? One letter."
+answers = ["r"]
+explanation = "Spoofing, Tampering, Repudiation, Information disclosure, Denial of service, Elevation of privilege."
+review = "2. What can go wrong? STRIDE"
+
+[[question]]
+id = "log-deleted"
+type = "choice"
+prompt = "An intruder deletes the logs so nothing can be proved. Which STRIDE category is that?"
+choices = ["Repudiation", "Spoofing", "Denial of service", "Elevation of privilege"]
+answers = ["Repudiation"]
+explanation = "Repudiation is being able to deny an action because nothing recorded it."
+review = "2. What can go wrong? STRIDE"
+
+[[question]]
+id = "photos"
+type = "choice"
+prompt = "A guest reads the family photos on the file share. Which category?"
+choices = ["Information disclosure", "Tampering", "Spoofing", "Denial of service"]
+answers = ["Information disclosure"]
+explanation = "Data reaching someone who should not see it."
+review = "2. What can go wrong? STRIDE"
+
+[[question]]
+id = "ransom"
+type = "choice"
+prompt = "Ransomware encrypts the only backup. Which category does the lesson file it under?"
+choices = ["Tampering", "Information disclosure", "Repudiation", "Spoofing"]
+answers = ["Tampering"]
+explanation = "It is malicious modification of data (it also hits availability; the table gives one primary letter)."
+review = "2. What can go wrong? STRIDE"
+
+[[question]]
+id = "boundary"
+type = "choice"
+prompt = "Why do trust boundaries matter?"
+choices = ["Most threats appear where data or commands cross a line where trust changes", "They decide the colour of the diagram", "They are required by bash", "They list the IP addresses"]
+answers = ["Most threats appear where data or commands cross a line where trust changes"]
+explanation = "Controls usually belong at a boundary: LAN versus internet, VM versus host, user versus root."
+review = "1. What are we working on?"
+
+[[question]]
+id = "four-answers"
+type = "multi"
+prompt = "Which are the lesson's honest answers to a threat?"
+choices = ["Mitigate", "Avoid", "Transfer", "Accept (and write it down)", "Ignore it without deciding"]
+answers = ["Mitigate", "Avoid", "Transfer", "Accept (and write it down)"]
+explanation = "Ignoring it without deciding is the failure, not accepting it on purpose."
+review = "3. What are we going to do about it?"
+
+[[question]]
+id = "risk-formula"
+type = "short"
+prompt = "In the table, a threat has likelihood 2 and impact 3. What risk score does wl-threats.sh give? Number only."
+answers = ["6"]
+explanation = "Risk is likelihood times impact (1 to 9)."
+review = "A threat table you can run"
+
+[[question]]
+id = "default-threshold"
+type = "choice"
+prompt = "With the default MIN_RISK of 6, why did the example exit with status 0?"
+choices = ["No OPEN threat had risk 6 or more (the two risk-6 rows were done and planned)", "The script ignores open threats", "Because the table had 7 rows", "Exit 0 is always printed"]
+answers = ["No OPEN threat had risk 6 or more (the two risk-6 rows were done and planned)"]
+explanation = "Only open threats at or above the threshold trigger exit status 1."
+review = "A threat table you can run"
+
+[[question]]
+id = "threshold-4"
+type = "short"
+prompt = "With MIN_RISK 4, what exit status did the ranker return for the example table? Number only."
+answers = ["1"]
+explanation = "The open log-deletion row (T6, risk 4) reached the threshold."
+review = "A threat table you can run"
+
+[[question]]
+id = "bad-table-status"
+type = "short"
+prompt = "What exit status does the ranker return for a malformed table (for example STRIDE letter Q)? Number only."
+answers = ["2"]
+explanation = "0 fine, 1 an open threat at or above the threshold, 2 a bad table or missing file."
+review = "A threat table you can run"
+
+[[question]]
+id = "done-not-safe"
+type = "choice"
+prompt = "T1 (password guessing) is done and still ranks first. What is the lesson?"
+choices = ["Done does not mean safe: residual risk after a control is not zero, and the table does not recompute it", "The table is broken", "Done rows are ignored", "T1 should be deleted"]
+answers = ["Done does not mean safe: residual risk after a control is not zero, and the table does not recompute it"]
+explanation = "A fuller model has a separate risk-after-control column; this table stays small on purpose."
+review = "Reading the table"
+
+[[question]]
+id = "all-threes"
+type = "choice"
+prompt = "Why is rating every threat 3 and 3 a mistake?"
+choices = ["A table where everything is urgent ranks nothing", "3 is not allowed", "It makes the script crash", "It hides the STRIDE letter"]
+answers = ["A table where everything is urgent ranks nothing"]
+explanation = "Likelihood and impact are judgements; use the range."
+review = "Common mistakes"
+
+[[question]]
+id = "assets-first"
+type = "choice"
+prompt = "Where should a model start?"
+choices = ["From the assets you are protecting, then what could go wrong with them", "From a list of attacks", "From the firewall rules", "From the newest vulnerability"]
+answers = ["From the assets you are protecting, then what could go wrong with them"]
+explanation = "Listing attacks first leaves you without a reason for each control."
+review = "Common mistakes"
+
+[[question]]
+id = "proof"
+type = "choice"
+prompt = "Is a threat model a proof of security?"
+choices = ["No: it lists what you thought of, and an attacker need not think the same", "Yes, if it has all six letters", "Yes, if the exit status is 0", "Only on AlmaLinux"]
+answers = ["No: it lists what you thought of, and an attacker need not think the same"]
+explanation = "A model is a way to decide and to find gaps, not a guarantee."
+review = "Common mistakes"

@@ -1,0 +1,128 @@
+schema_version = 1
+lesson = "security.authorization-and-scope"
+# Draft for owner review. Answers come from the lesson text and the tested output of wl-scope.sh (sc5.sh, Ubuntu 24.04 and AlmaLinux 9). Not legal advice.
+draw = 10
+
+[[question]]
+id = "why-permission"
+type = "choice"
+prompt = "A port scan of a machine you own and a port scan of a machine you do not own use the same command. What makes the first one acceptable?"
+choices = ["Permission from whoever has the right to decide, within a stated scope", "Using a well-known tool", "Scanning slowly", "Scanning only at night"]
+answers = ["Permission from whoever has the right to decide, within a stated scope"]
+explanation = "The difference is authorization and scope, not the command or the speed."
+review = "Why this lesson comes first"
+
+[[question]]
+id = "two-words"
+type = "multi"
+prompt = "Which two ideas do the quoted phrases 'without authorization' and 'exceeds authorized access' describe?"
+choices = ["Never being allowed to access the computer at all", "Being allowed some access and doing more than was permitted", "Using a computer that is slow", "Using a computer without a password policy"]
+answers = ["Never being allowed to access the computer at all", "Being allowed some access and doing more than was permitted"]
+explanation = "The first phrase is no permission at all; the second is permission for some things and going beyond them."
+review = "Why this lesson comes first"
+
+[[question]]
+id = "roe-where"
+type = "choice"
+prompt = "Which NIST publication contains an appendix with a Rules of Engagement template?"
+choices = ["SP 800-115", "SP 800-92", "SP 800-61 Rev. 3", "SP 800-53 Rev. 5"]
+answers = ["SP 800-115"]
+explanation = "Appendix B of SP 800-115, Technical Guide to Information Security Testing and Assessment, is the Rules of Engagement template."
+review = "What \"authorized\" means in practice"
+
+[[question]]
+id = "roe-parts"
+type = "multi"
+prompt = "Which of these belong in a scope or rules-of-engagement document, according to the lesson?"
+choices = ["The in-scope addresses and the exclusions", "The test schedule and hours", "Contacts to call if something breaks", "The learner's favourite scanning tool"]
+answers = ["The in-scope addresses and the exclusions", "The test schedule and hours", "Contacts to call if something breaks"]
+explanation = "Scope, schedule and contacts (personnel) are parts of the NIST template; the choice of tool is not a scope item."
+review = "What \"authorized\" means in practice"
+
+[[question]]
+id = "exclude-router"
+type = "choice"
+prompt = "In a typical home, which of these is most likely NOT yours to test even though it is on your network?"
+choices = ["The router managed by your ISP", "A VM you created for the lab", "A laptop you own", "Your own lab LAN range you wrote in the scope"]
+answers = ["The router managed by your ISP"]
+explanation = "The ISP-managed router and other people's devices belong to someone else; they belong in the exclusions."
+review = "What \"authorized\" means in practice"
+
+[[question]]
+id = "deny-wins"
+type = "short"
+prompt = "In wl-scope.sh, 192.168.50.1 is inside 'allow 192.168.50.0/24' and also listed in 'deny 192.168.50.1'. Which verdict does it print? (one word, as printed, in capitals)"
+answers = ["denied"]
+explanation = "A deny rule beats an allow rule, so the line is DENIED ... inside an excluded range."
+review = "Make the computer enforce the scope"
+
+[[question]]
+id = "names-refused"
+type = "choice"
+prompt = "Why does wl-scope.sh refuse a name such as example.com as a target?"
+choices = ["A name can resolve to a different address later, one you did not check", "Names are longer than addresses", "DNS is not installed in the lab VMs", "Bash cannot read names"]
+answers = ["A name can resolve to a different address later, one you did not check"]
+explanation = "Decide the address and write the address; a name may point somewhere else tomorrow."
+review = "Make the computer enforce the scope"
+
+[[question]]
+id = "wide-range"
+type = "choice"
+prompt = "The author's first scope file contained 'allow 127.0.0.0/8' and the guard refused it. What was the problem?"
+choices = ["The range was wider than /16, millions of addresses where one was meant", "127.0.0.1 is not a valid address", "The word allow is not accepted", "The file had no comment line"]
+answers = ["The range was wider than /16, millions of addresses where one was meant"]
+explanation = "The guard refuses an allow rule wider than /16. For this lab the file says allow 127.0.0.1."
+review = "Make the computer enforce the scope"
+
+[[question]]
+id = "batch-stops"
+type = "choice"
+prompt = "scan 127.0.0.1 8.8.8.8 printed 'not scanning: out of scope'. What happened to 127.0.0.1?"
+choices = ["It was not scanned either: one bad target stops the whole batch", "It was scanned first, then 8.8.8.8 was skipped", "It was scanned twice", "It was refused because it is a name"]
+answers = ["It was not scanned either: one bad target stops the whole batch"]
+explanation = "The guard runs on all targets before anything is scanned, so a typo cannot half-run."
+review = "Make the computer enforce the scope"
+
+[[question]]
+id = "exit-codes"
+type = "short"
+prompt = "What exit status does wl-scope.sh return when a target is out of scope (not for bad input)? Number only."
+answers = ["1"]
+explanation = "0 means all in scope, 1 means something is out of scope, 2 means bad input (for example a name or a bad scope file)."
+review = "Make the computer enforce the scope"
+
+[[question]]
+id = "guard-limits"
+type = "multi"
+prompt = "Which are limits of the scope guard, as the lesson states them?"
+choices = ["It does not stop someone who edits the scope file", "It checks addresses you type, not where a tool decides to connect", "It handles IPv4 only", "It only works on AlmaLinux"]
+answers = ["It does not stop someone who edits the scope file", "It checks addresses you type, not where a tool decides to connect", "It handles IPv4 only"]
+explanation = "The guard is a seatbelt for accidents, not a lock; the lesson also tested it on both Ubuntu and AlmaLinux."
+review = "Limits of the guard"
+
+[[question]]
+id = "third-party"
+type = "choice"
+prompt = "Your own resources are hosted in a cloud provider's data centre. Before scanning them you should:"
+choices = ["Read the provider's terms and acceptable-use policy, which may forbid it", "Assume it is fine because you pay for it", "Scan the provider's other customers to compare", "Ask the router"]
+answers = ["Read the provider's terms and acceptable-use policy, which may forbid it"]
+explanation = "A provider's terms or your ISP's contract can forbid scanning even your own hosted resources."
+review = "Other kinds of permission you still need"
+
+[[question]]
+id = "in-scope-not-allowed"
+type = "choice"
+prompt = "The guard prints 'in scope' for an address. What does that mean?"
+choices = ["It is inside what you wrote; the real permission is the decision behind the file", "The owner has approved the test", "The address is safe to attack", "Nothing else is needed"]
+answers = ["It is inside what you wrote; the real permission is the decision behind the file"]
+explanation = "A guard enforces your own written scope; it cannot create permission."
+review = "Common mistakes"
+
+[[question]]
+id = "scope-in-head"
+type = "choice"
+prompt = "Why should the scope be written down before testing starts?"
+choices = ["A scope you only remember tends to be quietly widened during the test", "Because bash needs a file", "To make the test slower", "Because tools refuse to run without it"]
+answers = ["A scope you only remember tends to be quietly widened during the test"]
+explanation = "A written scope is checked against, and kept with, the results."
+review = "Common mistakes"

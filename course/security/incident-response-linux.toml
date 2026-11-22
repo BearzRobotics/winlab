@@ -1,0 +1,42 @@
+schema_version = 1
+id = "security.incident-response-linux"
+title = "Incident response on Linux: triage in volatility order, sealing evidence and containment"
+summary = "A bash triage collector (wl-triage.sh) that gathers processes, sockets, persistence, logs and recent files in volatility order (RFC 3227), tested on Ubuntu 24.04 and AlmaLinux 9.8 against five planted fake artifacts: a key-bearing account, a cron entry, a program in /tmp, a deleted running binary recovered from /proc, and a rogue systemd service listening on 4444. Covers sealing with SHA-256, containment without destroying evidence, and the limits of running tools on a suspect host."
+content = "incident-response-linux.md"
+estimated_minutes = 90
+level = 4
+objectives = [
+  "Put evidence collection in order of volatility and explain RFC 3227's warnings (do not shut down first, do not trust the suspect's programs)",
+  "Run a read-only triage collector and find a program in /tmp, a deleted running binary, a stray authorized_keys, a cron entry and a rogue unit",
+  "Recover a deleted but running program from /proc/PID/exe before stopping it",
+  "Seal evidence with checksums and explain what protects the checksum list",
+  "Contain without destroying evidence (disable and stop, lock rather than delete) and say what eradication and recovery would add",
+]
+prerequisites = ["security.linux-logging-and-detection", "linux.systemd"]
+privilege = "administrator"
+certifications = ["comptia-linux-plus/security", "comptia-linux-plus/troubleshooting", "redhat-rhcsa/security"]
+evaluation_criteria = [
+  "Learner plants two artifacts in a lab VM and shows which collector file reveals each",
+  "Learner recovers a deleted running binary from /proc and shows its hash",
+  "Learner orders the first six response steps and justifies the order with RFC 3227",
+]
+
+[[references]]
+title = "RFC 3227: Guidelines for Evidence Collection and Archiving"
+url = "https://www.rfc-editor.org/rfc/rfc3227"
+
+[[references]]
+title = "NIST SP 800-61 Rev. 3, Incident Response Recommendations and Considerations for Cybersecurity Risk Management"
+url = "https://csrc.nist.gov/pubs/sp/800/61/r3/final"
+
+[[references]]
+title = "NIST SP 800-92, Guide to Computer Security Log Management"
+url = "https://csrc.nist.gov/pubs/sp/800/92/final"
+
+[[references]]
+title = "ss(8)"
+url = "https://man7.org/linux/man-pages/man8/ss.8.html"
+
+[[references]]
+title = "last(1) and lastb(1)"
+url = "https://man7.org/linux/man-pages/man1/last.1.html"

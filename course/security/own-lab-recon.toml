@@ -1,0 +1,42 @@
+schema_version = 1
+id = "security.own-lab-recon"
+title = "Reconnaissance on your own lab: ss, bash /dev/tcp and nmap"
+summary = "Answer 'what is listening?' three ways on Ubuntu 24.04 and AlmaLinux 9.8, against 127.0.0.1 only: ss -tlnp, a one-line bash connect scan with /dev/tcp (0.5 to 0.7 s for ports 1-1024), and nmap -sT/-sV/--reason (7.94 and 7.92). Shows that the SERVICE column is a port-table guess without -sV, that an orphaned test listener is found by the inventory, and why closed versus filtered could not be tested on loopback."
+content = "own-lab-recon.md"
+estimated_minutes = 60
+level = 3
+objectives = [
+  "List listening sockets and their processes with ss -tlnp and read the Local Address column (loopback versus every interface)",
+  "Check a TCP port with only bash using /dev/tcp and explain why it needs bash",
+  "Run an nmap connect scan, interpret open/closed, --reason and the SERVICE versus VERSION columns, and say what -sV costs",
+  "Compare inside and outside views and say what a difference between them means",
+  "Gate scans with the scope guard from security.authorization-and-scope",
+]
+prerequisites = ["security.authorization-and-scope", "networking.ports-and-firewalls"]
+privilege = "administrator"
+certifications = ["comptia-network-plus/network-security", "comptia-linux-plus/security", "comptia-a-core2/security"]
+evaluation_criteria = [
+  "Learner inventories the listeners on a lab VM and justifies each",
+  "Learner finds a deliberately started listener with ss, bash and nmap and says which view names the process",
+  "Learner explains why nmap labelled an unknown service on 8080 http-proxy before -sV",
+]
+
+[[references]]
+title = "Nmap Reference Guide"
+url = "https://nmap.org/book/man.html"
+
+[[references]]
+title = "Nmap: Legal Issues"
+url = "https://nmap.org/book/legal-issues.html"
+
+[[references]]
+title = "ss(8)"
+url = "https://man7.org/linux/man-pages/man8/ss.8.html"
+
+[[references]]
+title = "bash(1), Redirections (/dev/tcp), Debian manual page"
+url = "https://manpages.debian.org/stable/bash/bash.1.en.html"
+
+[[references]]
+title = "NIST SP 800-115 (planning and conducting technical tests)"
+url = "https://csrc.nist.gov/pubs/sp/800/115/final"

@@ -1,0 +1,55 @@
+schema_version = 1
+id = "security.linux-logging-and-detection"
+title = "Linux logging and detection: SSH failures, sudo, lastb and auditd"
+summary = "Where Ubuntu 24.04 and AlmaLinux 9.8 record logins, failed logins and sudo (journal, auth.log, secure, btmp, wtmp), what a failed SSH login looks like (Invalid user, Connection closed by authenticating user, Failed password), a bash/awk report with a threshold and an exit status, and auditd watch rules with ausearch and aureport. Includes what did not work: a double count in the first report, a volatile journal on AlmaLinux and an unexplained audit miss."
+content = "linux-logging-and-detection.md"
+estimated_minutes = 90
+level = 3
+objectives = [
+  "Find the SSH, sudo and login records on Ubuntu and AlmaLinux: the journal, the text logs, btmp and wtmp",
+  "Read the three wordings of a failed SSH login and say which accounts are real",
+  "Explain why lastb does not list a failed key login to an existing account, and why the journal may not survive a reboot",
+  "Summarise failures per source and per user with a small script and use its exit status",
+  "Write, test and read an audit watch rule with auditctl, ausearch -i and aureport, and explain auid versus uid",
+  "Say what a detection is and give five first ones",
+]
+prerequisites = ["linux.systemd", "security.authorization-and-scope"]
+privilege = "administrator"
+certifications = ["comptia-linux-plus/security", "comptia-linux-plus/troubleshooting", "redhat-rhcsa/security"]
+evaluation_criteria = [
+  "Learner generates failed logins from two loopback source addresses and reports them with a threshold",
+  "Learner adds an audit watch, triggers it, and names the real user with auid",
+  "Learner states whether the journal is persistent on their machine and how they checked",
+]
+
+[[references]]
+title = "journalctl(1)"
+url = "https://www.freedesktop.org/software/systemd/man/latest/journalctl.html"
+
+[[references]]
+title = "journald.conf(5)"
+url = "https://www.freedesktop.org/software/systemd/man/latest/journald.conf.html"
+
+[[references]]
+title = "last(1) and lastb(1)"
+url = "https://man7.org/linux/man-pages/man1/last.1.html"
+
+[[references]]
+title = "sshd_config(5)"
+url = "https://man.openbsd.org/sshd_config"
+
+[[references]]
+title = "auditctl(8)"
+url = "https://man7.org/linux/man-pages/man8/auditctl.8.html"
+
+[[references]]
+title = "ausearch(8)"
+url = "https://man7.org/linux/man-pages/man8/ausearch.8.html"
+
+[[references]]
+title = "aureport(8)"
+url = "https://man7.org/linux/man-pages/man8/aureport.8.html"
+
+[[references]]
+title = "NIST SP 800-92, Guide to Computer Security Log Management"
+url = "https://csrc.nist.gov/pubs/sp/800/92/final"

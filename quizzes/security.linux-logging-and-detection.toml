@@ -1,0 +1,163 @@
+schema_version = 1
+lesson = "security.linux-logging-and-detection"
+# Draft for owner review. Answers come from the tested output (sc1.sh, sc2.sh step 6, sc6.sh) on Ubuntu 24.04 and AlmaLinux 9.8.
+draw = 12
+
+[[question]]
+id = "unit-names"
+type = "choice"
+prompt = "Which journalctl unit shows the SSH daemon's messages on AlmaLinux 9?"
+choices = ["sshd", "ssh", "openssh", "auth"]
+answers = ["sshd"]
+explanation = "The Red Hat family calls the unit sshd; Ubuntu calls it ssh."
+review = "Where Linux writes security events"
+
+[[question]]
+id = "text-logs"
+type = "choice"
+prompt = "Which text file holds authentication messages on AlmaLinux 9?"
+choices = ["/var/log/secure", "/var/log/auth.log", "/var/log/audit.log only", "/var/log/btmp"]
+answers = ["/var/log/secure"]
+explanation = "AlmaLinux uses /var/log/secure; Ubuntu uses /var/log/auth.log. btmp is a binary database read with lastb."
+review = "Where Linux writes security events"
+
+[[question]]
+id = "volatile"
+type = "choice"
+prompt = "On the AlmaLinux image, /var/log/journal does not exist. What does that mean for the journal?"
+choices = ["It is kept in memory-backed /run and is lost at reboot", "It is encrypted", "It is kept forever", "It is stored in /var/log/secure"]
+answers = ["It is kept in memory-backed /run and is lost at reboot"]
+explanation = "With Storage=auto, journald keeps a persistent journal only if /var/log/journal exists. The text logs from rsyslog survive."
+review = "Where Linux writes security events"
+
+[[question]]
+id = "invalid-user"
+type = "choice"
+prompt = "A log line says 'Invalid user oracle from 127.0.0.1'. What does 'Invalid user' tell you?"
+choices = ["The account does not exist on that machine", "The account exists but its password is wrong", "The account is locked", "The account is an administrator"]
+answers = ["The account does not exist on that machine"]
+explanation = "Invalid user means no such account. An existing account whose client gave up logs 'Connection closed by authenticating user'."
+review = "What a failed SSH login looks like"
+
+[[question]]
+id = "auth-user"
+type = "choice"
+prompt = "'Connection closed by authenticating user wl-victim' means:"
+choices = ["The account exists and the client stopped during authentication", "The account does not exist", "The login succeeded", "sshd crashed"]
+answers = ["The account exists and the client stopped during authentication"]
+explanation = "The other wording, Invalid user, means the account does not exist."
+review = "What a failed SSH login looks like"
+
+[[question]]
+id = "sshd-session"
+type = "short"
+prompt = "On AlmaLinux 9.8 the journal showed the program name 'sshd-session' for SSH messages. Which journalctl option picks the messages by unit so that this does not matter? Type the option with its dashes."
+answers = ["-u", "-u sshd", "--unit", "--unit=sshd", "-u sshd.service"]
+explanation = "Selecting the unit (journalctl -u sshd) finds the messages whatever the program is called."
+review = "What a failed SSH login looks like"
+
+[[question]]
+id = "lastb-missing"
+type = "choice"
+prompt = "A failed key login to a REAL account did not appear in lastb in the tests. Where was it recorded?"
+choices = ["Only in the journal and text log", "In wtmp", "Nowhere", "In the audit log only"]
+answers = ["Only in the journal and text log"]
+explanation = "lastb listed failures for non-existent users; the existing account's failed key attempt was only in the journal."
+review = "What a failed SSH login looks like"
+
+[[question]]
+id = "double-line"
+type = "choice"
+prompt = "Why did the first version of the report show 'nosuchuser' twice after one attempt with a password?"
+choices = ["Two log lines are written for one attempt: Invalid user, then Failed password for invalid user", "The user tried twice", "awk counts every line twice", "Because the source address changed"]
+answers = ["Two log lines are written for one attempt: Invalid user, then Failed password for invalid user"]
+explanation = "The script now ignores the 'Failed password for invalid user' line."
+review = "What a failed SSH login looks like"
+
+[[question]]
+id = "source-trick"
+type = "choice"
+prompt = "How did the lesson test detection with different source addresses on one machine?"
+choices = ["ssh -b 127.0.0.2 (any 127.x.y.z address is local)", "By editing /etc/hosts", "By stopping sshd", "By using Windows"]
+answers = ["ssh -b 127.0.0.2 (any 127.x.y.z address is local)"]
+explanation = "-b chooses the source address, and every address in 127.0.0.0/8 belongs to the loopback interface."
+review = "What a failed SSH login looks like"
+
+[[question]]
+id = "exit-status"
+type = "short"
+prompt = "wl-authreport.sh exits with which status when a source reached the threshold? Number only."
+answers = ["1"]
+explanation = "0 means none reached it, 1 means at least one source did; cron or a monitor can act on that."
+review = "Turn the lines into a report"
+
+[[question]]
+id = "count-not-exact"
+type = "choice"
+prompt = "What is the right conclusion from the six-versus-five difference between Ubuntu and AlmaLinux in the report?"
+choices = ["The count is what sshd logged, not everything attempted; look for spikes", "AlmaLinux is more secure", "The script is wrong on Ubuntu", "Source addresses are always accurate"]
+answers = ["The count is what sshd logged, not everything attempted; look for spikes"]
+explanation = "The lesson could not explain the missing root line, so it recommends alerting on a spike, not on an exact number."
+review = "Turn the lines into a report"
+
+[[question]]
+id = "sudo-line"
+type = "multi"
+prompt = "What does a sudo log line like 'labadmin : PWD=/home/labadmin ; USER=root ; COMMAND=/usr/bin/bash -s' tell you?"
+choices = ["Who ran the command", "As which user it ran", "From which directory", "The password that was typed"]
+answers = ["Who ran the command", "As which user it ran", "From which directory"]
+explanation = "The line names the invoking user, the target user, the working directory and the command; never the password."
+review = "`sudo` is logged"
+
+[[question]]
+id = "kernel-audit"
+type = "choice"
+prompt = "How is the audit system different from ordinary application logs?"
+choices = ["It records what the kernel sees (file opens, commands), whichever program did it", "It only records what programs choose to write", "It replaces the journal", "It only works for SSH"]
+answers = ["It records what the kernel sees (file opens, commands), whichever program did it"]
+explanation = "Programs write their own logs; the kernel audit system records system calls and file access by rule."
+review = "`auditd`: be told when a file changes"
+
+[[question]]
+id = "watch-perm"
+type = "short"
+prompt = "In 'auditctl -w /etc/passwd -p wa -k wl-passwd', what do the two letters after -p mean together? Type the two letters."
+answers = ["wa"]
+explanation = "w is write, a is attribute change. Reads (r) and executes (x) are other options."
+review = "`auditd`: be told when a file changes"
+
+[[question]]
+id = "auid"
+type = "choice"
+prompt = "In an audit event, uid=root but auid=labadmin. Who 'really' did it?"
+choices = ["labadmin, the account that originally logged in (auid survives sudo)", "root", "Nobody", "The kernel"]
+answers = ["labadmin, the account that originally logged in (auid survives sudo)"]
+explanation = "uid is the user the process runs as; auid is the login user id and stays the same through sudo and su."
+review = "`auditd`: be told when a file changes"
+
+[[question]]
+id = "test-rule"
+type = "choice"
+prompt = "Why does the lesson say to test an audit rule by doing what it should catch, more than once?"
+choices = ["On Ubuntu one run missed the creation of a file in a watched directory and a second run caught it", "Because auditctl -l is always wrong", "Because rules expire", "Because audit only works on AlmaLinux"]
+answers = ["On Ubuntu one run missed the creation of a file in a watched directory and a second run caught it"]
+explanation = "The miss was not explained, so a rule listed by auditctl -l is not proof that it works."
+review = "`auditd`: be told when a file changes"
+
+[[question]]
+id = "rules-persist"
+type = "choice"
+prompt = "Where do you put audit rules so they are loaded at boot, according to the lesson?"
+choices = ["A file in /etc/audit/rules.d/, merged by augenrules", "Only on the command line with auditctl", "/var/log/audit/", "/etc/hosts"]
+answers = ["A file in /etc/audit/rules.d/, merged by augenrules"]
+explanation = "Rules loaded with auditctl live in the kernel; the persistent source is rules.d merged by augenrules. The lesson tested loading with augenrules --load, but not a reboot."
+review = "`auditd`: be told when a file changes"
+
+[[question]]
+id = "ship-logs"
+type = "choice"
+prompt = "Why should logs be shipped off the host?"
+choices = ["An intruder with root can delete the local logs", "Logs are too small", "The journal cannot be read locally", "It makes SSH faster"]
+answers = ["An intruder with root can delete the local logs"]
+explanation = "Evidence has to be somewhere an attacker cannot reach after gaining root. Shipping was not tested in the lesson."
+review = "From logs to detection"

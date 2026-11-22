@@ -1,0 +1,42 @@
+schema_version = 1
+id = "security.linux-hardening-checks"
+title = "Linux hardening checks: a read-only baseline script, planted weaknesses and Lynis"
+summary = "A bash baseline checker (sshd -T, UID 0, empty passwords, world-writable files, listeners, SELinux/AppArmor) that prints PASS/FAIL/INFO and returns the failure count, tested by planting seven weaknesses on Ubuntu 24.04 and AlmaLinux 9.8 and fixing them. Covers the first-value-wins rule for sshd_config.d, userdel -f for a UID 0 alias, differences between the two images, and Lynis 3.0.9 and 3.1.7 results."
+content = "linux-hardening-checks.md"
+estimated_minutes = 90
+level = 3
+objectives = [
+  "Explain hardening versus checking, and why a check needs a written reason",
+  "Read the effective sshd configuration with sshd -T and explain why the first value read wins across sshd_config.d",
+  "Find a second UID 0 account, empty passwords, world-writable files without the sticky bit and unneeded listeners with standard tools",
+  "Write a read-only checker whose exit status a scheduler can use",
+  "Run Lynis, read lynis-report.dat and explain why a suggestion is not a defect and why hardening indexes are not comparable across machines",
+]
+prerequisites = ["security.security-fundamentals", "security.linux-logging-and-detection"]
+privilege = "administrator"
+certifications = ["comptia-linux-plus/security", "redhat-rhcsa/security", "comptia-a-core2/security"]
+evaluation_criteria = [
+  "Learner plants two weaknesses in a lab VM, shows the checker finding them, fixes them and shows it passing",
+  "Learner explains the sshd_config.d include order from sshd -T output",
+  "Learner chooses, with reasons, three Lynis suggestions to apply and three to reject",
+]
+
+[[references]]
+title = "sshd_config(5)"
+url = "https://man.openbsd.org/sshd_config"
+
+[[references]]
+title = "sshd(8)"
+url = "https://man7.org/linux/man-pages/man8/sshd.8.html"
+
+[[references]]
+title = "ss(8)"
+url = "https://man7.org/linux/man-pages/man8/ss.8.html"
+
+[[references]]
+title = "Lynis documentation"
+url = "https://cisofy.com/documentation/lynis/"
+
+[[references]]
+title = "CIS Benchmarks (the catalogue of hardening checks; not read for this lesson)"
+url = "https://www.cisecurity.org/cis-benchmarks"
