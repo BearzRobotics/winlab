@@ -96,6 +96,8 @@ A static address shows `valid_lft forever` and no `dynamic`. See [ip-address(8)]
 nmcli device show eth0
 ```
 
+**Tested** (2026-11-22; `tests/verification/networking/nl1.sh`). The interface name `eth0` is only an example. On the **AlmaLinux 9.8** lab VM it really was `eth0` (with the alternative name `enp0s3`), `ip addr show eth0` showed `scope global dynamic noprefixroute eth0` with `valid_lft 86362sec`, and `nmcli device show eth0` worked (`GENERAL.CONNECTION: System eth0`, `IP4.GATEWAY: 10.0.2.2`, `IP4.DNS[1]: 10.0.2.3`). On **Ubuntu Server 24.04.5** the interface was `enp0s3`, there was **no `nmcli`** (NetworkManager was inactive; `systemd-networkd` was active with a netplan-generated configuration), `ip addr show enp0s3` showed `dynamic` with `valid_lft 86361sec`, and `networkctl status enp0s3` printed `State: routable (configured)`. I did not look for the `DHCP4.OPTION[...]` lines on AlmaLinux (the part of `nmcli` output I cut off) and did not test a static address.
+
 The `IP4.*` lines give the address, gateway and DNS, and the `DHCP4.OPTION[...]` lines list each option the server supplied (for example `routers`, `domain_name_servers`, `dhcp_lease_time`). Ubuntu Server may use a different network manager (netplan with systemd-networkd), but `ip addr` reads the same either way.
 
 ## Scopes, exclusions, reservations and relays

@@ -158,6 +158,8 @@ sudo ip route add 10.20.0.0/16 via 192.168.1.3
 sudo ip route del 10.20.0.0/16
 ```
 
+**Tested** (Ubuntu 24.04.5, 2026-11-22; `tests/verification/networking/nl1.sh`). The gateway must be **on a network the machine is directly attached to**. On a lab VM whose address was `10.0.2.15/24`, `ip route add 10.20.0.0/16 via 192.168.1.3` failed with `Error: Nexthop has invalid gateway.` (exit status 2), and the later `ip route del` said `RTNETLINK answers: No such process`, because nothing had been added. Substitute a gateway on your own subnet; with the VM's own default gateway (`10.0.2.2`) the add worked silently, `ip route show 10.20.0.0/16` printed `10.20.0.0/16 via 10.0.2.2 dev enp0s3`, and `ip route del` removed it. AlmaLinux 9.8 gave the same `invalid gateway` error. I did not test that the route vanishes at reboot.
+
 Routes added with `ip route add` are **not saved**; they vanish at reboot or when the interface restarts. To keep one, put it in the network manager (for NetworkManager, the connection's `ipv4.routes` property) rather than a script that you will forget.
 
 ### Safe habits

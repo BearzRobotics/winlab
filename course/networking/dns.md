@@ -132,6 +132,8 @@ resolvectl status                   # per-interface DNS servers and search domai
 dig example.com MX @1.1.1.1         # if the dig tool is installed (bind-utils / dnsutils)
 ```
 
+**Tested** (2026-11-22; `tests/verification/networking/nl1.sh`). On **Ubuntu 24.04.5** `getent`, `resolvectl query`, `resolvectl status`, `nslookup` and `dig` all worked (`resolvectl status` showed `resolv.conf mode: stub` and `Current DNS Server: 10.0.2.3`; `nslookup` reported `Server: 127.0.0.53`, the local stub, which forwards to 10.0.2.3). On the **AlmaLinux 9.8** lab image `nslookup`, `dig` and `resolvectl` were **not installed** (`nslookup` and `dig` come from the `bind-utils` package; AlmaLinux does not run systemd-resolved by default, so there is no `resolvectl` to use), but `getent hosts example.com` worked. I did not install `bind-utils` and run `dig` there. Note `dig example.com MX @1.1.1.1 +short` printed `0 .` on Ubuntu: example.com publishes a null MX record, meaning "does not receive mail".
+
 [`getent`](https://man7.org/linux/man-pages/man1/getent.1.html) and [`resolvectl`](https://man7.org/linux/man-pages/man1/resolvectl.1.html) are the tools to learn first because they follow the same path as real programs. `dig` and `nslookup` talk straight to a server and ignore the hosts file, so they answer a different question. Knowing which question each tool answers is the skill.
 
 ## Seeing and changing the DNS settings

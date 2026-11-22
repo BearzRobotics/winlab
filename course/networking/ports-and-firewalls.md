@@ -184,6 +184,8 @@ sudo firewall-cmd --reload                           # apply the saved rules
 sudo firewall-cmd --permanent --add-port=8080/tcp
 ```
 
+**Tested** (AlmaLinux 9.8, firewalld 1.3.4, 2026-11-22; `nl1.sh`). **firewalld was not installed on the lab image**: I installed it with `dnf install firewalld` and started it with `systemctl enable --now firewalld`. Then `--state` printed `running`, `--get-active-zones` showed `public` with `eth0`, and `--list-all` showed `services: cockpit dhcpv6-client ssh`. After `--add-service=http` the runtime list had `http` and the permanent list did not; after `--reload` the runtime rule was **gone**; after `--permanent --add-service=http` and `--reload` it stayed; `--permanent --add-port=8080/tcp` plus a reload listed `8080/tcp`. I removed what I added afterwards.
+
 The classic mistake is adding a rule at runtime, seeing it work, then losing it at the next reboot because it was never made permanent. The lab `labs.alma-firewalld-http` is this scenario.
 
 ### Linux: ufw (Debian and Ubuntu)
@@ -192,11 +194,19 @@ The classic mistake is adding a rule at runtime, seeing it work, then losing it 
 sudo ufw status verbose
 sudo ufw allow 22/tcp
 sudo ufw allow from 192.168.1.0/24 to any port 8080 proto tcp
-sudo ufw delete allow 8080/tcp
+sudo ufw delete allow from 192.168.1.0/24 to any port 8080 proto tcp   # the same words you added it with
+sudo ufw status numbered                                              # then: sudo ufw delete 2
 sudo ufw enable
 ```
 
 Allow SSH **before** you `enable` ufw on a remote machine, or you lock yourself out. See [ufw(8)](https://manpages.ubuntu.com/manpages/noble/en/man8/ufw.8.html).
+
+**Tested** (Ubuntu 24.04.5, ufw 0.36.2 installed with `apt-get install ufw`, 2026-11-22; `tests/verification/networking/nl1.sh` and `nl2.sh`). Four things the short examples hide:
+
+- Rules added while ufw is **inactive** are stored, but `ufw status` still prints `Status: inactive` and lists nothing until you enable it.
+- **A delete must name the rule the way you added it.** After `ufw allow from 192.168.1.0/24 to any port 8080 proto tcp`, the command `ufw delete allow 8080/tcp` answered `Could not delete non-existent rule` (and `... (v6)`). The full form (`ufw delete allow from 192.168.1.0/24 to any port 8080 proto tcp`) printed `Rule deleted`, and so did a numbered delete (`ufw status numbered`, then `ufw --force delete 2`). The short form works only for a rule added the short way (`ufw allow 8080/tcp`).
+- **`ufw delete` exits with status 0 even when it deleted nothing**, so a script that checks `$?` will not notice. Read the output or check `ufw status` afterwards.
+- With 22 allowed first, `ufw --force enable` printed `Firewall is active and enabled on system startup`, `ufw status verbose` showed `Default: deny (incoming), allow (outgoing), disabled (routed)`, and sshd was still listening and reachable. I did not test locking yourself out by enabling first.
 
 ## A bottom-up port check
 
