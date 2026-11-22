@@ -40,3 +40,7 @@ confused you.
 ## Known limits
 Windows 11 is where this was developed; Windows 10 is untested. Narrator and other screen readers are untested.
 There is no Linux or macOS version. The installer is unsigned.
+
+## Silent install (for scripts)
+Run `WinLab-<version>-x64.exe /Q` for a quiet per-user install, or `Install-WinLab.ps1 -Quiet` from the extracted files
+(`WinLab-<version>-x64.exe /C /T:<folder>` extracts without installing). `-InstallDir` changes the folder.

@@ -111,6 +111,16 @@ Quiz authoring rules (`docs/quizzes.md`): every question has an `explanation`; `
 7. Certification domain titles in `certs\catalog.toml` were never checked against the vendors' current objectives.
 8. **OPNsense under QEMU (2026-11-22, not resolved):** OPNsense 26.7 `serial-amd64.img` (SHA-256 matched the mirror's checksum file; the `.sig` was not verified) boots over the serial console, but with `-cpu max` (WHPX) `python3` and `php` die with signal 8 and "Generating configuration: templates" fails; with `-cpu Haswell` and `-cpu host` the kernel panics in `unionfs_create_uppervattr` during an `nmount`. Not tried: TCG (no WHPX), the DVD installer ISO, or another hypervisor. No OPNsense lesson is written. Scratch files (not in the repo): the image and a start script were in the session scratchpad.
 
+## 8b. Beta packaging (2026-11-22)
+
+`installer/build-installer.ps1` builds `dist/WinLab-<ver>-x64.exe` (per-user installer: IExpress wrapper + `Install-WinLab.ps1`, no admin), `dist/WinLab-<ver>-portable.zip` and a SHA-256 list, using stock Windows tools only. `dist/` is git-ignored. The version is `app_version` in `src/app/version.zig` (now `0.1.0-beta.1`). `installer/GETTING-STARTED.md` is the tester's guide and ships in the package.
+
+What was tested: the installer script on a clean Windows Server 2022 VM (install, files, Start menu shortcut, Apps entry, the installed exe runs `status` and `check`, uninstall removes everything but keeps `%APPDATA%\WinLab`); the IExpress wrapper on this Windows 11 machine, both with `/Q` and without; the portable zip finding its own `course\` from a fresh profile. **Not tested:** the installer's message boxes and the GUI launched from the installed copy (no interactive session on the VM; the message boxes were not clicked), Windows 10, a machine with an existing install being upgraded, SmartScreen behaviour.
+
+Findings that matter: (1) **a default `zig build` targets the build machine's own CPU**, and an exe built that way crashed with `c000001d` (illegal instruction) on the Server VM; the release script builds `-Dtarget=x86_64-windows -Dcpu=x86_64_v2`. Always release that way. (2) IExpress in `/Q` mode runs `AdminQuietInstCmd`/`UserQuietInstCmd`, not `AppLaunched`; with those empty it extracts and then hangs forever. (3) An installer exe whose name contains "setup" or "install" triggers a UAC prompt on Windows (installer detection), which would install into the wrong profile, so the exe is named `WinLab-<ver>-x64.exe`. (4) The installer is **unsigned** (SmartScreen will warn). There is **no LICENSE file in the repository**: choose one before sharing builds.
+
+Other beta features added the same day: first-run setup window, Help > Copy diagnostics, badges (derived from progress; `badges = false` hides them), `docs/REVIEW-CHECKLIST.md`.
+
 ## 9. Version control
 
 The project is now a **local git repository** on branch `main` (created 2026-11-21 at the owner's request, after a session with no history in which one file was corrupted and repaired by hand). The first commit holds everything. There is **no remote yet**; section 13 says how to create one. Commit small and often from now on, and run `winlab check course` before each commit.

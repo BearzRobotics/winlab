@@ -9,6 +9,7 @@
 #>
 param([switch]$RemoveUserData, [switch]$Quiet, [string]$FromDir = '')
 $ErrorActionPreference = 'Stop'
+if (-not [Environment]::UserInteractive) { $Quiet = $true }
 $keyPath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\WinLab'
 $me = $MyInvocation.MyCommand.Path
 

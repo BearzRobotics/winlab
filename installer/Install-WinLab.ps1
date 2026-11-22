@@ -15,6 +15,8 @@ param(
   [switch]$NoShortcut
 )
 $ErrorActionPreference = 'Stop'
+# A session with no desktop (a remote shell, a service) cannot show message boxes: behave as -Quiet there.
+if (-not [Environment]::UserInteractive) { $Quiet = $true }
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 $zip = Join-Path $here 'payload.zip'
 $keyPath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\WinLab'

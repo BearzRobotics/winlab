@@ -6,6 +6,8 @@
 .PARAMETER Version Overrides the version read from src\app\version.zig.
 .PARAMETER NoBuild Reuse the exe already in <OutDir>\build\bin (skip the zig build).
 .NOTES
+  The exe is built for the x86-64-v2 CPU baseline, NOT the build machine's own CPU: a default zig build uses the
+  host CPU's newest instructions and crashed with STATUS_ILLEGAL_INSTRUCTION (c000001d) on a Windows Server 2022 VM.
   The installer exe is NOT code-signed, so Windows SmartScreen will warn on first run until it is signed.
   Its file name deliberately has no "setup" or "install" in it: Windows' installer detection would otherwise
   ask for administrator rights, and this installer is per-user.
@@ -29,7 +31,7 @@ $pack = Join-Path $OutDir 'pack'
 
 if (-not $NoBuild) {
   Push-Location $repo
-  try { & zig build -Doptimize=ReleaseSafe --prefix $build; if ($LASTEXITCODE) { throw 'zig build failed' } } finally { Pop-Location }
+  try { & zig build -Doptimize=ReleaseSafe "-Dtarget=x86_64-windows" "-Dcpu=x86_64_v2" --prefix $build; if ($LASTEXITCODE) { throw 'zig build failed' } } finally { Pop-Location }
 }
 $exe = Join-Path $build 'bin\winlab.exe'
 if (-not (Test-Path $exe)) { throw "No exe at $exe" }
@@ -98,8 +100,8 @@ TargetName=$target
 FriendlyName=WinLab $Version
 AppLaunched=cmd /c powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File Install-WinLab.ps1
 PostInstallCmd=<None>
-AdminQuietInstCmd=
-UserQuietInstCmd=
+AdminQuietInstCmd=cmd /c powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File Install-WinLab.ps1 -Quiet
+UserQuietInstCmd=cmd /c powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File Install-WinLab.ps1 -Quiet
 FILE0="payload.zip"
 FILE1="Install-WinLab.ps1"
 FILE2="Uninstall-WinLab.ps1"
