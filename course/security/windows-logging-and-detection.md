@@ -121,6 +121,7 @@ After the clear there was **exactly one event left in the Security log: the 1102
 3. A **4720** or **4732** (to Administrators) outside a change window.
 4. Any **1102**.
 5. **Logon types you do not expect** (a type 10 remote-desktop logon from a machine that never uses it; I did not test type 10).
+6. **A 4740** (account locked out): a run of bad guesses reached the lockout threshold. I saw it written in `security.windows-hardening-checks` (the account name and the machine it came from were in the event).
 
 ## Common mistakes
 

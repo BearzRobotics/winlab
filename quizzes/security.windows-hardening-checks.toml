@@ -1,0 +1,136 @@
+schema_version = 1
+lesson = "security.windows-hardening-checks"
+# Draft for owner review. Answers come from the tested output of wl-winbaseline.ps1, win2.ps1, win3.ps1 and win4.ps1 on Windows Server 2022 (build 20348, PowerShell 5.1).
+draw = 10
+
+[[question]]
+id = "never-failed"
+type = "choice"
+prompt = "Why plant a weakness before trusting a baseline check?"
+choices = ["A check that has only ever printed PASS has not been shown to work", "Planting makes the check faster", "Windows requires it", "It turns on auditing"]
+answers = ["A check that has only ever printed PASS has not been shown to work"]
+explanation = "The SMB1 check was never proven: SMB1 could not be enabled on the test image."
+review = "Does it notice? Nine planted weaknesses"
+
+[[question]]
+id = "read-only"
+type = "choice"
+prompt = "What does wl-winbaseline.ps1 change on the machine?"
+choices = ["Nothing; it only reads", "The firewall", "The password policy", "The Guest account"]
+answers = ["Nothing; it only reads"]
+explanation = "The fixes are separate commands the lesson runs by hand."
+review = "What a baseline check is, and is not"
+
+[[question]]
+id = "review-lines"
+type = "choice"
+prompt = "What is a REVIEW line in the script's output?"
+choices = ["A list a person must read, because only a person knows whether an entry belongs", "A failed check", "A passed check", "An error"]
+answers = ["A list a person must read, because only a person knows whether an entry belongs"]
+explanation = "Listeners, Run keys, tasks and services are only wrong if you cannot account for them."
+review = "What a baseline check is, and is not"
+
+[[question]]
+id = "fresh-fails"
+type = "multi"
+prompt = "Which checks FAILED on the fresh, untouched server?"
+choices = ["SMB signing not required", "Minimum password length 0", "Lockout threshold Never", "Newest update 1726 days old", "SMB1 enabled"]
+answers = ["SMB signing not required", "Minimum password length 0", "Lockout threshold Never", "Newest update 1726 days old"]
+explanation = "SMB1 was off. The four failures were all real properties of the evaluation image."
+review = "Run on a fresh server"
+
+[[question]]
+id = "minlen-zero"
+type = "choice"
+prompt = "According to the Microsoft page the lesson read, what does a minimum password length of 0 mean?"
+choices = ["No password is required", "The password may be any length up to the maximum", "Passwords expire at once", "The account is locked"]
+answers = ["No password is required"]
+explanation = "The server's default was 0."
+review = "Run on a fresh server"
+
+[[question]]
+id = "firewall-on"
+type = "choice"
+prompt = "A firewall profile shows Enabled = True. What does the script's check not tell you?"
+choices = ["Which rules allow what", "Whether the profile is on", "The profile name", "Whether it is off"]
+answers = ["Which rules allow what"]
+explanation = "DefaultInboundAction was NotConfigured on all three profiles; the script does not review rules."
+review = "What each check reads"
+
+[[question]]
+id = "smb1-limit"
+type = "choice"
+prompt = "Why is the SMB1 check described as not proven?"
+choices = ["Enabling SMB1 failed on the test image (the service does not exist), so the check has only ever passed", "SMB1 was enabled and the check missed it", "Windows has no SMB1", "The check crashed"]
+answers = ["Enabling SMB1 failed on the test image (the service does not exist), so the check has only ever passed"]
+explanation = "The message was: The specified service does not exist."
+review = "Does it notice? Nine planted weaknesses"
+
+[[question]]
+id = "defender-off"
+type = "choice"
+prompt = "Set-MpPreference -DisableRealtimeMonitoring $true, from an elevated PowerShell on the test server:"
+choices = ["Succeeded, and the baseline then reported real-time protection off", "Was refused by Windows", "Needed a reboot", "Deleted Defender"]
+answers = ["Succeeded, and the baseline then reported real-time protection off"]
+explanation = "Tamper Protection was not examined."
+review = "Does it notice? Nine planted weaknesses"
+
+[[question]]
+id = "fix-commands"
+type = "multi"
+prompt = "Which commands did the lesson run to fix the real findings?"
+choices = ["Set-SmbServerConfiguration -RequireSecuritySignature $true -Force", "net accounts /minpwlen:12 /lockoutthreshold:5", "Delete the Windows folder", "Set-MpPreference -DisableRealtimeMonitoring $true"]
+answers = ["Set-SmbServerConfiguration -RequireSecuritySignature $true -Force", "net accounts /minpwlen:12 /lockoutthreshold:5"]
+explanation = "After them only the patch-age finding remained."
+review = "Fixing the real findings"
+
+[[question]]
+id = "net-accounts-limit"
+type = "choice"
+prompt = "What is the limit of net accounts?"
+choices = ["It changes the local policy; a domain's Group Policy can overwrite it", "It only works on Windows 7", "It cannot set a length", "It needs a reboot"]
+answers = ["It changes the local policy; a domain's Group Policy can overwrite it"]
+explanation = "Domain-joined machines were not tested."
+review = "Fixing the real findings"
+
+[[question]]
+id = "locked-code"
+type = "short"
+prompt = "With a lockout threshold of 5, which System error number did the sixth bad logon (and the later correct-password logon) give? Number only."
+answers = ["1909"]
+explanation = "Attempts 1 to 5 gave 1326 (bad name or password); 1909 means the account is locked out."
+review = "What a lockout does, and what it logs"
+
+[[question]]
+id = "locked-event"
+type = "short"
+prompt = "Which event ID records an account being locked out? Number only."
+answers = ["4740"]
+explanation = "The event named the account and the machine it came from."
+review = "What a lockout does, and what it logs"
+
+[[question]]
+id = "unlock"
+type = "short"
+prompt = "Which net user option unlocked the account in the lesson? Type it as /option:value."
+answers = ["/active:yes"]
+explanation = "net user wlvictim /active:yes; the correct password then worked."
+review = "What a lockout does, and what it logs"
+
+[[question]]
+id = "lockout-tradeoff"
+type = "choice"
+prompt = "Why is an account lockout both a defence and a risk?"
+choices = ["It stops password guessing, but anyone who can reach the logon can lock a name out by guessing it", "It deletes the account", "It forces a reboot", "It disables the firewall"]
+answers = ["It stops password guessing, but anyone who can reach the logon can lock a name out by guessing it"]
+explanation = "So the threshold is a trade-off."
+review = "What a lockout does, and what it logs"
+
+[[question]]
+id = "pair"
+type = "choice"
+prompt = "Why use the baseline together with the event log?"
+choices = ["The baseline shows what is configured now; the log shows what happened, who and when", "They are the same data", "The log replaces the baseline", "Neither is useful alone"]
+answers = ["The baseline shows what is configured now; the log shows what happened, who and when"]
+explanation = "A new administrator appears in both."
+review = "Reading the check alongside the logs"

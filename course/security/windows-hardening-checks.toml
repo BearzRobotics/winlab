@@ -1,0 +1,58 @@
+schema_version = 1
+id = "security.windows-hardening-checks"
+title = "Windows hardening checks: a read-only baseline script, planted weaknesses, fixes and a real lockout"
+summary = "Build and run a read-only PowerShell baseline check (firewall, SMB1 and signing, Remote Desktop and NLA, local administrators, Guest, password and lockout policy, Defender, UAC, patch age, plus review lists for listeners, Run keys, tasks and services) on Windows Server 2022, prove it notices nine planted weaknesses, fix the real findings (SMB signing, minimum password length, lockout threshold) and see a lockout in action (error 1326 then 1909, event 4740). One server, one day; the SMB1 positive case was not proven."
+content = "windows-hardening-checks.md"
+estimated_minutes = 75
+level = 3
+objectives = [
+  "Explain what a baseline check is and why it must be shown to fail before it is trusted",
+  "Run the baseline script and read PASS, FAIL and REVIEW lines",
+  "Explain the fresh-server findings: SMB signing, minimum password length 0, lockout Never, and patch age",
+  "Fix settings with Set-SmbServerConfiguration and net accounts and re-check",
+  "Describe what an account lockout does: errors 1326 and 1909, event 4740, and the denial-of-service trade-off",
+]
+prerequisites = ["security.windows-logging-and-detection", "foundations.powershell-basics"]
+privilege = "administrator"
+certifications = ["comptia-a-core2/security", "microsoft-md-102/protect-devices"]
+evaluation_criteria = [
+  "Learner runs the baseline and distinguishes a setting finding from a missing update",
+  "Learner plants a weakness and shows which line reports it",
+  "Learner locks a lab account out and names the error code, the event and the unlock command",
+]
+
+[[references]]
+title = "Windows security baselines"
+url = "https://learn.microsoft.com/en-us/windows/security/operating-system-security/device-management/windows-security-configuration-framework/windows-security-baselines"
+
+[[references]]
+title = "Get-NetFirewallProfile"
+url = "https://learn.microsoft.com/en-us/powershell/module/netsecurity/get-netfirewallprofile"
+
+[[references]]
+title = "Get-SmbServerConfiguration"
+url = "https://learn.microsoft.com/en-us/powershell/module/smbshare/get-smbserverconfiguration"
+
+[[references]]
+title = "Detect, enable and disable SMBv1, SMBv2 and SMBv3"
+url = "https://learn.microsoft.com/en-us/windows-server/storage/file-server/troubleshoot/detect-enable-and-disable-smbv1-v2-v3"
+
+[[references]]
+title = "SMB signing overview"
+url = "https://learn.microsoft.com/en-us/windows-server/storage/file-server/smb-signing-overview"
+
+[[references]]
+title = "Minimum password length"
+url = "https://learn.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/minimum-password-length"
+
+[[references]]
+title = "Account lockout threshold"
+url = "https://learn.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/account-lockout-threshold"
+
+[[references]]
+title = "Get-MpComputerStatus"
+url = "https://learn.microsoft.com/en-us/powershell/module/defender/get-mpcomputerstatus"
+
+[[references]]
+title = "Get-HotFix"
+url = "https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.management/get-hotfix"
