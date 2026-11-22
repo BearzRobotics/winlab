@@ -1,0 +1,110 @@
+schema_version = 1
+lesson = "endpoints.update-and-policy"
+# Draft for owner review. Every answer comes from the lesson text.
+draw = 10
+
+[[question]]
+id = "wu-service"
+type = "short"
+prompt = "What is the short name of the Windows Update service? Type it."
+answers = ["wuauserv"]
+explanation = "Get-Service wuauserv, bits, cryptsvc shows it and its helpers."
+review = "How updates reach a machine"
+
+[[question]]
+id = "update-sources"
+type = "multi"
+prompt = "Where can updates come from, according to the lesson?"
+choices = ["Microsoft directly", "WSUS", "Windows Update for Business", "A USB mouse"]
+answers = ["Microsoft directly", "WSUS", "Windows Update for Business"]
+explanation = "WSUS and Windows Update for Business are managed sources."
+review = "How updates reach a machine"
+
+[[question]]
+id = "update-types"
+type = "choice"
+prompt = "Which update type is a new Windows version?"
+choices = ["Feature update", "Quality update", "Driver update", "Definition update"]
+answers = ["Feature update"]
+explanation = "Quality updates are monthly fixes and security; definition updates are Defender signatures."
+review = "How updates reach a machine"
+
+[[question]]
+id = "hotfix-cmd"
+type = "choice"
+prompt = "Which command lists the most recently installed updates?"
+choices = ["Get-HotFix | Sort-Object InstalledOn -Descending | Select-Object -First 5", "gpresult /r", "reg export", "Get-NetFirewallProfile"]
+answers = ["Get-HotFix | Sort-Object InstalledOn -Descending | Select-Object -First 5"]
+explanation = "Get-HotFix lists installed updates with their dates."
+review = "How updates reach a machine"
+
+[[question]]
+id = "updates-stopped-order"
+type = "choice"
+prompt = "Updates have stopped. Which order of checks does the lesson give?"
+choices = ["Service and startup type, then policy, then free disk space, then the update log", "Update log, then reinstall Windows", "Policy only", "Disk space only"]
+answers = ["Service and startup type, then policy, then free disk space, then the update log"]
+explanation = "Cheapest and most common causes first."
+review = "How updates reach a machine"
+
+[[question]]
+id = "policy-is-registry"
+type = "choice"
+prompt = "On Windows, a policy is ultimately:"
+choices = ["A registry value written by one of several sources", "A text file in System32", "A scheduled task", "A service"]
+answers = ["A registry value written by one of several sources"]
+explanation = "Sources: local or domain Group Policy, MDM or Intune, or a direct registry write."
+review = "Where policy lives"
+
+[[question]]
+id = "policy-locations"
+type = "multi"
+prompt = "Which registry locations hold policy values?"
+choices = ["HKLM:\\SOFTWARE\\Policies", "HKCU:\\SOFTWARE\\Policies", "HKLM:\\HARDWARE\\DESCRIPTION", "C:\\Windows\\Temp"]
+answers = ["HKLM:\\SOFTWARE\\Policies", "HKCU:\\SOFTWARE\\Policies"]
+explanation = "Plus a few older locations such as CurrentVersion\\Policies\\System."
+review = "Where policy lives"
+
+[[question]]
+id = "gpedit"
+type = "choice"
+prompt = "Which tool edits Local Group Policy, and in which editions?"
+choices = ["gpedit.msc, on Pro and up", "regedit only, on Home", "gpresult, on all editions", "Intune, on Home"]
+answers = ["gpedit.msc, on Pro and up"]
+explanation = "Domain Group Policy uses Group Policy Management instead."
+review = "Where policy lives"
+
+[[question]]
+id = "gpresult-summary"
+type = "short"
+prompt = "Which command shows which Group Policy objects applied, as a summary? Type the command with its option."
+answers = ["gpresult /r"]
+explanation = "gpresult /h report.html writes the full report."
+review = "Finding what applies"
+
+[[question]]
+id = "policy-returns"
+type = "choice"
+prompt = "You delete a policy value and it comes back after a restart. What does that tell you?"
+choices = ["A managed source re-applies it; remove it at the source, not on the machine", "The registry is corrupt", "Windows is out of date", "The value was never there"]
+answers = ["A managed source re-applies it; remove it at the source, not on the machine"]
+explanation = "Settings shows 'some settings are managed by your organization' on an enrolled device."
+review = "Finding what applies"
+
+[[question]]
+id = "export-first"
+type = "choice"
+prompt = "Why export a registry key before editing it?"
+choices = ["So you can restore the previous state", "To make the edit faster", "Windows requires it", "To clear the policy"]
+answers = ["So you can restore the previous state"]
+explanation = "Export the key, change one value, then verify and write down what you changed."
+review = "Editing registry policy safely"
+
+[[question]]
+id = "zero-not-default"
+type = "choice"
+prompt = "Is setting a policy value to 0 the same as 'not configured'?"
+choices = ["Often not: removing the value returns the setting to its default, while 0 is an explicit setting", "Always the same", "Never has any effect", "Only on Home"]
+answers = ["Often not: removing the value returns the setting to its default, while 0 is an explicit setting"]
+explanation = "Removing a policy value returns a setting to its default."
+review = "Editing registry policy safely"

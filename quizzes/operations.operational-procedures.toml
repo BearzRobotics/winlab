@@ -1,0 +1,139 @@
+schema_version = 1
+lesson = "operations.operational-procedures"
+# Draft for owner review. Every answer comes from the lesson text.
+draw = 10
+
+[[question]]
+id = "document-when"
+type = "choice"
+prompt = "When should you write things down while troubleshooting?"
+choices = ["While you work, not afterward", "Only after the fix", "Only if it failed", "Never; memory is enough"]
+answers = ["While you work, not afterward"]
+explanation = "The lesson's first rule of documentation."
+review = "Documentation"
+
+[[question]]
+id = "record-parts"
+type = "multi"
+prompt = "Which belong in a problem record?"
+choices = ["The problem in the user's words and in yours", "What you checked, in order, and what each check showed", "What you changed, on which machine, at what time", "How you confirmed it was fixed, and how to undo the change", "The user's passwords"]
+answers = ["The problem in the user's words and in yours", "What you checked, in order, and what each check showed", "What you changed, on which machine, at what time", "How you confirmed it was fixed, and how to undo the change"]
+explanation = "Four parts; the same thing the troubleshooting method asks for."
+review = "Documentation"
+
+[[question]]
+id = "inventory-place"
+type = "choice"
+prompt = "Where should inventory facts (hostnames, addresses, owners, warranty, install dates) live?"
+choices = ["In one place, not in memory", "In each technician's head", "On sticky notes", "Nowhere"]
+answers = ["In one place, not in memory"]
+explanation = "One shared place everyone can read."
+review = "Documentation"
+
+[[question]]
+id = "change-first-step"
+type = "choice"
+prompt = "What is the first step of the change management process in the lesson?"
+choices = ["Request: what is changing, why, who asked", "Approval", "Back-out plan", "Verify"]
+answers = ["Request: what is changing, why, who asked"]
+explanation = "Then risk assessment, approval, plan and back-out plan, window, verify and record."
+review = "Change management"
+
+[[question]]
+id = "change-order"
+type = "choice"
+prompt = "Which order of the change steps matches the lesson?"
+choices = ["Request, risk assessment, approval, plan and back-out plan, window, verify and record", "Window, plan, request, verify", "Approval, request, verify, risk", "Verify, request, plan, window"]
+answers = ["Request, risk assessment, approval, plan and back-out plan, window, verify and record"]
+explanation = "Six steps."
+review = "Change management"
+
+[[question]]
+id = "backout"
+type = "choice"
+prompt = "What can serve as a back-out plan?"
+choices = ["A snapshot, a backup, or the old setting written down", "Hoping it works", "Asking the user", "Restarting the server"]
+answers = ["A snapshot, a backup, or the old setting written down"]
+explanation = "In this course's labs, a snapshot is the back-out plan and the check is the verification."
+review = "Change management"
+
+[[question]]
+id = "change-window"
+type = "choice"
+prompt = "What is the point of a change window?"
+choices = ["Do it when the impact is smallest, and tell the affected people", "Do it at the busiest time", "Do it without telling anyone", "Do it once a year"]
+answers = ["Do it when the impact is smallest, and tell the affected people"]
+explanation = "Step 5 of change management."
+review = "Change management"
+
+[[question]]
+id = "three-two-one"
+type = "choice"
+prompt = "What does the 3-2-1 backup rule say?"
+choices = ["Three copies, on two kinds of media, one off-site", "Three disks, two servers, one cloud", "Three days, two weeks, one month", "Three users, two admins, one owner"]
+answers = ["Three copies, on two kinds of media, one off-site"]
+explanation = "Three copies, two media, one off-site."
+review = "Backups and recovery"
+
+[[question]]
+id = "untested-backup"
+type = "choice"
+prompt = "Why is an untested backup a risk?"
+choices = ["A backup that has never been restored is a hope, not a backup", "It uses too much disk", "It is illegal", "It slows the network"]
+answers = ["A backup that has never been restored is a hope, not a backup"]
+explanation = "Test a restore."
+review = "Backups and recovery"
+
+[[question]]
+id = "rpo-rto"
+type = "choice"
+prompt = "What do RPO and RTO mean?"
+choices = ["RPO is how much data loss is acceptable; RTO is how long recovery may take", "RPO is how long recovery may take; RTO is how much data loss is acceptable", "Both are backup brands", "Both are file formats"]
+answers = ["RPO is how much data loss is acceptable; RTO is how long recovery may take"]
+explanation = "Define both with the business."
+review = "Backups and recovery"
+
+[[question]]
+id = "backup-kinds"
+type = "multi"
+prompt = "Which are the three backup kinds the lesson says you should know the difference between?"
+choices = ["Full", "Incremental", "Differential", "Cosmetic"]
+answers = ["Full", "Incremental", "Differential"]
+explanation = "Know the differences, and define RPO and RTO."
+review = "Backups and recovery"
+
+[[question]]
+id = "communication"
+type = "multi"
+prompt = "Which are communication habits from the lesson?"
+choices = ["Tell the user what you found and what happens next in plain words", "Do not blame and do not guess aloud", "Do not promise a time you cannot keep", "Treat what you see on a user's machine as confidential", "Promise a fix time to calm the user"]
+answers = ["Tell the user what you found and what happens next in plain words", "Do not blame and do not guess aloud", "Do not promise a time you cannot keep", "Treat what you see on a user's machine as confidential"]
+explanation = "Add: say when something is outside your authority and escalate with your problem record attached."
+review = "Communication and professionalism"
+
+[[question]]
+id = "escalate"
+type = "choice"
+prompt = "What should you do when something is outside your authority?"
+choices = ["Escalate with your problem record attached", "Fix it anyway", "Ignore it", "Tell the user to try again later"]
+answers = ["Escalate with your problem record attached"]
+explanation = "The record saves the next person from repeating your checks."
+review = "Communication and professionalism"
+
+[[question]]
+id = "safety"
+type = "choice"
+prompt = "Before opening equipment you should:"
+choices = ["Power off and unplug, and use anti-static precautions", "Leave it running", "Open it on a carpet", "Remove the battery only"]
+answers = ["Power off and unplug, and use anti-static precautions"]
+explanation = "Also lift with your legs and follow site rules for disposal of batteries and electronics."
+review = "Safety and the work environment"
+
+[[question]]
+id = "scripts-procedure"
+type = "multi"
+prompt = "Which are habits for scripts as procedure?"
+choices = ["Keep scripts under version control", "Give them clear names", "Test them on a lab machine first", "Log what they change", "Run unfamiliar scripts on production"]
+answers = ["Keep scripts under version control", "Give them clear names", "Test them on a lab machine first", "Log what they change"]
+explanation = "Do not run unfamiliar scripts on a production machine."
+review = "Scripts and automation as procedure"

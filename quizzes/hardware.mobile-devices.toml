@@ -1,0 +1,129 @@
+schema_version = 1
+lesson = "hardware.mobile-devices"
+# Draft for owner review. Every answer comes from the lesson text.
+draw = 10
+
+[[question]]
+id = "wearable"
+type = "choice"
+prompt = "Which device has a tiny battery and pairs with a phone over Bluetooth?"
+choices = ["Wearable", "Laptop", "Tablet", "Smartphone"]
+answers = ["Wearable"]
+explanation = "A smartphone has the cellular radio and a SIM or eSIM."
+review = "Device types and their parts"
+
+[[question]]
+id = "flicker-cable"
+type = "choice"
+prompt = "A laptop display flickers when the lid moves. What is the most likely cause?"
+choices = ["The display cable", "The backlight", "The Wi-Fi card", "The touchpad"]
+answers = ["The display cable"]
+explanation = "A dim but visible image under a torch points at the backlight; otherwise the panel."
+review = "Device types and their parts"
+
+[[question]]
+id = "backlight"
+type = "choice"
+prompt = "The screen looks dark but you can see a faint image under a torch. What failed?"
+choices = ["The backlight", "The cable", "The battery", "The SIM"]
+answers = ["The backlight"]
+explanation = "A dim but visible image is the backlight sign."
+review = "Device types and their parts"
+
+[[question]]
+id = "swollen-battery"
+type = "choice"
+prompt = "What do you do with a swollen battery?"
+choices = ["Stop using it and dispose of it as hazardous waste", "Charge it overnight", "Press it flat", "Keep using it on mains power"]
+answers = ["Stop using it and dispose of it as hazardous waste"]
+explanation = "Battery wear shows as shorter runtime and, in the extreme, a swollen case."
+review = "Device types and their parts"
+
+[[question]]
+id = "wifi-bands"
+type = "multi"
+prompt = "Which bands does Wi-Fi (802.11) use, according to the lesson?"
+choices = ["2.4 GHz", "5 GHz", "6 GHz", "900 MHz"]
+answers = ["2.4 GHz", "5 GHz", "6 GHz"]
+explanation = "The lesson lists 2.4, 5 and 6 GHz."
+review = "Connectivity"
+
+[[question]]
+id = "nfc-range"
+type = "choice"
+prompt = "Which technology works over centimetres and is used for payments and tags?"
+choices = ["NFC", "Bluetooth", "Cellular", "Wi-Fi"]
+answers = ["NFC"]
+explanation = "Quick checks: enabled, and the case not blocking."
+review = "Connectivity"
+
+[[question]]
+id = "bt-checks"
+type = "multi"
+prompt = "Which are quick checks for a Bluetooth accessory?"
+choices = ["Paired", "Powered", "In range", "Not paired to another device", "Airplane mode switched on"]
+answers = ["Paired", "Powered", "In range", "Not paired to another device"]
+explanation = "All four are in the lesson's table."
+review = "Connectivity"
+
+[[question]]
+id = "cell-checks"
+type = "short"
+prompt = "For cellular data, a quick check lists SIM or eSIM active, plan, signal, and which setting (three letters, an acronym)?"
+answers = ["apn"]
+explanation = "APN is the access point name."
+review = "Connectivity"
+
+[[question]]
+id = "full-bars-no-internet"
+type = "choice"
+prompt = "A phone shows full Wi-Fi bars but 'no internet'. What does that usually mean?"
+choices = ["It has no valid address or no route: a layer-2 or layer-3 problem, not a signal problem", "The signal is weak", "The battery is worn", "The SIM is inactive"]
+answers = ["It has no valid address or no route: a layer-2 or layer-3 problem, not a signal problem"]
+explanation = "The bottom-up routine applies unchanged: link, address, gateway, name, port."
+review = "Connectivity"
+
+[[question]]
+id = "mdm-wipe"
+type = "choice"
+prompt = "Why must a device be enrolled in management before a lost one can be wiped remotely?"
+choices = ["Management is what enforces a passcode, encryption and allowed apps and can wipe the device", "Wiping is a Wi-Fi feature", "Enrollment charges the battery", "It is not required"]
+answers = ["Management is what enforces a passcode, encryption and allowed apps and can wipe the device"]
+explanation = "Organisations enrol devices in MDM to enforce a passcode, encryption and allowed apps, and to wipe a lost device."
+review = "Management and security"
+
+[[question]]
+id = "byod"
+type = "choice"
+prompt = "How do corporate-owned and bring-your-own devices differ?"
+choices = ["They use different profiles: a personal device can hold a separate, managed work area", "They are managed identically", "BYOD devices cannot be managed", "Corporate devices cannot be wiped"]
+answers = ["They use different profiles: a personal device can hold a separate, managed work area"]
+explanation = "Keep the OS updated, use the official store, require a screen lock and encryption."
+review = "Management and security"
+
+[[question]]
+id = "reset-order"
+type = "choice"
+prompt = "What must you do before resetting a user's device?"
+choices = ["Back up the user's data and tell them what a reset removes", "Nothing: reset first", "Remove the SIM", "Update every app"]
+answers = ["Back up the user's data and tell them what a reset removes"]
+explanation = "Step 5 of the routine."
+review = "Troubleshooting routine"
+
+[[question]]
+id = "routine-first"
+type = "choice"
+prompt = "What is the first step of the mobile troubleshooting routine?"
+choices = ["Restart: it clears many software faults", "Reset to factory settings", "Replace the battery", "Replace the SIM"]
+answers = ["Restart: it clears many software faults"]
+explanation = "Then check settings, updates and recent apps, isolate, and back up before a reset."
+review = "Troubleshooting routine"
+
+[[question]]
+id = "isolate-mobile"
+type = "multi"
+prompt = "Which are ways the lesson says to isolate a mobile fault?"
+choices = ["A different network", "A different charger and cable", "Safe mode", "Throwing the device away"]
+answers = ["A different network", "A different charger and cable", "Safe mode"]
+explanation = "Isolate by changing one thing at a time."
+review = "Troubleshooting routine"

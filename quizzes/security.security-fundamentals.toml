@@ -1,0 +1,147 @@
+schema_version = 1
+lesson = "security.security-fundamentals"
+# Draft for owner review. Every answer comes from the lesson text.
+draw = 10
+
+[[question]]
+id = "least-privilege"
+type = "choice"
+prompt = "What does least privilege mean?"
+choices = ["An account can do its job and nothing more", "Every user is an administrator", "No one may sign in", "Passwords are never needed"]
+answers = ["An account can do its job and nothing more"]
+explanation = "Daily work as a standard account; an administrator account only when a task needs it."
+review = "Least privilege"
+
+[[question]]
+id = "whoami"
+type = "choice"
+prompt = "Which pair shows 'who is this?' on Windows and Linux?"
+choices = ["whoami /all on Windows, id on Linux", "id on Windows, whoami on Linux", "ss on Windows, icacls on Linux", "sudo on both"]
+answers = ["whoami /all on Windows, id on Linux"]
+explanation = "Elevated rights: UAC or Run as administrator on Windows, sudo on Linux."
+review = "Least privilege"
+
+[[question]]
+id = "usual-failures"
+type = "multi"
+prompt = "Which are the usual failures the lesson names?"
+choices = ["Shared administrator passwords", "Everyday use of an admin account", "Using standard accounts for daily work", "Closing unused ports"]
+answers = ["Shared administrator passwords", "Everyday use of an admin account"]
+explanation = "The other two are the recommended habits."
+review = "Least privilege"
+
+[[question]]
+id = "deny-wins"
+type = "choice"
+prompt = "A folder lets Alice read, but she is also in a group with a deny entry. Can she read it?"
+choices = ["No: deny wins", "Yes: allow wins", "Only on Linux", "Only as administrator"]
+answers = ["No: deny wins"]
+explanation = "The effective result combines allow and deny entries, and deny wins."
+review = "Permissions"
+
+[[question]]
+id = "icacls"
+type = "choice"
+prompt = "Which command reads NTFS permissions on a folder?"
+choices = ["icacls C:\\Data\\Reports", "chmod 700", "ls -l", "getenforce"]
+answers = ["icacls C:\\Data\\Reports"]
+explanation = "ls -l and chmod are Linux; getenforce reports the SELinux mode."
+review = "Permissions"
+
+[[question]]
+id = "mode-700"
+type = "choice"
+prompt = "On Linux, what does mode 700 mean?"
+choices = ["Only the owner has access", "Everyone has access", "Only the group has access", "Read-only for all"]
+answers = ["Only the owner has access"]
+explanation = "A directory needs x to be entered."
+review = "Permissions"
+
+[[question]]
+id = "everyone-full"
+type = "choice"
+prompt = "A folder is unreadable to a team. What is the right fix?"
+choices = ["Fix the group or entry that should have access, not give Everyone full control", "Give Everyone full control", "Delete the folder", "Turn the firewall off"]
+answers = ["Fix the group or entry that should have access, not give Everyone full control"]
+explanation = "Usual causes: inheritance removed, or the mode too tight."
+review = "Permissions"
+
+[[question]]
+id = "disable-vs-delete"
+type = "choice"
+prompt = "Why is deleting a former employee's account usually worse than disabling it?"
+choices = ["A disabled account can be turned back on; deleting loses its history", "Deleting is slower", "Disabled accounts cannot sign in anyway", "Deleting is not possible"]
+answers = ["A disabled account can be turned back on; deleting loses its history"]
+explanation = "Disable-LocalUser on Windows, passwd -l on Linux."
+review = "Accounts and passwords"
+
+[[question]]
+id = "password-length"
+type = "choice"
+prompt = "According to the lesson, which matters more for passwords?"
+choices = ["Length matters more than complexity rules", "Complexity matters more than length", "Neither matters", "Passwords should be reused"]
+answers = ["Length matters more than complexity rules"]
+explanation = "Also: do not reuse passwords across systems."
+review = "Accounts and passwords"
+
+[[question]]
+id = "event-ids"
+type = "short"
+prompt = "Which Windows Security event ID records a failed sign-in? Number only."
+answers = ["4625"]
+explanation = "4624 is a success."
+review = "Accounts and passwords"
+
+[[question]]
+id = "firewall-default"
+type = "choice"
+prompt = "What is the safe firewall default?"
+choices = ["Deny, and allow only what is needed", "Allow everything", "Turn it off", "Allow only outbound"]
+answers = ["Deny, and allow only what is needed"]
+explanation = "A firewall decides which connections reach a service."
+review = "Firewalls and exposed ports"
+
+[[question]]
+id = "ss-tln"
+type = "choice"
+prompt = "Which command shows what is listening, on either OS family, according to the lesson?"
+choices = ["ss -tln", "ufw status", "firewall-cmd --list-all", "icacls"]
+answers = ["ss -tln"]
+explanation = "firewall-cmd is for AlmaLinux firewalld and ufw for Ubuntu."
+review = "Firewalls and exposed ports"
+
+[[question]]
+id = "port-questions"
+type = "multi"
+prompt = "Which two questions does the lesson ask for any open port?"
+choices = ["Is something supposed to be listening?", "Should this source be allowed to reach it?", "Is the port number round?", "Is the port number low?"]
+answers = ["Is something supposed to be listening?", "Should this source be allowed to reach it?"]
+explanation = "A service listening on a blocked port is a different fault from an allowed port nothing uses."
+review = "Firewalls and exposed ports"
+
+[[question]]
+id = "attack-surface"
+type = "choice"
+prompt = "How do you reduce attack surface?"
+choices = ["Remove or disable what is not needed, and keep what remains updated", "Install more programs", "Disable updates", "Open more ports"]
+answers = ["Remove or disable what is not needed, and keep what remains updated"]
+explanation = "Record what you changed."
+review = "Patching and attack surface"
+
+[[question]]
+id = "selinux-403"
+type = "choice"
+prompt = "A page returns 403 on AlmaLinux though the Unix permissions are fine. What do you check?"
+choices = ["The SELinux label: ls -Z, getenforce, ausearch -m avc -ts recent", "The monitor", "The hostname", "The keyboard layout"]
+answers = ["The SELinux label: ls -Z, getenforce, ausearch -m avc -ts recent"]
+explanation = "Correct the label with semanage fcontext and restorecon."
+review = "Mandatory access control on Linux"
+
+[[question]]
+id = "selinux-off"
+type = "choice"
+prompt = "Should you turn SELinux off to fix a 403?"
+choices = ["No: correct the label (semanage fcontext, restorecon)", "Yes, always", "Only on Fridays", "Only for root"]
+answers = ["No: correct the label (semanage fcontext, restorecon)"]
+explanation = "SELinux denies anything the policy does not allow, even for root."
+review = "Mandatory access control on Linux"

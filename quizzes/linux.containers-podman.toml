@@ -1,0 +1,147 @@
+schema_version = 1
+lesson = "linux.containers-podman"
+# Draft for owner review. Every answer comes from the lesson text.
+draw = 10
+
+[[question]]
+id = "not-a-vm"
+type = "choice"
+prompt = "How is a container different from a virtual machine?"
+choices = ["It is an ordinary process isolated by namespaces and limited by cgroups; it shares the host's kernel", "It runs its own kernel", "It needs a hypervisor", "It is a full copy of the disk"]
+answers = ["It is an ordinary process isolated by namespaces and limited by cgroups; it shares the host's kernel"]
+explanation = "It starts from an image, a read-only bundle of files."
+review = "Images and containers"
+
+[[question]]
+id = "image-vs-container"
+type = "choice"
+prompt = "What is the difference between an image and a container?"
+choices = ["An image is the template; a container is a running or stopped instance of it", "An image runs; a container is a file", "They are the same thing", "A container is the template; an image is an instance"]
+answers = ["An image is the template; a container is a running or stopped instance of it"]
+explanation = "Images come from a registry."
+review = "Images and containers"
+
+[[question]]
+id = "registry-name"
+type = "choice"
+prompt = "In the image name registry/namespace/name:tag, what does a tag like :9 do?"
+choices = ["Picks a version", "Picks the registry", "Names the container", "Publishes a port"]
+answers = ["Picks a version"]
+explanation = "Prefer a specific tag over latest so a machine rebuilt next month matches today's."
+review = "Images and containers"
+
+[[question]]
+id = "avoid-latest"
+type = "choice"
+prompt = "Why prefer a specific tag over latest?"
+choices = ["A machine rebuilt next month matches the one built today", "latest is slower", "latest is not allowed", "It saves disk space"]
+answers = ["A machine rebuilt next month matches the one built today"]
+explanation = "Pinning the tag makes rebuilds repeatable."
+review = "Images and containers"
+
+[[question]]
+id = "podman-ps-a"
+type = "choice"
+prompt = "Which command lists all containers, running or not?"
+choices = ["podman ps -a", "podman images", "podman logs", "podman pull"]
+answers = ["podman ps -a"]
+explanation = "podman images lists local images; podman logs shows what a container printed."
+review = "Images and containers"
+
+[[question]]
+id = "publish-port"
+type = "choice"
+prompt = "What does -p 8080:80 do in podman run?"
+choices = ["Publishes host port 8080 to container port 80", "Publishes container port 8080 to host port 80", "Limits memory to 8080 MB", "Names the container 8080"]
+answers = ["Publishes host port 8080 to container port 80"]
+explanation = "The form is host:container."
+review = "Images and containers"
+
+[[question]]
+id = "exec-shell"
+type = "choice"
+prompt = "Which command opens a shell inside a running container named demo?"
+choices = ["podman exec -it demo /bin/sh", "podman run demo", "podman logs demo", "podman pull demo"]
+answers = ["podman exec -it demo /bin/sh"]
+explanation = "podman exec runs a command inside a running container."
+review = "Images and containers"
+
+[[question]]
+id = "data-disappears"
+type = "choice"
+prompt = "A container writes a file, then is removed and recreated. Where did the file go?"
+choices = ["It disappeared with the container; keep data in a volume or bind mount", "It moved to the image", "It moved to /tmp on the host", "It was backed up automatically"]
+answers = ["It disappeared with the container; keep data in a volume or bind mount"]
+explanation = "Anything written inside a container disappears with it."
+review = "Images and containers"
+
+[[question]]
+id = "z-suffix"
+type = "choice"
+prompt = "What does the :Z suffix in -v /srv/data:/data:Z do on an SELinux system?"
+choices = ["Relabels the folder so the container may use it", "Compresses the folder", "Makes the volume read-only", "Hides the folder"]
+answers = ["Relabels the folder so the container may use it"]
+explanation = "Without it you meet a permission-denied that chmod will not fix."
+review = "Images and containers"
+
+[[question]]
+id = "rootless"
+type = "choice"
+prompt = "In a rootless container, what is root inside the container on the host?"
+choices = ["An unprivileged user, so a break-out has little to hold on to", "The real root user", "A system service", "Nothing; it does not exist"]
+answers = ["An unprivileged user, so a break-out has little to hold on to"]
+explanation = "Rootless containers cannot bind ports below 1024 unless configured, and their images live in the user's home folder."
+review = "Rootless and rootful"
+
+[[question]]
+id = "low-ports"
+type = "choice"
+prompt = "Which restriction applies to rootless containers by default?"
+choices = ["They cannot bind ports below 1024 unless that is configured", "They cannot use the network", "They cannot run as a user", "They cannot have a name"]
+answers = ["They cannot bind ports below 1024 unless that is configured"]
+explanation = "Use rootful containers only when a task really needs it, and say why."
+review = "Rootless and rootful"
+
+[[question]]
+id = "quadlet"
+type = "choice"
+prompt = "What is a Quadlet?"
+choices = ["A short declarative file that systemd turns into a service for a container", "A kind of image registry", "A podman subcommand", "A firewall rule"]
+answers = ["A short declarative file that systemd turns into a service for a container"]
+explanation = "Example path: /etc/containers/systemd/web.container."
+review = "Containers as services"
+
+[[question]]
+id = "quadlet-reload"
+type = "short"
+prompt = "After creating a Quadlet file, which systemctl subcommand regenerates the service? Type the subcommand only."
+answers = ["daemon-reload"]
+explanation = "sudo systemctl daemon-reload, then systemctl start web.service."
+review = "Containers as services"
+
+[[question]]
+id = "container-causes"
+type = "multi"
+prompt = "Which are usual causes of a containerised service that will not start?"
+choices = ["A wrong command", "A missing image", "A port already in use", "A volume with the wrong SELinux label", "The service has a short name"]
+answers = ["A wrong command", "A missing image", "A port already in use", "A volume with the wrong SELinux label"]
+explanation = "Also a volume that does not exist, and a container that exits immediately because its main process finished."
+review = "Containers as services"
+
+[[question]]
+id = "debug-order"
+type = "choice"
+prompt = "A container service fails on every start. Which order of commands does the lesson give?"
+choices = ["systemctl status, journalctl -u, then podman logs and podman ps -a", "podman rm everything, then reinstall", "podman build, then podman push", "reboot, then podman pull"]
+answers = ["systemctl status, journalctl -u, then podman logs and podman ps -a"]
+explanation = "Treat it like any service first."
+review = "Containers as services"
+
+[[question]]
+id = "containerfile"
+type = "choice"
+prompt = "In a Containerfile, which instruction names the base image?"
+choices = ["FROM", "CMD", "RUN", "COPY"]
+answers = ["FROM"]
+explanation = "CMD is the command to start; podman build -t name . runs the file."
+review = "Building images, briefly"

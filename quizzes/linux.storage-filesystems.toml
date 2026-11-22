@@ -1,0 +1,137 @@
+schema_version = 1
+lesson = "linux.storage-filesystems"
+# Draft for owner review. Every answer comes from the lesson text.
+draw = 10
+
+[[question]]
+id = "lsblk-f"
+type = "choice"
+prompt = "Which command shows disks as a tree with file system type, label and UUID?"
+choices = ["lsblk -f", "df -hT", "findmnt", "mkfs.xfs"]
+answers = ["lsblk -f"]
+explanation = "df -hT shows mounted file systems with size, used, free and type."
+review = "Seeing the storage"
+
+[[question]]
+id = "df-ht"
+type = "choice"
+prompt = "Which command shows mounted file systems with size, used, free and type?"
+choices = ["df -hT", "lsblk", "blkid", "umount"]
+answers = ["df -hT"]
+explanation = "blkid prints the type and UUID of each block device."
+review = "Seeing the storage"
+
+[[question]]
+id = "block-device"
+type = "multi"
+prompt = "Which count as a block device, according to the lesson?"
+choices = ["A real disk such as /dev/sda", "A partition such as /dev/sda1", "A logical volume", "A file attached through a loop device", "A plain text file in /home"]
+answers = ["A real disk such as /dev/sda", "A partition such as /dev/sda1", "A logical volume", "A file attached through a loop device"]
+explanation = "Anything the kernel treats as a disk."
+review = "Seeing the storage"
+
+[[question]]
+id = "mount-point"
+type = "choice"
+prompt = "What is a mount point?"
+choices = ["The folder where a file system's structure appears", "The device name of a disk", "A file system type", "A partition table"]
+answers = ["The folder where a file system's structure appears"]
+explanation = "A file system (ext4, xfs) is the structure written onto the device."
+review = "Seeing the storage"
+
+[[question]]
+id = "findmnt-check"
+type = "choice"
+prompt = "Which command tells you whether /srv/data is mounted, and from what?"
+choices = ["findmnt /srv/data", "blkid /srv/data", "mkfs /srv/data", "lsblk /srv/data -x"]
+answers = ["findmnt /srv/data"]
+explanation = "findmnt with no argument shows everything mounted, as a tree."
+review = "Seeing the storage"
+
+[[question]]
+id = "manual-mount-persist"
+type = "choice"
+prompt = "A mount made with the mount command by hand survives a restart:"
+choices = ["No: it is gone after a restart unless it is in /etc/fstab", "Yes, always", "Only on xfs", "Only as root"]
+answers = ["No: it is gone after a restart unless it is in /etc/fstab"]
+explanation = "Make it persistent with an fstab line."
+review = "Mounting by hand"
+
+[[question]]
+id = "target-busy"
+type = "choice"
+prompt = "umount says 'target is busy'. Which commands show who is using it?"
+choices = ["findmnt and lsof +D /srv/data, or fuser -vm /srv/data", "mkfs and blkid", "df and lsblk", "mount -a and daemon-reload"]
+answers = ["findmnt and lsof +D /srv/data, or fuser -vm /srv/data"]
+explanation = "Something is using the mount; find it before detaching."
+review = "Mounting by hand"
+
+[[question]]
+id = "fstab-fields"
+type = "short"
+prompt = "How many fields does each line of /etc/fstab have? Number only."
+answers = ["6", "six"]
+explanation = "Device, mount point, type, options, dump, fsck order."
+review = "Making a mount persistent: /etc/fstab"
+
+[[question]]
+id = "fstab-sixth"
+type = "choice"
+prompt = "What does the sixth field of an fstab line control?"
+choices = ["The order of file system checks (fsck order)", "The mount options", "The dump frequency", "The device name"]
+answers = ["The order of file system checks (fsck order)"]
+explanation = "The fifth is dump; the fourth is options."
+review = "Making a mount persistent: /etc/fstab"
+
+[[question]]
+id = "uuid-safer"
+type = "choice"
+prompt = "Why is UUID= safer than /dev/sdb1 in fstab?"
+choices = ["Device names can change between boots", "UUIDs are shorter", "UUIDs are faster", "/dev/sdb1 is not allowed"]
+answers = ["Device names can change between boots"]
+explanation = "Prefer a UUID or label."
+review = "Making a mount persistent: /etc/fstab"
+
+[[question]]
+id = "mount-a"
+type = "choice"
+prompt = "Why run mount -a after editing fstab?"
+choices = ["It is also your test: a broken line shows as an error now instead of at boot", "It formats the disk", "It deletes old mounts", "It checks the network"]
+answers = ["It is also your test: a broken line shows as an error now instead of at boot"]
+explanation = "Found at boot, a broken line can drop the machine into emergency mode."
+review = "Making a mount persistent: /etc/fstab"
+
+[[question]]
+id = "nofail"
+type = "short"
+prompt = "Which fstab option stops a missing non-essential disk from halting the boot? Type the option."
+answers = ["nofail"]
+explanation = "Add it to non-essential volumes."
+review = "Making a mount persistent: /etc/fstab"
+
+[[question]]
+id = "mkfs-destroys"
+type = "choice"
+prompt = "What does mkfs.xfs do to a device that already holds data?"
+choices = ["It destroys what was on it, so check the device name twice with lsblk", "It keeps the data and adds a label", "It mounts it", "It only checks it"]
+answers = ["It destroys what was on it, so check the device name twice with lsblk"]
+explanation = "Never practise it on anything but the lab VM."
+review = "Creating a file system"
+
+[[question]]
+id = "wrong-disk"
+type = "multi"
+prompt = "Which evidence shows 'the files are on the wrong disk' (the mount did not happen)?"
+choices = ["findmnt shows nothing at the mount point", "df shows the root volume filling", "The files are fine and complete", "lsblk shows a new disk"]
+answers = ["findmnt shows nothing at the mount point", "df shows the root volume filling"]
+explanation = "Writes went to the folder on the root file system underneath."
+review = "The problem pattern"
+
+[[question]]
+id = "wrong-disk-fix"
+type = "choice"
+prompt = "What is the right way to treat files written to the folder underneath, once you have mounted the volume?"
+choices = ["Make a deliberate decision, not a guess", "Delete them at once", "Ignore them", "Reformat the disk"]
+answers = ["Make a deliberate decision, not a guess"]
+explanation = "The fix is to mount it and make the fstab entry correct."
+review = "The problem pattern"

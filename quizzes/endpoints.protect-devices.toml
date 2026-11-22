@@ -1,0 +1,111 @@
+schema_version = 1
+lesson = "endpoints.protect-devices"
+# Draft for owner review. Every answer comes from the lesson text.
+draw = 10
+
+[[question]]
+id = "profiles"
+type = "multi"
+prompt = "Which are the three Windows Defender Firewall profiles?"
+choices = ["Domain", "Private", "Public", "Guest"]
+answers = ["Domain", "Private", "Public"]
+explanation = "Domain is a domain network, Private a trusted network, Public everything else."
+review = "Windows Defender Firewall"
+
+[[question]]
+id = "fw-show"
+type = "choice"
+prompt = "Which command shows each firewall profile and whether it is enabled?"
+choices = ["Get-NetFirewallProfile", "Get-MpComputerStatus", "manage-bde -status", "Update-MpSignature"]
+answers = ["Get-NetFirewallProfile"]
+explanation = "The others are for Defender Antivirus, BitLocker and signatures."
+review = "Windows Defender Firewall"
+
+[[question]]
+id = "fw-fix"
+type = "choice"
+prompt = "Which command turns every firewall profile on?"
+choices = ["Set-NetFirewallProfile -Profile Domain,Private,Public -Enabled True", "Start-MpScan -ScanType QuickScan", "Get-NetFirewallRule -Enabled True", "manage-bde -on"]
+answers = ["Set-NetFirewallProfile -Profile Domain,Private,Public -Enabled True"]
+explanation = "Get-NetFirewallProfile reads; Set-NetFirewallProfile changes."
+review = "Windows Defender Firewall"
+
+[[question]]
+id = "fw-off-finding"
+type = "choice"
+prompt = "Why is 'I turned the firewall off to test' a finding in a security audit?"
+choices = ["Switching a profile off turns off every rule in it at once; open one port with a rule instead", "Turning it off deletes Windows", "It disables the keyboard", "It is not a finding"]
+answers = ["Switching a profile off turns off every rule in it at once; open one port with a rule instead"]
+explanation = "Prefer a single rule for the port you need."
+review = "Windows Defender Firewall"
+
+[[question]]
+id = "defender-status"
+type = "choice"
+prompt = "Which command shows whether real-time protection is on and when signatures were last updated?"
+choices = ["Get-MpComputerStatus", "Get-NetFirewallProfile", "Get-HotFix", "Get-Service bits"]
+answers = ["Get-MpComputerStatus"]
+explanation = "It reports AntivirusEnabled, RealTimeProtectionEnabled and AntivirusSignatureLastUpdated."
+review = "Microsoft Defender Antivirus"
+
+[[question]]
+id = "passive-mode"
+type = "choice"
+prompt = "What does it mean when Defender reports passive mode?"
+choices = ["A third-party antivirus may have switched Defender to passive mode; that is expected", "Defender is broken", "The firewall is off", "BitLocker is on"]
+answers = ["A third-party antivirus may have switched Defender to passive mode; that is expected"]
+explanation = "Real-time protection should still be on from some product, and signatures recent."
+review = "Microsoft Defender Antivirus"
+
+[[question]]
+id = "bitlocker-purpose"
+type = "choice"
+prompt = "What does BitLocker protect against?"
+choices = ["A lost or stolen machine giving up its data", "Network attacks", "Malware downloads", "Weak passwords"]
+answers = ["A lost or stolen machine giving up its data"]
+explanation = "It encrypts a volume."
+review = "Disk encryption"
+
+[[question]]
+id = "recovery-key"
+type = "choice"
+prompt = "Why must a BitLocker recovery key be saved before the drive is encrypted?"
+choices = ["It must be stored somewhere safe before it is needed", "It is created only after a failure", "BitLocker refuses to encrypt without it being printed", "It is not needed with a TPM"]
+answers = ["It must be stored somewhere safe before it is needed"]
+explanation = "The lesson names Active Directory or the management service as places to store it."
+review = "Disk encryption"
+
+[[question]]
+id = "bde-status"
+type = "short"
+prompt = "Which command shows each volume's BitLocker protection state? Type the command with its option."
+answers = ["manage-bde -status", "manage-bde.exe -status"]
+explanation = "manage-bde -status."
+review = "Disk encryption"
+
+[[question]]
+id = "bitlocker-home"
+type = "choice"
+prompt = "BitLocker is available on Pro and above. What does Home have on supported hardware?"
+choices = ["A lighter device encryption", "Nothing", "The same BitLocker", "Only a firewall"]
+answers = ["A lighter device encryption"]
+explanation = "The lesson says Home has a lighter 'device encryption' on supported hardware."
+review = "Disk encryption"
+
+[[question]]
+id = "signin"
+type = "multi"
+prompt = "Which are sign-in and account protections listed in the lesson?"
+choices = ["Windows Hello for Business (PIN or biometrics) or MFA with a cloud identity", "Standard accounts for daily work, with UAC on", "A lock screen after inactivity", "Sharing one administrator password"]
+answers = ["Windows Hello for Business (PIN or biometrics) or MFA with a cloud identity", "Standard accounts for daily work, with UAC on", "A lock screen after inactivity"]
+explanation = "The inactivity policy is 'Interactive logon: machine inactivity limit'."
+review = "Sign-in and account protection"
+
+[[question]]
+id = "compliance"
+type = "choice"
+prompt = "A management service marks a device non-compliant. How can you verify that by hand?"
+choices = ["The checks are the same facts you read with the commands in the lesson", "You cannot", "Only by reinstalling Windows", "Only by asking the vendor"]
+answers = ["The checks are the same facts you read with the commands in the lesson"]
+explanation = "Encryption on, firewall on, OS version recent: all readable on the machine."
+review = "Compliance"

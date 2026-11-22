@@ -1,0 +1,129 @@
+schema_version = 1
+lesson = "endpoints.endpoint-management"
+# Draft for owner review. Every answer comes from the lesson text.
+draw = 10
+
+[[question]]
+id = "join-vs-enroll"
+type = "choice"
+prompt = "What is the difference between joining a device and enrolling it?"
+choices = ["Join answers who owns the device; enrollment lets a management service push settings and apps", "Join installs apps; enrollment installs Windows", "They are two words for the same step", "Join is for phones; enrollment is for PCs"]
+answers = ["Join answers who owns the device; enrollment lets a management service push settings and apps"]
+explanation = "A device is joined to an identity system and enrolled in a management service."
+review = "Identity and enrollment"
+
+[[question]]
+id = "home-domain"
+type = "choice"
+prompt = "Which Windows edition cannot join a domain?"
+choices = ["Home", "Pro", "Enterprise", "Education"]
+answers = ["Home"]
+explanation = "Pro and above can join a domain; Home cannot."
+review = "Identity and enrollment"
+
+[[question]]
+id = "autopilot"
+type = "choice"
+prompt = "Which provisioning approach lets a factory-fresh device sign in, find the organization and configure itself?"
+choices = ["Autopilot", "Manual install", "A captured image applied by hand", "A provisioning package"]
+answers = ["Autopilot"]
+explanation = "The table lists Autopilot as the approach for remote and new devices."
+review = "Provisioning a device"
+
+[[question]]
+id = "imaging-fits"
+type = "choice"
+prompt = "Imaging (an answer file or a captured image) fits best when you have:"
+choices = ["Many identical machines", "One machine", "Only remote devices", "Only phones"]
+answers = ["Many identical machines"]
+explanation = "Manual install fits one machine; imaging fits many identical ones."
+review = "Provisioning a device"
+
+[[question]]
+id = "answer-file"
+type = "choice"
+prompt = "What does an answer file do in an unattended install?"
+choices = ["Supplies the answers the setup program would otherwise ask for", "Encrypts the disk", "Downloads updates", "Joins the device to Entra ID"]
+answers = ["Supplies the answers the setup program would otherwise ask for"]
+explanation = "Account, edition and options come from a file, not from clicking, which makes installs repeatable."
+review = "Provisioning a device"
+
+[[question]]
+id = "policy-targeting"
+type = "multi"
+prompt = "Which are design rules for configuration policy in the lesson?"
+choices = ["Target by group, not by individual machine", "Pilot on a small group first", "Document each setting's purpose and owner", "Apply every setting to every machine at once"]
+answers = ["Target by group, not by individual machine", "Pilot on a small group first", "Document each setting's purpose and owner"]
+explanation = "The fourth choice is the opposite of piloting."
+review = "Configuration"
+
+[[question]]
+id = "group-policy-mdm"
+type = "choice"
+prompt = "Settings are delivered as policies. Which delivers them to domain machines, and which to enrolled devices?"
+choices = ["Group Policy for domain machines, MDM profiles for enrolled devices", "MDM for domain machines, Group Policy for enrolled devices", "Both use only the registry editor", "Both use only winget"]
+answers = ["Group Policy for domain machines, MDM profiles for enrolled devices"]
+explanation = "See Windows updates and policy settings for where they land on the machine."
+review = "Configuration"
+
+[[question]]
+id = "app-planning"
+type = "multi"
+prompt = "Which four things does app delivery need planned, according to the lesson?"
+choices = ["Detection", "Requirements", "Install command and exit codes", "Uninstall", "A desktop wallpaper"]
+answers = ["Detection", "Requirements", "Install command and exit codes", "Uninstall"]
+explanation = "Detection is how the tool knows the app is installed; requirements are the OS version and free space."
+review = "Applications"
+
+[[question]]
+id = "detection-rule"
+type = "choice"
+prompt = "Why does an app deployment need a detection rule?"
+choices = ["So the tool knows whether the app is already installed", "So the app runs faster", "So users can pick a wallpaper", "So the installer is signed"]
+answers = ["So the tool knows whether the app is already installed"]
+explanation = "Detection is how the tool knows the app is installed."
+review = "Applications"
+
+[[question]]
+id = "exit-3010"
+type = "short"
+prompt = "A silent install returns an exit code meaning 'success, but a reboot is needed'. What number? Number only."
+answers = ["3010"]
+explanation = "0 is success; 3010 is success but reboot needed. Check the code, do not trust the output."
+review = "Applications"
+
+[[question]]
+id = "msi-silent"
+type = "choice"
+prompt = "Which command line performs a silent MSI install with a verbose log?"
+choices = ["msiexec /i app.msi /qn /l*v install.log", "winget search app.msi", "Get-Package app.msi", "wmic product get name"]
+answers = ["msiexec /i app.msi /qn /l*v install.log"]
+explanation = "/qn means no user interface and /l*v writes a verbose log."
+review = "Applications"
+
+[[question]]
+id = "wmic-avoid"
+type = "choice"
+prompt = "What does the lesson say about wmic product get name?"
+choices = ["It is legacy and slow, so avoid it on servers", "It is the best way to install apps", "It is the only way to list apps", "It silently installs MSI files"]
+answers = ["It is legacy and slow, so avoid it on servers"]
+explanation = "Prefer Get-Package or winget where present."
+review = "Applications"
+
+[[question]]
+id = "update-rings"
+type = "choice"
+prompt = "What are update rings?"
+choices = ["Pilot, broad, last: rolling updates to a small group before everyone", "Three antivirus scans", "Three firewall profiles", "A backup schedule"]
+answers = ["Pilot, broad, last: rolling updates to a small group before everyone"]
+explanation = "An inventory lets you answer which machines have not updated."
+review = "Update strategy"
+
+[[question]]
+id = "inventory"
+type = "choice"
+prompt = "Why keep an inventory of devices and versions?"
+choices = ["To answer which machines have not updated", "To hide devices from users", "To speed up the network", "To replace backups"]
+answers = ["To answer which machines have not updated"]
+explanation = "What is where and which version, so gaps are visible."
+review = "Update strategy"

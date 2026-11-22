@@ -1,0 +1,138 @@
+schema_version = 1
+lesson = "hardware.hardware-concepts"
+# Draft for owner review. Every answer comes from the lesson text.
+draw = 10
+
+[[question]]
+id = "ram-symptom"
+type = "choice"
+prompt = "Which symptom list fits failing or exhausted RAM?"
+choices = ["Slowness, heavy paging, out-of-memory kills, random crashes", "No POST and a wrong clock", "Random shutdowns and no power", "Display artefacts and driver crashes"]
+answers = ["Slowness, heavy paging, out-of-memory kills, random crashes"]
+explanation = "No POST and lost settings point at the motherboard or firmware; random shutdowns at the power supply; artefacts at the GPU."
+review = "The parts and what they do"
+
+[[question]]
+id = "psu-symptom"
+type = "choice"
+prompt = "Random shutdowns or no power at all most suggest which part?"
+choices = ["Power supply", "GPU", "NIC", "RAM"]
+answers = ["Power supply"]
+explanation = "The power supply converts mains power to the voltages the parts need."
+review = "The parts and what they do"
+
+[[question]]
+id = "add-ram"
+type = "choice"
+prompt = "Why does 'add RAM' fix more slowness than 'buy a faster CPU'?"
+choices = ["When RAM runs out the system pushes data to slow storage (paging or swap), and everything slows down", "RAM makes the CPU run hotter", "CPUs never get slow", "RAM is cheaper than storage"]
+answers = ["When RAM runs out the system pushes data to slow storage (paging or swap), and everything slows down"]
+explanation = "RAM is fast and small; storage is slow and large."
+review = "The parts and what they do"
+
+[[question]]
+id = "storage-types"
+type = "choice"
+prompt = "Which drive type has no moving parts but a finite number of writes?"
+choices = ["SSD", "HDD", "RAID 0", "NIC"]
+answers = ["SSD"]
+explanation = "HDDs have moving parts and fail from wear and shock; NVMe drives use the PCIe bus and are much faster."
+review = "Storage types and RAID"
+
+[[question]]
+id = "raid-0"
+type = "choice"
+prompt = "What does RAID 0 give you?"
+choices = ["Speed by striping, with no redundancy: one failure loses everything", "A mirror of two disks", "Survival of one failure", "Survival of two failures"]
+answers = ["Speed by striping, with no redundancy: one failure loses everything"]
+explanation = "RAID 1 mirrors; RAID 5 survives one failure; RAID 6 survives two."
+review = "Storage types and RAID"
+
+[[question]]
+id = "raid-levels"
+type = "multi"
+prompt = "Which statements about RAID levels are correct?"
+choices = ["RAID 1 mirrors two disks", "RAID 5 stripes with parity and survives one failure", "RAID 6 survives two failures", "RAID 0 survives one failure"]
+answers = ["RAID 1 mirrors two disks", "RAID 5 stripes with parity and survives one failure", "RAID 6 survives two failures"]
+explanation = "RAID 0 has no redundancy. RAID 10 mirrors and stripes."
+review = "Storage types and RAID"
+
+[[question]]
+id = "raid-not-backup"
+type = "choice"
+prompt = "Why is RAID not a backup?"
+choices = ["It is availability: deleting a file, or ransomware, is copied to every disk", "It is slower than a backup", "It only works on SSDs", "It cannot survive any failure"]
+answers = ["It is availability: deleting a file, or ransomware, is copied to every disk"]
+explanation = "A backup keeps history; RAID keeps the machine running through a disk failure."
+review = "Storage types and RAID"
+
+[[question]]
+id = "win-disk-health"
+type = "choice"
+prompt = "Which Windows command shows a physical disk's friendly name, media type and health status?"
+choices = ["Get-PhysicalDisk", "Get-Volume", "systeminfo", "Get-CimInstance Win32_Processor"]
+answers = ["Get-PhysicalDisk"]
+explanation = "Get-Volume lists volumes; systeminfo summarises the OS, memory and hotfixes."
+review = "Reading the hardware with built-in tools"
+
+[[question]]
+id = "linux-memory"
+type = "short"
+prompt = "Which Linux command shows memory and swap in use in human-readable sizes? Type the command with its option."
+answers = ["free -h"]
+explanation = "lscpu shows the processor, lsblk the disks."
+review = "Reading the hardware with built-in tools"
+
+[[question]]
+id = "rota"
+type = "choice"
+prompt = "In lsblk -d -o NAME,ROTA output, what does ROTA 0 mean?"
+choices = ["An SSD (ROTA 1 is a spinning disk)", "A spinning disk", "A removed disk", "A RAID array"]
+answers = ["An SSD (ROTA 1 is a spinning disk)"]
+explanation = "ROTA is the rotational flag."
+review = "Reading the hardware with built-in tools"
+
+[[question]]
+id = "swap-one-thing"
+type = "choice"
+prompt = "How do you isolate a hardware fault?"
+choices = ["Swap one thing at a time: a known-good cable, port or slot", "Replace everything at once", "Reinstall the operating system first", "Wait for it to fail again"]
+answers = ["Swap one thing at a time: a known-good cable, port or slot"]
+explanation = "The same method as for software."
+review = "Troubleshooting hardware"
+
+[[question]]
+id = "hw-evidence"
+type = "multi"
+prompt = "Which places hold evidence the machine keeps about hardware trouble?"
+choices = ["The Windows System log and Reliability Monitor", "Linux journalctl -k and dmesg", "The desktop wallpaper", "A growing reallocated-sector count"]
+answers = ["The Windows System log and Reliability Monitor", "Linux journalctl -k and dmesg", "A growing reallocated-sector count"]
+explanation = "A reallocated-sector count is a SMART disk indicator."
+review = "Troubleshooting hardware"
+
+[[question]]
+id = "post"
+type = "choice"
+prompt = "What do beep codes and POST (power-on self test) tell you?"
+choices = ["That the machine is failing before an operating system is involved", "Which Windows version is installed", "Which apps are slow", "How much free disk space there is"]
+answers = ["That the machine is failing before an operating system is involved"]
+explanation = "Document the codes your vendor lists."
+review = "Troubleshooting hardware"
+
+[[question]]
+id = "hypervisor-types"
+type = "choice"
+prompt = "Which hypervisor type runs on top of an operating system, as QEMU does in this course?"
+choices = ["Type 2", "Type 1", "Type 0", "Type 3"]
+answers = ["Type 2"]
+explanation = "Type 1 runs on the hardware (Hyper-V, KVM, ESXi)."
+review = "Virtualization and cloud, briefly"
+
+[[question]]
+id = "iaas-saas"
+type = "choice"
+prompt = "Which cloud model gives you the virtual machine, and which gives only the application?"
+choices = ["IaaS gives the virtual machine; SaaS gives only the application", "SaaS gives the virtual machine; IaaS gives only the application", "PaaS gives the hardware", "They are identical"]
+answers = ["IaaS gives the virtual machine; SaaS gives only the application"]
+explanation = "They differ in how much you manage yourself."
+review = "Virtualization and cloud, briefly"

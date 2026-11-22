@@ -1,0 +1,146 @@
+schema_version = 1
+lesson = "windows-admin.registry-and-filesystems"
+# Draft for owner review. Every answer comes from the lesson text.
+draw = 10
+
+[[question]]
+id = "hklm-vs-hkcu"
+type = "choice"
+prompt = "What does an HKCU value apply to, and what does an HKLM value apply to?"
+choices = ["HKCU: the signed-in user; HKLM: the whole machine", "HKCU: the whole machine; HKLM: the signed-in user", "Both: the whole machine", "Both: the signed-in user"]
+answers = ["HKCU: the signed-in user; HKLM: the whole machine"]
+explanation = "HKCU is loaded from the user's NTUSER.DAT."
+review = "The registry"
+
+[[question]]
+id = "hive-holds"
+type = "choice"
+prompt = "Which hive holds services, drivers, installed software and policy for the whole machine?"
+choices = ["HKLM", "HKCU", "HKCR", "HKCC"]
+answers = ["HKLM"]
+explanation = "HKCR is a merged view of file associations and COM."
+review = "The registry"
+
+[[question]]
+id = "value-types"
+type = "multi"
+prompt = "Which are registry value types listed in the lesson?"
+choices = ["REG_SZ (text)", "REG_DWORD (number)", "REG_MULTI_SZ (list)", "REG_BINARY", "REG_VIDEO"]
+answers = ["REG_SZ (text)", "REG_DWORD (number)", "REG_MULTI_SZ (list)", "REG_BINARY"]
+explanation = "A key holds values with a name, a type and data."
+review = "The registry"
+
+[[question]]
+id = "export-before"
+type = "choice"
+prompt = "Why export a registry key before editing it?"
+choices = ["So you can restore it with reg import if the change makes things worse", "To make the edit faster", "Windows requires it", "To clear the policy"]
+answers = ["So you can restore it with reg import if the change makes things worse"]
+explanation = "Safe practice: export the key, change one value, test, and record it."
+review = "The registry"
+
+[[question]]
+id = "reg-export-cmd"
+type = "choice"
+prompt = "Which command exports a key to a file?"
+choices = ["reg export \"HKLM\\SOFTWARE\\Contoso\" backup.reg", "reg import backup.reg", "Remove-ItemProperty", "New-ItemProperty"]
+answers = ["reg export \"HKLM\\SOFTWARE\\Contoso\" backup.reg"]
+explanation = "reg import restores it."
+review = "The registry"
+
+[[question]]
+id = "third-party-cleaners"
+type = "choice"
+prompt = "What does the lesson say about third-party registry 'cleaners'?"
+choices = ["Do not use them", "Use them weekly", "They are required", "They make backups"]
+answers = ["Do not use them"]
+explanation = "Do not 'clean' the registry with third-party tools."
+review = "The registry"
+
+[[question]]
+id = "policy-signal"
+type = "choice"
+prompt = "What does a value under a ...\\Policies key suggest?"
+choices = ["Something set it deliberately", "It is a default", "It is corrupt", "It is for hardware"]
+answers = ["Something set it deliberately"]
+explanation = "Policy values are a signal."
+review = "The registry"
+
+[[question]]
+id = "startup-places"
+type = "multi"
+prompt = "Which are places a program can start with Windows?"
+choices = ["Services", "Scheduled tasks", "The Run keys", "The Startup folders", "The wallpaper"]
+answers = ["Services", "Scheduled tasks", "The Run keys", "The Startup folders"]
+explanation = "Get-CimInstance Win32_StartupCommand lists many of them."
+review = "Startup locations"
+
+[[question]]
+id = "startup-cmd"
+type = "short"
+prompt = "Which built-in WMI class does Get-CimInstance query to list many startup commands? Type the class name."
+answers = ["win32_startupcommand"]
+explanation = "Get-CimInstance Win32_StartupCommand."
+review = "Startup locations"
+
+[[question]]
+id = "ntfs-features"
+type = "multi"
+prompt = "Which does NTFS provide?"
+choices = ["Permissions", "Compression", "Encryption (EFS)", "Journaling", "A 4 GB file size limit"]
+answers = ["Permissions", "Compression", "Encryption (EFS)", "Journaling"]
+explanation = "The 4 GB limit and no permissions describe FAT32."
+review = "File systems"
+
+[[question]]
+id = "fat32-limit"
+type = "short"
+prompt = "What is FAT32's maximum file size, in GB? Number only."
+answers = ["4"]
+explanation = "FAT32 has a 4 GB file-size limit and no permissions."
+review = "File systems"
+
+[[question]]
+id = "refs"
+type = "choice"
+prompt = "What does ReFS add?"
+choices = ["Resilience for storage workloads", "Removable-media simplicity", "A 4 GB limit", "Nothing"]
+answers = ["Resilience for storage workloads"]
+explanation = "FAT32 and exFAT are the simple formats for removable media."
+review = "File systems"
+
+[[question]]
+id = "chkdsk-readonly"
+type = "choice"
+prompt = "Does plain chkdsk C: (no switches) change the disk?"
+choices = ["No, it is a read-only check", "Yes, it repairs errors", "Yes, it formats", "Yes, it compresses"]
+answers = ["No, it is a read-only check"]
+explanation = "The lesson marks it read-only."
+review = "File systems"
+
+[[question]]
+id = "full-drive"
+type = "choice"
+prompt = "A machine behaves strangely and C: has 200 MB free. What do you suspect?"
+choices = ["The full system drive: it affects updates, paging and logs and causes odd, unrelated-looking failures", "A bad monitor", "A weak password", "A broken keyboard"]
+answers = ["The full system drive: it affects updates, paging and logs and causes odd, unrelated-looking failures"]
+explanation = "Find what is large before deleting anything."
+review = "File systems"
+
+[[question]]
+id = "mklink"
+type = "choice"
+prompt = "Which command makes a symbolic link to a folder?"
+choices = ["mklink /D C:\\Link C:\\Target", "attrib +h", "chkdsk C:", "fsutil volume diskfree C:"]
+answers = ["mklink /D C:\\Link C:\\Target"]
+explanation = "A junction or symbolic link makes one folder appear at another path."
+review = "Paths, links and attributes"
+
+[[question]]
+id = "hidden-not-protected"
+type = "choice"
+prompt = "Do the hidden and system attributes protect a file?"
+choices = ["No, they hide files without protecting them", "Yes, completely", "Only on FAT32", "Only for administrators"]
+answers = ["No, they hide files without protecting them"]
+explanation = "Use permissions to protect."
+review = "Paths, links and attributes"
