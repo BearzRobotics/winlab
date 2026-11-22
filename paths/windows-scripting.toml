@@ -9,7 +9,7 @@ certifications = ["comptia-a-core2/operating-systems"]
 [[stage]]
 title = "Command Prompt"
 entry_hint = "Already comfortable with CMD, or only need PowerShell? Skip to the next stage. Only maintain old batch files? This stage alone is a complete path."
-lessons = ["foundations.cmd-basics", "foundations.cmd-variables-and-expansion", "foundations.cmd-control-flow", "foundations.cmd-batch-files", "foundations.cmd-text-and-files", "foundations.cmd-advanced"]
+lessons = ["foundations.architecture", "foundations.cmd-basics", "foundations.cmd-variables-and-expansion", "foundations.cmd-control-flow", "foundations.cmd-batch-files", "foundations.cmd-text-and-files", "foundations.cmd-advanced"]
 labs = ["labs.script-cmd-args-sum", "labs.script-cmd-count-files", "labs.script-cmd-backup", "labs.script-cmd-exit-code", "labs.script-cmd-number-lines", "labs.script-cmd-subroutine", "labs.script-cmd-total-size"]
 
 [[stage]]

@@ -7,5 +7,5 @@ order = 52
 
 [[stage]]
 title = "The portable language"
-lessons = ["foundations.bash-basics", "foundations.shells-and-posix", "foundations.posix-sh-basics", "foundations.posix-sh-scripting"]
+lessons = ["foundations.architecture", "foundations.troubleshooting-method", "foundations.bash-basics", "foundations.shells-and-posix", "foundations.posix-sh-basics", "foundations.posix-sh-scripting"]
 labs = []

@@ -8,11 +8,11 @@ certifications = ["comptia-a-core2/security"]
 
 [[stage]]
 title = "Core security"
-lessons = ["security.security-fundamentals", "windows-admin.accounts-and-permissions", "networking.ports-and-firewalls"]
+lessons = ["foundations.architecture", "foundations.troubleshooting-method", "security.security-fundamentals", "foundations.powershell-basics", "windows-admin.accounts-and-permissions", "networking.addressing-and-names", "networking.ports-and-firewalls"]
 labs = ["labs.rdp-firewall", "labs.folder-permissions", "labs.linux-file-permissions", "labs.alma-ssh-root-login"]
 
 [[stage]]
 title = "Protect and audit"
-lessons = ["endpoints.protect-devices", "foundations.ps-errors-and-debugging"]
+lessons = ["endpoints.protect-devices", "foundations.ps-variables-types-operators", "foundations.powershell-control-flow", "foundations.ps-functions-and-scripts", "foundations.ps-errors-and-debugging"]
 optional = ["foundations.ps-advanced"]
 labs = ["labs.firewall-profiles-off"]

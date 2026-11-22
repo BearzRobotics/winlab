@@ -8,7 +8,7 @@ certifications = ["comptia-linux-plus/security"]
 
 [[stage]]
 title = "Foundations this track assumes"
-lessons = ["foundations.troubleshooting-method", "foundations.bash-basics", "foundations.powershell-basics", "networking.ports-and-firewalls", "linux.systemd"]
+lessons = ["foundations.architecture", "foundations.troubleshooting-method", "foundations.bash-basics", "foundations.powershell-basics", "networking.addressing-and-names", "networking.ports-and-firewalls", "linux.systemd"]
 labs = []
 
 [[stage]]

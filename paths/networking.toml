@@ -9,7 +9,7 @@ certifications = ["comptia-network-plus/networking-concepts"]
 [[stage]]
 title = "Models and addressing"
 entry_hint = "Already know the OSI model? Start at addressing and names."
-lessons = ["networking.models-and-protocols", "networking.addressing-and-names"]
+lessons = ["foundations.architecture", "foundations.troubleshooting-method", "networking.models-and-protocols", "networking.addressing-and-names"]
 labs = ["labs.hosts-file-entry", "labs.dns-broken"]
 
 [[stage]]

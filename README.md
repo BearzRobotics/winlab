@@ -61,7 +61,7 @@ software by itself. Reopen it from Help > Setup and requirements. The lessons ne
 ## Status (2026-11-22)
 
 `winlab check course` reports **68 lessons, 69 labs, 58 quiz files (2,296 questions) and 13 learning paths** with no
-problems (18 path-ordering warnings remain: a lesson recommends a prerequisite that is not earlier on that path).
+problems and no path-ordering warnings.
 **Every lesson is a draft for the course owner's review**; each states what was tested and what was not, and cites
 official documentation. Tracks: Windows administration, CMD, PowerShell (9 lessons), bash and POSIX sh, Linux
 administration (systemd, dinit), networking, security fundamentals, cybersecurity (7), home lab (4), package

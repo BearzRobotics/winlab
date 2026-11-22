@@ -8,7 +8,7 @@ certifications = ["microsoft-md-102/manage-maintain-devices"]
 
 [[stage]]
 title = "Prepare"
-lessons = ["foundations.powershell-basics", "windows-admin.accounts-and-permissions"]
+lessons = ["foundations.architecture", "foundations.powershell-basics", "windows-admin.accounts-and-permissions"]
 labs = ["labs.script-count-errors", "labs.folder-permissions", "labs.user-account-disabled"]
 
 [[stage]]

@@ -8,7 +8,7 @@ certifications = ["comptia-a-core2/operating-systems"]
 
 [[stage]]
 title = "The shell and the language"
-lessons = ["foundations.powershell-basics", "foundations.ps-variables-types-operators", "foundations.powershell-control-flow"]
+lessons = ["foundations.architecture", "foundations.powershell-basics", "foundations.ps-variables-types-operators", "foundations.powershell-control-flow"]
 labs = ["labs.script-count-errors", "labs.script-ps-csv-summary", "labs.script-ps-rename-files", "labs.script-ps-switch-classify"]
 
 [[stage]]
