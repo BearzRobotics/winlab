@@ -102,7 +102,7 @@ The seven PowerShell lessons in order, plus the two planned ones. This is path 4
 *Built 2026-11-22 (drafts):* `paths/home-lab.toml` with `networking.*` (all seven), the Linux basics, then `homelab.own-dns-and-dhcp` (dnsmasq), `homelab.file-sharing-samba`, `homelab.backups` (rsync, tar, restic) and `homelab.wireguard-and-exposure`. *Still planned, and not testable in the current VMs:* a firewall appliance (OPNsense or IPFire), a hypervisor (Proxmox, Hyper-V), Nextcloud, document and media servers, and monitoring.
 
 ### 11. Package repositories (stretch goal, added 2026-11-22)
-`paths/package-repositories.toml`: `packaging.apt-repository`, `packaging.dnf-repository`, `packaging.apk-repository` (tested on Chimera; written for the owner's FenrirOS package repository, which the author has not seen) and `packaging.hosting-a-repository` (measured repository sizes, nginx, atomic publishing, mirroring, a health-check script).
+`paths/package-repositories.toml`: `packaging.apt-repository`, `packaging.dnf-repository`, `packaging.apk-repository` (tested on Chimera; written for the owner's FenrirOS package repository, which the author has not seen) and `packaging.hosting-a-repository` (measured repository sizes, nginx, atomic publishing, mirroring, health-check scripts for apt, dnf and apk repositories).
 
 ## Choosing a first path (a short placement flow)
 
