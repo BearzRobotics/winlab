@@ -107,7 +107,7 @@ Quiz authoring rules (`docs/quizzes.md`): every question has an `explanation`; `
 4. (Fixed 2026-11-22: fixed-size dialogs ran off the window at 200% text size; they now use `fitRect`. Copy buttons, both Copy-whole-lesson items and the plain-text view were clicked and work.) (First-run setup window added 2026-11-22: Help > Setup and requirements; `WINLAB_SETUP_DEMO_NOQEMU=1` shows the QEMU choices.) **Unclicked GUI features**: the Copy buttons, "Copy whole lesson" menu items, Plain-text view and the Show answers button were built and seen, but I did not click Copy or the plain-text view, and not at 150%/200% DPI or with Narrator. Plain-text view shows the answers (it is one block). Multi-select quiz clicks were never driven.
 5. **Unverified in the lessons** (state of knowledge, not tested): Linux commands in the networking lessons (`ss`, `firewall-cmd`, `ufw`, `resolvectl`); the GUI Environment Variables dialog steps; the cmd admin-check elevated branch; PSScriptAnalyzer and Pester runs; the debugger commands (`s`, `v`, `o`, `c`); `New-NetRoute`'s default store; whether restore points are rate limited.
 (Path-order warnings fixed 2026-11-22: missing recommended prerequisites were inserted before the lessons that need them; `security-fundamentals` grew by about a dozen lessons of PowerShell basics because `ps-errors-and-debugging` recommends them, so decide whether to keep that lesson on that path.)
-6. Old lab verification backlog (appendix B): five Windows and AlmaLinux labs were never verified.
+6. Old lab verification backlog (appendix B): only `gateway-route-override` (Windows) is still unverified; the other five passed on 2026-11-22.
 7. Certification domain titles in `certs\catalog.toml` were never checked against the vendors' current objectives.
 8. **OPNsense under QEMU (2026-11-22, not resolved):** OPNsense 26.7 `serial-amd64.img` (SHA-256 matched the mirror's checksum file; the `.sig` was not verified) boots over the serial console, but with `-cpu max` (WHPX) `python3` and `php` die with signal 8 and "Generating configuration: templates" fails; with `-cpu Haswell` and `-cpu host` the kernel panics in `unionfs_create_uppervattr` during an `nmount`. Not tried: TCG (no WHPX), the DVD installer ISO, or another hypervisor. No OPNsense lesson is written. Scratch files (not in the repo): the image and a start script were in the session scratchpad.
 
@@ -211,8 +211,8 @@ Design and every finding are in `docs/decisions/0009-chimera-lab.md`. In short: 
 
 **NOT verified. Resume here:**
 - `gateway-route-override` (Windows). The first version hung the build for 48 minutes because the fault script removed and re-added the adapter address over the SSH channel. Redesigned (disable DHCP, replace the default route with a bad next hop 10.0.2.99). A second run was killed with no result. If it hangs again: a static route with a metric low enough to win, applied through the persistent store, or a hosts/DNS-style fault.
-- `policy-blocks-task-manager` (Windows). Setup now ends with `; exit 0`; not re-run.
-- `alma-sudo-access-lost`, `alma-ssh-root-login`, `alma-journal-volatile` (AlmaLinux). Verification was interrupted.
+- (Verified 2026-11-22, all PASSED: `policy-blocks-task-manager`, `spooler-stopped`, `alma-sudo-access-lost`, `alma-ssh-root-login`, `alma-journal-volatile`.)
+
 - The `spooler-stopped` Windows self-test started on `winlab-lab-c` this session printed `[2] setup` and then its output stopped; its result was not seen. `winlab lab verify labs\spooler-stopped.toml winlab-lab-c` should settle it.
 
 `lab verify` and `lab build` take `<lab.toml> <vm-id>` in that order. If a build was interrupted use `lab build ... --rebuild`; the `winlab-clean` snapshot is the recovery point.
