@@ -1,0 +1,155 @@
+schema_version = 1
+lesson = "homelab.file-sharing-samba"
+# Draft for owner review. Answers come from the tested output (hl2.sh, hl2b.sh) on Ubuntu 24.04 (Samba 4.19.5) and AlmaLinux 9.8 (Samba 4.24.5, SELinux enforcing).
+draw = 12
+
+[[question]]
+id = "two-systems"
+type = "choice"
+prompt = "A Samba user connects but cannot save. Which statement matches the lesson?"
+choices = ["Samba's rules and the file system (plus SELinux) must both allow it, so look at both", "Only smb.conf matters", "Only chmod matters", "Samba ignores file permissions"]
+answers = ["Samba's rules and the file system (plus SELinux) must both allow it, so look at both"]
+explanation = "Most 'connects but cannot save' problems are the second system disagreeing with the first."
+review = "What you are building"
+
+[[question]]
+id = "smbpasswd"
+type = "choice"
+prompt = "Why does a Samba user need smbpasswd in addition to a Linux account?"
+choices = ["Samba keeps its own password database", "Linux has no passwords", "smbpasswd creates the home folder", "It sets the share name"]
+answers = ["Samba keeps its own password database"]
+explanation = "pdbedit -L lists who is in it; the Linux account can have a nologin shell."
+review = "Install, users and a share"
+
+[[question]]
+id = "alma-service"
+type = "choice"
+prompt = "After installing samba on AlmaLinux 9.8, what was the state of the smb service?"
+choices = ["Disabled and not running", "Enabled and running", "Masked", "Missing"]
+answers = ["Disabled and not running"]
+explanation = "Ubuntu's smbd started at install; on AlmaLinux you must run systemctl enable --now smb."
+review = "Install, users and a share"
+
+[[question]]
+id = "setgid"
+type = "choice"
+prompt = "What does the leading 2 in chmod 2770 do on a folder?"
+choices = ["New files inherit the folder's group (setgid)", "It makes the folder read-only", "It hides the folder", "It sets the sticky bit"]
+answers = ["New files inherit the folder's group (setgid)"]
+explanation = "2 is setgid; 1 would be the sticky bit."
+review = "Install, users and a share"
+
+[[question]]
+id = "testparm"
+type = "choice"
+prompt = "What does testparm -s print?"
+choices = ["The configuration Samba understood, after loading smb.conf", "The list of users", "The firewall rules", "Network statistics"]
+answers = ["The configuration Samba understood, after loading smb.conf"]
+explanation = "Run it before restarting to catch mistakes."
+review = "Install, users and a share"
+
+[[question]]
+id = "ports"
+type = "multi"
+prompt = "On which TCP ports did smbd listen in the test?"
+choices = ["445", "139", "22", "53"]
+answers = ["445", "139"]
+explanation = "Both on 0.0.0.0 and [::], that is every interface."
+review = "Install, users and a share"
+
+[[question]]
+id = "logon-failure"
+type = "choice"
+prompt = "'session setup failed: NT_STATUS_LOGON_FAILURE' means:"
+choices = ["The server did not accept who you are (for example a wrong password)", "You may not use this share", "The share does not exist", "SELinux denied it"]
+answers = ["The server did not accept who you are (for example a wrong password)"]
+explanation = "It happens at session setup; ACCESS_DENIED at tree connect is a different stage."
+review = "Use it, as each kind of visitor"
+
+[[question]]
+id = "access-denied"
+type = "choice"
+prompt = "wl-bob used the right password and got 'tree connect failed: NT_STATUS_ACCESS_DENIED'. Why?"
+choices = ["He was authenticated but not in the group allowed by valid users", "His password was wrong", "The share is read-only", "SMB1 was disabled"]
+answers = ["He was authenticated but not in the group allowed by valid users"]
+explanation = "The server knew who he was and he may not use the share."
+review = "Use it, as each kind of visitor"
+
+[[question]]
+id = "homes-share"
+type = "choice"
+prompt = "What unexpected share appeared in the AlmaLinux listing?"
+choices = ["A share named for the user, described as Home Directories", "A printer share named lp", "A share called backup", "None"]
+answers = ["A share named for the user, described as Home Directories"]
+explanation = "The packaged configuration evidently has a [homes] section; read the defaults and run testparm."
+review = "Use it, as each kind of visitor"
+
+[[question]]
+id = "signing-not-encryption"
+type = "choice"
+prompt = "smbstatus showed Signing partial(AES-128-CMAC) and Encryption '-'. What does that mean for a real network?"
+choices = ["Tampering is detected but the content is readable by anyone who captures the traffic", "Everything is encrypted", "Nothing is protected", "Only the password is protected"]
+answers = ["Tampering is detected but the content is readable by anyone who captures the traffic"]
+explanation = "Turn on encryption (not tested) or tunnel SMB through a VPN such as WireGuard."
+review = "Protocol version, signing and encryption"
+
+[[question]]
+id = "smb-version"
+type = "short"
+prompt = "Which SMB dialect did the mount negotiate? Type it as shown by smbstatus (for example SMB2_10)."
+answers = ["smb3_11", "smb 3.1.1", "3.1.1", "smb3.1.1"]
+explanation = "mount showed vers=3.1.1 and smbstatus showed SMB3_11."
+review = "Protocol version, signing and encryption"
+
+[[question]]
+id = "smb1"
+type = "choice"
+prompt = "What happened when the client was told to use only SMB1 (-m NT1)?"
+choices = ["It refused: the minimum protocol is SMB2_02", "It worked slowly", "It crashed the server", "It used SMB3 anyway"]
+answers = ["It refused: the minimum protocol is SMB2_02"]
+explanation = "SMB1 has well-known security problems and is disabled."
+review = "Protocol version, signing and encryption"
+
+[[question]]
+id = "selinux-clue"
+type = "multi"
+prompt = "Which clues pointed to SELinux on AlmaLinux when the Unix permissions looked right?"
+choices = ["readme.txt was missing from the listing", "ACCESS_DENIED for a user in the right group", "The AVC denial named smbd_t and var_t", "The password was wrong"]
+answers = ["readme.txt was missing from the listing", "ACCESS_DENIED for a user in the right group", "The AVC denial named smbd_t and var_t"]
+explanation = "The { getattr } denial is why the file did not even appear."
+review = "AlmaLinux: it connects and you cannot save"
+
+[[question]]
+id = "contexts"
+type = "choice"
+prompt = "In the denial, scontext=...smbd_t and tcontext=...var_t. What are they?"
+choices = ["The Samba daemon's label and the label of the file or folder it tried to use", "The user and group", "The share and the port", "The old and new passwords"]
+answers = ["The Samba daemon's label and the label of the file or folder it tried to use"]
+explanation = "Policy lets smbd_t use samba_share_t, not the generic var_t."
+review = "AlmaLinux: it connects and you cannot save"
+
+[[question]]
+id = "right-label"
+type = "short"
+prompt = "Which SELinux type did the lesson give the shared folder? Type the type name."
+answers = ["samba_share_t"]
+explanation = "semanage fcontext -a -t samba_share_t '/srv/wl-share(/.*)?' then restorecon -Rv."
+review = "AlmaLinux: it connects and you cannot save"
+
+[[question]]
+id = "wrong-fixes"
+type = "multi"
+prompt = "Which are wrong fixes for the SELinux problem, according to the lesson?"
+choices = ["setenforce 0 or disabling SELinux", "chmod 777 on the folder", "Turning on samba_export_all_rw, which lets Samba write everywhere", "semanage fcontext plus restorecon"]
+answers = ["setenforce 0 or disabling SELinux", "chmod 777 on the folder", "Turning on samba_export_all_rw, which lets Samba write everywhere"]
+explanation = "The right fix is the narrow one: label this folder."
+review = "AlmaLinux: it connects and you cannot save"
+
+[[question]]
+id = "password-cmdline"
+type = "choice"
+prompt = "Why is 'mount -o password=...' on the command line a bad habit?"
+choices = ["Other users can see it in the process list", "It is slower", "It disables signing", "It only works on Ubuntu"]
+answers = ["Other users can see it in the process list"]
+explanation = "Use a credentials file instead (mount.cifs(8))."
+review = "Common mistakes"

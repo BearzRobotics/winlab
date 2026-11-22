@@ -1,0 +1,47 @@
+schema_version = 1
+id = "homelab.backups"
+title = "Backups: rsync hard-link snapshots, tar incrementals and restic, with restores and a corruption test"
+summary = "The 3-2-1 rule (CISA) and three tested tools on Ubuntu 24.04 (restic 0.16.4) and AlmaLinux 9.8 (restic 0.19.1): rsync --link-dest snapshots (shared inodes, why du misleads, restore and diff), GNU tar --listed-incremental (6 MB full, 297-byte incremental), and restic (encryption, deduplication, restore, wrong password). A deliberately corrupted pack file that plain restic check missed and check --read-data found, plus a transient systemd timer with AccuracySec."
+content = "backups.md"
+estimated_minutes = 90
+level = 3
+objectives = [
+  "State the 3-2-1 rule and turn it into a plan for a home lab, including a copy ransomware cannot reach",
+  "Make rsync snapshots with --link-dest, show that unchanged files share an inode, and measure size correctly with du and du -l",
+  "Make and restore a tar incremental chain in the right order",
+  "Use restic to init, back up, list, diff, check, restore and prune, and explain deduplication and the password warning",
+  "Explain why restic check without --read-data missed a damaged pack, and why a backup must be restored and compared",
+  "Run a backup from a systemd timer and avoid the AccuracySec trap",
+]
+prerequisites = ["linux.storage-filesystems", "linux.systemd-advanced"]
+privilege = "administrator"
+certifications = ["comptia-linux-plus/system-management", "redhat-rhcsa/file-systems", "comptia-a-core2/operational-procedures"]
+evaluation_criteria = [
+  "Learner restores a snapshot and shows diff -r identical, and measures snapshot sizes with and without -l",
+  "Learner corrupts a restic pack in a lab repository and shows which check finds it",
+  "Learner draws a 3-2-1 plan and says which copy survives ransomware",
+]
+
+[[references]]
+title = "CISA, Data Backup Options (the 3-2-1 rule)"
+url = "https://www.cisa.gov/sites/default/files/publications/data_backup_options.pdf"
+
+[[references]]
+title = "rsync(1) (Debian manual page)"
+url = "https://manpages.debian.org/stable/rsync/rsync.1.en.html"
+
+[[references]]
+title = "tar(1) (Debian manual page), --listed-incremental"
+url = "https://manpages.debian.org/stable/tar/tar.1.en.html"
+
+[[references]]
+title = "restic documentation"
+url = "https://restic.readthedocs.io/en/stable/"
+
+[[references]]
+title = "restic: working with repositories (check and --read-data)"
+url = "https://restic.readthedocs.io/en/stable/045_working_with_repos.html"
+
+[[references]]
+title = "systemd-run(1)"
+url = "https://www.freedesktop.org/software/systemd/man/latest/systemd-run.html"

@@ -7,6 +7,11 @@ order = 72
 certifications = ["comptia-linux-plus/security"]
 
 [[stage]]
+title = "Foundations this track assumes"
+lessons = ["foundations.troubleshooting-method", "foundations.bash-basics", "networking.ports-and-firewalls", "linux.systemd"]
+labs = []
+
+[[stage]]
 title = "Permission and planning"
 lessons = ["security.security-fundamentals", "security.authorization-and-scope", "security.threat-modelling"]
 labs = []

@@ -1,0 +1,47 @@
+schema_version = 1
+id = "homelab.wireguard-and-exposure"
+title = "Reaching your lab safely: WireGuard, AllowedIPs, and what not to expose"
+summary = "WireGuard (wireguard-tools 1.0.20210914) tested between network namespaces on Ubuntu 24.04 and AlmaLinux 9.8: keys, wg-quick files, handshake and wg show, split tunnel, AllowedIPs as routing table and access list (Destination Host Unreachable for an unowned address), a stranger with an unregistered key getting nothing and no reply to plain UDP, and a base64/sed bug. Ends with an exposure decision list; nothing was tested against a real router, firewall or the internet."
+content = "wireguard-and-exposure.md"
+estimated_minutes = 75
+level = 4
+objectives = [
+  "Explain a WireGuard tunnel as an interface, a key pair per side, cryptokey routing (AllowedIPs) and one UDP port",
+  "Generate keys safely and write a hub and a peer wg-quick configuration",
+  "Read wg show: latest handshake, endpoint, transfer, and say what a missing handshake means",
+  "Explain why AllowedIPs is both routing table and access list, and what it does not restrict",
+  "Show that a peer with an unregistered key gets nothing and that plain UDP to the port gets no reply, and say why silence does not prove safety",
+  "Apply a decision list for what to expose from a home lab and what to reach only through the tunnel",
+]
+prerequisites = ["networking.ports-and-firewalls", "security.own-lab-recon", "homelab.file-sharing-samba"]
+privilege = "administrator"
+certifications = ["comptia-network-plus/network-security", "comptia-linux-plus/security", "comptia-a-core2/security"]
+evaluation_criteria = [
+  "Learner builds the two-namespace tunnel and shows a handshake in wg show",
+  "Learner adds an unregistered peer and shows what it sees and what the hub lists",
+  "Learner classifies three of their own services as expose, tunnel or internal with reasons",
+]
+
+[[references]]
+title = "WireGuard: home page (cryptokey routing)"
+url = "https://www.wireguard.com/"
+
+[[references]]
+title = "WireGuard: quickstart"
+url = "https://www.wireguard.com/quickstart/"
+
+[[references]]
+title = "WireGuard: protocol and cryptography (silence toward unauthorized clients)"
+url = "https://www.wireguard.com/protocol/"
+
+[[references]]
+title = "WireGuard: routing and network namespaces"
+url = "https://www.wireguard.com/netns/"
+
+[[references]]
+title = "wg(8)"
+url = "https://man7.org/linux/man-pages/man8/wg.8.html"
+
+[[references]]
+title = "ip-netns(8)"
+url = "https://man7.org/linux/man-pages/man8/ip-netns.8.html"

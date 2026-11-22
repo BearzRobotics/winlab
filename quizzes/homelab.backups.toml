@@ -1,0 +1,156 @@
+schema_version = 1
+lesson = "homelab.backups"
+# Draft for owner review. Answers come from the tested output (hl3.sh and follow-ups) on Ubuntu 24.04 (restic 0.16.4) and AlmaLinux 9.8 (restic 0.19.1), and from the CISA paper for the 3-2-1 rule.
+draw = 12
+
+[[question]]
+id = "three-two-one"
+type = "choice"
+prompt = "What does the 3-2-1 rule say?"
+choices = ["3 copies (1 primary and 2 backups), on 2 different media types, with 1 copy offsite", "3 disks, 2 servers, 1 admin", "Back up 3 times a day for 2 days with 1 spare", "3 passwords, 2 keys, 1 vault"]
+answers = ["3 copies (1 primary and 2 backups), on 2 different media types, with 1 copy offsite"]
+explanation = "The rule is from the CISA paper Data Backup Options, read for this lesson."
+review = "First, the rule and the question"
+
+[[question]]
+id = "ransomware"
+type = "choice"
+prompt = "Why is a backup drive that is always mounted and writable not safe from ransomware?"
+choices = ["Ransomware can encrypt every drive it can reach", "Mounted drives are slow", "Ransomware only attacks the primary copy", "Drives cannot be written to when mounted"]
+answers = ["Ransomware can encrypt every drive it can reach"]
+explanation = "An offline or append-only copy is the protection; the lesson did not test ransomware."
+review = "First, the rule and the question"
+
+[[question]]
+id = "link-dest"
+type = "choice"
+prompt = "What does rsync --link-dest=DIR do?"
+choices = ["Unchanged files are hard-linked to the copy in DIR instead of copied again", "It deletes DIR", "It encrypts files", "It copies only file names"]
+answers = ["Unchanged files are hard-linked to the copy in DIR instead of copied again"]
+explanation = "Each snapshot looks like a full copy but shares unchanged data with the previous one."
+review = "rsync snapshots with hard links"
+
+[[question]]
+id = "same-inode"
+type = "choice"
+prompt = "An unchanged file in snap1 and snap2 showed the same inode number and 2 links. What does that mean?"
+choices = ["It is stored once on disk and has two names", "It is stored twice", "It is a symbolic link", "It is corrupted"]
+answers = ["It is stored once on disk and has two names"]
+explanation = "That is a hard link; the changed file had two different inodes."
+review = "rsync snapshots with hard links"
+
+[[question]]
+id = "du-once"
+type = "choice"
+prompt = "du -sh snap1 snap2 printed 2.0M and 8.0K. Why does snap2 look nearly empty?"
+choices = ["du counts each hard-linked file once per run, and snap1 already counted it", "snap2 is empty", "du is broken", "rsync compressed it"]
+answers = ["du counts each hard-linked file once per run, and snap1 already counted it"]
+explanation = "du -l counts every link and shows 2.0M for snap2 on its own."
+review = "rsync snapshots with hard links"
+
+[[question]]
+id = "du-l"
+type = "short"
+prompt = "Which du option counts every hard link, so a snapshot shows its full size? Type the option letter with its dash."
+answers = ["-l", "du -l", "--count-links"]
+explanation = "-l (--count-links) counts sizes many times if hard linked."
+review = "rsync snapshots with hard links"
+
+[[question]]
+id = "delete-old"
+type = "choice"
+prompt = "After deleting d5.txt from the live data and making snap3, which snapshots still have d5.txt?"
+choices = ["snap1 and snap2", "All three", "Only snap3", "None"]
+answers = ["snap1 and snap2"]
+explanation = "snap2 listed 5 files and snap3 listed 4; deleting from the live data does not remove it from older snapshots."
+review = "rsync snapshots with hard links"
+
+[[question]]
+id = "in-place"
+type = "choice"
+prompt = "What is the warning about hard-link snapshots?"
+choices = ["Editing an old file in place changes every snapshot that shares the inode", "They cannot be restored", "They need a license", "They are encrypted"]
+answers = ["Editing an old file in place changes every snapshot that shares the inode"]
+explanation = "They protect against mistakes, not against tampering with old data."
+review = "rsync snapshots with hard links"
+
+[[question]]
+id = "dry-run"
+type = "choice"
+prompt = "What does 'rsync -a -n --delete -i' do?"
+choices = ["Shows what would change without changing anything", "Deletes everything", "Compresses the data", "Restores the last snapshot"]
+answers = ["Shows what would change without changing anything"]
+explanation = "-n is the dry run and -i itemises the changes."
+review = "rsync snapshots with hard links"
+
+[[question]]
+id = "tar-sizes"
+type = "choice"
+prompt = "In the tar test the full backup was about 6 MB. How big was the level-1 incremental?"
+choices = ["297 bytes", "About 6 MB", "About 3 MB", "0 bytes"]
+answers = ["297 bytes"]
+explanation = "It held only the two changed or new files."
+review = "tar incrementals"
+
+[[question]]
+id = "tar-restore"
+type = "choice"
+prompt = "How do you restore a tar incremental chain?"
+choices = ["Extract the full backup first, then each incremental in order with --listed-incremental=/dev/null", "Extract only the last incremental", "Extract in any order", "Extract the incremental first"]
+answers = ["Extract the full backup first, then each incremental in order with --listed-incremental=/dev/null"]
+explanation = "A missing or damaged link in the chain breaks everything after it."
+review = "tar incrementals"
+
+[[question]]
+id = "restic-password"
+type = "choice"
+prompt = "What does restic say about losing the repository password?"
+choices = ["Your data is irrecoverably lost", "It can be reset by email", "The data stays readable", "restic regenerates it"]
+answers = ["Your data is irrecoverably lost"]
+explanation = "Keep the password somewhere that is not the machine being backed up."
+review = "restic: encrypted, deduplicated, and checkable"
+
+[[question]]
+id = "dedup"
+type = "choice"
+prompt = "The second restic backup added about 4 KiB after one small file changed. Why?"
+choices = ["restic stores only the chunks it has not seen before (deduplication)", "restic skipped the file", "It compressed the whole repository", "It copied only the metadata"]
+answers = ["restic stores only the chunks it has not seen before (deduplication)"]
+explanation = "The repository was about the size of the data for two snapshots."
+review = "restic: encrypted, deduplicated, and checkable"
+
+[[question]]
+id = "encrypted"
+type = "choice"
+prompt = "How did the lesson show the restic repository is not plain text?"
+choices = ["grep for a known sentence in the repository matched 0 files", "restic printed a warning", "The files were named .enc", "The repository was empty"]
+answers = ["grep for a known sentence in the repository matched 0 files"]
+explanation = "The lesson did not run the same search on an rsync snapshot."
+review = "restic: encrypted, deduplicated, and checkable"
+
+[[question]]
+id = "check-vs-read-data"
+type = "choice"
+prompt = "After a pack file was damaged, 'restic check' said 'no errors were found'. What found the damage?"
+choices = ["restic check --read-data", "restic snapshots", "restic diff", "Nothing"]
+answers = ["restic check --read-data"]
+explanation = "A plain check verifies structure, not the data in the pack files."
+review = "The check that did not notice"
+
+[[question]]
+id = "restore-test"
+type = "choice"
+prompt = "What is the best test that a backup works?"
+choices = ["Restore it somewhere else and compare it with the original", "restic check", "Counting the files", "Looking at the size"]
+answers = ["Restore it somewhere else and compare it with the original"]
+explanation = "A backup you have never restored is a hope, not a backup."
+review = "First, the rule and the question"
+
+[[question]]
+id = "accuracysec"
+type = "choice"
+prompt = "Why did the first transient backup timer run too late and fail?"
+choices = ["A timer's AccuracySec defaults to one minute, so it may fire up to a minute late", "restic was missing", "The data was encrypted", "systemd-run does not support timers"]
+answers = ["A timer's AccuracySec defaults to one minute, so it may fire up to a minute late"]
+explanation = "The fix was --timer-property=AccuracySec=1s; -p AccuracySec=1s failed with Unknown assignment because -p sets service properties."
+review = "Run it on a schedule"

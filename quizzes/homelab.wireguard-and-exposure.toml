@@ -1,0 +1,147 @@
+schema_version = 1
+lesson = "homelab.wireguard-and-exposure"
+# Draft for owner review. Answers come from the tested output (hl4.sh) on Ubuntu 24.04 and AlmaLinux 9.8 and from the WireGuard pages cited (home, quickstart, protocol).
+draw = 12
+
+[[question]]
+id = "keys"
+type = "choice"
+prompt = "Which key is shared with the other side of a WireGuard tunnel?"
+choices = ["The public key", "The private key", "Both", "Neither: a password is used"]
+answers = ["The public key"]
+explanation = "The private key never leaves the machine; a leaked public key is harmless."
+review = "Keys"
+
+[[question]]
+id = "umask"
+type = "choice"
+prompt = "Why did the lesson run 'umask 077' before generating keys?"
+choices = ["So the key files are readable by their owner only", "To speed up wg", "To make the keys longer", "To open the port"]
+answers = ["So the key files are readable by their owner only"]
+explanation = "The files showed -rw------- after generation."
+review = "Keys"
+
+[[question]]
+id = "cryptokey"
+type = "choice"
+prompt = "What is 'cryptokey routing'?"
+choices = ["Associating public keys with the tunnel addresses allowed from that peer (AllowedIPs)", "Encrypting the routing table", "Using the key as an IP address", "A firewall feature of Linux"]
+answers = ["Associating public keys with the tunnel addresses allowed from that peer (AllowedIPs)"]
+explanation = "AllowedIPs is both the routing table and the access list at the tunnel layer."
+review = "What WireGuard is, in five facts"
+
+[[question]]
+id = "udp"
+type = "choice"
+prompt = "What transport does WireGuard use?"
+choices = ["UDP on one port you choose", "TCP port 443 only", "ICMP", "SMB"]
+answers = ["UDP on one port you choose"]
+explanation = "51820 is the port used in the examples."
+review = "What WireGuard is, in five facts"
+
+[[question]]
+id = "conf-name"
+type = "choice"
+prompt = "wg-quick up conf/wg-hub.conf created which interface name?"
+choices = ["wg-hub, because the file name is the interface name", "wg0 always", "hub", "tun0"]
+answers = ["wg-hub, because the file name is the interface name"]
+explanation = "wg-quick takes the interface name from the configuration file's name."
+review = "The configuration files"
+
+[[question]]
+id = "keepalive"
+type = "choice"
+prompt = "Why does the laptop's configuration have PersistentKeepalive = 25?"
+choices = ["A NAT in front of it forgets idle UDP flows; the keepalive keeps the path open", "It speeds up the tunnel", "It encrypts keepalive packets", "It is required for the handshake"]
+answers = ["A NAT in front of it forgets idle UDP flows; the keepalive keeps the path open"]
+explanation = "The hub does not need it."
+review = "The configuration files"
+
+[[question]]
+id = "mtu"
+type = "short"
+prompt = "What MTU did wg-quick give the tunnel interface in the test? Number only."
+answers = ["1420"]
+explanation = "The tunnel adds headers, so the interface is smaller than 1500. A wrong MTU can make big downloads hang (not tested)."
+review = "The configuration files"
+
+[[question]]
+id = "handshake"
+type = "choice"
+prompt = "'wg show' printed 'latest handshake: 1 second ago'. What does it prove?"
+choices = ["The two sides authenticated each other", "The file share works", "The firewall is correct", "The MTU is right"]
+answers = ["The two sides authenticated each other"]
+explanation = "No handshake means the keys, the port or the path is wrong."
+review = "It works, and what the tunnel shows"
+
+[[question]]
+id = "endpoint-learned"
+type = "choice"
+prompt = "On the hub, 'endpoint: 10.99.0.2:47994' was shown for the peer. How did the hub know it?"
+choices = ["It learned it from the traffic the peer sent", "It was written in the hub's config", "From DNS", "From DHCP"]
+answers = ["It learned it from the traffic the peer sent"]
+explanation = "That is how roaming laptops work; the peer's config had the hub's endpoint, not the other way round."
+review = "It works, and what the tunnel shows"
+
+[[question]]
+id = "split-tunnel"
+type = "choice"
+prompt = "The peer's AllowedIPs was 10.8.0.0/24 and only that network used the tunnel. What is that called?"
+choices = ["A split tunnel", "A full tunnel", "A bridge", "A VLAN"]
+answers = ["A split tunnel"]
+explanation = "AllowedIPs = 0.0.0.0/0 would be a full tunnel, which needs forwarding, NAT and DNS work that was not tested."
+review = "It works, and what the tunnel shows"
+
+[[question]]
+id = "unowned-address"
+type = "choice"
+prompt = "The hub pinged 10.8.0.9, an address no peer owns. What happened?"
+choices = ["Destination Host Unreachable: it does not know which key to encrypt for", "It reached the peer anyway", "The tunnel went down", "The hub crashed"]
+answers = ["Destination Host Unreachable: it does not know which key to encrypt for"]
+explanation = "AllowedIPs works as the routing table for outgoing packets."
+review = "`AllowedIPs` is also the access list"
+
+[[question]]
+id = "allowedips-not"
+type = "choice"
+prompt = "What does AllowedIPs = 10.8.0.2/32 on the hub NOT control?"
+choices = ["Which ports the peer may reach inside the lab", "Which source address the peer may use", "Which peer owns 10.8.0.2", "Where replies go"]
+answers = ["Which ports the peer may reach inside the lab"]
+explanation = "A firewall behind the tunnel is needed for port-level rules."
+review = "`AllowedIPs` is also the access list"
+
+[[question]]
+id = "stranger"
+type = "multi"
+prompt = "What did the peer with an unregistered key experience?"
+choices = ["100% packet loss to the hub's tunnel address", "No reply to a plain UDP datagram sent to port 51820", "The hub added it to its peer list", "A handshake"]
+answers = ["100% packet loss to the hub's tunnel address", "No reply to a plain UDP datagram sent to port 51820"]
+explanation = "The hub still listed one peer. The protocol page says the server does not respond to an unauthorized client."
+review = "A stranger without a registered key"
+
+[[question]]
+id = "silence"
+type = "choice"
+prompt = "Why is a silent UDP port not proof that nothing is there?"
+choices = ["A dropped packet looks the same, and scanners report such ports as open|filtered", "UDP always replies", "Silence means closed", "Scanners cannot scan UDP"]
+answers = ["A dropped packet looks the same, and scanners report such ports as open|filtered"]
+explanation = "Silence is a property of the protocol, not proof of absence. A UDP scan was not run in the lesson."
+review = "A stranger without a registered key"
+
+[[question]]
+id = "sed-slash"
+type = "choice"
+prompt = "Why did sed \"s/^PrivateKey.*/PrivateKey = $(cat rogue.key)/\" fail on Ubuntu?"
+choices = ["The base64 key contained a '/', which ended the sed expression", "sed cannot read files", "The key was too long", "wg-quick locked the file"]
+answers = ["The base64 key contained a '/', which ended the sed expression"]
+explanation = "Use another delimiter such as s|a|b|. AlmaLinux's keys happened not to contain one."
+review = "A stranger without a registered key"
+
+[[question]]
+id = "never-expose"
+type = "multi"
+prompt = "Which should you not expose to the internet without a very good reason, according to the lesson?"
+choices = ["SMB file sharing (port 445)", "rpcbind (port 111)", "A DNS server that answers anyone (open resolver)", "One WireGuard UDP port"]
+answers = ["SMB file sharing (port 445)", "rpcbind (port 111)", "A DNS server that answers anyone (open resolver)"]
+explanation = "The single WireGuard port is the one door the lesson suggests, if you need access at all."
+review = "What to expose, and what not to"

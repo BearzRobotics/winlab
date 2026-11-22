@@ -1,0 +1,50 @@
+schema_version = 1
+id = "homelab.file-sharing-samba"
+title = "File sharing with Samba: users, shares, SMB versions, and the SELinux label on AlmaLinux"
+summary = "Samba 4.19.5 (Ubuntu 24.04) and 4.24.5 (AlmaLinux 9.8): a group-only share tested with smbclient and mount -t cifs over loopback, the difference between NT_STATUS_LOGON_FAILURE and NT_STATUS_ACCESS_DENIED, SMB 3.1.1 signed but not encrypted, SMB1 refused, an unrequested [homes] share, and the AlmaLinux failure where SELinux denies smbd_t on var_t, found with ausearch and fixed with semanage fcontext and restorecon (samba_share_t)."
+content = "file-sharing-samba.md"
+estimated_minutes = 90
+level = 3
+objectives = [
+  "Explain the two permission systems that both have to allow a Samba file (smb.conf and the file system, plus SELinux on Red Hat systems)",
+  "Create a Samba user with smbpasswd, a group-only share, and verify it with testparm, smbclient and mount -t cifs",
+  "Tell LOGON_FAILURE (who are you) from ACCESS_DENIED (you may not) and say which stage each belongs to",
+  "Read smbstatus for the protocol, signing and encryption in use and say what unencrypted means across a network",
+  "Diagnose a Samba share that SELinux blocks, from the AVC denial's contexts, and fix it with semanage fcontext and restorecon instead of disabling SELinux",
+]
+prerequisites = ["linux.storage-filesystems", "security.security-fundamentals", "linux.systemd"]
+privilege = "administrator"
+certifications = ["redhat-rhcsa/file-systems", "redhat-rhcsa/security", "comptia-linux-plus/security", "comptia-linux-plus/troubleshooting"]
+evaluation_criteria = [
+  "Learner shows one user in the group succeeding, a wrong password failing at session setup and a non-member failing at tree connect",
+  "Learner fixes the AlmaLinux share by labelling, shows the semanage rule, and does not use setenforce 0",
+  "Learner states from smbstatus whether the connection was encrypted",
+]
+
+[[references]]
+title = "smb.conf(5) (samba.org; intermittently unreachable while writing)"
+url = "https://www.samba.org/samba/docs/current/man-html/smb.conf.5.html"
+
+[[references]]
+title = "smbclient(1) (Debian manual page)"
+url = "https://manpages.debian.org/stable/smbclient/smbclient.1.en.html"
+
+[[references]]
+title = "smbpasswd(8) (Debian manual page)"
+url = "https://manpages.debian.org/stable/samba-common-bin/smbpasswd.8.en.html"
+
+[[references]]
+title = "testparm(1) (Debian manual page)"
+url = "https://manpages.debian.org/stable/samba-common-bin/testparm.1.en.html"
+
+[[references]]
+title = "mount.cifs(8)"
+url = "https://man7.org/linux/man-pages/man8/mount.cifs.8.html"
+
+[[references]]
+title = "semanage-fcontext(8)"
+url = "https://man7.org/linux/man-pages/man8/semanage-fcontext.8.html"
+
+[[references]]
+title = "restorecon(8)"
+url = "https://man7.org/linux/man-pages/man8/restorecon.8.html"

@@ -1,0 +1,147 @@
+schema_version = 1
+lesson = "homelab.own-dns-and-dhcp"
+# Draft for owner review. Answers come from the tested output (hl1.sh, three runs) on Ubuntu 24.04 (dnsmasq 2.91) and AlmaLinux 9.8 (dnsmasq 2.85).
+draw = 12
+
+[[question]]
+id = "port53-clash"
+type = "choice"
+prompt = "Why did the dnsmasq service fail to start right after installation on Ubuntu 24.04?"
+choices = ["systemd-resolved already listens on port 53, and dnsmasq wanted it on every address", "dnsmasq needs a license", "Port 53 is closed by default", "The package was corrupt"]
+answers = ["systemd-resolved already listens on port 53, and dnsmasq wanted it on every address"]
+explanation = "Two programs cannot share one address and port; the fix is to bind only addresses you name."
+review = "Install, and the first surprise on Ubuntu"
+
+[[question]]
+id = "bind-fix"
+type = "multi"
+prompt = "Which two directives let dnsmasq coexist with systemd-resolved in the lesson?"
+choices = ["listen-address=127.0.0.1", "bind-interfaces", "no-resolv", "log-queries"]
+answers = ["listen-address=127.0.0.1", "bind-interfaces"]
+explanation = "They bind exactly 127.0.0.1:53 instead of a wildcard; no-resolv only stops it reading /etc/resolv.conf for upstream servers."
+review = "Install, and the first surprise on Ubuntu"
+
+[[question]]
+id = "address-reverse"
+type = "choice"
+prompt = "In the lesson, which directive produced a working reverse (PTR) lookup?"
+choices = ["host-record=pi.lab.test,192.168.50.11", "address=/nas.lab.test/192.168.50.10", "cname=files.lab.test,nas.lab.test", "local=/lab.test/"]
+answers = ["host-record=pi.lab.test,192.168.50.11"]
+explanation = "address= gives a forward answer only; dig -x for .10 returned nothing."
+review = "A small lab zone"
+
+[[question]]
+id = "local-domain"
+type = "choice"
+prompt = "What does local=/lab.test/ do?"
+choices = ["Questions for lab.test are answered locally and never forwarded upstream", "It blocks lab.test", "It makes lab.test public", "It sets the DHCP lease time"]
+answers = ["Questions for lab.test are answered locally and never forwarded upstream"]
+explanation = "That is why nobody.lab.test came back NXDOMAIN at once, and it keeps private names from leaking."
+review = "A small lab zone"
+
+[[question]]
+id = "nxdomain"
+type = "short"
+prompt = "What status did dig show for a name in lab.test that did not exist? (one word, capitals)"
+answers = ["nxdomain"]
+explanation = "NXDOMAIN means no such name."
+review = "A small lab zone"
+
+[[question]]
+id = "block-name"
+type = "choice"
+prompt = "How does 'address=/ads.example/0.0.0.0' block a name?"
+choices = ["It answers with a useless address, so the client's connection goes nowhere", "It deletes the name from the internet", "It closes port 80", "It adds a firewall rule"]
+answers = ["It answers with a useless address, so the client's connection goes nowhere"]
+explanation = "Blocking at DNS is a lie told on purpose; blocklists do it at scale."
+review = "A small lab zone"
+
+[[question]]
+id = "cache-proof"
+type = "choice"
+prompt = "How did the lesson show that the second query for example.com came from the cache?"
+choices = ["Query time fell from 17 ms to 0 ms and the log said 'cached'", "The TTL turned to zero", "dig printed CACHED", "The answer changed"]
+answers = ["Query time fell from 17 ms to 0 ms and the log said 'cached'"]
+explanation = "The first query was forwarded to 10.0.2.3; the second was answered from dnsmasq's cache."
+review = "A small lab zone"
+
+[[question]]
+id = "test-trap"
+type = "choice"
+prompt = "On Ubuntu, 'dnsmasq --test' said 'syntax check OK' for a file containing 'bogus-option=1'. Why?"
+choices = ["It did not read /etc/dnsmasq.d: the service passes that directory itself", "The option is valid", "dnsmasq ignores unknown options", "The file was empty"]
+answers = ["It did not read /etc/dnsmasq.d: the service passes that directory itself"]
+explanation = "Use dnsmasq --test --conf-dir=/etc/dnsmasq.d (it then exited 1). AlmaLinux read the directory without the option."
+review = "A small lab zone"
+
+[[question]]
+id = "dora"
+type = "choice"
+prompt = "What are the four steps of the DHCP exchange the client logged?"
+choices = ["Discover, Offer, Request, Acknowledge", "Dial, Open, Route, Answer", "Detect, Obtain, Renew, Accept", "Deny, Offer, Release, Allow"]
+answers = ["Discover, Offer, Request, Acknowledge"]
+explanation = "DHCPDISCOVER, DHCPOFFER, DHCPREQUEST, DHCPACK."
+review = "DHCP, on a private network inside the VM"
+
+[[question]]
+id = "static-lease"
+type = "choice"
+prompt = "The client got 192.168.50.11 although the pool was .100-.150. Why?"
+choices = ["A dhcp-host line matched its MAC address and gave it a fixed address", "The pool was misconfigured", "dhclient picked a random address", "The router intervened"]
+answers = ["A dhcp-host line matched its MAC address and gave it a fixed address"]
+explanation = "dhcp-host=MAC,pi,192.168.50.11 reserves the address and name for that device."
+review = "DHCP, on a private network inside the VM"
+
+[[question]]
+id = "why-namespace"
+type = "choice"
+prompt = "Why was DHCP tested in a network namespace with a veth pair instead of on the VM's own network?"
+choices = ["So no real network is touched and no second DHCP server appears on a real LAN", "Namespaces are faster", "DHCP does not work on real interfaces", "QEMU requires it"]
+answers = ["So no real network is touched and no second DHCP server appears on a real LAN"]
+explanation = "Two DHCP servers on one network give clients inconsistent answers; the lesson did not test that."
+review = "DHCP, on a private network inside the VM"
+
+[[question]]
+id = "resolv-break"
+type = "choice"
+prompt = "After the first DHCP test dnf on AlmaLinux could not resolve names. What had happened?"
+choices = ["dhclient-script wrote the host's /etc/resolv.conf with nameserver 192.168.50.1", "dnf was removed", "The VM lost its network card", "The DNS server crashed"]
+answers = ["dhclient-script wrote the host's /etc/resolv.conf with nameserver 192.168.50.1"]
+explanation = "A namespace isolates the network, not files such as /etc/resolv.conf."
+review = "The mistake: `dhclient` rewrote the host's `/etc/resolv.conf`"
+
+[[question]]
+id = "netns-etc"
+type = "choice"
+prompt = "Which path protected the host's resolv.conf during the namespace test?"
+choices = ["/etc/netns/wllan/resolv.conf (bind-mounted by ip netns exec)", "/etc/resolv.conf.bak", "/var/lib/dhclient/resolv", "/run/netns/resolv.conf"]
+answers = ["/etc/netns/wllan/resolv.conf (bind-mounted by ip netns exec)"]
+explanation = "ip netns exec bind-mounts files under /etc/netns/NAME/ over the ones in /etc inside the namespace."
+review = "The mistake: `dhclient` rewrote the host's `/etc/resolv.conf`"
+
+[[question]]
+id = "recover-resolv"
+type = "choice"
+prompt = "How was the AlmaLinux /etc/resolv.conf recovered?"
+choices = ["Restarting NetworkManager, which rewrote it with nameserver 10.0.2.3", "Rebooting the host", "Reinstalling dnsmasq", "Deleting the namespace"]
+answers = ["Restarting NetworkManager, which rewrote it with nameserver 10.0.2.3"]
+explanation = "Whatever manages the file rewrites it."
+review = "The mistake: `dhclient` rewrote the host's `/etc/resolv.conf`"
+
+[[question]]
+id = "two-dhcp"
+type = "choice"
+prompt = "What should you never have on one LAN?"
+choices = ["Two DHCP servers answering the same question differently", "One DNS server", "A fixed address for the server", "A router"]
+answers = ["Two DHCP servers answering the same question differently"]
+explanation = "Turn the router's DHCP off before dnsmasq takes over, or leave DHCP to the router. Not tested on a real LAN."
+review = "Using it for real"
+
+[[question]]
+id = "log-queries"
+type = "choice"
+prompt = "Why should log-queries be used with thought?"
+choices = ["It records what every device on the network looks up", "It slows DNS by half", "It is not supported on Ubuntu", "It disables caching"]
+answers = ["It records what every device on the network looks up"]
+explanation = "A query log is a record of who asked what."
+review = "Common mistakes"

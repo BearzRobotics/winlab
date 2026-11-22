@@ -1,0 +1,32 @@
+schema_version = 1
+id = "home-lab"
+title = "Home lab: names, files, backups and safe access"
+goal = "Build the useful core of a home lab on Linux and test every piece before trusting it: your own DNS and DHCP, a file share, backups you have restored, and remote access that exposes one small door. Appliances and hypervisors come later."
+audience = "Someone comfortable with a Linux shell who wants a home network that is their own. The planned lessons (a firewall appliance such as OPNsense or IPFire, a hypervisor such as Proxmox or Hyper-V, Nextcloud, media servers, monitoring) are not written yet, because they cannot be tested in the current lab VMs."
+order = 80
+certifications = ["comptia-network-plus/network-implementation"]
+
+[[stage]]
+title = "Method and the Linux you will lean on"
+lessons = ["foundations.architecture", "foundations.troubleshooting-method", "foundations.bash-basics", "linux.systemd", "linux.systemd-advanced", "linux.storage-filesystems"]
+labs = []
+
+[[stage]]
+title = "Networking foundations"
+lessons = ["networking.models-and-protocols", "networking.addressing-and-names", "networking.subnetting", "networking.dhcp", "networking.dns", "networking.routing-and-gateways", "networking.ports-and-firewalls"]
+labs = ["labs.linux-name-resolution", "labs.linux-service-loopback-only"]
+
+[[stage]]
+title = "Names and addresses of your own"
+lessons = ["homelab.own-dns-and-dhcp"]
+labs = []
+
+[[stage]]
+title = "Share and protect your data"
+lessons = ["security.security-fundamentals", "homelab.file-sharing-samba", "homelab.backups"]
+labs = []
+
+[[stage]]
+title = "Reach it safely"
+lessons = ["security.authorization-and-scope", "security.own-lab-recon", "homelab.wireguard-and-exposure"]
+labs = []
