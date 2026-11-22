@@ -532,6 +532,7 @@ fn browse(init: std.process.Init, dir_arg: ?[]const u8) !void {
         .labs = lab_entries,
         .lab_engine = if (lab_backend_ready) .{ .ctx = &lab_backend, .run = LabBackend.run, .fixed = LabBackend.fixed } else null,
         .lab_note = lab_note,
+        .badges = cfg.settings.badges,
         .setup = .{ .ctx = &setup_backend, .check = SetupBackend.check, .finish = SetupBackend.finish, .show_first = !cfg.settings.setup_done, .settings_path = settings_path },
     });
 }

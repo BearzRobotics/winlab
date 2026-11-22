@@ -37,7 +37,7 @@ outline (a draft for review) is `outline.md`.
 | `lab selftest <lab.toml> <vm-id>` | Run a lab live (inject, fix, validate, roll back) |
 
 Settings are read from `%APPDATA%\WinLab\settings.toml` (`theme`, `text-scale`, `content-path`,
-`qemu-path`, `lab-vm`, `setup-done`); a bad key is reported and ignored. WinLab writes the file only to record that the first-run setup window was seen (`setup-done`).
+`qemu-path`, `lab-vm`, `setup-done`, `badges`); a bad key is reported and ignored. WinLab writes the file only to record that the first-run setup window was seen (`setup-done`).
 Progress and notes live in `progress.toml` beside it (ADR 0004); registered VMs in `vms.toml`.
 VM disks, keys and installation media are under `%LOCALAPPDATA%\WinLab\`.
 
@@ -67,7 +67,7 @@ official documentation. Tracks: Windows administration, CMD, PowerShell (9 lesso
 administration (systemd, dinit), networking, security fundamentals, cybersecurity (7), home lab (4), package
 repositories (4), and certification-mapped paths.
 
-**Tested on this machine** (Windows 11 Home, QEMU 11.1.1 with WHPX): the course browser, search, notes and progress,
+**Tested on this machine** (Windows 11 Home, QEMU 11.1.1 with WHPX): badges (Lesson > Badges, derived from progress, off with `badges = false`), the course browser, search, notes and progress,
 quizzes, learning paths, the embedded terminal (CMD and Windows PowerShell 5.1), the first-run setup window, text scaling to
 200%, and the Copy and plain-text view features. Lab VMs built by WinLab: Windows Server 2022, Ubuntu 24.04, AlmaLinux 9
 and Chimera Linux, with SSH guest control, snapshots and rollback. Baked scenarios pass `winlab lab verify`
@@ -76,7 +76,7 @@ and Chimera Linux, with SSH guest control, snapshots and rollback. Baked scenari
 **Not tested:** Windows 10 and the Windows 11 client install path (no client ISO here), Narrator and other screen readers,
 typing into quiz answers by automation (blocked in the test environment), and anything on Linux or macOS.
 
-**Not done:** a Windows installer, a badge or achievement system (planned after beta polish), a Linux port (the window
+**Not done:** a Windows installer, a Linux port (the window
 backend, terminal and process handling are Windows-specific), the Sysinternals advanced track (ADR 0007), and an
 OPNsense lesson (OPNsense 26.7 crashed under QEMU with WHPX in a first attempt; see `docs/HANDOFF.md`).
 

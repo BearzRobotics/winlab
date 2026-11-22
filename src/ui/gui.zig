@@ -163,6 +163,8 @@ pub const Options = struct {
     tracking: ?Tracking = null,
     /// First-run setup and requirements window; null hides it.
     setup: ?Setup = null,
+    /// Show the Badges window and menu entry (needs progress tracking).
+    badges: bool = true,
     dark: bool = false,
     /// Where Segoe UI and Consolas live (`%SystemRoot%\Fonts`). Empty: DVUI's bundled font.
     fonts_dir: []const u8 = "",
@@ -250,6 +252,7 @@ const App = struct {
     path: ?usize = null,
     show_picker: bool = false,
     show_setup: bool = false,
+    show_badges: bool = false,
     setup_items: [setup_max_items]SetupItem = undefined,
     setup_n: usize = 0,
     lab: LabUi = .{},
@@ -643,6 +646,14 @@ fn menuBar(a: *App) void {
             m.close();
         }
         _ = dvui.separator(@src(), .{ .expand = .horizontal });
+        if (badgesOn(a)) {
+            var bl: [64]u8 = undefined;
+            const label = std.fmt.bufPrint(&bl, "Badges ({d} of {d})...", .{ winlab.badges.countEarned(badgeStats(a)), winlab.badges.defs.len }) catch "Badges...";
+            if (dvui.menuItemLabel(@src(), label, .{}, .{ .expand = .horizontal }) != null) {
+                a.show_badges = true;
+                m.close();
+            }
+        }
         if (dvui.menuItemLabel(@src(), "Exit", .{}, .{ .expand = .horizontal }) != null) {
             m.close();
             requestQuit(a);
@@ -679,6 +690,10 @@ fn menuBar(a: *App) void {
         }
         if (dvui.menuItemLabel(@src(), "Keyboard shortcuts", .{}, .{ .expand = .horizontal }) != null) {
             a.show_keys = true;
+            m.close();
+        }
+        if (dvui.menuItemLabel(@src(), "Copy diagnostics (for bug reports)", .{}, .{ .expand = .horizontal }) != null) {
+            copyDiagnostics(a);
             m.close();
         }
         if (dvui.menuItemLabel(@src(), "About WinLab", .{}, .{ .expand = .horizontal }) != null) {
@@ -727,6 +742,84 @@ fn fitRect(want_w: f32, want_h: f32) dvui.Rect {
     return .{ .x = @max(8, (wr.w - w) / 2), .y = @max(8, (wr.h - h) / 4), .w = w, .h = h };
 }
 
+
+/// Text a tester can paste into a bug report: the version, what the setup check found, and the window state.
+fn copyDiagnostics(a: *App) void {
+    var out: std.Io.Writer.Allocating = .init(a.gpa);
+    defer out.deinit();
+    const w = &out.writer;
+    w.print("{s} {s} (Zig {s})\n", .{ winlab.version.app_name, winlab.version.app_version, winlab.version.pinned_zig }) catch return;
+    w.print("Lessons: {d}  Labs: {d}  Paths: {d}  Text scale: {d}%  Theme: {s}\n", .{ a.pages.len, a.o.labs.len, a.o.paths.len, a.o.text_scale, if (a.dark) "dark" else "light" }) catch return;
+    if (a.o.setup != null) {
+        runSetupCheck(a);
+        for (a.setup_items[0..a.setup_n]) |it| w.print("{s}: {s}\n", .{ it.name, if (it.ok) "found" else "not found" }) catch return;
+    }
+    const cur = a.pages[a.current];
+    w.print("Current lesson: {s} ({s})\n", .{ cur.title, cur.id }) catch return;
+    const text = out.toOwnedSlice() catch return;
+    defer a.gpa.free(text);
+    dvui.clipboardTextSet(text);
+}
+
+// ---------------------------------------------------------------------------------------------
+// Badges
+// ---------------------------------------------------------------------------------------------
+
+fn badgesOn(a: *const App) bool {
+    return a.o.badges and a.o.tracking != null;
+}
+
+fn badgeStats(a: *const App) winlab.badges.Stats {
+    const t = a.o.tracking orelse return .{};
+    return winlab.badges.Stats.from(t.progress);
+}
+
+fn badgesWindow(a: *App) void {
+    var open = true;
+    var fw = dvui.floatingWindow(@src(), .{ .modal = true, .open_flag = &open }, .{ .rect = fitRect(640, 560), .min_size_content = .{ .w = 420, .h = 300 } });
+    defer fw.deinit();
+    _ = dvui.windowHeader(.{ .title = "Badges", .open_flag = &open });
+    var body = dvui.box(@src(), .{}, .{ .expand = .both, .padding = .all(14) });
+    defer body.deinit();
+    const dim: dvui.Color = dvui.themeGet().text.opacity(0.7);
+    const stats = badgeStats(a);
+    var head: [96]u8 = undefined;
+    const line = std.fmt.bufPrint(&head, "{d} of {d} earned", .{ winlab.badges.countEarned(stats), winlab.badges.defs.len }) catch "";
+    dvui.labelNoFmt(@src(), line, .{}, .{ .font = dvui.Font.theme(.heading) });
+    {
+        var tl = dvui.textLayout(@src(), .{}, .{ .expand = .horizontal, .background = false, .padding = .all(0), .margin = .{ .y = 4, .h = 8 } });
+        tl.addText("Badges are worked out from your progress, so nothing extra is stored. They carry no points or ranking. To hide them, set badges = false in your settings file.", .{ .color_text = .{ .color = dim } });
+        tl.deinit();
+    }
+    var scroll = dvui.scrollArea(@src(), .{}, .{ .expand = .both, .background = false });
+    defer scroll.deinit();
+    for (winlab.badges.defs, 0..) |d, i| {
+        const got = winlab.badges.earned(stats, d);
+        var row = dvui.box(@src(), .{}, .{ .expand = .horizontal, .background = true, .style = .window, .corners = .all(6), .padding = .all(8), .margin = .{ .y = 3, .h = 3 }, .id_extra = i });
+        defer row.deinit();
+        var t: [160]u8 = undefined;
+        const title = std.fmt.bufPrint(&t, "{s}{s}", .{ d.title, if (got) "  (earned)" else "" }) catch d.title;
+        dvui.labelNoFmt(@src(), title, .{}, .{ .font = dvui.Font.theme(.heading), .id_extra = i, .color_text = if (got) null else .{ .color = dim } });
+        var how: [200]u8 = undefined;
+        const have = winlab.badges.value(stats, d.kind);
+        const text = if (got) d.how else (std.fmt.bufPrint(&how, "{s} ({d} so far)", .{ d.how, have }) catch d.how);
+        dvui.labelNoFmt(@src(), text, .{}, .{ .id_extra = i, .color_text = .{ .color = dim } });
+    }
+    // One badge per learning path, earned when every lesson on it is done.
+    for (a.o.paths, 0..) |p, i| {
+        const c = pathCounts(a, i);
+        if (c.total == 0) continue;
+        const got = c.done == c.total;
+        var row = dvui.box(@src(), .{}, .{ .expand = .horizontal, .background = true, .style = .window, .corners = .all(6), .padding = .all(8), .margin = .{ .y = 3, .h = 3 }, .id_extra = 1000 + i });
+        defer row.deinit();
+        var t: [200]u8 = undefined;
+        const title = std.fmt.bufPrint(&t, "Path: {s}{s}", .{ p.title, if (got) "  (earned)" else "" }) catch p.title;
+        dvui.labelNoFmt(@src(), title, .{}, .{ .font = dvui.Font.theme(.heading), .id_extra = 1000 + i, .color_text = if (got) null else .{ .color = dim } });
+        var how: [120]u8 = undefined;
+        dvui.labelNoFmt(@src(), std.fmt.bufPrint(&how, "Finish every lesson on this path ({d} of {d} done)", .{ c.done, c.total }) catch "", .{}, .{ .id_extra = 1000 + i, .color_text = .{ .color = dim } });
+    }
+    if (!open or escapePressed()) a.show_badges = false;
+}
 fn runSetupCheck(a: *App) void {
     const s = a.o.setup orelse return;
     a.setup_n = s.check(s.ctx, &a.setup_items);
@@ -1406,6 +1499,7 @@ fn scrollReader(a: *App, unit: enum { line, page }, dir: f32) void {
 // ---------------------------------------------------------------------------------------------
 
 fn dialogs(a: *App) void {
+    if (a.show_badges) badgesWindow(a);
     if (a.show_setup) setupWindow(a); // first, so the link dialog it can open sits above it
     if (a.pending_url) |url| linkDialog(a, url);
     if (a.info) |msg| infoDialog(a, msg);

@@ -20,6 +20,7 @@ pub const settings = @import("storage/settings.zig");
 pub const settings_file = @import("storage/settings_file.zig");
 pub const progress = @import("storage/progress.zig");
 pub const progress_file = @import("storage/progress_file.zig");
+pub const badges = @import("storage/badges.zig");
 pub const manifest = @import("content/manifest.zig");
 pub const catalog = @import("content/catalog.zig");
 pub const search = @import("content/search.zig");

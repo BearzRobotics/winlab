@@ -22,6 +22,8 @@ pub const Settings = struct {
     lab_vm: []const u8 = "",
     /// The first-run setup window has been shown and closed; it does not open by itself again.
     setup_done: bool = false,
+    /// Show milestone badges (derived from progress). `badges = false` hides them everywhere.
+    badges: bool = true,
 };
 
 pub const Loaded = struct {
@@ -73,6 +75,9 @@ pub fn parse(gpa: std.mem.Allocator, text: []const u8, diag: ?*toml.Diagnostic) 
     if (t.get("setup-done")) |_| {
         if (t.getBool("setup-done")) |b| loaded.settings.setup_done = b else try ignored.append(a, "setup-done");
     }
+    if (t.get("badges")) |_| {
+        if (t.getBool("badges")) |b| loaded.settings.badges = b else try ignored.append(a, "badges");
+    }
     loaded.ignored = try ignored.toOwnedSlice(a);
     return loaded;
 }
@@ -97,6 +102,7 @@ pub fn write(s: Settings, w: *std.Io.Writer) std.Io.Writer.Error!void {
     try w.writeAll("\nlab-vm = ");
     try writeQuoted(w, s.lab_vm);
     try w.print("\nsetup-done = {s}", .{if (s.setup_done) "true" else "false"});
+    try w.print("\nbadges = {s}", .{if (s.badges) "true" else "false"});
     try w.writeByte('\n');
 }
 
@@ -129,6 +135,7 @@ test "round trip" {
     try std.testing.expectEqualStrings("", l.settings.qemu_path);
     try std.testing.expectEqualStrings("", l.settings.lab_vm);
     try std.testing.expect(l.settings.setup_done);
+    try std.testing.expect(l.settings.badges);
 }
 
 test "invalid toml" {
