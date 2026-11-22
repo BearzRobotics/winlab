@@ -1,0 +1,135 @@
+schema_version = 1
+lesson = "security.windows-logging-and-detection"
+# Draft for owner review. Answers come from the tested output of win1.ps1 on Windows Server 2022 (build 20348, PowerShell 5.1) and the cited Microsoft pages.
+draw = 10
+
+[[question]]
+id = "no-policy-no-event"
+type = "choice"
+prompt = "What happens to an activity that the audit policy does not cover?"
+choices = ["No event is written", "It is written to the Application log", "It is written with a warning", "It is deferred until audited"]
+answers = ["No event is written"]
+explanation = "An event nobody asked for is never written; check auditpol /get first."
+review = "The policy decides what exists"
+
+[[question]]
+id = "auditpol-tool"
+type = "short"
+prompt = "Which built-in command shows the audit policy by subcategory? Type the command name."
+answers = ["auditpol", "auditpol /get", "auditpol.exe"]
+explanation = "auditpol /get /subcategory:\"Logon\" shows one subcategory."
+review = "The policy decides what exists"
+
+[[question]]
+id = "failed-id"
+type = "short"
+prompt = "Which event ID records a failed logon? Number only."
+answers = ["4625"]
+explanation = "4624 is a successful logon."
+review = "A failed logon: event 4625"
+
+[[question]]
+id = "type-3"
+type = "choice"
+prompt = "LogonType 3 means:"
+choices = ["A network logon", "An interactive logon at the console", "A remote desktop logon", "A service logon"]
+answers = ["A network logon"]
+explanation = "Type 2 is interactive and type 10 is remote desktop (the lesson did not test those)."
+review = "A failed logon: event 4625"
+
+[[question]]
+id = "substatus-name"
+type = "choice"
+prompt = "The failed logon for a NON-EXISTENT account had SubStatus 0xc0000064. What does that code mean?"
+choices = ["A misspelled or bad user account", "A bad password for a real account", "An expired account", "A locked account"]
+answers = ["A misspelled or bad user account"]
+explanation = "0xC000006A is the bad-password code; both had the general Status 0xc000006d."
+review = "A failed logon: event 4625"
+
+[[question]]
+id = "substatus-pw"
+type = "short"
+prompt = "Which SubStatus value marked the failed logon for the REAL account with a wrong password? Type it as shown, for example 0xc0000001."
+answers = ["0xc000006a"]
+explanation = "A real account with a bad password gave 0xc000006a."
+review = "A failed logon: event 4625"
+
+[[question]]
+id = "enumeration"
+type = "choice"
+prompt = "Several 0xC0000064 events in a row can be a sign of:"
+choices = ["A user enumeration attack (guessing account names)", "A disk failure", "A time problem", "A successful logon"]
+answers = ["A user enumeration attack (guessing account names)"]
+explanation = "The Microsoft page says so for 0xC0000064."
+review = "A failed logon: event 4625"
+
+[[question]]
+id = "xml-fields"
+type = "choice"
+prompt = "Why does the lesson read event fields from the XML rather than the Message text?"
+choices = ["The XML has named fields; the text is for people and varies with language", "The XML is faster to type", "The Message is encrypted", "Message is not available in PowerShell"]
+answers = ["The XML has named fields; the text is for people and varies with language"]
+explanation = "The battery used [xml]$event.ToXml()."
+review = "A failed logon: event 4625"
+
+[[question]]
+id = "guess-pattern"
+type = "choice"
+prompt = "Which pattern looks like a successful password guess?"
+choices = ["A 4624 for an account shortly after a run of 4625s for the same account", "A 1102 followed by a 4720", "A 4720 only", "A single 4625"]
+answers = ["A 4624 for an account shortly after a run of 4625s for the same account"]
+explanation = "It is one of the five detections in the lesson."
+review = "A successful logon: event 4624"
+
+[[question]]
+id = "account-events"
+type = "multi"
+prompt = "Which events did the lesson use for an intruder creating an account and making it an administrator?"
+choices = ["4720 (user account created)", "4732 (member added to a security-enabled local group)", "1102 (log cleared)", "4625 (failed logon)"]
+answers = ["4720 (user account created)", "4732 (member added to a security-enabled local group)"]
+explanation = "Both name the acting user in SubjectUserName."
+review = "Account and group changes: 4720 and 4732"
+
+[[question]]
+id = "sid"
+type = "choice"
+prompt = "Event 4732 showed the added member as S-1-5-21-...-1000. What is that?"
+choices = ["A SID, a security identifier that can be translated to a name", "A password hash", "A file path", "A port"]
+answers = ["A SID, a security identifier that can be translated to a name"]
+explanation = "The lesson shows the Translate method but did not run it."
+review = "Account and group changes: 4720 and 4732"
+
+[[question]]
+id = "log-size"
+type = "choice"
+prompt = "What was the Security log's maximum size on the test server, and what happens when it is full?"
+choices = ["20 MB; the oldest events are overwritten (retention false)", "1 GB; it stops logging", "200 KB; it mails the admin", "Unlimited"]
+answers = ["20 MB; the oldest events are overwritten (retention false)"]
+explanation = "maxSize was 20971520 bytes; plan for size and for forwarding."
+review = "The same query with `wevtutil`"
+
+[[question]]
+id = "rd-true"
+type = "short"
+prompt = "Which wevtutil qe option reads the newest events first? Type it as /rd:... with its value."
+answers = ["/rd:true"]
+explanation = "/rd:true reverses the direction."
+review = "The same query with `wevtutil`"
+
+[[question]]
+id = "after-clear"
+type = "choice"
+prompt = "After wevtutil cl Security, what was left in the Security log?"
+choices = ["Exactly one event: the 1102 'audit log was cleared'", "Nothing", "The last 100 events", "Only 4625 events"]
+answers = ["Exactly one event: the 1102 'audit log was cleared'"]
+explanation = "Everything before it exists only if copied elsewhere."
+review = "Clearing the log is itself logged: event 1102"
+
+[[question]]
+id = "forward"
+type = "choice"
+prompt = "Why forward events off the machine?"
+choices = ["A cleared or overwritten local log leaves no evidence of what came before", "It makes events smaller", "Windows requires it", "It turns on auditing"]
+answers = ["A cleared or overwritten local log leaves no evidence of what came before"]
+explanation = "Forwarding was not tested in the lesson."
+review = "Clearing the log is itself logged: event 1102"

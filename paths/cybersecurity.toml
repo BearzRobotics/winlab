@@ -2,7 +2,7 @@ schema_version = 1
 id = "cybersecurity"
 title = "Cybersecurity: defend and investigate your own lab"
 goal = "Work the defender's loop on your own machines: get permission and write the scope, model the threats, see what is exposed, harden and check, detect what happens, and respond without destroying evidence. Defensive first, own lab only."
-audience = "Someone who has finished the security fundamentals and can use a Linux shell. The Windows side (event logs, auditing) and a vulnerability-management lesson are planned, not yet written."
+audience = "Someone who has finished the security fundamentals and can use a Linux shell. Windows event logging is covered by one lesson; a vulnerability-management lesson is planned, not yet written."
 order = 72
 certifications = ["comptia-linux-plus/security"]
 
@@ -18,7 +18,7 @@ labs = []
 
 [[stage]]
 title = "See what is there and what happens"
-lessons = ["security.own-lab-recon", "security.linux-logging-and-detection"]
+lessons = ["security.own-lab-recon", "security.linux-logging-and-detection", "security.windows-logging-and-detection"]
 labs = []
 
 [[stage]]

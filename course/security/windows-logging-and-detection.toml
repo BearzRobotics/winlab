@@ -1,0 +1,46 @@
+schema_version = 1
+id = "security.windows-logging-and-detection"
+title = "Windows logging and detection: audit policy, events 4625, 4624, 4720, 4732 and 1102"
+summary = "Read the audit policy with auditpol and find failed logons (4625, with Status/SubStatus telling a bad user name from a bad password), successful logons (4624), account and group changes (4720, 4732) and a cleared log (1102, the only event left) with Get-WinEvent XML fields and wevtutil, on Windows Server 2022 build 20348 with PowerShell 5.1. Notes the 20 MB default log size and five detections."
+content = "windows-logging-and-detection.md"
+estimated_minutes = 75
+level = 3
+objectives = [
+  "Read the audit policy with auditpol and explain that an unaudited activity writes no event",
+  "Find a failed logon with Get-WinEvent, read Status, SubStatus and LogonType, and tell a bad user name from a bad password",
+  "Find successful logons, account creation and a group change, and name who did it",
+  "Query with wevtutil and XPath and read the Security log's size and retention",
+  "Explain event 1102 and why events must be forwarded off the machine",
+]
+prerequisites = ["security.authorization-and-scope", "foundations.powershell-basics"]
+privilege = "administrator"
+certifications = ["comptia-a-core2/security", "microsoft-md-102/protect-devices"]
+evaluation_criteria = [
+  "Learner produces one bad-user and one bad-password event and distinguishes them by SubStatus",
+  "Learner finds the 4720 and 4732 events for a lab account and names the acting user",
+  "Learner explains what remains after the Security log is cleared",
+]
+
+[[references]]
+title = "Event 4625: An account failed to log on"
+url = "https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/auditing/event-4625"
+
+[[references]]
+title = "Event 4624: An account was successfully logged on"
+url = "https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/auditing/event-4624"
+
+[[references]]
+title = "Event 1102: The audit log was cleared"
+url = "https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/auditing/event-1102"
+
+[[references]]
+title = "Audit Logon Events"
+url = "https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/auditing/basic-audit-logon-events"
+
+[[references]]
+title = "Get-WinEvent"
+url = "https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.diagnostics/get-winevent"
+
+[[references]]
+title = "wevtutil"
+url = "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/wevtutil"
