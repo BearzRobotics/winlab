@@ -718,6 +718,15 @@ fn pathsMenu(a: *App, m: *dvui.MenuWidget) void {
 // Setup and requirements
 // ---------------------------------------------------------------------------------------------
 
+/// A starting rectangle for a floating window: the wanted size, centred, but never larger than the app window.
+/// (A fixed rectangle ran off the right edge at 200% text size.) The learner can still move and resize it.
+fn fitRect(want_w: f32, want_h: f32) dvui.Rect {
+    const wr = dvui.windowRect();
+    const w = @min(want_w, @max(320, wr.w - 24));
+    const h = @min(want_h, @max(240, wr.h - 24));
+    return .{ .x = @max(8, (wr.w - w) / 2), .y = @max(8, (wr.h - h) / 4), .w = w, .h = h };
+}
+
 fn runSetupCheck(a: *App) void {
     const s = a.o.setup orelse return;
     a.setup_n = s.check(s.ctx, &a.setup_items);
@@ -732,7 +741,7 @@ fn closeSetup(a: *App) void {
 /// it shows the command, copies it, or opens the download page, and the learner decides.
 fn setupWindow(a: *App) void {
     var open = true;
-    var fw = dvui.floatingWindow(@src(), .{ .modal = true, .open_flag = &open }, .{ .rect = .{ .x = 140, .y = 40, .w = 760, .h = 620 }, .min_size_content = .{ .w = 520, .h = 360 } });
+    var fw = dvui.floatingWindow(@src(), .{ .modal = true, .open_flag = &open }, .{ .rect = fitRect(760, 620), .min_size_content = .{ .w = 520, .h = 360 } });
     defer fw.deinit();
     _ = dvui.windowHeader(.{ .title = "Set up WinLab", .open_flag = &open });
 
@@ -814,7 +823,7 @@ fn setupWindow(a: *App) void {
 /// The track picker: each goal with its size, levels and your progress.
 fn pickerWindow(a: *App) void {
     var open = true;
-    var fw = dvui.floatingWindow(@src(), .{ .modal = true, .open_flag = &open }, .{ .rect = .{ .x = 120, .y = 40, .w = 820, .h = 640 }, .min_size_content = .{ .w = 520, .h = 360 } });
+    var fw = dvui.floatingWindow(@src(), .{ .modal = true, .open_flag = &open }, .{ .rect = fitRect(820, 640), .min_size_content = .{ .w = 520, .h = 360 } });
     defer fw.deinit();
     _ = dvui.windowHeader(.{ .title = "Choose a learning path", .open_flag = &open });
 
@@ -1605,7 +1614,7 @@ fn labWindow(a: *App) void {
     const lab = a.o.labs[l.index];
     const busy = l.busy.load(.acquire);
     var open = true;
-    var fw = dvui.floatingWindow(@src(), .{ .open_flag = &open }, .{ .rect = .{ .x = 120, .y = 90, .w = 720, .h = 620 }, .min_size_content = .{ .w = 480, .h = 380 } });
+    var fw = dvui.floatingWindow(@src(), .{ .open_flag = &open }, .{ .rect = fitRect(720, 620), .min_size_content = .{ .w = 480, .h = 380 } });
     defer fw.deinit();
     _ = dvui.windowHeader(.{ .title = lab.title, .open_flag = &open });
 
@@ -1984,7 +1993,7 @@ fn quizWindow(a: *App) void {
     const z = &a.qz;
     const quiz = &a.o.quizzes[z.quiz];
     var open = true;
-    var fw = dvui.floatingWindow(@src(), .{ .modal = true, .open_flag = &open }, .{ .rect = .{ .x = 140, .y = 60, .w = 760, .h = 600 }, .min_size_content = .{ .w = 520, .h = 400 } });
+    var fw = dvui.floatingWindow(@src(), .{ .modal = true, .open_flag = &open }, .{ .rect = fitRect(760, 600), .min_size_content = .{ .w = 520, .h = 400 } });
     defer fw.deinit();
     var title_buf: [200]u8 = undefined;
     const title = std.fmt.bufPrint(&title_buf, "Quiz: {s}", .{quizTitle(a, quiz.lesson)}) catch "Quiz";
