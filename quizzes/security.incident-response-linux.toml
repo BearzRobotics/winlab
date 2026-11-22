@@ -114,10 +114,26 @@ review = "Seal the evidence"
 [[question]]
 id = "lock-not-delete"
 type = "choice"
-prompt = "Why lock the intruder's account (usermod -L) instead of deleting it?"
-choices = ["You keep its files as evidence", "Locking is faster", "Deleting is impossible", "Locked accounts cannot log in remotely at all and nothing else is needed"]
+prompt = "Why keep the intruder's account (locked or expired) instead of deleting it?"
+choices = ["You keep its files as evidence", "Deleting is impossible", "Locked accounts cannot log in remotely at all and nothing else is needed", "Locking is the same as expiring"]
 answers = ["You keep its files as evidence"]
-explanation = "Containment stops harm without destroying evidence; eradication comes later."
+explanation = "Containment stops harm without destroying evidence; eradication comes later. Note that usermod -L alone did not stop a key login."
+
+[[question]]
+id = "lock-key-login"
+type = "choice"
+prompt = "In the test, an account with an authorized SSH key had its password locked with usermod -L. What happened to its key login?"
+choices = ["It still worked (UsePAM yes)", "It was refused", "It asked for a password", "sshd restarted"]
+answers = ["It still worked (UsePAM yes)"]
+explanation = "Expiring the account (usermod -e 1) was refused with 'account has expired', and moving authorized_keys away gave Permission denied (publickey)."
+review = "Contain, then clean up"
+
+[[question]]
+id = "expire-account"
+type = "short"
+prompt = "Which command expired the account in the test? Type the usermod option and value, for example -x 5."
+answers = ["-e 1", "usermod -e 1", "-e1"]
+explanation = "usermod -e 1 sets the expiry date to 1 January 1970 plus one day; chage -l showed Account expires: Jan 02, 1970."
 review = "Contain, then clean up"
 
 [[question]]

@@ -19,12 +19,12 @@ labs = ["labs.linux-name-resolution", "labs.linux-service-loopback-only"]
 [[stage]]
 title = "Names and addresses of your own"
 lessons = ["homelab.own-dns-and-dhcp"]
-labs = []
+labs = ["labs.linux-dnsmasq-port-conflict"]
 
 [[stage]]
 title = "Share and protect your data"
 lessons = ["security.security-fundamentals", "homelab.file-sharing-samba", "homelab.backups"]
-labs = []
+labs = ["labs.alma-samba-selinux-label"]
 
 [[stage]]
 title = "Reach it safely"

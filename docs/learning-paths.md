@@ -96,10 +96,13 @@ The seven PowerShell lessons in order, plus the two planned ones. This is path 4
 
 ### 9. Security fundamentals: about 5.5 h so far
 `security.security-fundamentals`, `windows-admin.accounts-and-permissions`, `networking.ports-and-firewalls`, `endpoints.protect-devices`, `foundations.ps-errors-and-debugging` (reading and auditing code).
-*Planned:* the cybersecurity track (threat modelling, hardening, logging and detection, vulnerability scanning, incident response; defensive first, own lab only).
+*Built 2026-11-22 (drafts):* the **cybersecurity** path, `paths/cybersecurity.toml`, defensive first and own lab only: `security.authorization-and-scope`, `security.threat-modelling`, `security.own-lab-recon`, `security.linux-logging-and-detection`, `security.linux-hardening-checks`, `security.incident-response-linux`. *Still planned:* the Windows side (event logs and auditing; a lesson may exist, see HANDOFF), vulnerability management, web application basics.
 
 ### 10. Home lab (stretch goal)
-`networking.*` (all seven), the Linux basics above, then the *planned* lessons: a firewall appliance (OPNsense or IPFire), your own DNS and DHCP server, a hypervisor (Proxmox, Hyper-V), file sharing (Samba, Nextcloud), document and media servers, backups and monitoring, and what not to expose to the internet.
+*Built 2026-11-22 (drafts):* `paths/home-lab.toml` with `networking.*` (all seven), the Linux basics, then `homelab.own-dns-and-dhcp` (dnsmasq), `homelab.file-sharing-samba`, `homelab.backups` (rsync, tar, restic) and `homelab.wireguard-and-exposure`. *Still planned, and not testable in the current VMs:* a firewall appliance (OPNsense or IPFire), a hypervisor (Proxmox, Hyper-V), Nextcloud, document and media servers, and monitoring.
+
+### 11. Package repositories (stretch goal, added 2026-11-22)
+`paths/package-repositories.toml`: `packaging.apt-repository`, `packaging.dnf-repository`, `packaging.apk-repository` (tested on Chimera; written for the owner's FenrirOS package repository, which the author has not seen) and `packaging.hosting-a-repository` (measured repository sizes, nginx, atomic publishing, mirroring, a health-check script).
 
 ## Choosing a first path (a short placement flow)
 
@@ -131,7 +134,7 @@ The seven PowerShell lessons in order, plus the two planned ones. This is path 4
 
 **Not built yet**
 - A path-level "continue where I left off" button on the picker (the window already reopens at your last lesson on the path).
-- The home-lab path (no lessons for it yet) and the cybersecurity path.
+- The Windows side of the cybersecurity path, the firewall appliance and hypervisor lessons of the home-lab path, and a dnf or apk version of the repository health check.
 - The "all lessons" view still orders lessons inside an area by lesson id (so `bash-basics` sorts before `cmd-basics`); paths give the teaching order. A prerequisite-based order for that view would fix it.
 - Not checked: 200% scale and Narrator. Driven in the running window (2026-11-21, synthetic mouse and key messages, throwaway profile): the placement quiz end to end (100% on an unstarted lesson saved `known`, the sidebar and header updated), Down-arrow navigation in path mode (two presses moved two lessons in path order), stage labs in the sidebar, and 150% text scale (found and fixed two layout problems: the Paths button was squeezed out and the header buttons were pushed off; the buttons now sit on their own row).
 - Open questions below (threshold, whether Known counts toward certification coverage, whether placement attempts are recorded as normal attempts) are still open; today a placement attempt is an ordinary attempt.

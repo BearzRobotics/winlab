@@ -1,0 +1,44 @@
+schema_version = 1
+id = "labs.linux-sshd-dropin-order"
+target = "linux"
+title = "Linux: SSH allows passwords although the main settings say no"
+summary = "A drop-in file read first overrides the hardened SSH settings, because sshd uses the first value it reads."
+lesson = "security.linux-hardening-checks"
+symptom = "A security review says the lab VM accepts SSH password logins and root login. The main hardening notes say PasswordAuthentication is off, and nobody edited sshd_config. sshd -t reports no errors."
+hints = [
+  "sshd -T prints the settings the daemon would actually use. Compare it with the files, not the other way round.",
+  "sshd_config starts with an Include of /etc/ssh/sshd_config.d/*.conf, and sshd uses the FIRST value it reads for a keyword. ls /etc/ssh/sshd_config.d shows the order the files are read in.",
+  "Find which file sets the wrong values (grep -r -i -E 'PasswordAuthentication|PermitRootLogin' /etc/ssh). Remove or fix that file rather than editing the files that were right.",
+  "Check the syntax with sshd -t, reload the service (systemctl reload ssh on Ubuntu, sshd on AlmaLinux), and confirm with sshd -T. Keep your own session open until you have checked.",
+]
+expected_changes = [
+  "Adds /etc/ssh/sshd_config.d/00-legacy.conf with PasswordAuthentication yes and PermitRootLogin yes, sorted before the image's own files",
+  "Reloads sshd so the effective configuration changes (key-based logins, including yours, keep working)",
+]
+hazards = ["The lab VM accepts SSH password logins and root login until the file is removed; the lab user logs in with a key and is not affected"]
+scope = "single guest (the registered Linux training VM only)"
+privilege = "administrator"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["comptia-linux-plus/security", "redhat-rhcsa/security", "comptia-linux-plus/troubleshooting"]
+setup = '''
+mkdir -p /etc/ssh/sshd_config.d
+sshd -t
+'''
+fault = '''
+set -e
+printf 'PasswordAuthentication yes\nPermitRootLogin yes\n' > /etc/ssh/sshd_config.d/00-legacy.conf
+sshd -t
+systemctl reload ssh 2>/dev/null || systemctl reload sshd
+'''
+solution = '''
+rm -f /etc/ssh/sshd_config.d/00-legacy.conf
+sshd -t
+systemctl reload ssh 2>/dev/null || systemctl reload sshd
+'''
+
+[validate]
+script = '''
+echo "password=$(sshd -T | awk '/^passwordauthentication/ {print $2}');root=$(sshd -T | awk '/^permitrootlogin/ {print $2}')"
+'''
+expect_output_contains = "password=no;root=without-password"

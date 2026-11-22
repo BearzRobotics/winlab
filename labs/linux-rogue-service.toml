@@ -1,0 +1,73 @@
+schema_version = 1
+id = "labs.linux-rogue-service"
+target = "linux"
+title = "Linux: an unknown service and an unknown account"
+summary = "A scan shows an unexpected open port; find the service and the account behind it and contain them without breaking the real service."
+lesson = "security.incident-response-linux"
+symptom = "A port scan of the lab VM from another machine shows TCP port 4444 open, which nobody set up. The VM also has a user account nobody remembers creating. The VM does run one legitimate service, winlab-metrics, which must keep running."
+hints = [
+  "ss -tlnp shows which process listens on port 4444 and which programs run it. systemctl status on the unit name that the process belongs to shows where its file lives.",
+  "systemctl list-unit-files --state=enabled and ls -l /etc/systemd/system show units that are not the distribution's. getent passwd and ls /home show the extra account; look inside its .ssh directory.",
+  "Contain, do not destroy: stop and disable the service rather than deleting its unit file, and keep the account's files. Expiring the account (usermod -e 1) stops key logins; usermod -L alone locks the password but an SSH key can still log in.",
+  "Move the account's authorized_keys somewhere safe as evidence rather than deleting it. Check afterwards that port 4444 is closed and that winlab-metrics is still active.",
+]
+expected_changes = [
+  "Creates winlab-metrics.service (a small web server on 127.0.0.1:9100, enabled) as the legitimate service",
+  "Then adds a user wl-svc with an authorized SSH key and winlab-update-helper.service (enabled, listening on 0.0.0.0:4444)",
+]
+hazards = ["The lab VM listens on an extra port and has an extra account until you contain them; both are fake and created only by this lab"]
+scope = "single guest (the registered Linux training VM only)"
+privilege = "administrator"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["comptia-linux-plus/security", "comptia-linux-plus/troubleshooting", "redhat-rhcsa/security"]
+setup = '''
+set -e
+cat > /etc/systemd/system/winlab-metrics.service <<'UNIT'
+[Unit]
+Description=WinLab metrics page (legitimate)
+
+[Service]
+WorkingDirectory=/var/tmp
+ExecStart=/usr/bin/python3 -m http.server 9100 --bind 127.0.0.1
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+systemctl daemon-reload
+systemctl enable --now winlab-metrics
+'''
+fault = '''
+set -e
+id wl-svc >/dev/null 2>&1 || useradd -m -s /bin/bash wl-svc
+install -d -m 700 -o wl-svc -g wl-svc /home/wl-svc/.ssh
+echo 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIWLLABFAKEKEYWLLABFAKEKEYWLLABFAKEKEYAAAA attacker@evil.example' > /home/wl-svc/.ssh/authorized_keys
+chown wl-svc:wl-svc /home/wl-svc/.ssh/authorized_keys; chmod 600 /home/wl-svc/.ssh/authorized_keys
+cat > /etc/systemd/system/winlab-update-helper.service <<'UNIT'
+[Unit]
+Description=Totally normal update helper
+
+[Service]
+WorkingDirectory=/tmp
+ExecStart=/usr/bin/python3 -m http.server 4444 --bind 0.0.0.0
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+systemctl daemon-reload
+systemctl enable --now winlab-update-helper
+sleep 1
+'''
+solution = '''
+systemctl disable --now winlab-update-helper
+usermod -e 1 wl-svc
+mv /home/wl-svc/.ssh/authorized_keys /root/wl-svc-authorized_keys.evidence
+'''
+
+[validate]
+script = '''
+echo "port4444=$(ss -H -tln | grep -c ':4444 ');unit=$(systemctl is-enabled winlab-update-helper >/dev/null 2>&1 && echo on || echo off);key=$([ -e /home/wl-svc/.ssh/authorized_keys ] && echo present || echo gone);expires=$(chage -l wl-svc | awk -F': ' '/Account expires/ {print $2}');metrics=$(systemctl is-active winlab-metrics)"
+'''
+expect_output_contains = "port4444=0;unit=off;key=gone;expires=Jan 02, 1970;metrics=active"

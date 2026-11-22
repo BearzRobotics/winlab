@@ -14,7 +14,7 @@ labs = []
 [[stage]]
 title = "The three formats"
 lessons = ["linux.systemd", "packaging.apt-repository", "packaging.dnf-repository", "linux.dinit-basics", "linux.dinit-service-files", "linux.dinit-in-practice", "packaging.apk-repository"]
-labs = []
+labs = ["labs.linux-apt-repo-no-pubkey"]
 
 [[stage]]
 title = "Hosting"

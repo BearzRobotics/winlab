@@ -24,9 +24,9 @@ labs = []
 [[stage]]
 title = "Harden and check"
 lessons = ["security.linux-hardening-checks"]
-labs = []
+labs = ["labs.linux-sshd-dropin-order"]
 
 [[stage]]
 title = "Respond"
 lessons = ["security.incident-response-linux"]
-labs = []
+labs = ["labs.linux-rogue-service"]

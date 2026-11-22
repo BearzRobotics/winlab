@@ -155,9 +155,20 @@ $ systemctl disable --now wl-backdoor        Removed "/etc/systemd/system/multi-
 $ pkill -f wl-beacon; pkill -f wl-gone
 $ usermod -L wl-svc; passwd -S wl-svc
 wl-svc L 2026-11-22 0 99999 7 -1             (AlmaLinux: wl-svc LK 2026-11-22 0 99999 7 -1 (Password locked.))
+                                             (this locked the password only: see the test below)
 ```
 
-Lock rather than delete the account: you keep its files as evidence. Disable the service and kill the process **after** you have collected them. For a real incident the choice of what to isolate belongs in your plan before it happens: pulling the network cable (or the VM's network) keeps the machine running and its memory intact while stopping outside access, and is, in my reading of the RFC.s warning about shutdown, usually better than powering off (my judgement; not tested here). In a real compromise **assume the account's keys and passwords are exposed** and rotate them, and consider rebuilding the machine from a known-good image rather than cleaning it, because you cannot prove you found everything. **Eradication** and **recovery** (rebuild, restore from backup, verify) are outside what I tested. After the exercise I removed the unit, the cron file, the beacon, the account and the evidence directory.
+**Locking the password is not enough to stop an SSH key login.** I tested it (`tests/verification/security/sc8.sh`, both VMs, `UsePAM yes`): a throwaway account with an authorized key kept logging in after `usermod -L`, and so did a brand-new account that had no password at all (those start out locked, `passwd -S` printed `L` before I touched anything):
+
+```text
+1. before anything                         -> logged-in as wl-svc          (passwd -S: L)
+2. password locked (usermod -L)            -> logged-in as wl-svc
+3. + shell set to nologin                  -> This account is currently not available.
+4. account expired (usermod -e 1)          -> Connection closed ...  "account wl-svc has expired" / "Access denied for user wl-svc by PAM account configuration"
+5. authorized_keys moved away              -> Permission denied (publickey).
+```
+
+So for an account that may have a key, contain it with **`usermod -e 1`** (expire the account; `chage -l` then shows `Account expires: Jan 02, 1970`) and move its `authorized_keys` aside as evidence. A `nologin` shell stopped the shell but the key was still accepted (the message came from the login shell, and I did not test port forwarding). Still lock rather than delete, so you keep the account's files as evidence. Disable the service and kill the process **after** you have collected them. For a real incident the choice of what to isolate belongs in your plan before it happens: pulling the network cable (or the VM's network) keeps the machine running and its memory intact while stopping outside access, and is, in my reading of the RFC.s warning about shutdown, usually better than powering off (my judgement; not tested here). In a real compromise **assume the account's keys and passwords are exposed** and rotate them, and consider rebuilding the machine from a known-good image rather than cleaning it, because you cannot prove you found everything. **Eradication** and **recovery** (rebuild, restore from backup, verify) are outside what I tested. After the exercise I removed the unit, the cron file, the beacon, the account and the evidence directory.
 
 ## Lessons learned
 

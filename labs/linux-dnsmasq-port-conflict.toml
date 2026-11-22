@@ -1,0 +1,59 @@
+schema_version = 1
+id = "labs.linux-dnsmasq-port-conflict"
+target = "linux"
+title = "Linux: the home DNS server will not start"
+summary = "dnsmasq fails to start on Ubuntu because systemd-resolved already holds port 53; bind only the address you mean."
+lesson = "homelab.own-dns-and-dhcp"
+symptom = "The lab DNS server (dnsmasq) is supposed to answer for nas.lab.test on 127.0.0.1, but the service is failed. dig @127.0.0.1 nas.lab.test gets no answer."
+hints = [
+  "systemctl status dnsmasq and journalctl -u dnsmasq show the reason in the first lines: failed to create listening socket for port 53.",
+  "ss -ulnp | grep ':53 ' shows who already holds the port. On Ubuntu systemd-resolved listens on 127.0.0.53 and 127.0.0.54.",
+  "dnsmasq wants every address by default. /etc/dnsmasq.d/lab.conf should tell it to bind only the address it is meant to serve (listen-address and bind-interfaces).",
+  "dnsmasq --test does not read /etc/dnsmasq.d on Ubuntu; use dnsmasq --test --conf-dir=/etc/dnsmasq.d to check the real configuration before restarting.",
+]
+expected_changes = [
+  "Installs dnsmasq and dnsutils, and writes /etc/dnsmasq.d/lab.conf (listen-address=127.0.0.1, bind-interfaces, a lab.test zone with nas.lab.test) so the service runs",
+  "Then removes the listen-address and bind-interfaces lines and restarts the service, which fails with Address already in use",
+]
+hazards = ["The dnsmasq service in the lab VM stays failed until its configuration binds only 127.0.0.1; the lab needs internet access while it is built (package install)"]
+scope = "single guest (the registered Linux training VM only)"
+privilege = "administrator"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["comptia-network-plus/network-implementation", "comptia-linux-plus/system-management", "comptia-linux-plus/troubleshooting"]
+setup = '''
+set -e
+export DEBIAN_FRONTEND=noninteractive
+apt-get update -qq
+mkdir -p /etc/dnsmasq.d
+cat > /etc/dnsmasq.d/lab.conf <<'CONF'
+listen-address=127.0.0.1
+bind-interfaces
+no-resolv
+server=10.0.2.3
+domain=lab.test
+local=/lab.test/
+address=/nas.lab.test/192.168.50.10
+CONF
+apt-get install -y -qq dnsmasq dnsutils
+systemctl enable dnsmasq
+systemctl restart dnsmasq
+sleep 1
+'''
+fault = '''
+sed -i '/^listen-address=/d;/^bind-interfaces/d' /etc/dnsmasq.d/lab.conf
+systemctl restart dnsmasq || true
+sleep 1
+'''
+solution = '''
+printf 'listen-address=127.0.0.1\nbind-interfaces\n' >> /etc/dnsmasq.d/lab.conf
+dnsmasq --test --conf-dir=/etc/dnsmasq.d
+systemctl restart dnsmasq
+sleep 1
+'''
+
+[validate]
+script = '''
+echo "active=$(systemctl is-active dnsmasq);answer=$(dig @127.0.0.1 nas.lab.test +short +time=3 +tries=1)"
+'''
+expect_output_contains = "active=active;answer=192.168.50.10"

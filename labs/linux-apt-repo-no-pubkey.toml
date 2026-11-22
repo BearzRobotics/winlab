@@ -1,0 +1,88 @@
+schema_version = 1
+id = "labs.linux-apt-repo-no-pubkey"
+target = "linux"
+title = "Linux: apt update says NO_PUBKEY for the lab repository"
+summary = "The lab repository was re-signed with a new key; the client still trusts the old one."
+lesson = "packaging.apt-repository"
+symptom = "apt-get update prints a warning for the lab repository at http://127.0.0.1:8081: 'The following signatures couldn't be verified because the public key is not available: NO_PUBKEY ...', and the new version of wl-hello (1.1) is not offered."
+hints = [
+  "The message names the key ID that signed the repository. The client trusts only the keys in the Signed-By file named in /etc/apt/sources.list.d/wl-repo.sources.",
+  "gpg --show-keys /etc/apt/keyrings/wl-repo.gpg lists the key the client trusts; compare its ID with the one in the error.",
+  "The repository publishes the new public key at http://127.0.0.1:8081/wl-repo-new.gpg. Before trusting a key you downloaded from the same server, compare its fingerprint with one obtained another way; in this lab you may assume it is genuine.",
+  "Replace the client's keyring file with the new key (the Signed-By path stays the same), run apt-get update again and check apt-cache policy wl-hello. Do not mark the source trusted=yes.",
+]
+expected_changes = [
+  "Builds a signed apt repository in /srv/wl-repo (wl-hello 1.0), serves it from 127.0.0.1:8081 with a systemd unit, and points the client at it with Signed-By",
+  "Then publishes wl-hello 1.1 signed with a different, new key and puts the new public key at /srv/wl-repo/wl-repo-new.gpg; the client still has the old key",
+]
+hazards = ["apt-get update in the lab VM warns about the lab repository until the client trusts the new key; the lab needs internet access while it is built (package install)"]
+scope = "single guest (the registered Linux training VM only)"
+privilege = "administrator"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["comptia-linux-plus/system-management", "comptia-linux-plus/security", "comptia-linux-plus/troubleshooting"]
+setup = '''
+set -e
+export DEBIAN_FRONTEND=noninteractive
+apt-get update -qq
+apt-get install -y -qq dpkg-dev apt-utils gnupg
+R=/srv/wl-repo; export GNUPGHOME=/root/.wl-gpg-old
+rm -rf $R $GNUPGHOME /var/tmp/wl-pkg
+mkdir -p $R/pool/main/w/wl-hello $GNUPGHOME; chmod 700 $GNUPGHOME
+gpg --batch --pinentry-mode loopback --passphrase '' --quick-generate-key "WinLab Test Repo <repo@lab.test>" ed25519 sign never >/dev/null 2>&1
+mkdir -p /etc/apt/keyrings; gpg --export > /etc/apt/keyrings/wl-repo.gpg
+d=/var/tmp/wl-pkg/wl-hello_1.0; mkdir -p $d/DEBIAN $d/usr/bin
+printf '#!/bin/sh\necho "wl-hello 1.0"\n' > $d/usr/bin/wl-hello; chmod 755 $d/usr/bin/wl-hello
+printf 'Package: wl-hello\nVersion: 1.0\nArchitecture: all\nMaintainer: WinLab Test <repo@lab.test>\nDescription: test 1.0\n' > $d/DEBIAN/control
+dpkg-deb --root-owner-group --build $d $R/pool/main/w/wl-hello/ >/dev/null
+cd $R; mkdir -p dists/stable/main/binary-amd64
+dpkg-scanpackages --arch all pool 2>/dev/null > dists/stable/main/binary-amd64/Packages; gzip -9fk dists/stable/main/binary-amd64/Packages
+apt-ftparchive -o APT::FTPArchive::Release::Suite=stable -o APT::FTPArchive::Release::Codename=stable -o APT::FTPArchive::Release::Architectures=amd64 -o APT::FTPArchive::Release::Components=main release dists/stable > dists/stable/Release
+gpg --batch --yes --pinentry-mode loopback --passphrase '' -abs -o dists/stable/Release.gpg dists/stable/Release
+gpg --batch --yes --pinentry-mode loopback --passphrase '' --clearsign -o dists/stable/InRelease dists/stable/Release
+cat > /etc/systemd/system/wl-repo-http.service <<'UNIT'
+[Unit]
+Description=WinLab lab apt repository (static files)
+
+[Service]
+ExecStart=/usr/bin/python3 -m http.server 8081 --directory /srv/wl-repo --bind 127.0.0.1
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+systemctl daemon-reload
+systemctl enable --now wl-repo-http
+sleep 1
+printf 'Types: deb\nURIs: http://127.0.0.1:8081\nSuites: stable\nComponents: main\nSigned-By: /etc/apt/keyrings/wl-repo.gpg\n' > /etc/apt/sources.list.d/wl-repo.sources
+apt-get update -qq
+'''
+fault = '''
+set -e
+export DEBIAN_FRONTEND=noninteractive
+R=/srv/wl-repo; export GNUPGHOME=/root/.wl-gpg-new
+rm -rf $GNUPGHOME; mkdir -p $GNUPGHOME; chmod 700 $GNUPGHOME
+gpg --batch --pinentry-mode loopback --passphrase '' --quick-generate-key "WinLab Test Repo (new key) <repo@lab.test>" ed25519 sign never >/dev/null 2>&1
+gpg --export > $R/wl-repo-new.gpg
+d=/var/tmp/wl-pkg/wl-hello_1.1; rm -rf $d; mkdir -p $d/DEBIAN $d/usr/bin
+printf '#!/bin/sh\necho "wl-hello 1.1"\n' > $d/usr/bin/wl-hello; chmod 755 $d/usr/bin/wl-hello
+printf 'Package: wl-hello\nVersion: 1.1\nArchitecture: all\nMaintainer: WinLab Test <repo@lab.test>\nDescription: test 1.1\n' > $d/DEBIAN/control
+dpkg-deb --root-owner-group --build $d $R/pool/main/w/wl-hello/ >/dev/null
+cd $R
+dpkg-scanpackages --arch all pool 2>/dev/null > dists/stable/main/binary-amd64/Packages; gzip -9fk dists/stable/main/binary-amd64/Packages
+apt-ftparchive -o APT::FTPArchive::Release::Suite=stable -o APT::FTPArchive::Release::Codename=stable -o APT::FTPArchive::Release::Architectures=amd64 -o APT::FTPArchive::Release::Components=main release dists/stable > dists/stable/Release
+gpg --batch --yes --pinentry-mode loopback --passphrase '' -abs -o dists/stable/Release.gpg dists/stable/Release
+gpg --batch --yes --pinentry-mode loopback --passphrase '' --clearsign -o dists/stable/InRelease dists/stable/Release
+apt-get update 2>&1 | tail -3 || true
+'''
+solution = '''
+curl -fsS http://127.0.0.1:8081/wl-repo-new.gpg -o /etc/apt/keyrings/wl-repo.gpg
+apt-get update
+'''
+
+[validate]
+script = '''
+n=$(apt-get update 2>&1 | grep -c NO_PUBKEY)
+echo "nopubkey=$n;candidate=$(apt-cache policy wl-hello | awk '/Candidate/ {print $2}')"
+'''
+expect_output_contains = "nopubkey=0;candidate=1.1"

@@ -1,0 +1,70 @@
+schema_version = 1
+id = "labs.alma-samba-selinux-label"
+target = "linux"
+distro = "almalinux"
+title = "AlmaLinux: the Samba share lets you in but not save"
+summary = "SELinux denies smbd access to a share folder labelled var_t; give it samba_share_t instead of turning SELinux off."
+lesson = "homelab.file-sharing-samba"
+symptom = "Users in the right group can connect to the labfiles share and see its name, but saving a file fails with NT_STATUS_ACCESS_DENIED and an existing file does not even appear in the listing. The Unix permissions on /srv/wl-share are correct (group wl-labfiles, mode 2770)."
+hints = [
+  "getenforce shows whether SELinux is enforcing. ls -dZ /srv/wl-share shows the folder's label.",
+  "ausearch -m avc -c smbd -ts recent -i lists the denials. Compare the source context (smbd_t) with the target context of the folder.",
+  "Samba may use files labelled samba_share_t. semanage fcontext -a -t samba_share_t '/srv/wl-share(/.*)?' records the rule; restorecon -Rv /srv/wl-share applies it.",
+  "Do not use setenforce 0, chmod 777 or the samba_export_all_rw boolean: they open far more than this one folder. Test again with smbclient //127.0.0.1/labfiles -U wl-alice%Lab-pass-1.",
+]
+expected_changes = [
+  "Installs samba, samba-client and policycoreutils-python-utils, creates user wl-alice (lab-only password) and group wl-labfiles, the folder /srv/wl-share, a [labfiles] share, and labels the folder samba_share_t; the smb service is enabled",
+  "Then removes the labelling rule and relabels the folder, so it carries the generic var_t label and smbd is denied",
+]
+hazards = ["The Samba share in the lab VM cannot be written until the folder has the right SELinux label; the user and password in this lab are throwaways"]
+scope = "single guest (the registered AlmaLinux training VM only)"
+privilege = "administrator"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["redhat-rhcsa/security", "redhat-rhcsa/file-systems", "comptia-linux-plus/troubleshooting"]
+setup = '''
+set -e
+dnf -y -q install samba samba-client policycoreutils-python-utils
+groupadd -f wl-labfiles
+id wl-alice >/dev/null 2>&1 || useradd -m -s /usr/sbin/nologin -G wl-labfiles wl-alice
+printf 'Lab-pass-1\nLab-pass-1\n' | smbpasswd -a -s wl-alice
+mkdir -p /srv/wl-share
+chown root:wl-labfiles /srv/wl-share
+chmod 2770 /srv/wl-share
+echo "hello from the server" > /srv/wl-share/readme.txt
+chown root:wl-labfiles /srv/wl-share/readme.txt
+chmod 660 /srv/wl-share/readme.txt
+grep -q '^\[labfiles\]' /etc/samba/smb.conf || cat >> /etc/samba/smb.conf <<'CONF'
+
+[labfiles]
+   path = /srv/wl-share
+   valid users = @wl-labfiles
+   read only = no
+   create mask = 0660
+   directory mask = 2770
+   force group = wl-labfiles
+CONF
+semanage fcontext -a -t samba_share_t '/srv/wl-share(/.*)?'
+restorecon -R /srv/wl-share
+systemctl enable --now smb
+sleep 2
+'''
+fault = '''
+semanage fcontext -d '/srv/wl-share(/.*)?'
+restorecon -R /srv/wl-share
+systemctl restart smb
+sleep 2
+'''
+solution = '''
+semanage fcontext -a -t samba_share_t '/srv/wl-share(/.*)?'
+restorecon -Rv /srv/wl-share
+'''
+
+[validate]
+script = '''
+echo "lab check" > /tmp/wl-up.txt
+out=$(smbclient //127.0.0.1/labfiles -U wl-alice%Lab-pass-1 -c 'put /tmp/wl-up.txt up.txt' 2>&1)
+case "$out" in *"putting file"*) put=ok;; *) put=denied;; esac
+echo "put=$put;label=$(ls -dZ /srv/wl-share | awk '{print $1}' | cut -d: -f3);enforcing=$(getenforce)"
+'''
+expect_output_contains = "put=ok;label=samba_share_t;enforcing=Enforcing"
