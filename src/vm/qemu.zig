@@ -227,13 +227,17 @@ fn spawnQemu(q: *Qemu, argv: []const []const u8, dir: []const u8) !u32 {
     return pid;
 }
 
+/// The supervisor lives as long as the process: `lab start` leaves the VM running and exits without stopping it,
+/// so the debug leak checker would report it. It uses the page allocator, which that checker does not track.
+const sup_alloc = std.heap.page_allocator;
+
 fn startSupervisor(q: *Qemu, t: p.Target, argv: []const []const u8) void {
-    const s = q.gpa.create(Supervisor) catch return;
-    s.* = .{ .q = q, .arena = std.heap.ArenaAllocator.init(q.gpa), .argv = &.{}, .disk = "", .dir = "" };
+    const s = sup_alloc.create(Supervisor) catch return;
+    s.* = .{ .q = q, .arena = std.heap.ArenaAllocator.init(sup_alloc), .argv = &.{}, .disk = "", .dir = "" };
     const a = s.arena.allocator();
     const copy = a.alloc([]const u8, argv.len) catch {
         s.arena.deinit();
-        q.gpa.destroy(s);
+        sup_alloc.destroy(s);
         return;
     };
     for (argv, copy) |arg, *slot| slot.* = a.dupe(u8, arg) catch "";
@@ -242,7 +246,7 @@ fn startSupervisor(q: *Qemu, t: p.Target, argv: []const []const u8) void {
     s.dir = a.dupe(u8, vmDir(t)) catch "";
     s.thread = std.Thread.spawn(.{}, Supervisor.loop, .{s}) catch {
         s.arena.deinit();
-        q.gpa.destroy(s);
+        sup_alloc.destroy(s);
         return;
     };
     q.sup = s;
@@ -254,7 +258,7 @@ fn stopSupervisor(q: *Qemu) void {
     if (s.thread) |th| th.join();
     q.sup = null;
     s.arena.deinit();
-    q.gpa.destroy(s);
+    sup_alloc.destroy(s);
 }
 
 /// Blocks until the guest answers over SSH, up to `timeout_s`. For after a guest restart, when the
