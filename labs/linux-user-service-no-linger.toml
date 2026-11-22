@@ -1,0 +1,61 @@
+schema_version = 1
+id = "labs.linux-user-service-no-linger"
+target = "linux"
+title = "Linux: a user's service stops when nobody is logged in"
+summary = "A user service runs only while the user has a session, because linger is off."
+lesson = "linux.systemd-advanced"
+symptom = "The user 'reports' has a service (winlab-ticker) in their own systemd user manager. It runs while somebody is logged in as reports and vanishes shortly after the last session ends. It must keep running with nobody logged in, and start at boot."
+hints = [
+  "loginctl show-user reports shows State and Linger. Without a session, the user manager (user@UID.service) is stopped, and takes the user's services with it.",
+  "loginctl enable-linger USER keeps the user manager running without a login and starts it at boot.",
+  "To look at a user's services without logging in as them: systemctl --machine=reports@.host --user is-active winlab-ticker.",
+  "After you change linger, give the user manager a moment to start, then check the service is active.",
+]
+expected_changes = [
+  "Creates the user 'reports' with a user service winlab-ticker enabled in their default.target (linger is turned on while the lab is built)",
+  "Then turns linger off and stops the user manager, so the service is gone",
+]
+hazards = ["The reports user's service in the lab VM stays stopped until linger is enabled"]
+scope = "single guest (the registered Linux training VM only)"
+privilege = "administrator"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["comptia-linux-plus/system-management", "comptia-linux-plus/troubleshooting", "redhat-rhcsa/running-systems"]
+setup = '''
+set -e
+id reports >/dev/null 2>&1 || useradd -m reports
+UIDN=$(id -u reports)
+loginctl enable-linger reports
+for i in $(seq 1 20); do [ -S /run/user/$UIDN/bus ] && break; sleep 1; done
+install -d -o reports -g reports /home/reports/.config/systemd/user
+cat > /home/reports/.config/systemd/user/winlab-ticker.service <<'UNIT'
+[Unit]
+Description=WinLab user ticker
+
+[Service]
+ExecStart=/bin/sleep 100000
+
+[Install]
+WantedBy=default.target
+UNIT
+chown reports:reports /home/reports/.config/systemd/user/winlab-ticker.service
+systemctl --machine=reports@.host --user daemon-reload
+systemctl --machine=reports@.host --user enable --now winlab-ticker
+'''
+fault = '''
+UIDN=$(id -u reports)
+loginctl disable-linger reports
+systemctl stop user@$UIDN.service
+sleep 1
+'''
+solution = '''
+loginctl enable-linger reports
+sleep 5
+'''
+
+[validate]
+script = '''
+sleep 3
+echo "linger=$(loginctl show-user reports -p Linger --value);service=$(systemctl --machine=reports@.host --user is-active winlab-ticker 2>&1 | tail -1)"
+'''
+expect_output_contains = "linger=yes;service=active"

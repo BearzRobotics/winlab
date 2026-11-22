@@ -1,0 +1,64 @@
+schema_version = 1
+id = "labs.alma-unit-script-in-tmp"
+target = "linux"
+distro = "almalinux"
+title = "AlmaLinux: the service cannot run its script (Permission denied)"
+summary = "A unit runs a script from /tmp; SELinux stops PID 1 from executing it."
+lesson = "linux.systemd"
+symptom = "The winlab-report service stopped working after someone moved its script to /tmp. systemctl status says 'status=203/EXEC' and the journal says 'Permission denied', but the script is mode 755 and running it by hand as root works."
+hints = [
+  "Permission denied with correct file permissions on a Red Hat family machine points at SELinux. getenforce shows its mode.",
+  "ausearch -m avc -ts recent lists recent denials. Look for scontext init_t and a tcontext ending in user_tmp_t.",
+  "ls -Z shows the label of the script. Files in /tmp get user_tmp_t; files in /usr/local/bin get bin_t, which init_t may execute.",
+  "Do not turn SELinux off. Move the script back to /usr/local/bin, point ExecStart at it, run systemctl daemon-reload and restart the service.",
+]
+expected_changes = [
+  "Creates /usr/local/bin/winlab-report.sh and winlab-report.service (oneshot with RemainAfterExit) and runs it",
+  "Then moves the script to /tmp, points ExecStart there and restarts the service, which fails with 203/EXEC under SELinux",
+]
+hazards = ["The report service in the lab VM stays failed until its script is back in a location SELinux allows"]
+scope = "single guest (the registered AlmaLinux training VM only)"
+privilege = "administrator"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["redhat-rhcsa/running-systems", "redhat-rhcsa/security", "comptia-linux-plus/troubleshooting"]
+setup = '''
+set -e
+cat > /usr/local/bin/winlab-report.sh <<'SCRIPT'
+#!/bin/sh
+echo "report generated $(date +%T)" > /var/tmp/winlab-report.txt
+SCRIPT
+chmod 755 /usr/local/bin/winlab-report.sh
+cat > /etc/systemd/system/winlab-report.service <<'UNIT'
+[Unit]
+Description=WinLab report generator
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/winlab-report.sh
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+systemctl daemon-reload
+systemctl enable --now winlab-report
+'''
+fault = '''
+mv /usr/local/bin/winlab-report.sh /tmp/winlab-report.sh
+sed -i 's#/usr/local/bin/winlab-report.sh#/tmp/winlab-report.sh#' /etc/systemd/system/winlab-report.service
+systemctl daemon-reload
+systemctl restart winlab-report || true
+'''
+solution = '''
+mv /tmp/winlab-report.sh /usr/local/bin/winlab-report.sh
+sed -i 's#/tmp/winlab-report.sh#/usr/local/bin/winlab-report.sh#' /etc/systemd/system/winlab-report.service
+systemctl daemon-reload
+systemctl restart winlab-report
+'''
+
+[validate]
+script = '''
+echo "active=$(systemctl is-active winlab-report);selinux=$(getenforce);in-tmp=$(grep -c '^ExecStart=/tmp' /etc/systemd/system/winlab-report.service)"
+'''
+expect_output_contains = "active=active;selinux=Enforcing;in-tmp=0"

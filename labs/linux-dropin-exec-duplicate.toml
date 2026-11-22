@@ -1,0 +1,55 @@
+schema_version = 1
+id = "labs.linux-dropin-exec-duplicate"
+target = "linux"
+title = "Linux: a drop-in override breaks the service"
+summary = "A drop-in adds a second ExecStart instead of replacing the first."
+lesson = "linux.systemd"
+symptom = "A colleague wanted the winlab-greeter service to sleep 6000 seconds instead of 5000 and added a drop-in file rather than editing the package's unit. Since then the service is down and will not start."
+hints = [
+  "systemctl status winlab-greeter and journalctl -u winlab-greeter say what systemd refused. Read the message about ExecStart.",
+  "systemctl cat winlab-greeter prints the unit file and every drop-in in the order they apply. Look at how many ExecStart= lines there are.",
+  "For settings that are lists, a drop-in adds to the list. Only an empty assignment (ExecStart= on its own line) clears what came before, and it must come before the new ExecStart=.",
+  "Fix the drop-in, run systemctl daemon-reload, then start the service. Check systemctl show winlab-greeter -p ExecStart afterwards.",
+]
+expected_changes = [
+  "Creates winlab-greeter.service (sleep 5000) and starts it",
+  "Adds a drop-in /etc/systemd/system/winlab-greeter.service.d/override.conf with a second ExecStart (sleep 6000) and no empty ExecStart= before it",
+]
+hazards = ["The greeter service in the lab VM stays down until the drop-in is corrected"]
+scope = "single guest (the registered Linux training VM only)"
+privilege = "administrator"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["comptia-linux-plus/system-management", "comptia-linux-plus/troubleshooting", "redhat-rhcsa/running-systems"]
+setup = '''
+set -e
+cat > /etc/systemd/system/winlab-greeter.service <<'UNIT'
+[Unit]
+Description=WinLab greeter
+
+[Service]
+ExecStart=/bin/sleep 5000
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+systemctl daemon-reload
+systemctl enable --now winlab-greeter
+'''
+fault = '''
+mkdir -p /etc/systemd/system/winlab-greeter.service.d
+printf '[Service]\nExecStart=/bin/sleep 6000\n' > /etc/systemd/system/winlab-greeter.service.d/override.conf
+systemctl daemon-reload
+systemctl restart winlab-greeter || true
+'''
+solution = '''
+printf '[Service]\nExecStart=\nExecStart=/bin/sleep 6000\n' > /etc/systemd/system/winlab-greeter.service.d/override.conf
+systemctl daemon-reload
+systemctl restart winlab-greeter
+'''
+
+[validate]
+script = '''
+echo "active=$(systemctl is-active winlab-greeter);cmd=$(systemctl show winlab-greeter -p ExecStart | grep -o 'argv\[\]=[^;]*' | head -1)"
+'''
+expect_output_contains = "active=active;cmd=argv[]=/bin/sleep 6000"

@@ -1,0 +1,63 @@
+schema_version = 1
+id = "labs.linux-restart-limit-hit"
+target = "linux"
+title = "Linux: a service keeps dying and then stays failed"
+summary = "A service with Restart=always fails at once, hits the start limit and stays down even after its cause is fixed."
+lesson = "linux.systemd"
+symptom = "The winlab-poller service shows failed. systemd restarted it again and again at first and then gave up. Starting it by hand does not help."
+hints = [
+  "systemctl status winlab-poller shows the last result. Look for start-limit-hit or Start request repeated too quickly.",
+  "journalctl -u winlab-poller shows why the program exited each time. The first messages name a file that is missing.",
+  "systemd stops trying after too many starts in a short time (StartLimitBurst in StartLimitIntervalSec). The failed state remembers it. systemctl reset-failed winlab-poller clears the counter.",
+  "After reset-failed, start the service and check that it stays active for more than a few seconds.",
+]
+expected_changes = [
+  "Creates winlab-poller.service (Restart=always, which exits at once when /etc/winlab-poller.conf is missing) and starts it",
+  "Removes the configuration file, so the service loops until systemd gives up (start-limit-hit); it is enabled, so it fails the same way after every boot",
+]
+hazards = ["The poller service in the lab VM stays failed until its configuration file exists and it is started again"]
+scope = "single guest (the registered Linux training VM only)"
+privilege = "administrator"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["comptia-linux-plus/system-management", "comptia-linux-plus/troubleshooting", "redhat-rhcsa/running-systems"]
+setup = '''
+set -e
+cat > /usr/local/bin/winlab-poller.sh <<'SCRIPT'
+#!/bin/sh
+[ -s /etc/winlab-poller.conf ] || { echo "winlab-poller: /etc/winlab-poller.conf is missing" >&2; exit 1; }
+exec sleep 100000
+SCRIPT
+chmod 755 /usr/local/bin/winlab-poller.sh
+cat > /etc/systemd/system/winlab-poller.service <<'UNIT'
+[Unit]
+Description=WinLab poller
+
+[Service]
+ExecStart=/usr/local/bin/winlab-poller.sh
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+echo 'interval=30' > /etc/winlab-poller.conf
+systemctl daemon-reload
+systemctl enable --now winlab-poller
+'''
+fault = '''
+rm -f /etc/winlab-poller.conf
+systemctl restart winlab-poller || true
+sleep 3
+'''
+solution = '''
+echo 'interval=30' > /etc/winlab-poller.conf
+systemctl reset-failed winlab-poller
+systemctl start winlab-poller
+'''
+
+[validate]
+script = '''
+sleep 3
+echo "active=$(systemctl is-active winlab-poller)"
+'''
+expect_output_contains = "active=active"

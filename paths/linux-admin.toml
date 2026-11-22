@@ -14,7 +14,7 @@ labs = ["labs.linux-service-disabled", "labs.linux-wrong-time-zone", "labs.linux
 [[stage]]
 title = "Services and the journal"
 lessons = ["linux.systemd", "linux.systemd-advanced"]
-labs = []
+labs = ["labs.linux-unit-exec-typo", "labs.linux-dropin-exec-duplicate", "labs.linux-restart-limit-hit", "labs.linux-timer-not-enabled", "labs.linux-user-service-no-linger", "labs.alma-unit-script-in-tmp", "labs.linux-service-disabled"]
 
 [[stage]]
 title = "dinit and Chimera"

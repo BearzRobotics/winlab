@@ -1,0 +1,64 @@
+schema_version = 1
+id = "labs.linux-timer-not-enabled"
+target = "linux"
+title = "Linux: the scheduled cleanup never runs"
+summary = "The service of a timer was enabled, but the timer was not."
+lesson = "linux.systemd-advanced"
+symptom = "The nightly cleanup job (winlab-cleanup) is supposed to run from a systemd timer. Its log file has not changed since the machine was built, and 'systemctl list-timers' shows nothing for it."
+hints = [
+  "systemctl list-timers --all lists every timer, including inactive ones. Is there a winlab-cleanup.timer, and is it active?",
+  "A timer unit is what schedules a service. The service and the timer are separate units with separate enable and start states.",
+  "systemctl status winlab-cleanup.timer and systemctl is-enabled winlab-cleanup.timer tell you what is missing. Enable and start the timer, not the service.",
+  "After you fix it, systemctl list-timers shows when it will next run, and the job's log file shows each run.",
+]
+expected_changes = [
+  "Creates winlab-cleanup.service (oneshot) and winlab-cleanup.timer and enables the timer",
+  "Then disables and stops the timer and enables only the service, which has an [Install] section that runs it at boot",
+]
+hazards = ["The cleanup job in the lab VM does not run on schedule until the timer is enabled and started"]
+scope = "single guest (the registered Linux training VM only)"
+privilege = "administrator"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["comptia-linux-plus/system-management", "comptia-linux-plus/troubleshooting", "redhat-rhcsa/running-systems"]
+setup = '''
+set -e
+cat > /etc/systemd/system/winlab-cleanup.service <<'UNIT'
+[Unit]
+Description=WinLab cleanup job
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'echo "cleanup ran $(date +%T)" >> /var/log/winlab-cleanup.log'
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+cat > /etc/systemd/system/winlab-cleanup.timer <<'UNIT'
+[Unit]
+Description=Run the WinLab cleanup job every minute
+
+[Timer]
+OnCalendar=minutely
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+UNIT
+systemctl daemon-reload
+systemctl enable --now winlab-cleanup.timer
+'''
+fault = '''
+systemctl disable --now winlab-cleanup.timer
+systemctl enable winlab-cleanup.service
+'''
+solution = '''
+systemctl disable winlab-cleanup.service
+systemctl enable --now winlab-cleanup.timer
+'''
+
+[validate]
+script = '''
+echo "timer-enabled=$(systemctl is-enabled winlab-cleanup.timer);timer-active=$(systemctl is-active winlab-cleanup.timer)"
+'''
+expect_output_contains = "timer-enabled=enabled;timer-active=active"
