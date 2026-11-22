@@ -1,0 +1,165 @@
+schema_version = 1
+lesson = "packaging.apk-repository"
+# Draft for owner review. Answers come from the tested output (rp3.sh, rp5.sh) on Chimera Linux (apk-tools 3.0.8) and the upstream apk manual sources named in the lesson. Nothing is claimed about FenrirOS.
+draw = 12
+
+[[question]]
+id = "index-name"
+type = "short"
+prompt = "What is the file name of the apk v3 repository index? (case matters in the real file name; type it as it appears on the server)"
+answers = ["Packages.adb", "packages.adb"]
+explanation = "The client asked for /main/x86_64/Packages.adb, and Chimera's real repository serves the same name. The older v2 index was APKINDEX.tar.gz."
+review = "apk in short"
+
+[[question]]
+id = "list-dir"
+type = "choice"
+prompt = "Where do you add your own repository line on a Chimera system?"
+choices = ["A .list file in /etc/apk/repositories.d/", "/etc/apk/keys/", "/usr/lib/apk/repositories.d/01-repo-main.list", "/var/cache/apk/"]
+answers = ["A .list file in /etc/apk/repositories.d/"]
+explanation = "The distribution's own file is in /usr/lib/apk/repositories.d; yours goes in /etc."
+review = "apk in short"
+
+[[question]]
+id = "v3-line"
+type = "choice"
+prompt = "What does the repository line 'v3 http://127.0.0.1:8083/main' mean?"
+choices = ["A v3-format repository whose base URL is http://127.0.0.1:8083/main", "Version 3 of the server", "The third mirror", "A signature algorithm"]
+answers = ["A v3-format repository whose base URL is http://127.0.0.1:8083/main"]
+explanation = "The index is then at $base_url/$arch/Packages.adb."
+review = "apk in short"
+
+[[question]]
+id = "layout-rule"
+type = "choice"
+prompt = "By default where does apk look for a package file?"
+choices = ["$base_url/$arch/$name-$version.apk, with the package's own architecture", "Always next to the index", "In /etc/apk/", "At the root of the server"]
+answers = ["$base_url/$arch/$name-$version.apk, with the package's own architecture"]
+explanation = "For a script package the arch is noarch, so the file belongs in noarch/."
+review = "apk in short"
+
+[[question]]
+id = "key-type"
+type = "choice"
+prompt = "What key type did the lesson use, following Chimera's own keys?"
+choices = ["RSA (.rsa.pub)", "ed25519 only", "A password", "A TLS certificate"]
+answers = ["RSA (.rsa.pub)"]
+explanation = "Chimera's shipped keys are named like x86_64@chimera-linux.org-669d70ff.rsa.pub."
+review = "A signing key"
+
+[[question]]
+id = "version-format"
+type = "choice"
+prompt = "In '1.0-r0', what is 'r0'?"
+choices = ["The packaging revision, bumped when you change the package but not the program", "The release candidate", "The architecture", "The repository"]
+answers = ["The packaging revision, bumped when you change the package but not the program"]
+explanation = "The Alpine convention."
+review = "Build a package: `apk mkpkg`"
+
+[[question]]
+id = "mkpkg-opts"
+type = "multi"
+prompt = "Which apk mkpkg options did the lesson use?"
+choices = ["--info KEY:VALUE", "--files PATH", "--sign-key KEYFILE", "--output FILE", "--allow-untrusted"]
+answers = ["--info KEY:VALUE", "--files PATH", "--sign-key KEYFILE", "--output FILE"]
+explanation = "--info sets metadata, --files is the root of the files to package, --sign-key signs the package and --output names it."
+review = "Build a package: `apk mkpkg`"
+
+[[question]]
+id = "mkndx-refused"
+type = "choice"
+prompt = "Why did the first apk mkndx fail with 'UNTRUSTED signature ... not creating index'?"
+choices = ["mkndx verifies the packages it indexes and the build machine did not trust the new key", "The package was empty", "The index was too big", "The key was too short"]
+answers = ["mkndx verifies the packages it indexes and the build machine did not trust the new key"]
+explanation = "A good default: you cannot index packages that fail your own trust check."
+review = "Make the index: `apk mkndx`, and the first error"
+
+[[question]]
+id = "keys-dir"
+type = "choice"
+prompt = "Which is the safer way round the refusal?"
+choices = ["--keys-dir with a directory that holds only the public key you mean", "--allow-untrusted", "Disabling the check in a config file", "Copying the private key to /etc/apk/keys"]
+answers = ["--keys-dir with a directory that holds only the public key you mean"]
+explanation = "--allow-untrusted switches the check off, which is what let an unsigned package into the index later."
+review = "Make the index: `apk mkndx`, and the first error"
+
+[[question]]
+id = "adbdump-untrusted"
+type = "choice"
+prompt = "apk adbdump on the index ended with '# sig v00 ...: UNTRUSTED signature'. What did that mean?"
+choices = ["The signature is not trusted on this machine, which was true of the builder, not a defect in the index", "The index is corrupt", "The package is unsigned", "The key expired"]
+answers = ["The signature is not trusted on this machine, which was true of the builder, not a defect in the index"]
+explanation = "The builder's trust store did not hold the key."
+review = "Make the index: `apk mkndx`, and the first error"
+
+[[question]]
+id = "404-noarch"
+type = "choice"
+prompt = "The server log showed 'GET /main/noarch/wl-hello-1.0-r0.apk 404'. What was wrong?"
+choices = ["The package file was next to the index in x86_64/ instead of in noarch/", "The key was missing", "The index was unsigned", "The port was closed"]
+answers = ["The package file was next to the index in x86_64/ instead of in noarch/"]
+explanation = "Move the file to main/noarch/ and it works."
+review = "Make the index: `apk mkndx`, and the first error"
+
+[[question]]
+id = "untrusted-no-key"
+type = "choice"
+prompt = "Without the public key on the client, what did apk update do with the lesson's repository?"
+choices = ["Refused it with UNTRUSTED signature, counted it as unavailable, and carried on with the others", "Installed from it anyway", "Stopped all updates", "Asked to import the key"]
+answers = ["Refused it with UNTRUSTED signature, counted it as unavailable, and carried on with the others"]
+explanation = "Chimera's own repository kept working."
+review = "Serve it, and use it"
+
+[[question]]
+id = "upgrade-trap"
+type = "choice"
+prompt = "Why was plain 'apk upgrade' a mistake in the test?"
+choices = ["It upgrades every installed package from every repository, here the whole lab system", "It deleted my package", "It needs a key", "It only works offline"]
+answers = ["It upgrades every installed package from every repository, here the whole lab system"]
+explanation = "Use apk add --upgrade NAME for one package, and apk upgrade --simulate to preview."
+review = "Publish an update"
+
+[[question]]
+id = "stale"
+type = "choice"
+prompt = "After 7 bytes were appended to Packages.adb, apk update printed '0 unavailable, 1 stale'. What does 'stale' mean here?"
+choices = ["apk could not refresh that index and kept using the cached old copy, with no obvious error", "The index is empty", "The key expired", "The server is down"]
+answers = ["apk could not refresh that index and kept using the cached old copy, with no obvious error"]
+explanation = "The lesson could not say whether a warning line was printed because the output was cut. Watch for stale in monitoring."
+review = "What the client says when something is wrong"
+
+[[question]]
+id = "unsigned-installed"
+type = "choice"
+prompt = "A package built without --sign-key was added to a signed index with --allow-untrusted. What did the client do?"
+choices = ["Installed it without complaint", "Refused it as unsigned", "Asked for the key", "Crashed"]
+answers = ["Installed it without complaint"]
+explanation = "apk verify on the file alone said UNTRUSTED signature, but the install through the signed index worked: the lesson reads this as the index being the trust root (its interpretation, not confirmed in the documentation)."
+review = "What the client says when something is wrong"
+
+[[question]]
+id = "trust-root"
+type = "choice"
+prompt = "What does that finding imply for protecting keys?"
+choices = ["The key that signs the index decides what clients install, so guard it and the machine using it most carefully", "Package keys matter most", "Keys do not matter over HTTP", "Only HTTPS matters"]
+answers = ["The key that signs the index decides what clients install, so guard it and the machine using it most carefully"]
+explanation = "This is the opposite of the dnf case, where an unsigned RPM in a signed index was refused."
+review = "What the client says when something is wrong"
+
+[[question]]
+id = "repo-size"
+type = "choice"
+prompt = "Roughly how large was Chimera's main repository for x86_64, from the sum of file-size in its index?"
+choices = ["About 15.5 GiB for 9,007 packages", "About 150 MB", "About 1.5 TB", "About 15 KB"]
+answers = ["About 15.5 GiB for 9,007 packages"]
+explanation = "The index file itself was 1.2 MB. The largest packages were game data and a font."
+review = "How big is a real repository?"
+
+[[question]]
+id = "fenriros-claim"
+type = "choice"
+prompt = "What does the lesson claim about FenrirOS?"
+choices = ["Nothing verified: it has not been seen, and the lesson applies only if FenrirOS follows Chimera in using apk", "That it uses apk", "That it uses dnf", "That it uses cbuild"]
+answers = ["Nothing verified: it has not been seen, and the lesson applies only if FenrirOS follows Chimera in using apk"]
+explanation = "Everything was run on Chimera Linux only."
+review = "Not tested, and honest limits"

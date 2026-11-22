@@ -1,0 +1,44 @@
+schema_version = 1
+id = "packaging.hosting-a-repository"
+title = "Hosting a package repository: measured sizes, nginx, atomic publishing, mirroring and an outside health check"
+summary = "Storage and serving for a package repository, with measured sizes (Chimera main x86_64 15.5 GiB for 9,007 packages with a 1.2 MB index; AlmaLinux BaseOS 2.90, AppStream 14.47 and EPEL 19.48 GiB; Ubuntu noble all suites 408.4 GiB), nginx 1.24 static serving (ETag, 304, 206, path traversal 400), a cache-header bug caused by regex location precedence and its ^~ fix, the 404 from publishing the index before the files, a symlink swap, rsync mirroring, and a tested bash health checker (wl-aptcheck.sh). Nothing is claimed about FenrirOS."
+content = "hosting-a-repository.md"
+estimated_minutes = 100
+level = 4
+objectives = [
+  "Estimate the disk a repository needs from the sizes in its index, and say what the numbers do and do not compare",
+  "Serve a repository with nginx and check ETag, conditional, range and cache headers with curl",
+  "Explain why a regular-expression location overrode a prefix location, and fix it with ^~",
+  "Publish safely: package files first and index last, and swap trees with an atomic symlink rename that can be rolled back",
+  "Mirror a repository with rsync and say why a mirror is not a backup",
+  "Run an outside health check that verifies the signature, the index hash and every package's presence and size",
+  "State where the signing key should and should not live",
+]
+prerequisites = ["packaging.apt-repository", "packaging.dnf-repository", "packaging.apk-repository", "homelab.backups"]
+privilege = "administrator"
+certifications = ["comptia-linux-plus/system-management", "comptia-linux-plus/security", "redhat-rhcsa/deploy-maintain"]
+evaluation_criteria = [
+  "Learner computes the total package size of a repository from its index and estimates disk for architectures, releases and history",
+  "Learner proves with curl -I that the index is uncacheable and packages are cacheable, and shows the regex-location bug",
+  "Learner runs the health checker against a healthy and a broken repository and explains each failure",
+]
+
+[[references]]
+title = "nginx: ngx_http_core_module, location"
+url = "https://nginx.org/en/docs/http/ngx_http_core_module.html"
+
+[[references]]
+title = "rsync(1) (Debian manual page)"
+url = "https://manpages.debian.org/stable/rsync/rsync.1.en.html"
+
+[[references]]
+title = "Debian wiki: DebianRepository/Setup"
+url = "https://wiki.debian.org/DebianRepository/Setup"
+
+[[references]]
+title = "apk-repositories(5) (upstream manual source)"
+url = "https://github.com/alpinelinux/apk-tools/blob/master/doc/apk-repositories.5.scd"
+
+[[references]]
+title = "createrepo_c"
+url = "https://rpm-software-management.github.io/createrepo_c/"

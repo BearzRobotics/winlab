@@ -1,0 +1,147 @@
+schema_version = 1
+lesson = "packaging.apt-repository"
+# Draft for owner review. Answers come from the tested output (rp1.sh, rp4.sh) on Ubuntu 24.04 (dpkg 1.22.6, apt 2.8.4, GnuPG 2.4.4).
+draw = 12
+
+[[question]]
+id = "two-parts"
+type = "choice"
+prompt = "What are the two parts of an apt repository?"
+choices = ["A signed index under dists/ and a pool of .deb files", "A database and a daemon", "A kernel module and a firewall", "Two mirrors"]
+answers = ["A signed index under dists/ and a pool of .deb files"]
+explanation = "No special server is needed; static files are enough."
+review = "What is in a repository"
+
+[[question]]
+id = "chain"
+type = "choice"
+prompt = "What is the trust chain from the signing key to a .deb?"
+choices = ["The key signs Release; Release holds the hash of Packages; Packages holds the hash of each .deb", "The .deb signs Packages", "Release signs the key", "The web server signs everything"]
+answers = ["The key signs Release; Release holds the hash of Packages; Packages holds the hash of each .deb"]
+explanation = "Change any byte and a hash stops matching."
+review = "What is in a repository"
+
+[[question]]
+id = "inrelease"
+type = "choice"
+prompt = "What is InRelease?"
+choices = ["The Release text wrapped in an inline signature", "A list of installed packages", "A log file", "A package"]
+answers = ["The Release text wrapped in an inline signature"]
+explanation = "Release.gpg is the separate (detached) signature of the same Release file."
+review = "What is in a repository"
+
+[[question]]
+id = "own-key"
+type = "choice"
+prompt = "Why use a signing key that exists only for the repository, in its own GNUPGHOME?"
+choices = ["It never mixes with personal keys, and only its public half goes on the web", "It makes packages smaller", "apt requires it", "To avoid passphrases"]
+answers = ["It never mixes with personal keys, and only its public half goes on the web"]
+explanation = "The test key had an empty passphrase and no expiry because it was throwaway; a real key needs a passphrase and a rotation plan."
+review = "Make a signing key"
+
+[[question]]
+id = "root-owner"
+type = "choice"
+prompt = "What does 'dpkg-deb --root-owner-group --build' do for the files in the package?"
+choices = ["Makes them owned by root whoever built the package", "Signs them", "Compresses them twice", "Changes their names"]
+answers = ["Makes them owned by root whoever built the package"]
+explanation = "Almost always what you want for installed files."
+review = "Build a package and the index"
+
+[[question]]
+id = "tools"
+type = "multi"
+prompt = "Which tools generated the index in the lesson?"
+choices = ["dpkg-scanpackages (Packages)", "apt-ftparchive (Release)", "gpg (InRelease and Release.gpg)", "createrepo_c"]
+answers = ["dpkg-scanpackages (Packages)", "apt-ftparchive (Release)", "gpg (InRelease and Release.gpg)"]
+explanation = "createrepo_c is the dnf/rpm tool, covered in the next lesson."
+review = "Build a package and the index"
+
+[[question]]
+id = "packages-entry"
+type = "multi"
+prompt = "What does a Packages entry hold besides the control fields?"
+choices = ["Filename (where the .deb is)", "Size", "Hashes such as SHA256", "The private key"]
+answers = ["Filename (where the .deb is)", "Size", "Hashes such as SHA256"]
+explanation = "apt checks the downloaded .deb against these."
+review = "Build a package and the index"
+
+[[question]]
+id = "signed-by"
+type = "choice"
+prompt = "What does Signed-By in a deb822 .sources file do?"
+choices = ["Names the keyring trusted to verify that source", "Names the package maintainer", "Signs the packages", "Selects the architecture"]
+answers = ["Names the keyring trusted to verify that source"]
+explanation = "In test (b) a repository signed by a different key was refused with NO_PUBKEY."
+review = "Serve it, and use it"
+
+[[question]]
+id = "keyring-dir"
+type = "short"
+prompt = "In which directory did the lesson put the repository's public key on the client? Type the path."
+answers = ["/etc/apt/keyrings", "/etc/apt/keyrings/"]
+explanation = "The file was /etc/apt/keyrings/wl-repo.gpg, a binary keyring made with gpg --export."
+review = "Serve it, and use it"
+
+[[question]]
+id = "fetch-order"
+type = "choice"
+prompt = "In which order does apt fetch and check things?"
+choices = ["InRelease first, then Packages (checked against Release), then the .deb (checked against Packages)", ".deb first, then the index", "Packages first, then the key", "All at once without checking"]
+answers = ["InRelease first, then Packages (checked against Release), then the .deb (checked against Packages)"]
+explanation = "Each step is verified by the hash held in the step before."
+review = "Serve it, and use it"
+
+[[question]]
+id = "no-error-first"
+type = "choice"
+prompt = "Why did the first attempt to tamper with Packages.gz show no error?"
+choices = ["apt still had a current cached index and never downloaded the tampered file", "The tamper did not change the file", "apt ignores size", "The signature was valid"]
+answers = ["apt still had a current cached index and never downloaded the tampered file"]
+explanation = "The lesson removed /var/lib/apt/lists/127.0.0.1* and then got 'File has unexpected size'."
+review = "What the client says when something is wrong"
+
+[[question]]
+id = "unexpected-size"
+type = "choice"
+prompt = "'File has unexpected size (315 != 284). Mirror sync in progress?' most likely means:"
+choices = ["The file served does not match the size in the signed Release, for example a bad index or an update in progress", "The disk is full", "The key expired", "DNS failed"]
+answers = ["The file served does not match the size in the signed Release, for example a bad index or an update in progress"]
+explanation = "'Mirror sync in progress?' is apt's guess at the most common innocent cause."
+review = "What the client says when something is wrong"
+
+[[question]]
+id = "no-pubkey"
+type = "choice"
+prompt = "'NO_PUBKEY 4D9C8B1A1B589FCD' on update means:"
+choices = ["The repository is signed by a key the client does not have", "The package is missing", "The network is down", "The index is empty"]
+answers = ["The repository is signed by a key the client does not have"]
+explanation = "It appeared as a W: warning and apt kept the previous index files."
+review = "What the client says when something is wrong"
+
+[[question]]
+id = "no-longer-signed"
+type = "choice"
+prompt = "InRelease and Release.gpg were removed from the server. What did apt do?"
+choices = ["It refused: the repository is no longer signed", "It installed anyway", "It switched to HTTPS", "It ignored the repository silently"]
+answers = ["It refused: the repository is no longer signed"]
+explanation = "Marking the source trusted would remove the protection and was not tested."
+review = "What the client says when something is wrong"
+
+[[question]]
+id = "publish-order"
+type = "choice"
+prompt = "Why publish the new .deb before the updated index?"
+choices = ["A client updating in between would otherwise see a package that returns 404", "Because apt-ftparchive requires it", "To make the index smaller", "To avoid signing"]
+answers = ["A client updating in between would otherwise see a package that returns 404"]
+explanation = "In the test the index showed Candidate 1.1 and the install failed with 404 until the file arrived."
+review = "Publish without breaking clients"
+
+[[question]]
+id = "mv-t-swap"
+type = "choice"
+prompt = "What does 'ln -sfn r2 current.new; mv -T current.new current' achieve?"
+choices = ["An atomic switch from the old tree to the new one: clients see one or the other, never a mixture", "It deletes r1", "It signs r2", "It compresses r2"]
+answers = ["An atomic switch from the old tree to the new one: clients see one or the other, never a mixture"]
+explanation = "The server must be configured to follow the symlink (the hosting lesson shows nginx doing so)."
+review = "Publish without breaking clients"

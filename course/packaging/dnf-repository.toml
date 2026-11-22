@@ -1,0 +1,39 @@
+schema_version = 1
+id = "packaging.dnf-repository"
+title = "Build and sign a dnf/rpm repository by hand: gpgcheck, repo_gpgcheck and createrepo_c"
+summary = "A signed dnf repository on AlmaLinux 9.8 (RPM 4.16.1.3, createrepo_c 0.20.1, GnuPG 2.3.3): a spec-built noarch RPM, rpmsign (rpm -K shows NOKEY until the key is imported), createrepo_c and a detached signature on repomd.xml, a .repo file with gpgcheck=1 and repo_gpgcheck=1 (two separate key imports), an update to 1.1, and failures: an unsigned RPM (GPG check FAILED), a changed repomd.xml (Bad GPG signature), and the trap of re-signing a file that was edited."
+content = "dnf-repository.md"
+estimated_minutes = 90
+level = 4
+objectives = [
+  "Explain the two signatures (gpgcheck for packages, repo_gpgcheck for metadata), that both default to off in the dnf documentation, and why they keep separate key stores",
+  "Build a noarch RPM from a spec file and sign it with rpmsign, and read rpm -Kv including NOKEY",
+  "Create repository metadata with createrepo_c and sign repomd.xml with a detached signature",
+  "Write a .repo file with both checks on, and describe what the two key imports are for and why the fingerprint matters",
+  "Publish an update and recognise the errors for an unsigned package and a changed repomd.xml",
+  "Explain why re-signing an edited file hides the problem and what a safe publish step looks like",
+]
+prerequisites = ["packaging.apt-repository", "linux.systemd"]
+privilege = "administrator"
+certifications = ["redhat-rhcsa/deploy-maintain", "redhat-rhcsa/security", "comptia-linux-plus/system-management"]
+evaluation_criteria = [
+  "Learner builds and signs an RPM, shows rpm -K before and after, and installs it from their own repository with both checks on",
+  "Learner publishes an unsigned RPM and shows which setting rejects it",
+  "Learner explains the re-signing trap",
+]
+
+[[references]]
+title = "DNF configuration reference (gpgcheck, repo_gpgcheck)"
+url = "https://dnf.readthedocs.io/en/latest/conf_ref.html"
+
+[[references]]
+title = "createrepo_c"
+url = "https://rpm-software-management.github.io/createrepo_c/"
+
+[[references]]
+title = "rpmsign(8) (Debian manual page)"
+url = "https://manpages.debian.org/stable/rpm/rpmsign.8.en.html"
+
+[[references]]
+title = "RPM documentation"
+url = "https://rpm-software-management.github.io/rpm/manual/"

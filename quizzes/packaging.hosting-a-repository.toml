@@ -1,0 +1,155 @@
+schema_version = 1
+lesson = "packaging.hosting-a-repository"
+# Draft for owner review. Answers come from the tested output (rp4.sh, rp4b.sh, rp5.sh, rp6.sh, rp7.sh) on Ubuntu 24.04 (nginx 1.24.0), AlmaLinux 9.8 and Chimera Linux, and the nginx location documentation.
+draw = 12
+
+[[question]]
+id = "host-tasks"
+type = "multi"
+prompt = "Which are things a repository host has to do, according to the lesson?"
+choices = ["Serve static files", "Publish without showing clients a half-finished state", "Keep the signing key off the web server", "Run a database server for the index"]
+answers = ["Serve static files", "Publish without showing clients a half-finished state", "Keep the signing key off the web server"]
+explanation = "No application server or database is needed; a signed index and a pool of files are enough."
+review = "What a repository host has to do"
+
+[[question]]
+id = "index-size"
+type = "choice"
+prompt = "How large was Chimera's Packages.adb compared with the 15.5 GiB of packages it describes?"
+choices = ["About 1.2 MB, a tiny fraction", "About 1 GiB", "About half", "The same size"]
+answers = ["About 1.2 MB, a tiny fraction"]
+explanation = "1,215,483 bytes against 16,620,518,385: about 0.007 percent."
+review = "How big is a repository? Measured"
+
+[[question]]
+id = "not-like-for-like"
+type = "choice"
+prompt = "Why is the Ubuntu 408.4 GiB figure not comparable with Chimera's 15.5 GiB?"
+choices = ["It counts every version of every package across four suites and several components, while Chimera's is one repository, one architecture and one release", "Ubuntu packages are bigger", "It was measured on Windows", "It includes the kernel source only"]
+answers = ["It counts every version of every package across four suites and several components, while Chimera's is one repository, one architecture and one release"]
+explanation = "A package can appear in noble, -updates and -security, so the figure is an upper bound for a mirror."
+review = "How big is a repository? Measured"
+
+[[question]]
+id = "heavy-packages"
+type = "multi"
+prompt = "Which kinds of package dominated the largest-package lists?"
+choices = ["Game data", "Documentation", "Firmware", "Shell scripts"]
+answers = ["Game data", "Documentation", "Firmware"]
+explanation = "Chimera: xonotic-data, sauerbraten-data; Ubuntu: qgis-api-doc, 0ad-data; AlmaLinux: linux-firmware."
+review = "How big is a repository? Measured"
+
+[[question]]
+id = "plan-formula"
+type = "multi"
+prompt = "Which terms belong in the disk planning arithmetic of the lesson?"
+choices = ["Size of one release and architecture", "Number of architectures and releases kept", "Old package versions you keep", "Working space to publish", "The colour of the logo"]
+answers = ["Size of one release and architecture", "Number of architectures and releases kept", "Old package versions you keep", "Working space to publish"]
+explanation = "The lesson labels this arithmetic, not measurement. Hard links can reduce the working space (not tested for a repository)."
+review = "How big is a repository? Measured"
+
+[[question]]
+id = "etag-304"
+type = "choice"
+prompt = "A request with If-None-Match set to the file's ETag returned which status?"
+choices = ["304, with no body", "200 with the file", "404", "206"]
+answers = ["304, with no body"]
+explanation = "It is the cheap path for an unchanged index."
+review = "Serve it with nginx"
+
+[[question]]
+id = "range-206"
+type = "choice"
+prompt = "curl -r 0-99 against a .deb returned 206 and how many bytes?"
+choices = ["100", "99", "0", "The whole file"]
+answers = ["100"]
+explanation = "Range requests let an interrupted download of a large package resume."
+review = "Serve it with nginx"
+
+[[question]]
+id = "traversal"
+type = "short"
+prompt = "What status did nginx return for curl --path-as-is http://127.0.0.1:8090/../../etc/passwd? Number only."
+answers = ["400"]
+explanation = "A path outside the root was not reachable."
+review = "Serve it with nginx"
+
+[[question]]
+id = "regex-wins"
+type = "choice"
+prompt = "Why did Packages.gz get 'public, max-age=3600' under the first nginx configuration?"
+choices = ["The regex location for .deb and .gz took precedence over the /dists/ prefix location", "The /dists/ rule was ignored by mistake", "gz files are always cached", "A proxy added the header"]
+answers = ["The regex location for .deb and .gz took precedence over the /dists/ prefix location"]
+explanation = "nginx checks regular expressions after the longest prefix and uses them unless the prefix has ^~."
+review = "A bug in my first configuration"
+
+[[question]]
+id = "caret-tilde"
+type = "short"
+prompt = "Which location modifier makes a prefix match final so regular expressions are not checked? Type it."
+answers = ["^~"]
+explanation = "location ^~ /dists/ { ... } fixed the index cache header."
+review = "A bug in my first configuration"
+
+[[question]]
+id = "immutable"
+type = "choice"
+prompt = "When is 'Cache-Control: ... immutable' on a .deb true?"
+choices = ["Only if you never overwrite a published file under the same name", "Always", "Only for the index", "Only over HTTPS"]
+answers = ["Only if you never overwrite a published file under the same name"]
+explanation = "A new version is a new file; replacing foo_1.0_all.deb in place breaks the promise."
+review = "A bug in my first configuration"
+
+[[question]]
+id = "order"
+type = "choice"
+prompt = "What happened when the index for 1.1 was published before the .deb?"
+choices = ["Clients saw Candidate 1.1 and the install failed with 404", "Nothing", "apt refused the index", "The signature failed"]
+answers = ["Clients saw Candidate 1.1 and the install failed with 404"]
+explanation = "Copy the package files first, then replace the index and its signature."
+review = "Publish without showing clients a broken state"
+
+[[question]]
+id = "symlink-swap"
+type = "choice"
+prompt = "Why keep the previous tree (r1) after swapping the symlink to r2?"
+choices = ["A client may still be reading it, and it is your rollback: point the symlink back", "To use more disk", "nginx requires two trees", "To sign it"]
+answers = ["A client may still be reading it, and it is your rollback: point the symlink back"]
+explanation = "mv -T makes the switch atomic."
+review = "Publish without showing clients a broken state"
+
+[[question]]
+id = "mirror-not-backup"
+type = "choice"
+prompt = "Why is a mirror not a backup?"
+choices = ["It copies your mistakes and deletions too", "It is slower", "It cannot be signed", "It has no index"]
+answers = ["It copies your mistakes and deletions too"]
+explanation = "A backup keeps history; rsync --delete mirrors the current state."
+review = "Mirror it"
+
+[[question]]
+id = "pool-first"
+type = "choice"
+prompt = "What is the safer order when mirroring a repository?"
+choices = ["Copy the pool first, then dists/", "Copy dists/ first, then the pool", "Copy only dists/", "Any order"]
+answers = ["Copy the pool first, then dists/"]
+explanation = "A mirror inherits the publish-order problem."
+review = "Mirror it"
+
+[[question]]
+id = "checker-steps"
+type = "multi"
+prompt = "What does wl-aptcheck.sh verify?"
+choices = ["InRelease verifies against the public keyring", "The index named in Release has the promised size and hash", "Every listed package exists with the promised size", "That each package's contents are safe"]
+answers = ["InRelease verifies against the public keyring", "The index named in Release has the promised size and hash", "Every listed package exists with the promised size"]
+explanation = "It does not verify package signatures or contents, only presence and size."
+review = "Check it from the outside"
+
+[[question]]
+id = "key-place"
+type = "choice"
+prompt = "Where should the signing key live?"
+choices = ["On a separate signing machine, not on the web server, with a passphrase and a rotation plan", "On the web server for convenience", "In the repository's public folder", "Inside each package"]
+answers = ["On a separate signing machine, not on the web server, with a passphrase and a rotation plan"]
+explanation = "A compromised web server can then delete or corrupt files but cannot sign new ones."
+review = "Where the signing key lives"

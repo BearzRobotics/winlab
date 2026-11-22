@@ -1,0 +1,47 @@
+schema_version = 1
+id = "packaging.apk-repository"
+title = "Build and sign an apk (v3) repository by hand on Chimera Linux, and what the client trusts"
+summary = "A signed apk v3 repository tested on Chimera Linux (apk-tools 3.0.8): an RSA key, apk mkpkg, apk mkndx (UNTRUSTED signature until --keys-dir is given), the $base_url/$arch layout including the noarch directory (a 404 until the package is moved), repositories.d/*.list with a v3 line, UNTRUSTED/stale client messages, a whole-system apk upgrade trap, and the finding that an unsigned package listed in a signed index installed without complaint. Includes the real size of Chimera's main x86_64 repository (9,007 packages, about 15.5 GiB)."
+content = "apk-repository.md"
+estimated_minutes = 100
+level = 4
+objectives = [
+  "Describe the apk v3 repository layout ($base_url/$arch/Packages.adb and $base_url/$arch/name-version.apk) and why noarch packages need their own directory",
+  "Generate an RSA signing key, build a package with apk mkpkg and read it with apk adbdump",
+  "Create a signed index with apk mkndx, explain the UNTRUSTED signature refusal, and use --keys-dir instead of --allow-untrusted",
+  "Configure a client with a v3 line in /etc/apk/repositories.d and a key in /etc/apk/keys, and read the UNTRUSTED and stale messages",
+  "Upgrade one package without upgrading the system, and say why apk upgrade without a name is dangerous in a test",
+  "Explain what the unsigned-package test showed about where the trust sits, and what that implies for protecting the index-signing key",
+]
+prerequisites = ["packaging.apt-repository", "packaging.dnf-repository", "linux.dinit-in-practice"]
+privilege = "administrator"
+certifications = ["comptia-linux-plus/system-management", "comptia-linux-plus/security"]
+evaluation_criteria = [
+  "Learner builds, indexes, serves and installs a package on a Chimera VM",
+  "Learner reproduces the 404 caused by a noarch package in the wrong directory and reads the server log",
+  "Learner installs an unsigned package through a signed index and explains the consequence",
+]
+
+[[references]]
+title = "apk-repositories(5) (upstream manual source)"
+url = "https://github.com/alpinelinux/apk-tools/blob/master/doc/apk-repositories.5.scd"
+
+[[references]]
+title = "apk-mkndx(8) (upstream manual source)"
+url = "https://github.com/alpinelinux/apk-tools/blob/master/doc/apk-mkndx.8.scd"
+
+[[references]]
+title = "apk-mkpkg(8) (upstream manual source)"
+url = "https://github.com/alpinelinux/apk-tools/blob/master/doc/apk-mkpkg.8.scd"
+
+[[references]]
+title = "apk-tools (upstream project)"
+url = "https://github.com/alpinelinux/apk-tools"
+
+[[references]]
+title = "Chimera Linux documentation"
+url = "https://chimera-linux.org/docs/"
+
+[[references]]
+title = "cports, Chimera's package build system (not run for this lesson)"
+url = "https://github.com/chimera-linux/cports"

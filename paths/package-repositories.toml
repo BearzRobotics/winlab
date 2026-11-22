@@ -1,0 +1,22 @@
+schema_version = 1
+id = "package-repositories"
+title = "Package repositories: build, sign, host and check"
+goal = "Publish your own packages the way a distribution does: a signed index plus files, served as static pages, updated without breaking clients, and checked from the outside. Covers the three formats in use on the lab machines (apt, dnf, apk) and the storage and hosting questions."
+audience = "Someone building their own distribution or internal package set, such as the owner's FenrirOS (not seen by the course author; the apk lesson applies only if it follows Chimera). Needs a comfortable Linux shell."
+order = 60
+certifications = ["comptia-linux-plus/system-management"]
+
+[[stage]]
+title = "Foundations"
+lessons = ["foundations.architecture", "foundations.troubleshooting-method", "foundations.bash-basics", "linux.storage-filesystems", "security.security-fundamentals"]
+labs = []
+
+[[stage]]
+title = "The three formats"
+lessons = ["linux.systemd", "packaging.apt-repository", "packaging.dnf-repository", "linux.dinit-basics", "linux.dinit-service-files", "linux.dinit-in-practice", "packaging.apk-repository"]
+labs = []
+
+[[stage]]
+title = "Hosting"
+lessons = ["linux.systemd-advanced", "homelab.backups", "packaging.hosting-a-repository"]
+labs = []

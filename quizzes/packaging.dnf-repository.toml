@@ -1,0 +1,138 @@
+schema_version = 1
+lesson = "packaging.dnf-repository"
+# Draft for owner review. Answers come from the tested output (rp2.sh) on AlmaLinux 9.8 (RPM 4.16.1.3, createrepo_c 0.20.1) and the dnf configuration reference.
+draw = 12
+
+[[question]]
+id = "gpgcheck"
+type = "choice"
+prompt = "What does gpgcheck=1 verify?"
+choices = ["The signatures on the packages", "The repository metadata", "The web server's certificate", "The disk"]
+answers = ["The signatures on the packages"]
+explanation = "repo_gpgcheck is the one for the repository metadata."
+review = "The two signatures"
+
+[[question]]
+id = "repo-gpgcheck"
+type = "choice"
+prompt = "What does repo_gpgcheck=1 verify?"
+choices = ["The signature on the repository metadata (repomd.xml)", "The packages", "The mirror's speed", "The file system"]
+answers = ["The signature on the repository metadata (repomd.xml)"]
+explanation = "Its keys are stored separately from package keys, and separately per repository."
+review = "The two signatures"
+
+[[question]]
+id = "defaults"
+type = "choice"
+prompt = "According to the dnf documentation, what is the default for gpgcheck and repo_gpgcheck?"
+choices = ["False for both", "True for both", "True for gpgcheck only", "They do not exist"]
+answers = ["False for both"]
+explanation = "A hand-written .repo file that omits them verifies nothing (a distribution's defaults may differ; not checked)."
+review = "The two signatures"
+
+[[question]]
+id = "two-imports"
+type = "choice"
+prompt = "Why did dnf ask to import the key twice?"
+choices = ["Metadata keys and package keys are stored separately", "The first import failed", "There were two keys", "dnf was run twice"]
+answers = ["Metadata keys and package keys are stored separately"]
+explanation = "One import was for repo_gpgcheck (metadata), one for gpgcheck (the package)."
+review = "Serve it, and use it"
+
+[[question]]
+id = "fingerprint"
+type = "choice"
+prompt = "Why is accepting a key import with -y without reading the fingerprint risky?"
+choices = ["The key came over the same untrusted connection as the repository, so accepting it proves nothing", "-y deletes the key", "The fingerprint is secret", "dnf will not install"]
+answers = ["The key came over the same untrusted connection as the repository, so accepting it proves nothing"]
+explanation = "Compare the fingerprint with one obtained another way."
+review = "Serve it, and use it"
+
+[[question]]
+id = "nokey"
+type = "choice"
+prompt = "rpm -Kv printed 'Header V4 EdDSA/SHA256 Signature, key ID 88152453: NOKEY'. What does it mean?"
+choices = ["The package is signed, but that key is not in this machine's RPM database so it cannot be verified yet", "The package is unsigned", "The signature is forged", "The key expired"]
+answers = ["The package is signed, but that key is not in this machine's RPM database so it cannot be verified yet"]
+explanation = "After the client imports the key the result is OK."
+review = "Make a key, a package and a repository"
+
+[[question]]
+id = "pgpsig"
+type = "choice"
+prompt = "rpm -qp --qf '%{SIGPGP:pgpsig}' printed (none) for a signed RPM. What should you use instead to check a signature?"
+choices = ["rpm -K (or -Kv)", "rpm -qi", "dnf info", "gpg --list-keys"]
+answers = ["rpm -K (or -Kv)"]
+explanation = "That tag does not hold this EdDSA signature."
+review = "Make a key, a package and a repository"
+
+[[question]]
+id = "repomd-sign"
+type = "choice"
+prompt = "Which file is signed so that the whole repository's metadata is covered?"
+choices = ["repodata/repomd.xml, giving repomd.xml.asc", "primary.xml.gz", "every .rpm", "wl.repo"]
+answers = ["repodata/repomd.xml, giving repomd.xml.asc"]
+explanation = "repomd.xml lists the other metadata files with their checksums."
+review = "Make a key, a package and a repository"
+
+[[question]]
+id = "createrepo-update"
+type = "short"
+prompt = "Which createrepo_c option was used to refresh the metadata after adding a package? Type the option with its dashes."
+answers = ["--update", "createrepo_c --update"]
+explanation = "The run printed 'Pool finished'."
+review = "Make a key, a package and a repository"
+
+[[question]]
+id = "epoch"
+type = "choice"
+prompt = "In 'wl-hello-0:1.1-1.noarch' what is the 0?"
+choices = ["The epoch, a number that overrides version comparison and is almost always 0", "The release", "The architecture", "The repository id"]
+answers = ["The epoch, a number that overrides version comparison and is almost always 0"]
+explanation = "dnf repoquery printed it for both versions."
+review = "Publish an update"
+
+[[question]]
+id = "unsigned-rpm"
+type = "choice"
+prompt = "A 1.2 RPM was published unsigned (the index was signed). The client printed 'Package ... is not signed / GPG check FAILED'. Which setting rejected it?"
+choices = ["gpgcheck=1", "repo_gpgcheck=1", "enabled=1", "baseurl"]
+answers = ["gpgcheck=1"]
+explanation = "The signed index was fine; the package was refused anyway. The opposite case (gpgcheck=0 with repo_gpgcheck=1) was not tested."
+review = "What the client says when something is wrong"
+
+[[question]]
+id = "bad-gpg"
+type = "choice"
+prompt = "repomd.xml was edited without re-signing. What did dnf print?"
+choices = ["repomd.xml GPG signature verification error: Bad GPG signature", "Package not signed", "Mirror sync in progress", "NO_PUBKEY"]
+answers = ["repomd.xml GPG signature verification error: Bad GPG signature"]
+explanation = "The error mentioned failing to download metadata for the repo."
+review = "What the client says when something is wrong"
+
+[[question]]
+id = "resign-trap"
+type = "choice"
+prompt = "Why was re-signing the edited repomd.xml a trap?"
+choices = ["A signature only says the key holder approved those bytes; it does not check that they are right", "Signing deletes the file", "dnf rejects re-signed files", "It changes the key"]
+answers = ["A signature only says the key holder approved those bytes; it does not check that they are right"]
+explanation = "A safe publish step builds the metadata fresh and signs only what it built."
+review = "What the client says when something is wrong"
+
+[[question]]
+id = "publish-order"
+type = "choice"
+prompt = "Which order should a publish step follow?"
+choices = ["Package files first, metadata and its signature last", "Metadata first, packages later", "Signature first", "Any order"]
+answers = ["Package files first, metadata and its signature last"]
+explanation = "The same rule as for apt: a client must never see an index that points at a file that is not there yet."
+review = "Common mistakes"
+
+[[question]]
+id = "key-reuse"
+type = "choice"
+prompt = "Why not reuse one key between build servers and releases?"
+choices = ["A compromised build machine would then sign releases", "Keys cannot be copied", "dnf forbids it", "It makes packages larger"]
+answers = ["A compromised build machine would then sign releases"]
+explanation = "Keep the release key away from the machines that run untrusted build steps."
+review = "Common mistakes"

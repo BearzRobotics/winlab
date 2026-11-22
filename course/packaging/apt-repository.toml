@@ -1,0 +1,47 @@
+schema_version = 1
+id = "packaging.apt-repository"
+title = "Build and sign an apt repository by hand, serve it, and break it"
+summary = "A complete signed apt repository on Ubuntu 24.04 (dpkg 1.22.6, apt 2.8.4, GnuPG 2.4.4): a repository-only ed25519 key, dpkg-deb, dpkg-scanpackages, apt-ftparchive Release, InRelease and Release.gpg, static serving, a deb822 .sources file with Signed-By, an update to 1.1, and three client failures (size mismatch after tampering, NO_PUBKEY, no longer signed). Publishing order (files first, index last) and an atomic symlink swap, both tested."
+content = "apt-repository.md"
+estimated_minutes = 90
+level = 4
+objectives = [
+  "Describe a repository as a signed index (Release, InRelease, Packages) plus a pool of packages, and the chain of hashes from key to .deb",
+  "Create a repository-only signing key and export it as binary keyring and ASCII text",
+  "Build a .deb with dpkg-deb, generate Packages with dpkg-scanpackages and Release with apt-ftparchive, and sign both InRelease and Release.gpg",
+  "Configure a client with a keyring in /etc/apt/keyrings and a deb822 source with Signed-By",
+  "Recognise the client messages for a tampered index, an untrusted key and an unsigned repository",
+  "Publish safely: files first and index last, and swap whole trees with an atomic symlink rename",
+]
+prerequisites = ["linux.storage-filesystems", "security.security-fundamentals"]
+privilege = "administrator"
+certifications = ["comptia-linux-plus/system-management", "comptia-linux-plus/security", "redhat-rhcsa/deploy-maintain"]
+evaluation_criteria = [
+  "Learner builds a signed repository, installs a package from it, and publishes an update that a client upgrades to",
+  "Learner reproduces and explains NO_PUBKEY and the size-mismatch error",
+  "Learner demonstrates why the index must be published after the package file",
+]
+
+[[references]]
+title = "Debian wiki: DebianRepository/Format"
+url = "https://wiki.debian.org/DebianRepository/Format"
+
+[[references]]
+title = "Debian wiki: DebianRepository/Setup"
+url = "https://wiki.debian.org/DebianRepository/Setup"
+
+[[references]]
+title = "sources.list(5) (Signed-By)"
+url = "https://manpages.debian.org/stable/apt/sources.list.5.en.html"
+
+[[references]]
+title = "apt-ftparchive(1)"
+url = "https://manpages.debian.org/stable/apt-utils/apt-ftparchive.1.en.html"
+
+[[references]]
+title = "dpkg-scanpackages(1)"
+url = "https://manpages.debian.org/stable/dpkg-dev/dpkg-scanpackages.1.en.html"
+
+[[references]]
+title = "dpkg-deb(1)"
+url = "https://manpages.debian.org/stable/dpkg/dpkg-deb.1.en.html"
