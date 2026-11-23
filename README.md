@@ -15,9 +15,9 @@ package should **depend on all of it**.
 | Lab VMs: **QEMU** (`qemu-system-x86_64`, `qemu-img`, `qemu-io`) | winget `SoftwareFreedomConservancy.QEMU` | `qemu-system-x86` + `qemu-utils` (Debian, Ubuntu); `qemu-system-x86` + `qemu-img` (Fedora, RHEL, Alma); `qemu-full` (Arch); `qemu-system-x86_64` + `qemu-img` (Alpine) |
 | Lab control: **OpenSSH client** (`ssh`, `ssh-keygen`) | built in (optional Windows feature) | `openssh-client` / `openssh-clients` / `openssh` |
 | Downloading images: **curl** | built in (`curl.exe`) | `curl` |
-| Window: **SDL2** (shared library, 2.0.20 or newer) | not needed (Direct3D 11) | `libsdl2-2.0-0` / `SDL2` / `sdl2` |
+| Window: **SDL3** | not needed (Direct3D 11) | nothing for the prebuilt tarball (SDL3 is linked in; it loads X11 or Wayland at run time). A distribution package may use its own `libsdl3` with `-fsys=sdl3` |
 | Disk space check: **df** | not needed | `coreutils` |
-| Building from source: **Zig 0.17.1** and, on Linux, the SDL2 development files + `pkg-config` | Zig only | `libsdl2-dev` / `SDL2-devel` / `sdl2` + `pkgconf` |
+| Building from source: **Zig 0.17.1** and, on Linux, (optionally, for `-fsys=sdl3`) the SDL3 development files + `pkg-config` | Zig only | `libsdl3-dev` / `SDL3-devel` + `pkgconf` |
 
 Optional: PowerShell 7 (`pwsh`, for the PowerShell lessons on Linux), **bsdtar** (`libarchive-tools`; only to build the
 Chimera Linux lab, which reads a live ISO), and **KVM** acceleration on Linux (`/dev/kvm` readable and writable by you,
@@ -28,7 +28,7 @@ xfce4-terminal, kitty, alacritty, foot or xterm) is used for the Practice menu o
 ## Build, run, test
 
     zig build                                # Windows: build (Direct3D 11 window)
-    zig build -fsys=sdl2                     # Linux: build against the system SDL2 (what packages should do)
+    zig build                                # Linux: also works; SDL3 is fetched (hash-pinned) on the first build and linked in
     zig build run                            # version, shell and QEMU capability status
     zig build run -- browse course           # the course browser (lessons, search, notes, terminal, labs)
     zig build check-content                  # validate course/ and labs/ (manifests, prerequisites, scenarios)
@@ -41,7 +41,7 @@ extracted into `zig-pkg/`, which release tarballs keep (ADR 0003).
 
 **Linux package:**
 
-    zig build -Doptimize=ReleaseSafe -fsys=sdl2 -Dshare-content=true --prefix "$DESTDIR/usr"
+    zig build -Doptimize=ReleaseSafe -Dshare-content=true --prefix "$DESTDIR/usr"
 
 installs `bin/winlab`, the lessons, labs, paths, quizzes and catalogs under `share/winlab/`, a desktop entry and the
 licence. WinLab finds the content in `<exe folder>/../share/winlab`, `/usr/share/winlab` or `/usr/local/share/winlab`.
@@ -78,7 +78,7 @@ VM disks, keys and installation media are under `%LOCALAPPDATA%\WinLab\` (Window
 - `src/vm/` provider interface, in-memory mock, QEMU provider and session supervisor, VM registry,
   image catalog and download, unattended-install answer files, ISO builder, guest control over SSH
 - `src/labs/` lab manifests, scenario builder/runner, scripting-lab harness generator
-- `src/ui/` the DVUI window (Direct3D 11 on Windows, SDL2 on Linux), the Windows terminal window, the lesson renderer
+- `src/ui/` the DVUI window (Direct3D 11 on Windows, SDL3 on Linux), the Windows terminal window, the lesson renderer
 - `course/` lessons; `labs/` lab files; `images/catalog.toml` downloadable media; `docs/decisions/` ADRs
 
 **First run.** A setup window opens once. It lists what WinLab found (shells, the OpenSSH client, QEMU) and, if QEMU is
@@ -100,7 +100,7 @@ quizzes, learning paths, the embedded terminal (CMD and Windows PowerShell 5.1),
 and Chimera Linux, with SSH guest control, snapshots and rollback. Baked scenarios pass `winlab lab verify`
 (see `docs/HANDOFF.md`, appendix B, for the few that are still unverified).
 
-**Linux (new, 2026-11-22; Ubuntu 26.04 under WSL2 with KVM, QEMU 10.2.1, SDL2 2.32):** it builds with the system SDL2; the unit
+**Linux (new, 2026-11-22; Ubuntu 26.04 under WSL2 with KVM, QEMU 10.2.1):** the first Linux tests used the system SDL2 2.32; the shipped build now links SDL3 statically (cross-compiled from Windows with no Linux libraries, glibc 2.31 floor, and its window was checked in WSLg). The unit
 tests pass (107, one Windows-only test skipped); `winlab check course` and `winlab status` work; the window opens and shows the
 lesson list and the setup window; `image fetch ubuntu-2404-cloud` and `vm install` build an Ubuntu lab VM under KVM in about a
 minute; `lab build` and `lab verify` pass all five stages on `linux-file-permissions` (37 s); the package install

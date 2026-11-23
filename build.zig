@@ -15,12 +15,12 @@ pub fn build(b: *std.Build) void {
     });
 
     // GUI: DVUI on its Direct3D 11 backend on Windows (ADR 0002); on every other OS the SDL2 backend
-    // (system SDL2 with -fsys=sdl2, which is what distro packages should use, or SDL2 built from source).
+    // (SDL3 built from source and linked in by default, or the system SDL3 with -fsys=sdl3 for distribution packages).
     const is_windows = target.result.os.tag == .windows;
     const dvui_dep = if (is_windows)
         b.dependency("dvui", .{ .target = target, .optimize = optimize, .backend = .dx11 })
     else
-        b.dependency("dvui", .{ .target = target, .optimize = optimize, .backend = .sdl2 });
+        b.dependency("dvui", .{ .target = target, .optimize = optimize, .backend = .sdl3 });
 
     const exe = b.addExecutable(.{
         .name = "winlab",
@@ -30,8 +30,8 @@ pub fn build(b: *std.Build) void {
             .optimize = optimize,
             .imports = &.{
                 .{ .name = "winlab", .module = mod },
-                .{ .name = "dvui", .module = dvui_dep.module(if (is_windows) "dvui_dx11" else "dvui_sdl2") },
-                .{ .name = "backend", .module = dvui_dep.module(if (is_windows) "dx11" else "sdl2") },
+                .{ .name = "dvui", .module = dvui_dep.module(if (is_windows) "dvui_dx11" else "dvui_sdl3") },
+                .{ .name = "backend", .module = dvui_dep.module(if (is_windows) "dx11" else "sdl3") },
             },
         }),
     });
@@ -47,7 +47,7 @@ pub fn build(b: *std.Build) void {
         }
     }
 
-    // Packagers (Linux): `zig build -Doptimize=ReleaseSafe -fsys=sdl2 -Dshare-content=true --prefix /usr` puts the program in
+    // Packagers (Linux): `zig build -Doptimize=ReleaseSafe -Dshare-content=true --prefix /usr` puts the program in
     // bin/ and the lessons in share/winlab/, where winlab looks for them, plus the desktop entry and the licence.
     const share_content = b.option(bool, "share-content", "Install course, labs, paths, certs, images and quizzes to <prefix>/share/winlab, with a desktop entry and the licence") orelse false;
     if (share_content) {

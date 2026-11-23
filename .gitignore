@@ -21,3 +21,8 @@ id_ed25519.pub
 *.qcow2
 *.iso
 dist/
+
+# SDL3 and its sources are fetched (hash-pinned) on the first Linux build; they are ~200 MB and are not committed
+zig-pkg/sdl-*/
+zig-pkg/N-V-*/
+!zig-pkg/N-V-__8AAHNaAgD6kjK3HX6lAf89chPqS5zIm0tLpvBQLOtX/

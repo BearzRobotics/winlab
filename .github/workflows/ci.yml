@@ -1,0 +1,25 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: mlugg/setup-zig@v2
+        with:
+          version: 0.17.1
+      - name: Unit tests
+        run: zig build test --summary all
+      - name: Validate the course content
+        run: zig build check-content
+      - name: Build (release flags, generic x86-64 CPU)
+        run: zig build -Doptimize=ReleaseSafe -Dcpu=x86_64_v2
