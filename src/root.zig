@@ -1,7 +1,8 @@
 //! WinLab core library. UI-independent; see docs/architecture.md.
 pub const version = @import("app/version.zig");
+pub const platform = @import("platform.zig");
 pub const shell_discovery = @import("windows/shell_discovery.zig");
-pub const conpty = @import("terminal/conpty.zig");
+pub const conpty = if (platform.is_windows) @import("terminal/conpty.zig") else struct {};
 pub const vm_provider = @import("vm/provider.zig");
 pub const vm_mock = @import("vm/mock.zig");
 pub const vm_qemu = @import("vm/qemu.zig");

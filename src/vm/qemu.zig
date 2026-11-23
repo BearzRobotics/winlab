@@ -9,6 +9,7 @@
 const std = @import("std");
 const p = @import("provider.zig");
 const guest = @import("guest.zig");
+const platform = @import("../platform.zig");
 
 pub const Tools = struct {
     gpa: std.mem.Allocator,
@@ -16,8 +17,8 @@ pub const Tools = struct {
     qemu_img: []u8,
     /// First line of `qemu-system-x86_64 --version`.
     version: []u8,
-    /// The Windows Hypervisor Platform accelerator is available to this binary.
-    whpx: bool,
+    /// Hardware acceleration is usable: WHPX (Windows Hypervisor Platform) on Windows, KVM on Linux.
+    hw_accel: bool,
 
     pub fn deinit(self: *Tools) void {
         self.gpa.free(self.qemu_system);
@@ -27,8 +28,9 @@ pub const Tools = struct {
     }
 };
 
-const system_exe = "qemu-system-x86_64.exe";
-const img_exe = "qemu-img.exe";
+const system_exe = "qemu-system-x86_64" ++ platform.exe_suffix;
+const img_exe = "qemu-img" ++ platform.exe_suffix;
+const accel_word = if (platform.is_windows) "whpx" else "kvm";
 
 fn isFile(io: std.Io, path: []const u8) bool {
     const st = std.Io.Dir.cwd().statFile(io, path, .{}) catch return false;
@@ -41,16 +43,21 @@ pub fn discover(gpa: std.mem.Allocator, io: std.Io, path_list: []const u8, confi
     var candidates: std.ArrayList([]const u8) = .empty;
     defer candidates.deinit(gpa);
     if (configured_dir.len > 0) try candidates.append(gpa, configured_dir);
-    var it = std.mem.tokenizeScalar(u8, path_list, ';');
+    var it = std.mem.tokenizeScalar(u8, path_list, platform.path_sep);
     while (it.next()) |d| try candidates.append(gpa, d);
-    try candidates.append(gpa, "C:\\Program Files\\qemu");
-    try candidates.append(gpa, "C:\\msys64\\ucrt64\\bin");
+    if (platform.is_windows) {
+        try candidates.append(gpa, "C:\\Program Files\\qemu");
+        try candidates.append(gpa, "C:\\msys64\\ucrt64\\bin");
+    } else {
+        try candidates.append(gpa, "/usr/bin");
+        try candidates.append(gpa, "/usr/local/bin");
+    }
 
     for (candidates.items) |dir| {
-        const d = std.mem.trimEnd(u8, dir, "\\");
-        const sys = try std.fmt.allocPrint(gpa, "{s}\\{s}", .{ d, system_exe });
+        const d = std.mem.trimEnd(u8, dir, "\\/");
+        const sys = try std.fmt.allocPrint(gpa, "{s}{c}{s}", .{ d, platform.dir_sep, system_exe });
         errdefer gpa.free(sys);
-        const img = try std.fmt.allocPrint(gpa, "{s}\\{s}", .{ d, img_exe });
+        const img = try std.fmt.allocPrint(gpa, "{s}{c}{s}", .{ d, platform.dir_sep, img_exe });
         errdefer gpa.free(img);
         if (!isFile(io, sys) or !isFile(io, img)) {
             gpa.free(sys);
@@ -60,15 +67,24 @@ pub fn discover(gpa: std.mem.Allocator, io: std.Io, path_list: []const u8, confi
         const version = try firstLine(gpa, io, &.{ sys, "--version" });
         errdefer gpa.free(version);
         const accel = std.process.run(gpa, io, .{ .argv = &.{ sys, "-accel", "help" } }) catch null;
-        var whpx = false;
+        var hw = false;
         if (accel) |a| {
             defer gpa.free(a.stdout);
             defer gpa.free(a.stderr);
-            whpx = std.mem.indexOf(u8, a.stdout, "whpx") != null or std.mem.indexOf(u8, a.stderr, "whpx") != null;
+            hw = std.mem.indexOf(u8, a.stdout, accel_word) != null or std.mem.indexOf(u8, a.stderr, accel_word) != null;
         }
-        return .{ .gpa = gpa, .qemu_system = sys, .qemu_img = img, .version = version, .whpx = whpx };
+        // KVM is listed whenever QEMU was built with it, but the learner also needs permission on /dev/kvm.
+        if (hw and !platform.is_windows) hw = kvmUsable(io);
+        return .{ .gpa = gpa, .qemu_system = sys, .qemu_img = img, .version = version, .hw_accel = hw };
     }
     return null;
+}
+
+/// True when /dev/kvm exists and this user may open it (the `kvm` group on most distributions).
+fn kvmUsable(io: std.Io) bool {
+    var f = std.Io.Dir.cwd().openFile(io, "/dev/kvm", .{ .mode = .read_write }) catch return false;
+    f.close(io);
+    return true;
 }
 
 fn firstLine(gpa: std.mem.Allocator, io: std.Io, argv: []const []const u8) ![]u8 {
@@ -80,13 +96,17 @@ fn firstLine(gpa: std.mem.Allocator, io: std.Io, argv: []const []const u8) ![]u8
 }
 
 /// Text shown when QEMU is not installed.
-pub const install_guidance =
+pub const install_guidance = if (platform.is_windows)
     "QEMU was not found. Install it, for example with winget: " ++
-    "winget install --id SoftwareFreedomConservancy.QEMU --exact " ++
-    "(or from https://www.qemu.org/download/#windows, or with MSYS2: " ++
-    "pacman -S mingw-w64-ucrt-x86_64-qemu). The winget and installer versions land in " ++
-    "C:\\Program Files\\qemu, which WinLab finds on its own; otherwise add the folder to PATH " ++
-    "or set qemu-path in WinLab's settings. WinLab never installs software on its own.";
+        "winget install --id SoftwareFreedomConservancy.QEMU --exact " ++
+        "(or from https://www.qemu.org/download/#windows, or with MSYS2: " ++
+        "pacman -S mingw-w64-ucrt-x86_64-qemu). The winget and installer versions land in " ++
+        "C:\\Program Files\\qemu, which WinLab finds on its own; otherwise add the folder to PATH " ++
+        "or set qemu-path in WinLab's settings. WinLab never installs software on its own."
+else
+    "QEMU was not found. Install it with your package manager (for example `sudo apt install qemu-system-x86 qemu-utils`, " ++
+        "`sudo dnf install qemu-system-x86 qemu-img`, `sudo pacman -S qemu-full` or `sudo apk add qemu-system-x86_64 qemu-img`); " ++
+        "otherwise add its folder to PATH or set qemu-path in WinLab's settings. WinLab never installs software on its own.";
 
 pub const Qemu = struct {
     gpa: std.mem.Allocator,
@@ -138,7 +158,7 @@ fn name(_: *anyopaque) []const u8 {
 fn capabilities(ptr: *anyopaque) p.Capabilities {
     const q = me(ptr);
     const ssh = q.ssh_exe.len != 0;
-    return .{ .snapshots = true, .power = ssh, .guest_exec = ssh, .accelerated = q.tools.whpx };
+    return .{ .snapshots = true, .power = ssh, .guest_exec = ssh, .accelerated = q.tools.hw_accel };
 }
 /// "Running" means some process has the disk image open (see `diskInUse`): QEMU on
 /// Windows takes no image lock, so qemu-img would happily modify a live disk.
@@ -151,10 +171,20 @@ fn state(ptr: *anyopaque, t: p.Target) p.Error!p.State {
 fn requireStopped(ptr: *anyopaque, t: p.Target) p.Error!void {
     if (diskInUse(me(ptr).gpa, t.disk)) return error.WrongState;
 }
-const HANDLE_ = ?*anyopaque;
-extern "kernel32" fn GetProcessId(HANDLE_) callconv(.winapi) u32;
-extern "kernel32" fn OpenProcess(u32, i32, u32) callconv(.winapi) HANDLE_;
-extern "kernel32" fn TerminateProcess(HANDLE_, u32) callconv(.winapi) i32;
+const win = if (platform.is_windows) struct {
+    const HANDLE_ = ?*anyopaque;
+    extern "kernel32" fn GetProcessId(HANDLE_) callconv(.winapi) u32;
+    extern "kernel32" fn OpenProcess(u32, i32, u32) callconv(.winapi) HANDLE_;
+    extern "kernel32" fn TerminateProcess(HANDLE_, u32) callconv(.winapi) i32;
+    extern "kernel32" fn CloseHandle(HANDLE_) callconv(.winapi) i32;
+    extern "kernel32" fn CreateFileW([*:0]const u16, u32, u32, ?*anyopaque, u32, u32, HANDLE_) callconv(.winapi) HANDLE_;
+    extern "kernel32" fn GetLastError() callconv(.winapi) u32;
+} else struct {};
+
+fn childPid(id: anytype) u32 {
+    if (platform.is_windows) return win.GetProcessId(id);
+    return @intCast(id orelse 0);
+}
 
 const pid_file = "qemu.pid";
 
@@ -214,7 +244,7 @@ const Supervisor = struct {
 
 fn spawnQemu(q: *Qemu, argv: []const []const u8, dir: []const u8) !u32 {
     const child = try std.process.spawn(q.io, .{ .argv = argv, .stdin = .ignore, .stdout = .ignore, .stderr = .ignore });
-    const pid = GetProcessId(child.id);
+    const pid = childPid(child.id);
     // Record the pid so a later stop can end this exact process if the guest will not shut down.
     var buf: [24]u8 = undefined;
     if (std.fmt.bufPrint(&buf, "{d}\n", .{pid})) |text| {
@@ -290,7 +320,7 @@ fn start(ptr: *anyopaque, t: p.Target) p.Error!void {
         .disk = t.disk,
         .memory_mb = t.memory_mb,
         .cpus = t.cpus,
-        .accel = if (q.tools.whpx) .whpx else .tcg,
+        .accel = if (q.tools.hw_accel) hw_accel_kind else .tcg,
         .ssh_port = access.port,
         .cpu = access.cpu,
         .no_reboot = true,
@@ -318,10 +348,14 @@ fn hardStop(q: *Qemu, t: p.Target) void {
     const path = std.fs.path.join(arena_state.allocator(), &.{ vmDir(t), pid_file }) catch return;
     const text = std.Io.Dir.cwd().readFileAlloc(q.io, path, arena_state.allocator(), .limited(64)) catch return;
     const pid = std.fmt.parseInt(u32, std.mem.trim(u8, text, " \r\n"), 10) catch return;
-    // PROCESS_TERMINATE | PROCESS_QUERY_LIMITED_INFORMATION
-    const h = OpenProcess(0x0001 | 0x1000, 0, pid) orelse return;
-    _ = TerminateProcess(h, 1);
-    _ = CloseHandle(h);
+    if (platform.is_windows) {
+        // PROCESS_TERMINATE | PROCESS_QUERY_LIMITED_INFORMATION
+        const h = win.OpenProcess(0x0001 | 0x1000, 0, pid) orelse return;
+        _ = win.TerminateProcess(h, 1);
+        _ = win.CloseHandle(h);
+    } else {
+        std.posix.kill(@intCast(pid), .KILL) catch {};
+    }
 }
 
 /// Asks the guest to shut down, waits for QEMU to release the disk, and ends the process
@@ -450,7 +484,7 @@ test "QEMU snapshots on a throwaway qcow2: create, list, change, restore, delete
 
 /// Runs `qemu-io -f qcow2 -c <cmd> <disk>` and reports whether it exited 0.
 fn qemuIo(gpa: std.mem.Allocator, io: std.Io, tools: *const Tools, disk: []const u8, cmd: []const u8) !bool {
-    const exe = try std.mem.replaceOwned(u8, gpa, tools.qemu_img, "qemu-img.exe", "qemu-io.exe");
+    const exe = try std.mem.replaceOwned(u8, gpa, tools.qemu_img, "qemu-img" ++ platform.exe_suffix, "qemu-io" ++ platform.exe_suffix);
     defer gpa.free(exe);
     const r = try std.process.run(gpa, io, .{ .argv = &.{ exe, "-f", "qcow2", "-c", cmd, disk } });
     defer gpa.free(r.stdout);
@@ -489,30 +523,58 @@ test "restoring a snapshot really rolls the disk contents back" {
     try prov.deleteSnapshot(target, "winlab-pre-data");
 }
 
-const HANDLE = ?*anyopaque;
-extern "kernel32" fn CreateFileW([*:0]const u16, u32, u32, ?*anyopaque, u32, u32, HANDLE) callconv(.winapi) HANDLE;
-extern "kernel32" fn CloseHandle(HANDLE) callconv(.winapi) i32;
-extern "kernel32" fn GetLastError() callconv(.winapi) u32;
-
 /// True when some process has the disk image open. QEMU on Windows does NOT take the
 /// image-level locks that make qemu-img refuse a busy image (verified: `qemu-img
 /// snapshot -c` succeeded against a disk a running QEMU had open), so WinLab asks the
 /// OS directly: opening with share mode 0 fails with a sharing violation while any
 /// other handle exists. Unknown errors count as in use (fail safe).
 pub fn diskInUse(gpa: std.mem.Allocator, path: []const u8) bool {
+    if (!platform.is_windows) return diskInUseLinux(gpa, path);
     const w = std.unicode.utf8ToUtf16LeAllocZ(gpa, path) catch return true;
     defer gpa.free(w);
     // GENERIC_READ, no sharing, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL
-    const h = CreateFileW(w.ptr, 0x80000000, 0, null, 3, 0x80, null);
-    if (h == @as(HANDLE, @ptrFromInt(std.math.maxInt(usize)))) {
-        const err = GetLastError();
+    const h = win.CreateFileW(w.ptr, 0x80000000, 0, null, 3, 0x80, null);
+    if (h == @as(win.HANDLE_, @ptrFromInt(std.math.maxInt(usize)))) {
+        const err = win.GetLastError();
         return err != 2 and err != 3; // missing file/path is "not in use" (the caller reports it separately)
     }
-    _ = CloseHandle(h);
+    _ = win.CloseHandle(h);
+    return false;
+}
+
+/// Linux: QEMU takes qcow2 image locks there, but only inside the process, so a second tool cannot ask cheaply.
+/// Instead look at what is running: any process whose command line names this disk file counts as using it.
+/// That also covers a QEMU the learner started by hand. If /proc cannot be read, the answer is "in use" (fail safe).
+fn diskInUseLinux(gpa: std.mem.Allocator, path: []const u8) bool {
+    const io = std.Io.Threaded.global_single_threaded.io();
+    var proc = std.Io.Dir.cwd().openDir(io, "/proc", .{ .iterate = true }) catch return true;
+    defer proc.close(io);
+    var it = proc.iterate();
+    const needle = std.mem.concat(gpa, u8, &.{ "file=", path }) catch return true;
+    defer gpa.free(needle);
+    while (it.next(io) catch return true) |entry| {
+        if (entry.kind != .directory) continue;
+        const digits = for (entry.name) |c| {
+            if (!std.ascii.isDigit(c)) break false;
+        } else true;
+        if (!digits) continue;
+        var sub_buf: [64]u8 = undefined;
+        const sub = std.fmt.bufPrint(&sub_buf, "{s}/cmdline", .{entry.name}) catch continue;
+        // procfs files report size 0, so read them as a stream. A process can exit meanwhile: skip it.
+        var f = proc.openFile(io, sub, .{}) catch continue;
+        defer f.close(io);
+        var rbuf: [4096]u8 = undefined;
+        var fr = f.readerStreaming(io, &rbuf);
+        const bytes = fr.interface.allocRemaining(gpa, .limited(256 * 1024)) catch continue;
+        defer gpa.free(bytes);
+        if (std.mem.indexOf(u8, bytes, "qemu-system") == null) continue;
+        if (std.mem.indexOf(u8, bytes, needle) != null) return true;
+    }
     return false;
 }
 
 test "diskInUse notices an open handle and is false once it is closed" {
+    if (!platform.is_windows) return error.SkipZigTest; // Linux looks at running QEMU processes instead of file handles
     const gpa = std.testing.allocator;
     const io = std.testing.io;
     var tmp = std.testing.tmpDir(.{});
@@ -541,7 +603,7 @@ test "a disk held open by a running QEMU is reported running and is never modifi
     defer tmp.cleanup();
     const dir = try tmp.dir.realPathFileAlloc(io, ".", gpa);
     defer gpa.free(dir);
-    const disk = try std.fmt.allocPrint(gpa, "{s}\\live.qcow2", .{dir});
+    const disk = try std.fmt.allocPrint(gpa, "{s}{c}live.qcow2", .{ dir, platform.dir_sep });
     defer gpa.free(disk);
     const created = try std.process.run(gpa, io, .{ .argv = &.{ tools.qemu_img, "create", "-f", "qcow2", disk, "16M" } });
     defer gpa.free(created.stdout);
@@ -580,13 +642,16 @@ test "a disk held open by a running QEMU is reported running and is never modifi
 
 // ---- command line for a VM (pure; starting the process is the caller's job) ----
 
-pub const Accel = enum { whpx, tcg };
+pub const Accel = enum { whpx, kvm, tcg };
+
+/// The hardware accelerator of this operating system.
+pub const hw_accel_kind: Accel = if (platform.is_windows) .whpx else .kvm;
 
 pub const RunConfig = struct {
     disk: []const u8,
     memory_mb: u32 = 4096,
     cpus: u32 = 2,
-    accel: Accel = .whpx,
+    accel: Accel = hw_accel_kind,
     /// Installer ISO to attach (first boot device while set).
     iso: ?[]const u8 = null,
     /// ISO image attached as a second CD-ROM (holds Autounattend.xml and the first-logon script).
@@ -618,6 +683,7 @@ pub fn buildArgv(arena: std.mem.Allocator, tools: *const Tools, c: RunConfig) ![
     try a.append(arena, tools.qemu_system);
     try a.appendSlice(arena, &.{ "-machine", "q35", "-accel", switch (c.accel) {
         .whpx => "whpx", // kernel-irqchip=off made the guest hang at the BIOS screen after the first reboot
+        .kvm => "kvm",
         .tcg => "tcg",
     } });
     try a.appendSlice(arena, &.{ "-cpu", c.cpu });
@@ -661,7 +727,7 @@ pub fn buildArgv(arena: std.mem.Allocator, tools: *const Tools, c: RunConfig) ![
 test "direct kernel boot and the serial port are added, local-only" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
-    const tools: Tools = .{ .gpa = std.testing.allocator, .qemu_system = @constCast("C:/q/qemu-system-x86_64.exe"), .qemu_img = @constCast("x"), .version = @constCast("v"), .whpx = true };
+    const tools: Tools = .{ .gpa = std.testing.allocator, .qemu_system = @constCast("C:/q/qemu-system-x86_64.exe"), .qemu_img = @constCast("x"), .version = @constCast("v"), .hw_accel = true };
     const argv = try buildArgv(arena.allocator(), &tools, .{ .disk = "D:/vm/a.qcow2", .show_display = false, .kernel = "D:/k/vmlinuz", .initrd = "D:/k/initrd", .append = "boot=live console=ttyS0,115200", .serial_port = 5555 });
     const joined = try std.mem.join(arena.allocator(), " ", argv);
     try std.testing.expect(std.mem.indexOf(u8, joined, "-kernel D:/k/vmlinuz -initrd D:/k/initrd -append boot=live console=ttyS0,115200") != null);
@@ -675,7 +741,7 @@ test "direct kernel boot and the serial port are added, local-only" {
 test "command line is driver-free, local-only and carries the answer CD" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
-    const tools: Tools = .{ .gpa = std.testing.allocator, .qemu_system = @constCast("C:/q/qemu-system-x86_64.exe"), .qemu_img = @constCast("x"), .version = @constCast("v"), .whpx = true };
+    const tools: Tools = .{ .gpa = std.testing.allocator, .qemu_system = @constCast("C:/q/qemu-system-x86_64.exe"), .qemu_img = @constCast("x"), .version = @constCast("v"), .hw_accel = true };
     const argv = try buildArgv(arena.allocator(), &tools, .{ .disk = "D:/vm/a.qcow2", .iso = "D:/iso/s.iso", .answer_iso = "D:/ans.iso", .show_display = false, .qmp_port = 4444 });
     const joined = try std.mem.join(arena.allocator(), " ", argv);
     try std.testing.expect(std.mem.indexOf(u8, joined, "e1000e") != null);

@@ -5,6 +5,7 @@
 //! only when complete. WinLab never fetches anything in the background and never
 //! installs or activates Windows.
 const std = @import("std");
+const builtin = @import("builtin");
 const toml = @import("toml");
 const registry = @import("registry.zig");
 const unattend = @import("unattend.zig");
@@ -113,9 +114,11 @@ pub fn parse(gpa: std.mem.Allocator, text: []const u8) ParseError!Catalog {
         if (path.len > 0) {
             // A learner-supplied image: absolute Windows path, .iso, no control characters.
             const absolute = (path.len > 3 and std.ascii.isAlphabetic(path[0]) and path[1] == ':' and (path[2] == '\\' or path[2] == '/')) or std.mem.startsWith(u8, path, "\\\\");
-            if (!absolute or !std.ascii.endsWithIgnoreCase(path, ".iso")) return error.InvalidEntry;
+            const posix_absolute = builtin.os.tag != .windows and path.len > 1 and path[0] == '/';
+            if (!(absolute or posix_absolute) or !std.ascii.endsWithIgnoreCase(path, ".iso")) return error.InvalidEntry;
             for (path) |c| if (c < 0x20 or c == '"') return error.InvalidEntry;
-            file = std.fs.path.basename(path);
+            // Either separator: a catalog written on Windows is still read on Linux.
+            file = path[if (std.mem.lastIndexOfAny(u8, path, "\\/")) |sep| sep + 1 else 0..];
         } else {
             url = t.getString("url") orelse return error.InvalidEntry;
             if (!std.mem.startsWith(u8, url, "https://")) return error.InvalidEntry;
@@ -203,17 +206,47 @@ pub fn hashFile(io: std.Io, dir: std.Io.Dir, sub_path: []const u8) ![64]u8 {
     return std.fmt.bytesToHex(digest, .lower);
 }
 
-extern "kernel32" fn GetDiskFreeSpaceExW([*:0]const u16, ?*u64, ?*u64, ?*u64) callconv(.winapi) i32;
+const win_disk = if (builtin.os.tag == .windows) struct {
+    extern "kernel32" fn GetDiskFreeSpaceExW([*:0]const u16, ?*u64, ?*u64, ?*u64) callconv(.winapi) i32;
+} else struct {};
 
 /// Bytes available to the current user on the volume containing `dir_path`, or null if unknown.
 pub fn freeBytes(gpa: std.mem.Allocator, dir_path: []const u8) ?u64 {
+    if (builtin.os.tag != .windows) return freeBytesPosix(gpa, dir_path);
     const w = std.unicode.utf8ToUtf16LeAllocZ(gpa, dir_path) catch return null;
     defer gpa.free(w);
     var avail: u64 = 0;
-    if (GetDiskFreeSpaceExW(w.ptr, &avail, null, null) == 0) return null;
+    if (win_disk.GetDiskFreeSpaceExW(w.ptr, &avail, null, null) == 0) return null;
     return avail;
 }
 
+/// Linux: asks `df` (always present with coreutils), which avoids a hand-written statvfs layout.
+fn freeBytesPosix(gpa: std.mem.Allocator, dir_path: []const u8) ?u64 {
+    const io = std.Io.Threaded.global_single_threaded.io();
+    const r = std.process.run(gpa, io, .{ .argv = &.{ "df", "-Pk", "--", dir_path } }) catch return null;
+    defer gpa.free(r.stdout);
+    defer gpa.free(r.stderr);
+    return parseDfAvailable(r.stdout);
+}
+
+/// The "Available" column (1 KiB blocks) of the last line of `df -Pk` output, in bytes.
+fn parseDfAvailable(out: []const u8) ?u64 {
+    var last: ?[]const u8 = null;
+    var lines = std.mem.tokenizeScalar(u8, out, '\n');
+    while (lines.next()) |l| last = l;
+    const line = last orelse return null;
+    var cols = std.mem.tokenizeAny(u8, line, " \t");
+    var i: usize = 0;
+    while (cols.next()) |c| : (i += 1) {
+        if (i == 3) return (std.fmt.parseInt(u64, c, 10) catch return null) * 1024;
+    }
+    return null;
+}
+
+test "df output is read" {
+    try std.testing.expectEqual(@as(?u64, 4096 * 1024), parseDfAvailable("Filesystem 1024-blocks Used Available Capacity Mounted on\n/dev/sda1 100 50 4096 50% /\n"));
+    try std.testing.expectEqual(@as(?u64, null), parseDfAvailable(""));
+}
 test "catalog parses and validates" {
     const gpa = std.testing.allocator;
     var c = try parse(gpa,

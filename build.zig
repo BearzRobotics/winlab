@@ -1,4 +1,4 @@
-const std = @import("std");
+﻿const std = @import("std");
 
 pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
@@ -14,8 +14,13 @@ pub fn build(b: *std.Build) void {
         },
     });
 
-    // GUI: DVUI on its Direct3D 11 backend (ADR 0002). Windows-only, like the terminal and the VM tools.
-    const dvui_dep = b.dependency("dvui", .{ .target = target, .optimize = optimize, .backend = .dx11 });
+    // GUI: DVUI on its Direct3D 11 backend on Windows (ADR 0002); on every other OS the SDL2 backend
+    // (system SDL2 with -fsys=sdl2, which is what distro packages should use, or SDL2 built from source).
+    const is_windows = target.result.os.tag == .windows;
+    const dvui_dep = if (is_windows)
+        b.dependency("dvui", .{ .target = target, .optimize = optimize, .backend = .dx11 })
+    else
+        b.dependency("dvui", .{ .target = target, .optimize = optimize, .backend = .sdl2 });
 
     const exe = b.addExecutable(.{
         .name = "winlab",
@@ -25,12 +30,12 @@ pub fn build(b: *std.Build) void {
             .optimize = optimize,
             .imports = &.{
                 .{ .name = "winlab", .module = mod },
-                .{ .name = "dvui", .module = dvui_dep.module("dvui_dx11") },
-                .{ .name = "dx11-backend", .module = dvui_dep.module("dx11") },
+                .{ .name = "dvui", .module = dvui_dep.module(if (is_windows) "dvui_dx11" else "dvui_sdl2") },
+                .{ .name = "backend", .module = dvui_dep.module(if (is_windows) "dx11" else "sdl2") },
             },
         }),
     });
-    exe.win32_manifest = dvui_dep.path("src/main.manifest");
+    if (is_windows) exe.win32_manifest = dvui_dep.path("src/main.manifest");
     b.installArtifact(exe);
 
     // A development build reads the source tree (`zig-out/bin/../..`), so nothing is copied beside the exe

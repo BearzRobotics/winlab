@@ -10,10 +10,13 @@
 const std = @import("std");
 const winlab = @import("winlab");
 const dvui = @import("dvui");
-const Dx11 = @import("dx11-backend");
-const win32 = Dx11.win32;
+const builtin = @import("builtin");
+/// DVUI's Direct3D 11 backend on Windows, its SDL2 backend everywhere else (see build.zig).
+const Be = @import("backend");
+const is_win = winlab.platform.is_windows;
+const win32 = if (is_win) Be.win32 else struct {};
 const md_view = @import("md_view.zig");
-const terminal_win = @import("terminal_win.zig");
+const terminal_host = @import("terminal_host.zig");
 
 // ---------------------------------------------------------------------------------------------
 // Types shared with main.zig
@@ -175,8 +178,15 @@ pub fn isDark(theme: winlab.settings.Theme) bool {
     return switch (theme) {
         .light => false,
         .dark => true,
-        .system => (Dx11.preferredColorScheme(undefined) orelse .light) == .dark,
+        .system => if (is_win) (Be.preferredColorScheme(undefined) orelse .light) == .dark else linuxPrefersDark(),
     };
+}
+
+/// SDL2 cannot tell us the desktop theme on Linux. GTK_THEME (for example "Adwaita:dark") is the common override;
+/// without it the light theme is used, and settings.toml `theme = "dark"` always wins.
+fn linuxPrefersDark() bool {
+    const v = std.c.getenv("GTK_THEME") orelse return false;
+    return std.ascii.findIgnoreCase(std.mem.span(v), "dark") != null;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -184,7 +194,7 @@ pub fn isDark(theme: winlab.settings.Theme) bool {
 // ---------------------------------------------------------------------------------------------
 
 const search_max = 200;
-const class_name = win32.L("WinLabWindow");
+const class_name = if (is_win) win32.L("WinLabWindow") else {};
 const reader_width: f32 = 820;
 const debug_waits = false;
 
@@ -213,7 +223,7 @@ const LabUi = struct {
 const App = struct {
     gpa: std.mem.Allocator,
     win: *dvui.Window,
-    hwnd: ?win32.HWND,
+    hwnd: if (is_win) ?win32.HWND else void,
     o: Options,
     pages: []const Page,
     docs: []winlab.search.Doc,
@@ -269,45 +279,29 @@ var app_storage: App = undefined;
 
 pub const Error = error{ WindowClass, OutOfMemory } || dvui.Backend.GenericError || std.Io.File.OpenError;
 
-/// Shows `pages` and runs the message loop until the window closes.
+/// Shows `pages` and runs the event loop until the window closes.
 pub fn run(gpa: std.mem.Allocator, title: [:0]const u8, pages: []const Page, o: Options) !void {
     std.debug.assert(pages.len > 0);
     dvui.io = o.io;
-    freeOwnConsole();
+    if (is_win) freeOwnConsole();
 
     var fonts: std.ArrayList(dvui.Font.Source) = .empty;
     defer fonts.deinit(gpa);
     loadWindowsFonts(gpa, o, &fonts);
 
-    Dx11.RegisterClass(class_name, .{}) catch return error.WindowClass;
-    var window_state: Dx11.WindowState = undefined;
-    const backend = try Dx11.initWindow(&window_state, .{
-        .registered_class = class_name,
-        .dvui_gpa = gpa,
-        .allocator = gpa,
-        .size = .{ .w = 1280, .h = 820 },
-        .min_size = .{ .w = 640, .h = 420 },
-        .vsync = true,
-        .title = title,
-        .dvui_window_init_options = .{
-            .theme = makeTheme(o.dark, fonts.items),
-            // Ctrl+= / Ctrl+- / Ctrl+0 scale the whole UI.
-            .keybinds_zoom = true,
-        },
-    });
-    defer backend.deinit();
-    const win = backend.getWindow();
-    win.content_scale = @as(f32, @floatFromInt(o.text_scale)) / 100.0;
+    if (is_win) return runWindows(gpa, title, pages, o, fonts.items);
+    return runSdl(gpa, title, pages, o, fonts.items);
+}
 
+/// Everything after the window exists: the state, the lesson list, the first lesson. Pairs with `finishApp`.
+fn prepareApp(gpa: std.mem.Allocator, pages: []const Page, o: Options, win: *dvui.Window, hwnd: if (is_win) ?win32.HWND else void, fonts: []const dvui.Font.Source) !*App {
+    win.content_scale = @as(f32, @floatFromInt(o.text_scale)) / 100.0;
     const docs = try gpa.alloc(winlab.search.Doc, pages.len);
-    defer gpa.free(docs);
+    errdefer gpa.free(docs);
     for (pages, docs) |p, *d| d.* = .{ .title = p.title, .summary = p.summary, .body = p.body };
 
     const a = &app_storage;
-    a.* = .{ .gpa = gpa, .win = win, .hwnd = Dx11.hwndFromContext(backend), .o = o, .pages = pages, .docs = docs, .fonts = fonts.items, .dark = o.dark };
-    defer a.visible.deinit(gpa);
-    defer if (a.plain) |p| gpa.free(p);
-    defer a.lab.log.deinit(gpa);
+    a.* = .{ .gpa = gpa, .win = win, .hwnd = hwnd, .o = o, .pages = pages, .docs = docs, .fonts = fonts, .dark = o.dark };
     buildGroups(a);
     rebuildList(a);
     // Open on the first lesson in the list, not the first in directory order.
@@ -318,22 +312,58 @@ pub fn run(gpa: std.mem.Allocator, title: [:0]const u8, pages: []const Page, o: 
         runSetupCheck(a);
         if (s.show_first) a.show_setup = true;
     }
+    return a;
+}
 
-    while (!a.quit) switch (Dx11.serviceMessageQueue()) {
+fn finishApp(a: *App) void {
+    commitNotes(a);
+    a.visible.deinit(a.gpa);
+    if (a.plain) |p| a.gpa.free(p);
+    a.lab.log.deinit(a.gpa);
+    a.gpa.free(a.docs);
+}
+
+/// The window's close button. A lab step in flight, or a running lab VM, needs an answer first.
+fn handleCloseEvents(a: *App, win: *dvui.Window) void {
+    for (dvui.events()) |*e| {
+        if (!dvui.eventMatchSimple(e, win.data())) continue;
+        if ((e.evt == .window and e.evt.window.action == .close) or (e.evt == .app and e.evt.app.action == .quit)) {
+            e.handle(@src(), win.data());
+            requestQuit(a);
+        }
+    }
+}
+
+fn runWindows(gpa: std.mem.Allocator, title: [:0]const u8, pages: []const Page, o: Options, fonts: []const dvui.Font.Source) !void {
+    if (!is_win) unreachable;
+    Be.RegisterClass(class_name, .{}) catch return error.WindowClass;
+    var window_state: Be.WindowState = undefined;
+    const backend = try Be.initWindow(&window_state, .{
+        .registered_class = class_name,
+        .dvui_gpa = gpa,
+        .allocator = gpa,
+        .size = .{ .w = 1280, .h = 820 },
+        .min_size = .{ .w = 640, .h = 420 },
+        .vsync = true,
+        .title = title,
+        .dvui_window_init_options = .{
+            .theme = makeTheme(o.dark, fonts),
+            // Ctrl+= / Ctrl+- / Ctrl+0 scale the whole UI.
+            .keybinds_zoom = true,
+        },
+    });
+    defer backend.deinit();
+    const win = backend.getWindow();
+    const a = try prepareApp(gpa, pages, o, win, Be.hwndFromContext(backend), fonts);
+    defer finishApp(a);
+
+    while (!a.quit) switch (Be.serviceMessageQueue()) {
         .queue_empty => {
             const nstime = win.beginWait(backend.hasEvent());
             try win.begin(nstime);
 
             frame(a);
-
-            // Window close button. A lab step in flight, or a running lab VM, needs an answer first.
-            for (dvui.events()) |*e| {
-                if (!dvui.eventMatchSimple(e, win.data())) continue;
-                if ((e.evt == .window and e.evt.window.action == .close) or (e.evt == .app and e.evt.app.action == .quit)) {
-                    e.handle(@src(), win.data());
-                    requestQuit(a);
-                }
-            }
+            handleCloseEvents(a, win);
 
             const end_micros = try win.end(.{});
             backend.setCursor(win.cursorRequested());
@@ -348,7 +378,42 @@ pub fn run(gpa: std.mem.Allocator, title: [:0]const u8, pages: []const Page, o: 
         },
         .quit => break,
     };
-    commitNotes(a);
+}
+
+fn runSdl(gpa: std.mem.Allocator, title: [:0]const u8, pages: []const Page, o: Options, fonts: []const dvui.Font.Source) !void {
+    if (is_win) unreachable;
+    var backend = try Be.initWindow(.{
+        .io = o.io,
+        .size = .{ .w = 1280, .h = 820 },
+        .min_size = .{ .w = 640, .h = 420 },
+        .vsync = true,
+        .org = "WinLab",
+        .app = "WinLab",
+        .title = title,
+    });
+    defer backend.deinit();
+    var win = try dvui.Window.init(@src(), gpa, backend.backend(), .{
+        .theme = makeTheme(o.dark, fonts),
+        // Ctrl+= / Ctrl+- / Ctrl+0 scale the whole UI.
+        .keybinds_zoom = true,
+    });
+    defer win.deinit();
+    const a = try prepareApp(gpa, pages, o, &win, {}, fonts);
+    defer finishApp(a);
+
+    var interrupted = false;
+    while (!a.quit) {
+        const nstime = win.beginWait(interrupted);
+        try win.begin(nstime);
+        try backend.addAllEvents(&win);
+
+        frame(a);
+        handleCloseEvents(a, &win);
+
+        const end_micros = try win.end(.{});
+        // Sleep until an event arrives or DVUI needs another frame, instead of redrawing at vsync forever.
+        interrupted = try backend.waitEventTimeout(win.waitTime(end_micros));
+    }
 }
 
 /// Started by double-click, the console window would sit behind the GUI; drop it when we own it.
@@ -1024,7 +1089,7 @@ fn stepLesson(a: *App, delta: isize) void {
 }
 
 fn openShell(a: *App, sh: ShellChoice) void {
-    terminal_win.open(a.gpa, a.hwnd, .{
+    terminal_host.open(a.gpa, a.hwnd, .{
         .command = sh.command,
         .shell_name = sh.name,
         .lesson_title = a.pages[a.current].title,

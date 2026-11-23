@@ -1,9 +1,9 @@
 const std = @import("std");
 const winlab = @import("winlab");
-const terminal_win = @import("ui/terminal_win.zig");
+const terminal_host = @import("ui/terminal_host.zig");
 const gui = @import("ui/gui.zig");
 comptime {
-    _ = terminal_win;
+    _ = terminal_host;
     _ = @import("ui/highlight.zig");
 }
 
@@ -15,7 +15,7 @@ const usage =
     \\       winlab coverage [exam-id]  show certification domains covered by lessons and labs
     \\       winlab paths               list the learning paths with size and level
     \\       winlab view <file.md>      show one Markdown file in the reader
-    \\       winlab terminal <shell>    open a real shell (cmd, powershell or pwsh) in a terminal window
+    \\       winlab terminal <shell>    open a real shell (cmd, powershell, pwsh or bash) in a terminal window
     \\       winlab image list          show installation media WinLab can download
     \\       winlab image fetch <id>    download one (asks first; HTTPS via the system curl.exe)
     \\       winlab vm install <image-id> <vm-id>   build a training VM unattended (runs until the guest is ready)
@@ -97,7 +97,7 @@ fn status(init: std.process.Init) !void {
     });
 
     const path = init.environ_map.get("PATH") orelse "";
-    inline for (std.meta.tags(winlab.shell_discovery.Shell)) |sh| {
+    for (winlab.shell_discovery.here) |sh| {
         const found = winlab.shell_discovery.findOnPath(init.io, path, sh.executable());
         try out.print("  {s}: {s}\n", .{ sh.displayName(), if (found) "found" else if (sh.isOptional()) "not installed (optional)" else "NOT FOUND" });
     }
@@ -108,7 +108,7 @@ fn status(init: std.process.Init) !void {
     if (try winlab.vm_qemu.discover(init.gpa, init.io, path, cfg.settings.qemu_path)) |found| {
         var tools = found;
         defer tools.deinit();
-        try out.print("  QEMU: {s}\n  Location: {s}\n  Hardware acceleration (WHPX): {s}\n", .{ tools.version, tools.qemu_system, if (tools.whpx) "available" else "not available (slow software emulation only)" });
+        try out.print("  QEMU: {s}\n  Location: {s}\n  Hardware acceleration ({s}): {s}\n", .{ tools.version, tools.qemu_system, if (winlab.platform.is_windows) "WHPX" else "KVM", if (tools.hw_accel) "available" else "not available (slow software emulation only)" });
     } else {
         try out.print("  QEMU: not found\n  {s}\n", .{winlab.vm_qemu.install_guidance});
     }
@@ -126,6 +126,7 @@ fn renderPage(arena: std.mem.Allocator, title: []const u8, markdown: []const u8)
 
 /// `%SystemRoot%\Fonts`, where Segoe UI and Consolas live.
 fn fontsDir(init: std.process.Init) []const u8 {
+    if (!winlab.platform.is_windows) return ""; // DVUI's bundled font is used
     const root = init.environ_map.get("SystemRoot") orelse "C:\\Windows";
     return std.fs.path.join(init.arena.allocator(), &.{ root, "Fonts" }) catch "";
 }
@@ -370,8 +371,7 @@ fn openLabs(init: std.process.Init, cfg: *const winlab.settings.Loaded, root: []
         return try arena.dupe(gui.Lab, entries.items);
     };
     errdefer tools.deinit();
-    const system_root = init.environ_map.get("SystemRoot") orelse "C:\\Windows";
-    const ssh_exe = try std.fs.path.join(arena, &.{ system_root, "System32", "OpenSSH", "ssh.exe" });
+    const ssh_exe = try winlab.platform.tool(arena, init.io, init.environ_map, .ssh);
     backend.* = .{
         .gpa = gpa,
         .io = io,
@@ -405,7 +405,7 @@ const SetupBackend = struct {
         var n: usize = 0;
         out[n] = .{ .name = "Lessons and quizzes", .ok = true, .optional = false, .detail = std.fmt.allocPrint(a, "Course folder: {s}", .{self.content_dir}) catch "Course folder found." };
         n += 1;
-        inline for (std.meta.tags(winlab.shell_discovery.Shell)) |sh| {
+        for (winlab.shell_discovery.here) |sh| {
             if (n < out.len) {
                 const found = winlab.shell_discovery.findOnPath(io, path, sh.executable());
                 out[n] = .{
@@ -417,22 +417,21 @@ const SetupBackend = struct {
                 n += 1;
             }
         }
-        const system_root = self.init.environ_map.get("SystemRoot") orelse "C:\\Windows";
-        const ssh = std.fs.path.join(a, &.{ system_root, "System32", "OpenSSH", "ssh.exe" }) catch "";
+        const ssh = winlab.platform.tool(a, io, self.init.environ_map, .ssh) catch "";
         const ssh_ok = ssh.len > 0 and blk: {
             const st = std.Io.Dir.cwd().statFile(io, ssh, .{}) catch break :blk false;
             break :blk st.kind == .file;
         };
-        out[n] = .{ .name = "OpenSSH client", .ok = ssh_ok, .optional = true, .detail = if (ssh_ok) "Labs use it to control the virtual machine." else "Labs use it to control the virtual machine. It is an optional Windows feature: Settings > System > Optional features > Add a feature > OpenSSH Client." };
+        out[n] = .{ .name = "OpenSSH client", .ok = ssh_ok, .optional = true, .detail = if (ssh_ok) "Labs use it to control the virtual machine." else if (winlab.platform.is_windows) "Labs use it to control the virtual machine. It is an optional Windows feature: Settings > System > Optional features > Add a feature > OpenSSH Client." else "Labs use it to control the virtual machine. Install your distribution's OpenSSH client package (openssh-client, openssh-clients or openssh)." };
         n += 1;
         // WINLAB_SETUP_DEMO_NOQEMU=1 pretends QEMU is missing, to see the install choices without uninstalling it.
         const pretend_missing = self.init.environ_map.get("WINLAB_SETUP_DEMO_NOQEMU") != null;
         if (if (pretend_missing) null else winlab.vm_qemu.discover(self.init.gpa, io, path, self.settings.qemu_path) catch null) |found| {
             var tools = found;
             defer tools.deinit();
-            out[n] = .{ .name = "QEMU", .ok = true, .optional = true, .detail = std.fmt.allocPrint(a, "{s}. Location: {s}. Hardware acceleration (WHPX): {s}.", .{ tools.version, tools.qemu_system, if (tools.whpx) "available" else "not available, so labs run in slow software emulation; turn on Windows Hypervisor Platform in Windows Features" }) catch "Found." };
+            out[n] = .{ .name = "QEMU", .ok = true, .optional = true, .detail = std.fmt.allocPrint(a, "{s}. Location: {s}. Hardware acceleration ({s}): {s}.", .{ tools.version, tools.qemu_system, if (winlab.platform.is_windows) "WHPX" else "KVM", if (tools.hw_accel) "available" else if (winlab.platform.is_windows) "not available, so labs run in slow software emulation; turn on Windows Hypervisor Platform in Windows Features" else "not available, so labs run in slow software emulation; /dev/kvm must exist and be readable and writable by you (usually: add yourself to the kvm group, then log in again)" }) catch "Found." };
         } else {
-            out[n] = .{ .name = "QEMU", .ok = false, .optional = true, .detail = "Needed only for the hands-on labs. Not found in your settings, PATH, Program Files or MSYS2." };
+            out[n] = .{ .name = "QEMU", .ok = false, .optional = true, .detail = "Needed only for the hands-on labs. Not found in your settings or PATH (or Program Files and MSYS2 on Windows)." };
         }
         n += 1;
         return n;
@@ -442,7 +441,7 @@ const SetupBackend = struct {
         const self: *SetupBackend = @ptrCast(@alignCast(ctx));
         if (self.settings.setup_done) return;
         self.settings.setup_done = true;
-        const appdata = self.init.environ_map.get("APPDATA") orelse return;
+        const appdata = winlab.platform.configBase(self.init.arena.allocator(), self.init.environ_map) orelse return;
         var base = std.Io.Dir.cwd().openDir(self.init.io, appdata, .{}) catch return;
         defer base.close(self.init.io);
         winlab.settings_file.save(self.init.io, base, self.settings) catch |e| std.debug.print("warning: could not save settings: {t}\n", .{e});
@@ -502,7 +501,7 @@ fn browse(init: std.process.Init, dir_arg: ?[]const u8) !void {
     // Offer each real shell that is installed. Nothing is started until the learner picks one.
     var shells: std.ArrayList(gui.ShellChoice) = .empty;
     const path = init.environ_map.get("PATH") orelse "";
-    inline for (std.meta.tags(winlab.shell_discovery.Shell)) |sh| {
+    for (winlab.shell_discovery.here) |sh| {
         if (winlab.shell_discovery.findOnPath(io, path, sh.executable())) {
             try shells.append(arena, .{ .name = sh.displayName(), .command = sh.commandLine() });
         }
@@ -517,7 +516,7 @@ fn browse(init: std.process.Init, dir_arg: ?[]const u8) !void {
 
     var setup_backend: SetupBackend = .{ .init = init, .settings = cfg.settings, .content_dir = dir, .arena = std.heap.ArenaAllocator.init(gpa) };
     defer setup_backend.arena.deinit();
-    const settings_path = if (init.environ_map.get("APPDATA")) |ad| std.fs.path.join(arena, &.{ ad, winlab.settings_file.sub_dir, winlab.settings_file.file_name }) catch "" else "";
+    const settings_path = if (winlab.platform.configBase(init.arena.allocator(), init.environ_map)) |ad| std.fs.path.join(arena, &.{ ad, winlab.settings_file.sub_dir, winlab.settings_file.file_name }) catch "" else "";
 
     try gui.run(gpa, "WinLab - Course", pages, .{
         .io = io,
@@ -525,7 +524,7 @@ fn browse(init: std.process.Init, dir_arg: ?[]const u8) !void {
         .quizzes = openQuizzes(arena, io, rootOfCourse(dir)),
         .paths = path_views,
         .shells = shells.items,
-        .start_dir = init.environ_map.get("USERPROFILE"),
+        .start_dir = winlab.platform.homeDir(init.environ_map),
         .text_scale = cfg.settings.text_scale,
         .dark = dark,
         .tracking = store.tracking(),
@@ -549,8 +548,8 @@ const ProgressStore = struct {
 
     fn open(init: std.process.Init) ProgressStore {
         var s: ProgressStore = .{ .gpa = init.gpa, .io = init.io, .progress = winlab.progress.Progress.init(init.gpa) };
-        const appdata = init.environ_map.get("APPDATA") orelse {
-            std.debug.print("warning: APPDATA is not set; progress tracking is off\n", .{});
+        const appdata = winlab.platform.configBase(init.arena.allocator(), init.environ_map) orelse {
+            std.debug.print("warning: the settings folder is unknown (APPDATA or HOME is not set); progress tracking is off\n", .{});
             return s;
         };
         var base = std.Io.Dir.cwd().openDir(init.io, appdata, .{}) catch |err| {
@@ -596,6 +595,8 @@ fn terminal(init: std.process.Init, which: []const u8) !void {
         .cmd
     else if (std.mem.eql(u8, which, "powershell"))
         .windows_powershell
+    else if (std.mem.eql(u8, which, "bash"))
+        .bash
     else if (std.mem.eql(u8, which, "pwsh"))
         .powershell_7
     else {
@@ -604,10 +605,10 @@ fn terminal(init: std.process.Init, which: []const u8) !void {
     };
     var cfg = loadSettings(init);
     defer cfg.deinit();
-    try terminal_win.runStandalone(init.gpa, .{
+    try terminal_host.runStandalone(init.gpa, .{
         .command = sh.commandLine(),
         .shell_name = sh.displayName(),
-        .start_dir = init.environ_map.get("USERPROFILE"),
+        .start_dir = winlab.platform.homeDir(init.environ_map),
         .text_scale = cfg.settings.text_scale,
         .dark = gui.isDark(cfg.settings.theme),
     });
@@ -635,8 +636,8 @@ fn loadImageCatalog(init: std.process.Init, cfg: *const winlab.settings.Loaded) 
 
 /// %LOCALAPPDATA%\WinLab\images
 fn imagesDir(init: std.process.Init) ![]const u8 {
-    const base = init.environ_map.get("LOCALAPPDATA") orelse {
-        std.debug.print("LOCALAPPDATA is not set; cannot choose a download folder\n", .{});
+    const base = winlab.platform.dataBase(init.arena.allocator(), init.environ_map) orelse {
+        std.debug.print("the data folder is unknown (LOCALAPPDATA or HOME is not set); cannot choose a download folder\n", .{});
         std.process.exit(1);
     };
     return std.fs.path.join(init.arena.allocator(), &.{ base, "WinLab", "images" });
@@ -694,6 +695,10 @@ fn imageEditions(init: std.process.Init, iso_path: []const u8) !void {
         std.debug.print("{s}: {t}\n", .{ iso_path, err });
         std.process.exit(1);
     };
+    if (!winlab.platform.is_windows) {
+        std.debug.print("Listing the editions inside a Windows ISO needs Windows (it mounts the image). On Linux, give `image add` the edition index you already know.\n", .{});
+        std.process.exit(1);
+    }
     const system_root = init.environ_map.get("SystemRoot") orelse "C:\\Windows";
     const ps = try std.fs.path.join(init.arena.allocator(), &.{ system_root, "System32", "WindowsPowerShell", "v1.0", "powershell.exe" });
     // The script reads the path from $args[0]; it is passed through -Command as a script block with arguments.
@@ -780,8 +785,7 @@ fn imageFetch(init: std.process.Init, id: []const u8) !void {
         std.process.exit(1);
     };
     const dir = try imagesDir(init);
-    const system_root = init.environ_map.get("SystemRoot") orelse "C:\\Windows";
-    const curl = try std.fs.path.join(arena, &.{ system_root, "System32", "curl.exe" });
+    const curl = try winlab.platform.tool(arena, init.io, init.environ_map, .curl);
     if (std.Io.Dir.cwd().statFile(io, curl, .{})) |_| {} else |_| {
         std.debug.print("curl.exe was not found at {s}\n", .{curl});
         std.process.exit(1);
@@ -885,8 +889,8 @@ fn vmInstallCloud(init: std.process.Init, cfg: *const winlab.settings.Loaded, en
         std.process.exit(1);
     };
     defer tools.deinit();
-    const local = init.environ_map.get("LOCALAPPDATA") orelse {
-        std.debug.print("LOCALAPPDATA is not set\n", .{});
+    const local = winlab.platform.dataBase(init.arena.allocator(), init.environ_map) orelse {
+        std.debug.print("the data folder is unknown (LOCALAPPDATA or HOME is not set)\n", .{});
         std.process.exit(1);
     };
     const vm_dir = try std.fs.path.join(arena, &.{ local, "WinLab", "vms", vm_id });
@@ -906,8 +910,7 @@ fn vmInstallCloud(init: std.process.Init, cfg: *const winlab.settings.Loaded, en
     for (raw, &password) |r, *p| p.* = alphabet[r % alphabet.len];
 
     // Per-VM SSH key.
-    const system_root = init.environ_map.get("SystemRoot") orelse "C:\\Windows";
-    const keygen = try std.fs.path.join(arena, &.{ system_root, "System32", "OpenSSH", "ssh-keygen.exe" });
+    const keygen = try winlab.platform.tool(arena, init.io, init.environ_map, .ssh_keygen);
     const key_path = try std.fs.path.join(arena, &.{ vm_dir, winlab.vm_guest.key_file });
     const comment = try std.fmt.allocPrint(arena, "winlab-{s}", .{vm_id});
     const keygen_run = std.process.run(gpa, io, .{ .argv = &.{ keygen, "-q", "-t", "ed25519", "-N", "", "-C", comment, "-f", key_path } }) catch |err| {
@@ -996,8 +999,7 @@ fn makeVmCredentials(init: std.process.Init, vm_folder: std.Io.Dir, vm_dir: []co
     var password: [16]u8 = undefined;
     for (raw, &password) |r, *p| p.* = alphabet[r % alphabet.len];
 
-    const system_root = init.environ_map.get("SystemRoot") orelse "C:\\Windows";
-    const keygen = try std.fs.path.join(arena, &.{ system_root, "System32", "OpenSSH", "ssh-keygen.exe" });
+    const keygen = try winlab.platform.tool(arena, init.io, init.environ_map, .ssh_keygen);
     const key_path = try std.fs.path.join(arena, &.{ vm_dir, winlab.vm_guest.key_file });
     const comment = try std.fmt.allocPrint(arena, "winlab-{s}", .{vm_id});
     const run = std.process.run(gpa, io, .{ .argv = &.{ keygen, "-q", "-t", "ed25519", "-N", "", "-C", comment, "-f", key_path } }) catch |err| {
@@ -1054,8 +1056,8 @@ fn vmInstallLive(init: std.process.Init, cfg: *const winlab.settings.Loaded, ent
         std.process.exit(1);
     };
     defer tools.deinit();
-    const local = init.environ_map.get("LOCALAPPDATA") orelse {
-        std.debug.print("LOCALAPPDATA is not set\n", .{});
+    const local = winlab.platform.dataBase(init.arena.allocator(), init.environ_map) orelse {
+        std.debug.print("the data folder is unknown (LOCALAPPDATA or HOME is not set)\n", .{});
         std.process.exit(1);
     };
     const vm_dir = try std.fs.path.join(arena, &.{ local, "WinLab", "vms", vm_id });
@@ -1073,8 +1075,7 @@ fn vmInstallLive(init: std.process.Init, cfg: *const winlab.settings.Loaded, ent
     // The ISO's own kernel and initrd, so the live system can be started with a serial console. Windows 10 and
     // later ship tar.exe (bsdtar), which reads ISO 9660 images.
     std.debug.print("Extracting the live kernel from {s} ...\n", .{entry.file});
-    const system_root = init.environ_map.get("SystemRoot") orelse "C:\\Windows";
-    const tar = try std.fs.path.join(arena, &.{ system_root, "System32", "tar.exe" });
+    const tar = try winlab.platform.tool(arena, init.io, init.environ_map, .tar);
     const extract = std.process.run(gpa, io, .{ .argv = &.{ tar, "-xf", iso, "-C", live_dir, winlab.vm_chimera.iso_kernel, winlab.vm_chimera.iso_initrd } }) catch |err| {
         std.debug.print("cannot run {s}: {t}\n", .{ tar, err });
         std.process.exit(1);
@@ -1135,7 +1136,7 @@ fn vmInstallLive(init: std.process.Init, cfg: *const winlab.settings.Loaded, ent
         .disk = disk,
         .iso = iso,
         .answer_iso = seed_path,
-        .accel = if (tools.whpx) .whpx else .tcg,
+        .accel = if (tools.hw_accel) winlab.vm_qemu.hw_accel_kind else .tcg,
         .cpu = if (entry.cpu.len > 0) entry.cpu else "max",
         .show_display = false,
         .no_reboot = true,
@@ -1270,8 +1271,8 @@ fn vmInstall(init: std.process.Init, image_id: []const u8, vm_id: []const u8) !v
     };
     defer tools.deinit();
 
-    const local = init.environ_map.get("LOCALAPPDATA") orelse {
-        std.debug.print("LOCALAPPDATA is not set\n", .{});
+    const local = winlab.platform.dataBase(init.arena.allocator(), init.environ_map) orelse {
+        std.debug.print("the data folder is unknown (LOCALAPPDATA or HOME is not set)\n", .{});
         std.process.exit(1);
     };
     const vm_dir = try std.fs.path.join(arena, &.{ local, "WinLab", "vms", vm_id });
@@ -1308,8 +1309,7 @@ fn vmInstall(init: std.process.Init, image_id: []const u8, vm_id: []const u8) !v
 
     // Guest control: a per-VM SSH key (the private half never leaves the VM folder), the guest-side
     // setup script and the public key on the answer drive, and a loopback-only port forward.
-    const system_root = init.environ_map.get("SystemRoot") orelse "C:\\Windows";
-    const keygen = try std.fs.path.join(arena, &.{ system_root, "System32", "OpenSSH", "ssh-keygen.exe" });
+    const keygen = try winlab.platform.tool(arena, init.io, init.environ_map, .ssh_keygen);
     const key_path = try std.fs.path.join(arena, &.{ vm_dir, winlab.vm_guest.key_file });
     const comment = try std.fmt.allocPrint(arena, "winlab-{s}", .{vm_id});
     const keygen_run = std.process.run(gpa, io, .{ .argv = &.{ keygen, "-q", "-t", "ed25519", "-N", "", "-C", comment, "-f", key_path } }) catch |err| {
@@ -1434,8 +1434,8 @@ fn vmRemove(init: std.process.Init, vm_id: []const u8) !void {
         std.debug.print("'{s}' is not marked as a training target; refusing to delete it\n", .{vm_id});
         std.process.exit(1);
     }
-    const local = init.environ_map.get("LOCALAPPDATA") orelse {
-        std.debug.print("LOCALAPPDATA is not set\n", .{});
+    const local = winlab.platform.dataBase(init.arena.allocator(), init.environ_map) orelse {
+        std.debug.print("the data folder is unknown (LOCALAPPDATA or HOME is not set)\n", .{});
         std.process.exit(1);
     };
     const expected = try std.fs.path.join(arena, &.{ local, "WinLab", "vms", vm_id });
@@ -1492,8 +1492,7 @@ fn vmRebootTest(init: std.process.Init, vm_id: []const u8) !void {
         std.process.exit(1);
     };
     defer tools.deinit();
-    const system_root = init.environ_map.get("SystemRoot") orelse "C:\\Windows";
-    const ssh_exe = try std.fs.path.join(init.arena.allocator(), &.{ system_root, "System32", "OpenSSH", "ssh.exe" });
+    const ssh_exe = try winlab.platform.tool(init.arena.allocator(), init.io, init.environ_map, .ssh);
     var q: winlab.vm_qemu.Qemu = .{ .gpa = gpa, .io = io, .tools = &tools, .ssh_exe = ssh_exe };
     const prov = q.provider();
     const t = vm.target();
@@ -1570,8 +1569,7 @@ fn superviseUntilReady(init: std.process.Init, tools: *const winlab.vm_qemu.Tool
     const arena = init.arena.allocator();
     const dir = std.fs.path.dirname(vm.disk) orelse ".";
     const access = try winlab.vm_guest.load(arena, io, dir);
-    const system_root = init.environ_map.get("SystemRoot") orelse "C:\\Windows";
-    const ssh_exe = try std.fs.path.join(arena, &.{ system_root, "System32", "OpenSSH", "ssh.exe" });
+    const ssh_exe = try winlab.platform.tool(arena, init.io, init.environ_map, .ssh);
 
     var run: u32 = 0;
     var waited_s: u32 = 0;
@@ -1582,7 +1580,7 @@ fn superviseUntilReady(init: std.process.Init, tools: *const winlab.vm_qemu.Tool
             // Installer media only until Windows is installed; once the disk boots, nothing else is needed.
             .iso = iso,
             .answer_iso = answer_iso,
-            .accel = if (tools.whpx) .whpx else .tcg,
+            .accel = if (tools.hw_accel) winlab.vm_qemu.hw_accel_kind else .tcg,
             .qmp_port = qmp,
             .ssh_port = access.port,
             .cpu = access.cpu,
@@ -1686,8 +1684,7 @@ fn labVerifySet(init: std.process.Init, vm_id: []const u8, lab_paths: []const [:
         std.process.exit(1);
     };
     defer tools.deinit();
-    const system_root = init.environ_map.get("SystemRoot") orelse "C:\\Windows";
-    const ssh_exe = try std.fs.path.join(init.arena.allocator(), &.{ system_root, "System32", "OpenSSH", "ssh.exe" });
+    const ssh_exe = try winlab.platform.tool(init.arena.allocator(), init.io, init.environ_map, .ssh);
     var q: winlab.vm_qemu.Qemu = .{ .gpa = gpa, .io = io, .tools = &tools, .ssh_exe = ssh_exe };
     const prov = q.provider();
     const t = vm.target();
@@ -1813,8 +1810,7 @@ const LabCtx = struct {
             std.debug.print("{s}\n", .{winlab.vm_qemu.install_guidance});
             std.process.exit(1);
         };
-        const system_root = init.environ_map.get("SystemRoot") orelse "C:\\Windows";
-        const ssh_exe = try std.fs.path.join(init.arena.allocator(), &.{ system_root, "System32", "OpenSSH", "ssh.exe" });
+        const ssh_exe = try winlab.platform.tool(init.arena.allocator(), init.io, init.environ_map, .ssh);
         self.q = .{ .gpa = gpa, .io = io, .tools = &self.tools, .ssh_exe = ssh_exe };
     }
 
@@ -1951,8 +1947,7 @@ fn labSelfTest(init: std.process.Init, lab_path: []const u8, vm_id: []const u8) 
         std.process.exit(1);
     };
     defer tools.deinit();
-    const system_root = init.environ_map.get("SystemRoot") orelse "C:\\Windows";
-    const ssh_exe = try std.fs.path.join(init.arena.allocator(), &.{ system_root, "System32", "OpenSSH", "ssh.exe" });
+    const ssh_exe = try winlab.platform.tool(init.arena.allocator(), init.io, init.environ_map, .ssh);
     var q: winlab.vm_qemu.Qemu = .{ .gpa = gpa, .io = io, .tools = &tools, .ssh_exe = ssh_exe };
 
     std.debug.print(
@@ -2015,7 +2010,7 @@ fn labSelfTest(init: std.process.Init, lab_path: []const u8, vm_id: []const u8) 
 
 /// Opens %APPDATA% (where settings, progress and the VM registry live).
 fn openAppData(init: std.process.Init) !std.Io.Dir {
-    const appdata = init.environ_map.get("APPDATA") orelse return error.NoAppData;
+    const appdata = winlab.platform.configBase(init.arena.allocator(), init.environ_map) orelse return error.NoAppData;
     return std.Io.Dir.cwd().openDir(init.io, appdata, .{});
 }
 
@@ -2435,7 +2430,7 @@ fn loadCertsNear(gpa: std.mem.Allocator, io: std.Io, course_dir: []const u8) ?wi
 /// this run. The file is never rewritten here, so a hand-edited file is not lost.
 fn loadSettings(init: std.process.Init) winlab.settings.Loaded {
     const defaults = winlab.settings.parse(init.gpa, "", null) catch @panic("out of memory");
-    const appdata = init.environ_map.get("APPDATA") orelse return defaults;
+    const appdata = winlab.platform.configBase(init.arena.allocator(), init.environ_map) orelse return defaults;
     var base = std.Io.Dir.cwd().openDir(init.io, appdata, .{}) catch |err| {
         std.debug.print("warning: cannot open {s}: {t}; using default settings\n", .{ appdata, err });
         return defaults;
@@ -2489,7 +2484,7 @@ fn contentRoot(init: std.process.Init, content_path: []const u8) []const u8 {
     if (exe_dir) |dir| {
         if (hasCourse(arena, io, dir)) return dir;
     }
-    if (init.environ_map.get("APPDATA")) |appdata| {
+    if (winlab.platform.configBase(init.arena.allocator(), init.environ_map)) |appdata| {
         if (std.fs.path.join(arena, &.{ appdata, winlab.settings_file.sub_dir })) |dir| {
             if (hasCourse(arena, io, dir)) return dir;
         } else |_| {}
