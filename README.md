@@ -143,4 +143,4 @@ code, lessons, quizzes and labs.
 ## Beta notice
 
 This is a **beta**. Every lesson is a draft for review: each says what was tested and what was not. Please report mistakes,
-crashes and confusing steps as issues. The Windows installer is not code-signed, so SmartScreen warns on first run.
+crashes and confusing steps as issues. The Windows installer is not code-signed, so SmartScreen warns on first run (see `docs/code-signing.md`).
