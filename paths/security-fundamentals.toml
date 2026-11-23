@@ -13,6 +13,6 @@ labs = ["labs.rdp-firewall", "labs.folder-permissions", "labs.linux-file-permiss
 
 [[stage]]
 title = "Protect and audit"
-lessons = ["endpoints.protect-devices", "foundations.ps-variables-types-operators", "foundations.powershell-control-flow", "foundations.ps-functions-and-scripts", "foundations.ps-errors-and-debugging"]
-optional = ["foundations.ps-advanced"]
+lessons = ["endpoints.protect-devices"]
+optional = ["foundations.ps-variables-types-operators", "foundations.powershell-control-flow", "foundations.ps-functions-and-scripts", "foundations.ps-errors-and-debugging", "foundations.ps-advanced"]
 labs = ["labs.firewall-profiles-off"]

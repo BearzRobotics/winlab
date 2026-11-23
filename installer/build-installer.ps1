@@ -50,6 +50,7 @@ Copy-Item (Join-Path $repo 'images\catalog.toml') (Join-Path $stage 'images')
 New-Item -ItemType Directory -Force -Path (Join-Path $stage 'docs') | Out-Null
 Copy-Item (Join-Path $repo 'docs\learning-paths.md') (Join-Path $stage 'docs')
 Copy-Item (Join-Path $repo 'README.md') $stage
+Copy-Item (Join-Path $repo 'LICENSE') $stage
 Copy-Item (Join-Path $repo 'installer\GETTING-STARTED.md') $stage
 Set-Content -Path (Join-Path $stage 'VERSION.txt') -Value $Version -Encoding ASCII
 $files = Get-ChildItem $stage -Recurse -File

@@ -84,3 +84,7 @@ OPNsense lesson (OPNsense 26.7 crashed under QEMU with WHPX in a first attempt; 
 itself; a guest restart inside one QEMU process hangs the BIOS under WHPX, so QEMU runs with `-no-reboot` and is
 relaunched; baked faults must survive a reboot; Windows reserves moving TCP port ranges, so ports are test-bound before
 use; a lab file's expected-value snippets are code in the guest's own language (a bare word is a command, not a string).
+
+## Licence
+
+WinLab is free software under the GNU General Public License, version 2 (see `LICENSE`). Course text and quizzes are covered by the same licence unless a file says otherwise.
