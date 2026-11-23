@@ -1,0 +1,28 @@
+name: Bug in the app
+description: A crash, a wrong window, a lab that will not start
+labels: [bug]
+body:
+  - type: dropdown
+    id: build
+    attributes:
+      label: Which build
+      options: [Windows installer, Windows portable zip, Linux tarball, Built from source]
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics
+      description: In the app choose Help > Copy diagnostics (for bug reports) and paste the result.
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what you expected
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce

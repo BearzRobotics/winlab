@@ -11,14 +11,14 @@ jobs:
   windows:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: mlugg/setup-zig@v2
         with:
           version: 0.17.1
       - name: Build installer and portable zip
         shell: pwsh
         run: powershell -NoProfile -File installer\build-installer.ps1
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: windows
           path: |
@@ -27,7 +27,7 @@ jobs:
   linux:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: mlugg/setup-zig@v2
         with:
           version: 0.17.1
@@ -48,7 +48,7 @@ jobs:
           echo "$version" > "dist/$name/VERSION.txt"
           tar -C dist -czf "dist/$name.tar.gz" "$name"
           "dist/$name/winlab" check "dist/$name/course" | tail -4
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: linux
           path: dist/*.tar.gz
@@ -56,7 +56,7 @@ jobs:
     needs: [windows, linux]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           path: out
           merge-multiple: true

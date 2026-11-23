@@ -1,0 +1,26 @@
+name: Linux desktop check (beta testers)
+description: Tell us how the Linux build behaves on your desktop
+labels: [linux, testing]
+body:
+  - type: input
+    id: desktop
+    attributes:
+      label: Distribution, desktop and session
+      description: For example Fedora 41, GNOME, Wayland
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: What worked (tick what you tried and it worked)
+      options:
+        - label: The window opened and the first-run setup window showed what was found
+        - label: Continue closed the setup window and it did not come back on the next start
+        - label: Practice > Bash opened my terminal emulator
+        - label: Text is readable at my screen scale (Ctrl+= and Ctrl+- resize it)
+        - label: Hardware acceleration (KVM) showed as available, or I joined the kvm group and it did
+        - label: A lab started and I could fix it
+  - type: textarea
+    id: notes
+    attributes:
+      label: What did not work, with details

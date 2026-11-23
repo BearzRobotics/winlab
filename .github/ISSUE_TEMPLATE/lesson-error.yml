@@ -1,0 +1,25 @@
+name: Lesson or quiz error
+description: A wrong claim, a command that does not behave as written, a broken link, a confusing step
+labels: [lesson]
+body:
+  - type: input
+    id: lesson
+    attributes:
+      label: Lesson id
+      description: Shown under the lesson title, for example foundations.architecture
+    validations:
+      required: true
+  - type: input
+    id: system
+    attributes:
+      label: Your system
+      description: For example Windows 11 23H2, Ubuntu 24.04, AlmaLinux 9
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What is wrong
+      description: Quote the sentence or command, say what you did and what happened instead. Paste real output.
+    validations:
+      required: true

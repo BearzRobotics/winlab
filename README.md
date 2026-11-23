@@ -1,8 +1,17 @@
 # WinLab
 
+![WinLab showing a lesson](docs/images/screenshot.png)
+
 Offline-first Windows and Linux administration course. Written in Zig with DVUI; it runs on **Windows 10/11 and Linux**
 (x86-64). Product contract: `ai/specs.md`; engineering rules: `ai/AGENTS.md`. Design decisions are in `docs/decisions/`
 (0001-0007). The course outline (a draft for review) is `outline.md`.
+
+## Download
+
+Beta builds are on the [Releases page](https://github.com/BearzRobotics/winlab/releases): a Windows installer (per user, no admin rights;
+unsigned, so SmartScreen warns), a Windows portable zip, and a Linux tarball (unpack and run `./winlab`; nothing to install but QEMU and
+OpenSSH for the labs). Check downloads against `SHA256SUMS`. Please report problems as [issues](https://github.com/BearzRobotics/winlab/issues);
+see `CONTRIBUTING.md`.
 
 ## Required software
 
