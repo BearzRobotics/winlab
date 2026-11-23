@@ -162,7 +162,7 @@ With `p=/home/user/archive.tar.gz`:
 
 **Portability (tested):** `${#v}`, `${v:-d}`, `${v:=d}`, `${v:?}`, `${v:+x}` and the four trim forms `# ## % %%` worked identically in bash, dash and busybox ash. **bash-only (or partly):** substring `${v:1:3}` (dash: `Bad substitution`; ash works), replace `${v/l/L}` (dash fails; ash works), `${v^^}` (dash and ash fail), `${!n}` (dash and ash fail).
 
-**A trap in the replacement:** `${p/#\/home/~}` is meant to replace a leading `/home` by a literal `~`, but the unquoted `~` was **tilde-expanded**, giving `/home/dakota/user/...` (my home folder). Escape or quote it: `${p/#\/home/\~}` printed `~/user/archive.tar.gz`. Expansions nest inside expansions.
+**A trap in the replacement:** `${p/#\/home/~}` is meant to replace a leading `/home` by a literal `~`, but the unquoted `~` was **tilde-expanded**, giving `/home/alice/user/...` (my home folder). Escape or quote it: `${p/#\/home/\~}` printed `~/user/archive.tar.gz`. Expansions nest inside expansions.
 
 ## Arrays
 

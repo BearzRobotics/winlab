@@ -30,7 +30,7 @@ An editor is something you will need: `nano` (friendly, keys listed at the botto
 ```bash
 pwd             # print the current folder
 cd /var/log     # change folder
-cd              # no argument: your home folder (/home/dakota on mine)
+cd              # no argument: your home folder (for example /home/alice)
 cd -            # back to the previous folder
 ls              # list the folder
 ```
@@ -42,10 +42,10 @@ Paths that start with `/` are **absolute**; others are **relative** to where you
 ### Reading `ls -l`
 
 ```text
--rw-r--r-- 1 USER dakota  0 DATE a.txt
--rw-r----- 1 USER dakota  6 DATE data.txt
-drwxr-xr-x 2 USER dakota 40 DATE dir1
-lrwxrwxrwx 1 USER dakota  8 DATE link.txt -> data.txt
+-rw-r--r-- 1 USER alice  0 DATE a.txt
+-rw-r----- 1 USER alice  6 DATE data.txt
+drwxr-xr-x 2 USER alice 40 DATE dir1
+lrwxrwxrwx 1 USER alice  8 DATE link.txt -> data.txt
 ```
 
 (I replaced my user name and the date.) The columns: **type and permissions** (first character `-` file, `d` directory, `l` symbolic link; then three triples for owner, group and others), **link count**, **owner**, **group**, **size in bytes**, **modification time**, **name** (a link shows `-> target`). Useful options: `-a` (include hidden names, which begin with `.`: `.hidden` appeared only with `-a`), `-h` (human sizes: `3.0K`), `-S` (sort by size), `-t` (newest first), `-R` (recursive), `-d` (the folder itself, not its contents: `ls -ld dir1` showed `drwxr-xr-x`). `ls nosuchfile` failed with status **2**.
@@ -110,8 +110,8 @@ wc -l file          # count lines  (-w words, -c bytes, -m characters)
 ## Who you are and what you may do
 
 ```bash
-id          # uid=1000(dakota) gid=1000(dakota) groups=...
-whoami      # dakota
+id          # uid=1000(alice) gid=1000(alice) groups=...
+whoami      # alice
 chmod u+x script.sh      # add execute for the owner
 chmod 640 file           # rw- for owner, r-- for group, --- for others
 ```

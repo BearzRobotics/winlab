@@ -258,7 +258,7 @@ review = "Parameter expansion: working on the value"
 [[question]]
 id = "pe-tilde"
 type = "choice"
-prompt = "Why did ${p/#\\/home/~} print /home/dakota/user/... instead of ~/user/...?"
+prompt = "Why did ${p/#\\/home/~} print /home/alice/user/... instead of ~/user/...?"
 choices = ["The unquoted ~ was tilde-expanded", "The replace operator is broken", "p was changed", "~ is a wildcard"]
 answers = ["The unquoted ~ was tilde-expanded"]
 explanation = "Escape or quote it: ${p/#\\/home/\\~}."

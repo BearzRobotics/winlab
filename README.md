@@ -126,3 +126,12 @@ use; a lab file's expected-value snippets are code in the guest's own language (
 ## Licence
 
 WinLab is free software under the GNU General Public License, version 2 (see `LICENSE`). Course text and quizzes are covered by the same licence unless a file says otherwise.
+
+Third-party material keeps its own licence: `zig-pkg/` holds the pinned dependencies (each with its licence file) and `reference/`
+holds preservation copies of public documents (see `reference/MANIFEST.md` and its takedown notice). The GPL covers WinLab's own
+code, lessons, quizzes and labs.
+
+## Beta notice
+
+This is a **beta**. Every lesson is a draft for review: each says what was tested and what was not. Please report mistakes,
+crashes and confusing steps as issues. The Windows installer is not code-signed, so SmartScreen warns on first run.
