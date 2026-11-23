@@ -143,6 +143,17 @@ the image (now `-U`). Not tested: terminal launcher, first-run click-through and
 the Chimera VM (needs bsdtar), Windows Server VM, distributions other than Ubuntu as host. Install layout: `zig build -Doptimize=ReleaseSafe
 -fsys=sdl2 -Dshare-content=true --prefix <dir>` (README, "Build, run, test"). README "Required software" is the list a package should depend on.
 
+## 8d. Public repo, CI and releases (2026-11-22)
+
+Repo: https://github.com/BearzRobotics/winlab (public, GPL-2.0). `.github/workflows/ci.yml` runs tests, `check-content` and a release-flag
+build on Windows and Ubuntu for every push. `release.yml` runs on a `v*` tag: Windows installer + portable zip (`installer/build-installer.ps1`),
+Linux tarball (`-Dtarget=x86_64-linux-gnu.2.31 -Dcpu=x86_64_v2`, SDL3 statically linked, content beside the binary), then a pre-release with
+`SHA256SUMS`. To ship: bump `src/app/version.zig`, commit, `git tag -a vX -m ...`, `git push origin vX`. **Linux backend is SDL3** (not SDL2): the
+allyourcodebase SDL3 package carries its own X11/Wayland/audio sources, so it cross-compiles from Windows with no Linux libraries and the binary
+needs only glibc 2.31+; SDL3 loads X11 or Wayland at run time. Its sources (~200 MB) are fetched hash-pinned on the first Linux build and are
+git-ignored (`zig-pkg/sdl-*`, `zig-pkg/N-V-*`), so a Linux build needs the network once (Windows builds stay offline). Verified from the released
+tarball: checksum, `check`, `status`, window opens in WSLg. v0.1.0-beta.1 is the first release.
+
 ## 9. Version control
 
 The project is now a **local git repository** on branch `main` (created 2026-11-21 at the owner's request, after a session with no history in which one file was corrupted and repaired by hand). The first commit holds everything. There is **no remote yet**; section 13 says how to create one. Commit small and often from now on, and run `winlab check course` before each commit.
