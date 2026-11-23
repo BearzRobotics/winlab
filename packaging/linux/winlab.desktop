@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=WinLab
+GenericName=Administration course
+Comment=Offline Windows and Linux administration course with hands-on labs
+Exec=winlab
+Icon=utilities-terminal
+Terminal=false
+Categories=Education;System;
+Keywords=course;lessons;windows;linux;administration;labs;

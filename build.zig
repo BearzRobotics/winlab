@@ -1,4 +1,4 @@
-﻿const std = @import("std");
+const std = @import("std");
 
 pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
@@ -42,11 +42,24 @@ pub fn build(b: *std.Build) void {
     // by default. `-Dbundle-content=true` makes a self-contained folder to hand to someone.
     const bundle_content = b.option(bool, "bundle-content", "Copy course, labs, certs, images and quizzes next to winlab.exe") orelse false;
     if (bundle_content) {
-        for ([_][]const u8{ "course", "labs", "certs", "images", "quizzes" }) |dir| {
+        for ([_][]const u8{ "course", "labs", "paths", "certs", "images", "quizzes" }) |dir| {
             b.installDirectory(.{ .source_dir = b.path(dir), .install_dir = .bin, .install_subdir = dir });
         }
     }
 
+    // Packagers (Linux): `zig build -Doptimize=ReleaseSafe -fsys=sdl2 -Dshare-content=true --prefix /usr` puts the program in
+    // bin/ and the lessons in share/winlab/, where winlab looks for them, plus the desktop entry and the licence.
+    const share_content = b.option(bool, "share-content", "Install course, labs, paths, certs, images and quizzes to <prefix>/share/winlab, with a desktop entry and the licence") orelse false;
+    if (share_content) {
+        for ([_][]const u8{ "course", "labs", "paths", "certs", "quizzes" }) |dir| {
+            b.installDirectory(.{ .source_dir = b.path(dir), .install_dir = .prefix, .install_subdir = b.fmt("share/winlab/{s}", .{dir}) });
+        }
+        b.installFile("images/catalog.toml", "share/winlab/images/catalog.toml");
+        b.installFile("docs/learning-paths.md", "share/winlab/docs/learning-paths.md");
+        b.installFile("packaging/linux/winlab.desktop", "share/applications/winlab.desktop");
+        b.installFile("LICENSE", "share/doc/winlab/LICENSE");
+        b.installFile("README.md", "share/doc/winlab/README.md");
+    }
     const run_step = b.step("run", "Run WinLab");
     const run_cmd = b.addRunArtifact(exe);
     run_step.dependOn(&run_cmd.step);

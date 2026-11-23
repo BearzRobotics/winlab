@@ -368,7 +368,10 @@ fn stop(ptr: *anyopaque, t: p.Target) p.Error!void {
     if (!diskInUse(q.gpa, t.disk)) return;
     var arena_state = std.heap.ArenaAllocator.init(q.gpa);
     defer arena_state.deinit();
-    if (execIn(q, arena_state.allocator(), t, q.gpa, "shutdown /s /t 0")) |r| q.gpa.free(r.output) else |_| {}
+    // Linux guests run the script in bash (as root); Windows guests in PowerShell, where `shutdown` takes /s.
+    const linux_guest = if (guest.load(arena_state.allocator(), q.io, vmDir(t))) |a| a.shell == .bash else |_| false;
+    const power_off = if (linux_guest) "poweroff" else "shutdown /s /t 0";
+    if (execIn(q, arena_state.allocator(), t, q.gpa, power_off)) |r| q.gpa.free(r.output) else |_| {}
     var waited: i64 = 0;
     while (waited < 180_000 and diskInUse(q.gpa, t.disk)) : (waited += 2000) sleepMs(q, 2000);
     if (diskInUse(q.gpa, t.disk)) {
@@ -382,7 +385,8 @@ fn hasSnapshot(ptr: *anyopaque, t: p.Target, snap: []const u8) p.Error!bool {
     if (!p.validSnapshotName(snap)) return error.ProviderFailed;
     try safeDisk(t);
     const q = me(ptr);
-    const out = try q.img(&.{ "snapshot", "-f", "qcow2", "-l", t.disk });
+    // -U: read the list even while a VM holds the image (Linux QEMU takes image locks; Windows QEMU does not).
+    const out = try q.img(&.{ "snapshot", "-U", "-f", "qcow2", "-l", t.disk });
     defer q.gpa.free(out);
     var lines = std.mem.tokenizeAny(u8, out, "\r\n");
     while (lines.next()) |line| {

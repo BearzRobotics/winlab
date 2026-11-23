@@ -121,6 +121,28 @@ Findings that matter: (1) **a default `zig build` targets the build machine's ow
 
 Other beta features added the same day: first-run setup window, Help > Copy diagnostics, badges (derived from progress; `badges = false` hides them), `docs/REVIEW-CHECKLIST.md`.
 
+## 8c. Linux port (2026-11-22, beta 2)
+
+Same code base, one extra backend. Windows keeps DVUI/Direct3D 11; every other OS uses DVUI's **SDL2** backend (`build.zig`
+picks by target; `-fsys=sdl2` links the system SDL2, which is what a distribution package should do). Everything that differs lives
+in `src/platform.zig` (config folder `%APPDATA%` / `$XDG_CONFIG_HOME` or `~/.config`, data folder `%LOCALAPPDATA%` / `~/.local/share`, PATH
+separator, `ssh`, `ssh-keygen`, `curl`, `bsdtar`). Other Windows-only spots now branch on `platform.is_windows`: `vm/qemu.zig`
+(KVM instead of WHPX, pid kill, and `diskInUse` which on Linux scans `/proc/*/cmdline` for a `qemu-system` holding the disk file),
+`vm/images.zig` (free space via `df -Pk`), `ui/terminal_host.zig` (Windows: our ConPTY window; Linux: the first terminal emulator found on
+PATH), `shell_discovery.zig` (bash; pwsh optional), `main.zig` (content root also looks in `share/winlab`). `winlab image editions` needs Windows.
+
+Test rig: Ubuntu 26.04 in WSL2 (`wsl -d Ubuntu-26.04`), Zig 0.17.1 unpacked in `~/sdk`, repo copied to `~/winlab`, packages
+`libsdl2-dev pkgconf qemu-system-x86 qemu-utils` and the user in group `kvm` (nested KVM works). Build there with `zig build -fsys=sdl2`;
+set `XDG_CONFIG_HOME` and `XDG_DATA_HOME` to scratch folders so nothing mixes with real settings. Do not call `wsl` from Git Bash
+(it rewrites `/mnt/...` paths): use PowerShell. WSLg shows the window; `xwininfo`+`import -window` takes a screenshot; `xdotool` clicks do not reach it.
+
+Verified: unit tests (107 pass), `check`, `status`, the window and setup window, image fetch (SHA-256 matched), `vm install` of Ubuntu
+(about a minute under KVM), `lab build` + `lab verify` of `linux-file-permissions` (all five stages). Two Linux-only bugs found that way:
+Linux guests received `shutdown /s /t 0` (now `poweroff`), and `qemu-img snapshot -l` fails on a running VM because Linux QEMU locks
+the image (now `-U`). Not tested: terminal launcher, first-run click-through and settings save on a fresh account, real Wayland/X11 desktops,
+the Chimera VM (needs bsdtar), Windows Server VM, distributions other than Ubuntu as host. Install layout: `zig build -Doptimize=ReleaseSafe
+-fsys=sdl2 -Dshare-content=true --prefix <dir>` (README, "Build, run, test"). README "Required software" is the list a package should depend on.
+
 ## 9. Version control
 
 The project is now a **local git repository** on branch `main` (created 2026-11-21 at the owner's request, after a session with no history in which one file was corrupted and repaired by hand). The first commit holds everything. There is **no remote yet**; section 13 says how to create one. Commit small and often from now on, and run `winlab check course` before each commit.

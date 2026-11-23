@@ -94,7 +94,12 @@ pub const Setup = struct {
 };
 
 pub const qemu_winget_command = "winget install --id SoftwareFreedomConservancy.QEMU --exact";
-pub const qemu_download_url = "https://www.qemu.org/download/#windows";
+pub const qemu_linux_commands =
+    "sudo apt install qemu-system-x86 qemu-utils openssh-client      (Debian, Ubuntu)\n" ++
+    "sudo dnf install qemu-system-x86 qemu-img openssh-clients       (Fedora, RHEL, Alma)\n" ++
+    "sudo pacman -S qemu-full openssh                                (Arch)\n" ++
+    "sudo apk add qemu-system-x86_64 qemu-img openssh-client         (Alpine)";
+pub const qemu_download_url = if (is_win) "https://www.qemu.org/download/#windows" else "https://www.qemu.org/download/#linux";
 
 /// A shell the learner can open from a lesson.
 pub const ShellChoice = struct {
@@ -933,24 +938,24 @@ fn setupWindow(a: *App) void {
         dvui.labelNoFmt(@src(), "To use the labs, choose one:", .{}, .{ .font = dvui.Font.theme(.heading) });
         {
             var tl = dvui.textLayout(@src(), .{}, .{ .expand = .horizontal, .background = false, .padding = .all(0), .margin = .{ .y = 4 } });
-            tl.addText("1. Install with winget (Windows 10 version 1809 or newer, and Windows 11). Run this in a terminal:", .{});
+            tl.addText(if (is_win) "1. Install with winget (Windows 10 version 1809 or newer, and Windows 11). Run this in a terminal:" else "1. Install it with your package manager. Run the line for your distribution in a terminal (select the text to copy it):", .{});
             tl.deinit();
         }
         {
             var tl = dvui.textLayout(@src(), .{}, .{ .expand = .horizontal, .background = true, .style = .window, .padding = .all(6), .font = dvui.Font.theme(.mono) });
-            tl.addText(qemu_winget_command, .{});
+            tl.addText(if (is_win) qemu_winget_command else qemu_linux_commands, .{});
             tl.deinit();
         }
-        if (dvui.button(@src(), "Copy the command", .{}, .{ .margin = .{ .y = 4 } })) dvui.clipboardTextSet(qemu_winget_command);
+        if (is_win and dvui.button(@src(), "Copy the command", .{}, .{ .margin = .{ .y = 4 } })) dvui.clipboardTextSet(qemu_winget_command);
         {
             var tl = dvui.textLayout(@src(), .{}, .{ .expand = .horizontal, .background = false, .padding = .all(0), .margin = .{ .y = 8 } });
-            tl.addText("2. Or download the installer from the QEMU website and run it:", .{});
+            tl.addText(if (is_win) "2. Or download the installer from the QEMU website and run it:" else "2. Or read the QEMU website's instructions for your distribution:", .{});
             tl.deinit();
         }
         if (dvui.button(@src(), "Open the QEMU download page", .{}, .{ .margin = .{ .y = 4 } })) a.pending_url = qemu_download_url;
         {
             var tl = dvui.textLayout(@src(), .{}, .{ .expand = .horizontal, .background = false, .padding = .all(0), .margin = .{ .y = 8 } });
-            tl.addText("3. Already installed somewhere else? Set qemu-path (the folder that holds qemu-system-x86_64.exe) in your settings file, then choose Check again:", .{});
+            tl.addText(if (is_win) "3. Already installed somewhere else? Set qemu-path (the folder that holds qemu-system-x86_64.exe) in your settings file, then choose Check again:" else "3. Already installed somewhere else? Set qemu-path (the folder that holds qemu-system-x86_64) in your settings file, then choose Check again:", .{});
             tl.deinit();
         }
         if (a.o.setup.?.settings_path.len > 0) {

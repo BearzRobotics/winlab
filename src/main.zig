@@ -8,7 +8,7 @@ comptime {
 }
 
 const usage =
-    \\usage: winlab                     open the course (from settings content-path, next to winlab.exe, or %APPDATA%\WinLab)
+    \\usage: winlab                     open the course (from settings content-path, next to winlab.exe, share/winlab on Linux, or the settings folder %APPDATA%\WinLab / ~/.config/WinLab)
     \\       winlab status              print version and shell capability status
     \\       winlab browse [course-dir] open the course browser
     \\       winlab check <course-dir>  validate lesson manifests, content files and prerequisites
@@ -442,6 +442,7 @@ const SetupBackend = struct {
         if (self.settings.setup_done) return;
         self.settings.setup_done = true;
         const appdata = winlab.platform.configBase(self.init.arena.allocator(), self.init.environ_map) orelse return;
+        std.Io.Dir.cwd().createDirPath(self.init.io, appdata) catch {};
         var base = std.Io.Dir.cwd().openDir(self.init.io, appdata, .{}) catch return;
         defer base.close(self.init.io);
         winlab.settings_file.save(self.init.io, base, self.settings) catch |e| std.debug.print("warning: could not save settings: {t}\n", .{e});
@@ -552,12 +553,13 @@ const ProgressStore = struct {
             std.debug.print("warning: the settings folder is unknown (APPDATA or HOME is not set); progress tracking is off\n", .{});
             return s;
         };
+        std.Io.Dir.cwd().createDirPath(init.io, appdata) catch {};
         var base = std.Io.Dir.cwd().openDir(init.io, appdata, .{}) catch |err| {
             std.debug.print("warning: cannot open {s}: {t}; progress tracking is off\n", .{ appdata, err });
             return s;
         };
         const loaded = winlab.progress_file.load(init.gpa, init.io, base) catch |err| {
-            std.debug.print("warning: {s}\\{s}\\{s}: {t}; progress tracking is off so the file is not overwritten\n", .{ appdata, winlab.progress_file.sub_dir, winlab.progress_file.file_name, err });
+            std.debug.print("warning: {s}{c}{s}{c}{s}: {t}; progress tracking is off so the file is not overwritten\n", .{ appdata, winlab.platform.dir_sep, winlab.progress_file.sub_dir, winlab.platform.dir_sep, winlab.progress_file.file_name, err });
             base.close(init.io);
             return s;
         };
@@ -797,12 +799,12 @@ fn imageFetch(init: std.process.Init, id: []const u8) !void {
         \\About to download:
         \\  {s}
         \\  from:    {s}
-        \\  to:      {s}\{s}
+        \\  to:      {s}{c}{s}
         \\  size:    {d} bytes
         \\  free:    {s}
         \\  note:    {s}
         \\
-    , .{ e.name, e.url, dir, e.file, e.size_bytes, if (free) |f| try std.fmt.allocPrint(arena, "{d} bytes", .{f}) else "unknown", e.note });
+    , .{ e.name, e.url, dir, winlab.platform.dir_sep, e.file, e.size_bytes, if (free) |f| try std.fmt.allocPrint(arena, "{d} bytes", .{f}) else "unknown", e.note });
     if (free) |f| if (e.size_bytes > 0 and f < e.size_bytes + 1024 * 1024 * 1024) {
         std.debug.print("Not enough free space (need the image plus 1 GiB of headroom).\n", .{});
         std.process.exit(1);
@@ -868,7 +870,7 @@ fn imageFetch(init: std.process.Init, id: []const u8) !void {
     const sidecar = try std.fmt.allocPrint(arena, "{s}.sha256", .{e.file});
     const line = try std.fmt.allocPrint(arena, "{s}  {s}\n", .{ hex, e.file });
     try folder.writeFile(io, .{ .sub_path = sidecar, .data = line });
-    std.debug.print("Done.\n  file:   {s}\\{s}\n  sha256: {s}{s}\n", .{ dir, e.file, hex, if (e.sha256.len == 0) "  (recorded; compare it with a trusted source if you can)" else "  (matches the catalog)" });
+    std.debug.print("Done.\n  file:   {s}{c}{s}\n  sha256: {s}{s}\n", .{ dir, winlab.platform.dir_sep, e.file, hex, if (e.sha256.len == 0) "  (recorded; compare it with a trusted source if you can)" else "  (matches the catalog)" });
 }
 
 /// `winlab vm install <cloud-image-id> <vm-id>`: a Linux VM from an official cloud image. There is no installer:
@@ -978,11 +980,11 @@ fn vmInstallCloud(init: std.process.Init, cfg: *const winlab.settings.Loaded, en
     std.debug.print(
         \\Linux VM '{s}' created and registered as a training target.
         \\  folder:      {s}
-        \\  credentials: {s}\credentials.txt  (user labadmin, console password {s})
+        \\  credentials: {s}{c}credentials.txt  (user labadmin, console password {s})
         \\  First boot configures the VM (about a minute). Keep this command running: it finishes
         \\  when the guest answers over SSH.
         \\
-    , .{ vm_id, vm_dir, vm_dir, &password });
+    , .{ vm_id, vm_dir, vm_dir, winlab.platform.dir_sep, &password });
     try superviseUntilReady(init, &tools, vm, null, seed_path, 30);
 }
 
@@ -1358,11 +1360,11 @@ fn vmInstall(init: std.process.Init, image_id: []const u8, vm_id: []const u8) !v
     std.debug.print(
         \\VM '{s}' created and registered as a training target.
         \\  folder:      {s}
-        \\  credentials: {s}\credentials.txt  (user {s}, password {s})
+        \\  credentials: {s}{c}credentials.txt  (user {s}, password {s})
         \\  The installer runs unattended and the guest restarts several times. Keep this command
         \\  running: it relaunches QEMU after each restart and finishes when the guest answers over SSH.
         \\
-    , .{ vm_id, vm_dir, vm_dir, if (kind == .server) "Administrator" else "labadmin", &password });
+    , .{ vm_id, vm_dir, vm_dir, winlab.platform.dir_sep, if (kind == .server) "Administrator" else "labadmin", &password });
     try superviseUntilReady(init, &tools, .{ .id = vm_id, .name = vm_id, .provider = "qemu", .disk = disk, .training_target = true }, iso, answer_iso, 120);
 }
 
@@ -2011,6 +2013,7 @@ fn labSelfTest(init: std.process.Init, lab_path: []const u8, vm_id: []const u8) 
 /// Opens %APPDATA% (where settings, progress and the VM registry live).
 fn openAppData(init: std.process.Init) !std.Io.Dir {
     const appdata = winlab.platform.configBase(init.arena.allocator(), init.environ_map) orelse return error.NoAppData;
+    std.Io.Dir.cwd().createDirPath(init.io, appdata) catch {};
     return std.Io.Dir.cwd().openDir(init.io, appdata, .{});
 }
 
@@ -2432,12 +2435,13 @@ fn loadSettings(init: std.process.Init) winlab.settings.Loaded {
     const defaults = winlab.settings.parse(init.gpa, "", null) catch @panic("out of memory");
     const appdata = winlab.platform.configBase(init.arena.allocator(), init.environ_map) orelse return defaults;
     var base = std.Io.Dir.cwd().openDir(init.io, appdata, .{}) catch |err| {
+        if (err == error.FileNotFound) return defaults; // first run: nothing saved yet
         std.debug.print("warning: cannot open {s}: {t}; using default settings\n", .{ appdata, err });
         return defaults;
     };
     defer base.close(init.io);
     const loaded = winlab.settings_file.load(init.gpa, init.io, base) catch |err| {
-        std.debug.print("warning: {s}\\{s}\\{s}: {t}; using default settings for this run\n", .{ appdata, winlab.settings_file.sub_dir, winlab.settings_file.file_name, err });
+        std.debug.print("warning: {s}{c}{s}{c}{s}: {t}; using default settings for this run\n", .{ appdata, winlab.platform.dir_sep, winlab.settings_file.sub_dir, winlab.platform.dir_sep, winlab.settings_file.file_name, err });
         return defaults;
     };
     var d = defaults;
@@ -2468,8 +2472,9 @@ fn isSourceTree(arena: std.mem.Allocator, io: std.Io, root: []const u8) bool {
 ///      and `course/`), so a development build never picks up an installed copy
 ///   2. `content-path` in settings.toml (an explicit choice)
 ///   3. the folder of winlab.exe (an installed copy that ships its content beside it)
-///   4. %APPDATA%\WinLab
-///   5. the working directory
+///   4. Linux: `<exe folder>/../share/winlab`, `/usr/share/winlab`, `/usr/local/share/winlab`
+///   5. the settings folder (`%APPDATA%\WinLab`, `~/.config/WinLab`)
+///   6. the working directory
 /// When nothing has a `course/`, the working directory is returned so later errors name a real path.
 fn contentRoot(init: std.process.Init, content_path: []const u8) []const u8 {
     const arena = init.arena.allocator();
@@ -2483,6 +2488,17 @@ fn contentRoot(init: std.process.Init, content_path: []const u8) []const u8 {
     if (content_path.len > 0) return content_path;
     if (exe_dir) |dir| {
         if (hasCourse(arena, io, dir)) return dir;
+    }
+    if (!winlab.platform.is_windows) {
+        // A packaged install: <prefix>/bin/winlab with the content in <prefix>/share/winlab, or the usual prefixes.
+        if (exe_dir) |dir| {
+            if (std.fs.path.join(arena, &.{ dir, "..", "share", "winlab" })) |share| {
+                if (hasCourse(arena, io, share)) return share;
+            } else |_| {}
+        }
+        for ([_][]const u8{ "/usr/share/winlab", "/usr/local/share/winlab" }) |share| {
+            if (hasCourse(arena, io, share)) return share;
+        }
     }
     if (winlab.platform.configBase(init.arena.allocator(), init.environ_map)) |appdata| {
         if (std.fs.path.join(arena, &.{ appdata, winlab.settings_file.sub_dir })) |dir| {
