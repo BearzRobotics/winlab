@@ -107,3 +107,13 @@ An optional track, **Python for administrators** (`paths/python-admin.toml`). On
 ## Learning paths
 
 Goal-based paths, soft prerequisites and test-out-by-quiz are designed in `docs/learning-paths.md` (not yet implemented).
+
+## Capture-the-flag and hands-on security (owner idea, 2026-11-26; **after** the lesson update, not started)
+
+The owner is considering a TryHackMe or capture-the-flag style platform for the cybersecurity material, and noted that some sites let you test against VMs with malware installed. The points below are suggestions to decide on, not agreed design. The standing rule still applies: defensive first, the learner's own lab only.
+
+- **Reuse the lab engine:** restore a prepared VM, then check a result. A challenge adds a **flag** to submit, ideally generated for each preparation so answers cannot be copied. Hints, tracking and badges already exist in some form.
+- **Containment before content:** lab VMs use QEMU user-mode networking, so they can reach the internet and possibly the local network. A challenge or hostile VM needs outbound traffic blocked (QEMU's `restrict` option is the candidate; **not tested**) while WinLab's own control connection keeps working, plus no shared folders or clipboard, and a test that proves the blocking before anything hostile runs.
+- **Start without live malware:** deliberately vulnerable setups WinLab builds itself, and harmless stand-ins that **behave** like malware (persistence, a listening port, odd scheduled tasks, tampered files, planted log evidence). `labs.linux-rogue-service` is a first example.
+- **Real malware, if ever:** a separate decision. WinLab should not ship or download samples; it would need an opt-in, offline-only mode and a clear legal and safety review. Third-party vulnerable images have their own licences: check before listing any.
+- **Open questions:** local only or any online part (accounts, scoreboards); Windows targets as well as Linux; which certification domains it should support.
