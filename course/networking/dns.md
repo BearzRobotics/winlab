@@ -1,6 +1,6 @@
 *Draft for owner review.* Nearly every network action starts with a name. If names stop resolving, "the internet is down" even though the link, the address and the gateway are fine. This lesson explains how DNS works, then teaches you to query it directly so you can tell a DNS fault from every other kind.
 
-Output shown is real in layout; names and addresses are samples.
+**What was tested.** The sections marked *measured* use an **AlmaLinux 9.8** lab VM with `dig` 9.16 and a private test DNS server (dnsmasq, made-up names under `wl.test`), and a **Windows Server 2022** lab VM (`tests/verification/networking/dns1.sh`, `tests/verification/powershell/dns2.ps1`). Other output shows the layout with sample names and addresses.
 
 ## What DNS is
 
@@ -26,6 +26,13 @@ Each level can **delegate** the level below to different servers. The root is se
 
 When your machine looks up `www.example.com`, the stub resolver asks its configured server (usually handed out by DHCP, see the DHCP lesson). That recursive server asks a root server, then a `com` server, then an `example.com` server, and returns the final answer. The next person to ask gets it from the recursive server's cache.
 
+![Diagram: the stub resolver asks a recursive resolver, which asks a root server, then a com server, then the authoritative server, and returns the answer](diagrams/dns-walk.svg)
+
+```text
+ stub (your machine) <--> recursive resolver --> 1. root --> 2. com --> 3. authoritative for example.com
+                          (caches the answer until its TTL runs out)
+```
+
 ## Record types
 
 A **resource record** is one entry in a zone. The ones you will meet constantly:
@@ -50,6 +57,17 @@ Every record carries a **TTL** (time to live) in seconds. A resolver may keep th
 Failure is cached too. [RFC 2308](https://www.rfc-editor.org/rfc/rfc2308) describes **negative caching**: a "that name does not exist" answer (`NXDOMAIN`) is remembered for a time taken from the zone's SOA. If you query a name before you have created it, you may keep seeing "does not exist" after you create it.
 
 Practical rule: **lower the TTL a day before a planned change, make the change, then raise it again.**
+
+### Watching a TTL count down (measured)
+
+An answer that comes from a cache shows the time **left**. `dig example.com A` twice, five seconds apart (a later run, so the numbers had already dropped):
+
+```text
+example.com.   48   IN   A   104.20.23.154
+example.com.   36   IN   A   104.20.23.154
+```
+
+On Windows, `Get-DnsClientCache -Entry example.com` showed `TimeToLive 285`, then `280`. The addresses of public names change over time; do not expect these. The gap between the two dig answers was more than five seconds, because the commands themselves take time.
 
 ## The local lookup order
 
@@ -136,6 +154,61 @@ dig example.com MX @1.1.1.1         # if the dig tool is installed (bind-utils /
 
 [`getent`](https://man7.org/linux/man-pages/man1/getent.1.html) and [`resolvectl`](https://man7.org/linux/man-pages/man1/resolvectl.1.html) are the tools to learn first because they follow the same path as real programs. `dig` and `nslookup` talk straight to a server and ignore the hosts file, so they answer a different question. Knowing which question each tool answers is the skill.
 
+## Reading dig's answer (measured)
+
+```text
+$ dig @127.0.0.1 -p 5353 app.wl.test
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 23711
+;; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+;; QUESTION SECTION:
+;app.wl.test.               IN    A
+
+;; ANSWER SECTION:
+app.wl.test.        60      IN    A    192.0.2.10
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#5353(127.0.0.1)
+```
+
+| Line | Read it as |
+|---|---|
+| `status:` | **Read this first.** What kind of answer this is (next table) |
+| `flags: ... aa` | **Authoritative answer**: the server holds this data itself. Without `aa` it usually came from a cache or another server |
+| `ANSWER: 1` | How many records answer the question |
+| `QUESTION SECTION` | What was actually asked: check the name and the type |
+| `60  IN  A  192.0.2.10` | TTL, class, record type, value |
+| `SERVER:` | **Who answered.** If it is not the server you meant, fix that first |
+
+(`@server` and `-p port` choose where to ask; `+noall +answer` shows only the answers, and `+short` only the values.) For an alias, the answer holds **both** records: `www.wl.test CNAME app.wl.test.` and then the `A` record.
+
+### The different kinds of "no"
+
+| What `dig` showed | Meaning | Look at |
+|---|---|---|
+| `status: NOERROR`, `ANSWER: 1` or more | Here is the answer | |
+| `status: NXDOMAIN` | **The name does not exist** | Spelling, the zone, which server you asked |
+| `status: NOERROR`, **`ANSWER: 0`** | **The name exists, but has no record of the type you asked for** (I asked a name with only an `A` record for `AAAA`) | The record type. This is not an error |
+| `status: REFUSED` | The server **will not** answer this (my server was asked about a name outside its zone and had nowhere to send it) | Whether you are asking the right server, and its access rules |
+| `connection timed out; no servers could be reached` (exit **9**) | **No answer at all** | The server's address, the path, UDP and TCP 53, whether it is running |
+
+I got the same "timed out" for an address with nothing there **and** for a port on this machine with no DNS server: `dig`'s message does not tell those apart.
+
+**`+short` hides the difference.** For the name that **does not exist** and the name with **no `AAAA` record**, `dig ... +short` printed **nothing**, and `dig` exited 0 for these answers. In a script, "empty output" is not a diagnosis: read the `status`.
+
+**Windows hides it differently.** I asked `Resolve-DnsName example.com -Type SRV`, a type that name does not have. There was **no error**, and the result was **not empty**: it returned the zone's `SOA` record, in the `Authority` section. So `if (Resolve-DnsName $name -Type SRV)` would be **true**. Test for the type you need:
+
+```powershell
+$srv = @(Resolve-DnsName $name -Type SRV -ErrorAction SilentlyContinue | Where-Object Type -eq 'SRV')
+if (-not $srv.Count) { 'no SRV records' }
+```
+
+And do not assume how a missing **name** will be reported: when I asked for a made-up name under `example.com`, its servers' answer arrived as "no records" rather than "no such name" (`nslookup` printed the name with no address, and the Windows cache recorded status `9501`, no records). I did not investigate why. A made-up name under my own test zone gave `NXDOMAIN`.
+
+### Tools that skip the hosts file
+
+With `198.51.100.7 app.wl.test` added to `/etc/hosts`, `dig ... app.wl.test +short` still printed the DNS answer `192.0.2.10`, while `getent hosts app.wl.test` printed `198.51.100.7`, which is what programs would use.
+
 ## Seeing and changing the DNS settings
 
 **Windows, PowerShell:**
@@ -176,7 +249,8 @@ Goal: decide whether the fault is DNS at all.
 |---|---|
 | `Non-existent domain` / `NXDOMAIN` | the name does not exist (or is cached as missing) |
 | `DNS request timed out` / `timeout` | the server did not answer: unreachable, down, or port 53 blocked |
-| `SERVFAIL` | the server tried and failed, for example a broken delegation or DNSSEC problem |
+| `SERVFAIL` | the server tried and failed, for example a broken delegation or DNSSEC problem (not reproduced here) |
+| `NOERROR` with no answers | the name exists but has no record of that type |
 | `REFUSED` | the server will not answer you, usually an access list |
 | right address, wrong site | a hosts-file line, a stale cache, or a changed record not yet expired |
 | works by address, fails by name | DNS (or the hosts file) |
@@ -187,6 +261,8 @@ DNS normally uses **UDP port 53**, falling back to **TCP port 53** for large ans
 
 - **Testing with `ping name` and believing a failure means "no network".** Ping may be blocked even when DNS works; use the resolver tools above.
 - **Forgetting the hosts file.** `nslookup` and `dig` ignore it, so they say everything is fine while the application fails.
+- **Reading empty `+short` output as "no such name".**
+- **Treating any result from `Resolve-DnsName` as the record you asked for.**
 - **Editing a generated `resolv.conf`.** Your change disappears at the next network event.
 - **Flushing the local cache and expecting the world to update.** The recursive servers and TTL decide that.
 - **Using a public resolver for internal names.** Names that exist only inside the company are answered only by the company's DNS, so DHCP should hand out the internal server.

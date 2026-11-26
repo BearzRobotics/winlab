@@ -415,3 +415,41 @@ choices = ["Use the company's DNS server, normally handed out by DHCP", "Raise t
 answers = ["Use the company's DNS server, normally handed out by DHCP"]
 explanation = "Only the internal DNS knows the internal names."
 review = "Common mistakes"
+
+# ---- Added when the lesson was deepened ----
+
+[[question]]
+id = "noerror-zero"
+type = "choice"
+prompt = "dig shows status NOERROR with ANSWER: 0. What does it mean?"
+choices = ["The name exists but has no record of the type asked for", "The name does not exist", "The server refused", "The server did not reply"]
+answers = ["The name exists but has no record of the type asked for"]
+explanation = "NXDOMAIN is the status for a name that does not exist."
+review = "The different kinds of \"no\""
+
+[[question]]
+id = "short-hides"
+type = "choice"
+prompt = "dig +short prints nothing. What should you do?"
+choices = ["Run it without +short and read the status", "Conclude the name does not exist", "Conclude the server is down", "Flush the hosts file"]
+answers = ["Run it without +short and read the status"]
+explanation = "Different answers look identical in short form."
+review = "The different kinds of \"no\""
+
+[[question]]
+id = "aa-flag"
+type = "choice"
+prompt = "What does the aa flag in dig's output mean?"
+choices = ["The server answered authoritatively, from data it holds itself", "The answer is an IPv6 address", "The query used TCP", "The answer came from the hosts file"]
+answers = ["The server answered authoritatively, from data it holds itself"]
+explanation = "Without it the answer usually came from a cache or another server."
+review = "Reading dig's answer (measured)"
+
+[[question]]
+id = "resolve-soa"
+type = "choice"
+prompt = "Why is if (Resolve-DnsName name -Type SRV) an unsafe test?"
+choices = ["It can return an SOA record, with no error, when there is no SRV record", "It always throws", "It only reads the hosts file", "It cannot ask for SRV"]
+answers = ["It can return an SOA record, with no error, when there is no SRV record"]
+explanation = "Filter the results by Type."
+review = "The different kinds of \"no\""

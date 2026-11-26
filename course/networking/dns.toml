@@ -3,7 +3,7 @@ id = "networking.dns"
 title = "DNS: how names become addresses"
 summary = "The DNS hierarchy, resolvers, caching and TTL, the common record types, and how to query, read and troubleshoot name resolution with nslookup, Resolve-DnsName, resolvectl and getent."
 content = "dns.md"
-estimated_minutes = 55
+estimated_minutes = 90
 level = 3
 objectives = [
   "Explain what a stub resolver, a recursive resolver and an authoritative server each do",
@@ -32,8 +32,24 @@ title = "RFC 1035: Domain names, implementation and specification"
 url = "https://www.rfc-editor.org/rfc/rfc1035"
 
 [[references]]
+title = "IANA root servers"
+url = "https://www.iana.org/domains/root/servers"
+
+[[references]]
 title = "RFC 2308: Negative caching of DNS queries"
 url = "https://www.rfc-editor.org/rfc/rfc2308"
+
+[[references]]
+title = "nsswitch.conf(5) manual page"
+url = "https://man7.org/linux/man-pages/man5/nsswitch.conf.5.html"
+
+[[references]]
+title = "hosts(5) manual page"
+url = "https://man7.org/linux/man-pages/man5/hosts.5.html"
+
+[[references]]
+title = "resolv.conf(5) manual page"
+url = "https://man7.org/linux/man-pages/man5/resolv.conf.5.html"
 
 [[references]]
 title = "nslookup (Microsoft Learn)"
@@ -44,12 +60,12 @@ title = "Resolve-DnsName (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/module/dnsclient/resolve-dnsname"
 
 [[references]]
-title = "Get-DnsClientCache (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/module/dnsclient/get-dnsclientcache"
+title = "getent(1) manual page"
+url = "https://man7.org/linux/man-pages/man1/getent.1.html"
 
 [[references]]
-title = "Clear-DnsClientCache (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/module/dnsclient/clear-dnsclientcache"
+title = "resolvectl(1) manual page"
+url = "https://man7.org/linux/man-pages/man1/resolvectl.1.html"
 
 [[references]]
 title = "Get-DnsClientServerAddress (Microsoft Learn)"
@@ -60,29 +76,14 @@ title = "Set-DnsClientServerAddress (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/module/dnsclient/set-dnsclientserveraddress"
 
 [[references]]
+title = "Get-DnsClientCache (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/dnsclient/get-dnsclientcache"
+
+[[references]]
+title = "Clear-DnsClientCache (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/dnsclient/clear-dnsclientcache"
+
+[[references]]
 title = "ipconfig (Microsoft Learn)"
 url = "https://learn.microsoft.com/windows-server/administration/windows-commands/ipconfig"
 
-[[references]]
-title = "resolvectl(1) manual page"
-url = "https://man7.org/linux/man-pages/man1/resolvectl.1.html"
-
-[[references]]
-title = "getent(1) manual page"
-url = "https://man7.org/linux/man-pages/man1/getent.1.html"
-
-[[references]]
-title = "hosts(5) manual page"
-url = "https://man7.org/linux/man-pages/man5/hosts.5.html"
-
-[[references]]
-title = "nsswitch.conf(5) manual page"
-url = "https://man7.org/linux/man-pages/man5/nsswitch.conf.5.html"
-
-[[references]]
-title = "resolv.conf(5) manual page"
-url = "https://man7.org/linux/man-pages/man5/resolv.conf.5.html"
-
-[[references]]
-title = "IANA root servers"
-url = "https://www.iana.org/domains/root/servers"
