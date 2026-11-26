@@ -475,3 +475,14 @@ choices = ["Keeps the loop in the current shell, so variables survive", "Runs th
 answers = ["Keeps the loop in the current shell, so variables survive"]
 explanation = "count=2 instead of 0. It is a bash feature (dash fails on it)."
 review = "Process substitution and here-strings (bash)"
+
+# ---- Added when the lesson was deepened ----
+
+[[question]]
+id = "followed-ext"
+type = "choice"
+prompt = "ext='*.log' and the folder holds app.log and 'old app.log'. How many words does an unquoted $ext become?"
+choices = ["Two", "One", "Three", "None"]
+answers = ["Two"]
+explanation = "The value is used as a pattern; the name with a space stays one word."
+review = "One line, followed through"

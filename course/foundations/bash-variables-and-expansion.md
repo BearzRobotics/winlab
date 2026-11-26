@@ -32,6 +32,45 @@ Two consequences you will use constantly:
 - **Brace expansion happens before variables.** `n=3; echo {1..$n}` printed `{1..3}` (one word), not `1 2 3`, because when braces were processed `$n` had not been expanded. `eval "args {1..$n}"` produced `1 2 3`, but see the `eval` section for why that is dangerous.
 - **Word splitting and globbing only touch the results of unquoted expansions.** Quotes switch them off. That is the whole point of quoting.
 
+![Diagram: bash expands braces, then tilde, then variables, arithmetic and command substitution; then splits words and expands file patterns, which quotes switch off; then removes quotes and runs the command](diagrams/expansion-order.svg)
+
+```text
+ 1 braces -> 2 tilde -> 3 $var $(( )) $( ) -> [4 split words -> 5 file patterns] -> 6 remove quotes -> run
+                                              ^ quotes switch 4 and 5 off
+```
+
+### One line, followed through
+
+In a folder holding `app.log`, `old app.log` and `notes.txt`, with `who='my report'` and `ext='*.log'` (`tests/verification/bash/expand4.sh`):
+
+```bash
+args {a,b}.txt ~ "$who" $who $ext "$ext" $((2+3))
+```
+
+```text
+10 args: [a.txt] [b.txt] [/home/you] [my report] [my] [report] [app.log] [old app.log] [*.log] [5]
+```
+
+(The home folder is shown as `/home/you`.) Seven words were typed after `args`; the command received **ten**:
+
+| You typed | It became | Because of |
+|---|---|---|
+| `{a,b}.txt` | `a.txt`, `b.txt` | Step 1, even though no such files exist |
+| `~` | your home folder | Step 2 |
+| `"$who"` | **one** word, `my report` | Step 3; quotes stop step 4 |
+| `$who` | **two** words, `my`, `report` | Step 4 split the result |
+| `$ext` | `app.log`, `old app.log` | Step 5 treated the **value** as a pattern. The name with a space stayed whole: splitting had already happened |
+| `"$ext"` | `*.log` | Quoted: no splitting, no globbing |
+| `$((2+3))` | `5` | Step 3 |
+
+`set -x` shows the same result before the command runs, adding quotes to show where words begin and end:
+
+```text
++ : a.txt b.txt 'my report' my report app.log 'old app.log' '*.log' 5
+```
+
+(There I used `:`, a command that does nothing, so only the trace is printed.) **When a script does something you did not expect, run that line with `set -x` and count the words.**
+
 ## Quoting
 
 | Form | Effect | My test |

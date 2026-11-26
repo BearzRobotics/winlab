@@ -3,7 +3,7 @@ id = "foundations.bash-variables-and-expansion"
 title = "Bash variables, quoting and expansion"
 summary = "The order in which bash rewrites a command line, why unquoted variables are the commonest bug, IFS and word splitting, parameter expansion, indexed and associative arrays, globbing options, braces, command substitution and its status traps, integer arithmetic (octal, wraparound, set -e) and why arithmetic or eval on untrusted text runs commands."
 content = "bash-variables-and-expansion.md"
-estimated_minutes = 120
+estimated_minutes = 150
 level = 2
 objectives = [
   "State the order of expansions and say which steps quoting disables",
@@ -32,12 +32,12 @@ title = "Bash Reference Manual: Shell Expansions, Parameter Expansion, Arrays, A
 url = "https://tiswww.case.edu/php/chet/bash/bashref.html"
 
 [[references]]
-title = "bash(1) manual page (man7.org)"
-url = "https://man7.org/linux/man-pages/man1/bash.1.html"
-
-[[references]]
 title = "POSIX Shell Command Language, Word Expansions (The Open Group)"
 url = "https://pubs.opengroup.org/onlinepubs/9799919799/utilities/V3_chap02.html"
+
+[[references]]
+title = "bash(1) manual page (man7.org)"
+url = "https://man7.org/linux/man-pages/man1/bash.1.html"
 
 [[references]]
 title = "ShellCheck wiki: SC2086, double quote to prevent globbing and word splitting"
@@ -50,3 +50,4 @@ url = "https://mywiki.wooledge.org/Bashism"
 [[references]]
 title = "Shell Style Guide (Google)"
 url = "https://google.github.io/styleguide/shellguide.html"
+

@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 330" role="img" aria-label="Order of expansion: braces, tilde, then parameter, arithmetic and command substitution, then word splitting and globbing, which quotes switch off, then quote removal, then the command runs" font-family="Segoe UI, sans-serif">
+  <title>What bash does to a line before running it</title>
+  <style>
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.5 }
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    .wire { stroke: #57606a; stroke-width: 1.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .dim { fill: #57606a }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+
+  <rect class="box" x="30" y="14" width="380" height="36" rx="5"/>
+  <text x="220" y="37" text-anchor="middle">1. braces: {a,b}</text>
+  <line class="wire" x1="220" y1="50" x2="220" y2="64" marker-end="url(#arrow)"/>
+  <rect class="box" x="30" y="66" width="380" height="36" rx="5"/>
+  <text x="220" y="89" text-anchor="middle">2. tilde: ~</text>
+  <line class="wire" x1="220" y1="102" x2="220" y2="116" marker-end="url(#arrow)"/>
+  <rect class="box" x="30" y="118" width="380" height="36" rx="5"/>
+  <text x="220" y="141" text-anchor="middle">3. $var, $((...)), $(...)</text>
+  <line class="wire" x1="220" y1="154" x2="220" y2="168" marker-end="url(#arrow)"/>
+  <rect class="zone-kernel" x="30" y="170" width="380" height="36" rx="5"/>
+  <text class="bold" x="220" y="193" text-anchor="middle">4. word splitting</text>
+  <line class="wire" x1="220" y1="206" x2="220" y2="220" marker-end="url(#arrow)"/>
+  <rect class="zone-kernel" x="30" y="222" width="380" height="36" rx="5"/>
+  <text class="bold" x="220" y="245" text-anchor="middle">5. file name patterns (globbing)</text>
+  <line class="wire" x1="220" y1="258" x2="220" y2="272" marker-end="url(#arrow)"/>
+  <rect class="box" x="30" y="274" width="380" height="36" rx="5"/>
+  <text x="220" y="297" text-anchor="middle">6. quote removal, then the command runs</text>
+
+  <rect class="zone-user" x="450" y="170" width="260" height="88" rx="6"/>
+  <text class="bold" x="580" y="200" text-anchor="middle">QUOTES switch</text>
+  <text class="bold" x="580" y="222" text-anchor="middle">steps 4 and 5 off</text>
+  <text x="580" y="244" text-anchor="middle" font-size="13">for what is inside them</text>
+  <text class="dim" x="450" y="140" font-size="13">Braces come before variables,</text>
+  <text class="dim" x="450" y="158" font-size="13">so {1..$n} does not work.</text>
+</svg>
