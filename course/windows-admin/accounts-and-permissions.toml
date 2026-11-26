@@ -89,3 +89,7 @@ url = "https://learn.microsoft.com/powershell/module/smbshare/new-smbshare"
 [[references]]
 title = "Get-SmbShareAccess (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/module/smbshare/get-smbshareaccess"
+
+[[references]]
+title = "Order of ACEs in a DACL (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/win32/secauthz/order-of-aces-in-a-dacl"

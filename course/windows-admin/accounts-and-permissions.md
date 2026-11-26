@@ -207,8 +207,8 @@ icacls C:\OldUserData /grant Administrators:(OI)(CI)F /t
 ### The rules that decide access
 
 - **Inheritance:** a folder passes its entries to what it contains unless inheritance is turned off. A broken inheritance chain is a frequent cause of "this one folder is different".
-- **Deny overrides allow.** Use deny sparingly, because it is hard to read later.
-- **Effective access** is the combination of all entries that match the user *and all of their groups*. Rights add up across groups unless a deny applies.
+- **Order matters.** Windows normally checks **explicit** entries before inherited ones, and deny before allow **within each level** ([order of entries](https://learn.microsoft.com/windows/win32/secauthz/order-of-aces-in-a-dacl)). So an explicit deny beats an explicit allow, but an allow set **directly on the item** beats a deny that was only **inherited** (the security fundamentals lesson shows a test). Use deny sparingly: it is hard to reason about later.
+- **Effective access** is the combination of all entries that match the user *and all of their groups*. Rights add up across groups; a deny can take one away, depending on where it sits in that order.
 - **The owner** can always change the permissions, even with no entry.
 - **Share permissions** apply to access over the network and **NTFS permissions** apply always; over the network, the **stricter result wins**. (Share permissions are covered when we share a folder, below.)
 

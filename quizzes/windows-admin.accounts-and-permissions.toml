@@ -349,8 +349,8 @@ review = "Changing permissions"
 id = "ntfs-deny"
 type = "choice"
 prompt = "Why use Deny entries sparingly?"
-choices = ["Deny overrides allow and is hard to read later", "Windows ignores them", "They slow the disk", "They expire after a day"]
-answers = ["Deny overrides allow and is hard to read later"]
+choices = ["They make effective access hard to reason about", "Windows ignores them", "They slow the disk", "They expire after a day"]
+answers = ["They make effective access hard to reason about"]
 explanation = "A deny on a broad group can even lock out administrators."
 review = "The rules that decide access"
 
