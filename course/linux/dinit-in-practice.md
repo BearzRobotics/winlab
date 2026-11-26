@@ -225,6 +225,14 @@ no linger file:                                        with /var/lib/turnstiled/
 
 **Without a linger file the user's services, the user's dinit and `/run/user/UID` were all gone within 3 seconds of the last logout; with a file named for the user in `/var/lib/turnstiled/linger/` everything stayed.** That is the whole mechanism: `turnstiled.conf` has `linger = maybe` by default, whose manual says "the default behavior is to stop them unless a file with the same name as the user exists in `/var/lib/turnstiled/linger`", and "it is not necessary to log in and out when the linger directory is changed". The manual says lingering is disabled when `manage_rundir` is `no`; it is `yes` here.
 
+![Diagram: at login turnstile starts a per-user dinit; after the last logout everything is removed unless a linger file exists for the user](diagrams/dinit-linger.svg)
+
+```text
+ login -> turnstile starts dinit --user
+ last logout, no linger file   -> all gone within 3 seconds
+ last logout, linger file      -> everything keeps running
+```
+
 Two traps found on the way:
 
 - **My first logout test was wrong**: to check the machine after logout I logged in again as the same user, and that login **kept the user manager alive**. Any check that logs in as the user changes the result; use a root-owned watcher started before you log out.
