@@ -59,10 +59,6 @@ title = "Install-PSResource (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.psresourceget/install-psresource"
 
 [[references]]
-title = "Packages("
-url = "https://www.powershellgallery.com/api/v2/Packages("
-
-[[references]]
 title = "Get-AuthenticodeSignature (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.security/get-authenticodesignature"
 
@@ -137,4 +133,3 @@ url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.securi
 [[references]]
 title = "Start-Job (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/start-job"
-

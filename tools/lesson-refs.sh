@@ -4,6 +4,7 @@
 # remove a dead one by hand). Titles already in the manifest are kept; others come from "url<TAB>title" lines
 # on stdin, or else the last part of the link.
 #   bash tools/lesson-refs.sh course/area/name < titles.tsv
+# Only real Markdown links [text](https://...) count: an address inside a code block is an example, not a reference.
 # It does not check that links load.
 set -e
 base=$1
@@ -15,9 +16,9 @@ tr -d '\r' < "$toml" | awk '/^\[\[references\]\]/{on=1} on && /^title = /{t=$0; 
 cut -f1 "$tmp.titles" > "$tmp.urls"          # what the manifest had, before anything is added
 if [ ! -t 0 ]; then tr -d '\r' >> "$tmp.titles"; fi
 awk '/^\[\[references\]\]/{exit} {print}' "$toml" > "$tmp"
-{ grep -oE 'https://[^) >]+' "$md" || true; cat "$tmp.urls"; } | awk 'NF && !seen[$0]++' | while read -r url; do
+{ grep -oE '\]\(https://[^)[:space:]]+\)' "$md" | sed 's/^](//;s/)$//' || true; cat "$tmp.urls"; } | awk 'NF && !seen[$0]++' | while read -r url; do
     title=$(awk -F '\t' -v u="$url" '$1 == u {t=$2} END {print t}' "$tmp.titles")
-    [ -n "$title" ] || title=${url##*/}
+    [ -n "$title" ] || { title=${url%/}; title=${title##*/}; }
     printf '[[references]]\ntitle = "%s"\nurl = "%s"\n\n' "$title" "$url" >> "$tmp"
 done
 cat "$tmp" > "$toml"

@@ -96,10 +96,6 @@ title = "about_Providers (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_providers"
 
 [[references]]
-title = "example.com"
-url = "https://example.com"
-
-[[references]]
 title = "PowerShell on Linux and macOS: differences (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/scripting/whats-new/unix-support"
 
@@ -122,4 +118,3 @@ url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.host/s
 [[references]]
 title = "PowerShell documentation (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/"
-
