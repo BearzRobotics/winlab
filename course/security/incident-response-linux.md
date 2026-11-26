@@ -6,6 +6,13 @@
 
 Evidence disappears at different speeds. The IETF's [RFC 3227, Guidelines for Evidence Collection and Archiving](https://www.rfc-editor.org/rfc/rfc3227) (read in full; it is short) says: "When collecting evidence you should proceed from the volatile to the less volatile", and gives an example order: registers and cache; **routing table, ARP cache, process table, kernel statistics, memory**; temporary file systems; **disk**; remote logging data; physical configuration; archival media. It also lists **things to avoid**: "Don't shutdown until you've completed evidence collection" (the attacker may have altered the shutdown scripts to destroy evidence), "Don't trust the programs on the system. Run your evidence gathering programs from appropriately protected media", and don't run programs that modify the access time of every file.
 
+![Diagram: collect from most to least volatile: registers and cache; network tables, processes and memory; temporary file systems; disk; remote logs; archives](diagrams/volatility.svg)
+
+```text
+ registers -> routes, ARP, processes, memory -> temporary file systems -> disk -> remote logs -> archives
+ (most volatile first)
+```
+
 That is the template for the collector: running processes and network sockets first (they vanish when the process or machine stops), then persistence mechanisms and logs on disk. **My collector breaks the second rule above on purpose, and that is a limitation, not a recommendation**: it runs from the suspect machine's own disk and uses the machine's own `ps`, `ss` and `find`. On a real compromise a rootkit can make those programs lie. It is a practice tool for the *shape* of triage; a real one would run from read-only media.
 
 The older NIST incident-response model had four phases: **preparation; detection and analysis; containment, eradication and recovery; post-incident activity**. The current revision, [SP 800-61 Rev. 3](https://csrc.nist.gov/pubs/sp/800/61/r3/final), maps incident response onto the NIST Cybersecurity Framework 2.0 functions (it includes a table relating the previous phases to the CSF functions Govern, Identify, Protect, Detect, Respond and Recover). I read that table and the lines around it; I did not read the rest. This lesson is about the middle of the older model: analysing and containing.

@@ -101,3 +101,4 @@ By path, in the order the owner works through them.
 | `security.windows-logging-and-detection` | reviewed 2026-11-26: already explains each result; added 1 diagram (what reaches the log). Tests are from the earlier run |
 | `security.authorization-and-scope` | reviewed 2026-11-26: already explains each result; added 1 diagram (the scope guard). Tests are from the earlier run |
 | `security.threat-modelling` | reviewed 2026-11-26: already explains each result; added 1 diagram (trust boundaries). Tests are from the earlier run |
+| `security.incident-response-linux` | reviewed 2026-11-26: already explains each result; added 1 diagram (collection order). Tests are from the earlier run |
