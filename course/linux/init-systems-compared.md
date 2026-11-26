@@ -98,6 +98,14 @@ dinit:    wl-need has depends-on: wl-db.             dinitctl stop wl-db     -> 
 
 systemd propagates a stop to the dependents; dinit asks you to stop the dependents or to say `--force`. And **who started a service matters in dinit** (**explicit activation**): `start wl-need` pulls in `wl-db`, and stopping `wl-need` stops `wl-db` again unless you had started `wl-db` yourself. systemd's `Wants=` and `Requires=` tests in this course did not include stopping the unit that pulled a dependency in, so I cannot say what systemd does in that case.
 
+![Diagram: wl-app needs wl-db. In systemd, stopping wl-db stops wl-app too; in dinit the stop is refused and stop --force stops both](diagrams/stop-dependency.svg)
+
+```text
+ wl-app --needs--> wl-db
+ systemd: stop wl-db  -> wl-app stops too          (Wants= would keep it running)
+ dinit:   stop wl-db  -> refused, names wl-app     (stop --force stops both)
+```
+
 ### A failing dependency
 
 Both agree: a hard dependency that cannot start stops the dependent (`A dependency job for ... failed`, rc 1 / `a dependency of the service failed to start`, rc 1); a soft one does not (`Wants=` and `waits-for` both started the dependent, rc 0). dinit's `depends-ms` ("it must start once, then may go away") has no single systemd keyword.

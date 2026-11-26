@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 240" role="img" aria-label="A service app has a hard dependency on db. Stopping db in systemd also stops app. In dinit the stop is refused unless forced, and then both stop" font-family="Segoe UI, sans-serif">
+  <title>Stopping a service that another one requires</title>
+  <style>
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.5 }
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    .wire { stroke: #57606a; stroke-width: 1.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .dim { fill: #57606a }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+
+  <rect class="box" x="30" y="30" width="130" height="44" rx="6"/>
+  <text class="bold" x="95" y="57" text-anchor="middle">wl-app</text>
+  <line class="wire" x1="160" y1="52" x2="238" y2="52" marker-end="url(#arrow)"/>
+  <text x="199" y="42" text-anchor="middle" font-size="13">needs</text>
+  <rect class="box" x="240" y="30" width="130" height="44" rx="6"/>
+  <text class="bold" x="305" y="57" text-anchor="middle">wl-db</text>
+  <text class="dim" x="390" y="50" font-size="13">a hard dependency:</text>
+  <text class="dim" x="390" y="70" font-size="13">Requires= or depends-on:</text>
+
+  <rect class="zone-user" x="30" y="110" width="300" height="90" rx="6"/>
+  <text class="bold" x="180" y="136" text-anchor="middle">systemd: stop wl-db</text>
+  <text x="180" y="162" text-anchor="middle">wl-app is stopped too</text>
+  <text x="180" y="184" text-anchor="middle" font-size="13">(with Wants= it keeps running)</text>
+
+  <rect class="zone-kernel" x="390" y="110" width="320" height="90" rx="6"/>
+  <text class="bold" x="550" y="136" text-anchor="middle">dinit: stop wl-db</text>
+  <text x="550" y="162" text-anchor="middle">REFUSED, naming wl-app</text>
+  <text x="550" y="184" text-anchor="middle" font-size="13">stop --force stops both</text>
+
+  <text class="dim" x="30" y="228" font-size="13">In the lessons' tests: systemd 259 and dinit 0.22.0.</text>
+</svg>

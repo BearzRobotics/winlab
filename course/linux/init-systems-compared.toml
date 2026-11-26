@@ -30,6 +30,10 @@ title = "systemd.service(5)"
 url = "https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html"
 
 [[references]]
+title = "dinit project page (davmac.org)"
+url = "https://davmac.org/projects/dinit/"
+
+[[references]]
 title = "systemctl(1)"
 url = "https://www.freedesktop.org/software/systemd/man/latest/systemctl.html"
 
@@ -44,3 +48,4 @@ url = "https://davmac.org/projects/dinit/man-pages-html/dinitctl.8.html"
 [[references]]
 title = "Chimera Linux: Service management"
 url = "https://chimera-linux.org/docs/configuration/services"
+
