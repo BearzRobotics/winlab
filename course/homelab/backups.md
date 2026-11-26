@@ -31,6 +31,13 @@ $ stat -c '%i %h links  %n' dest/snap1/docs/d1.txt dest/snap2/docs/d1.txt
 
 The photo, unchanged, has **two names and one inode**; the changed text file has two inodes. (`--link-dest` wants an absolute path or one relative to the destination; I used absolute paths.) The archive option `-a` keeps permissions, times and ownership. `--delete` makes the new snapshot an exact image of the source, removing files that are gone.
 
+![Diagram: both snapshots name p1.bin, which is one copy of data with two links; each names a different copy of the changed d1.txt](diagrams/snapshot-links.svg)
+
+```text
+ snap1/p1.bin ---> [data, inode 265452, 2 links] <--- snap2/p1.bin     unchanged: stored once
+ snap1/d1.txt ---> [old copy]          [new copy] <--- snap2/d1.txt     changed: two copies
+```
+
 **Measuring size is a trap.** `du` counts each hard-linked file **once per run**:
 
 ```text
