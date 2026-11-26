@@ -1,5 +1,7 @@
 # WinLab handoff (2026-11-21)
 
+> **Update 2026-11-26.** Much below is out of date. The project is now a git repository, and the lesson-deepening pass is finished: all 69 lessons have a status row in `docs/depth-review.md` and at least one SVG diagram, and `winlab check course` reported 69 lessons, 69 labs, 69 quiz files (2,669 questions), 14 paths and 86 diagrams with 0 problems. The rows differ in depth: some lessons were rewritten with new test runs, while others were reviewed and given a diagram, with their tests left from earlier runs. Read each row before relying on a lesson. All lessons are still drafts for the owner's review. Planned next, not started: a capture-the-flag style security platform (`docs/content-plan.md`), with VM network containment first.
+
 Read this first. It says what the project is, what was done in the long scripting-and-networking session, how to keep working, what is unfinished, and what is *not* verified. Nothing is running in the background: all VMs are stopped and restored to their clean snapshots, and QEMU has no processes.
 
 ## 1. One-paragraph status
