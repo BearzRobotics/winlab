@@ -28,6 +28,8 @@ A leaked **private** key lets someone be that machine; a leaked **public** key i
 
 ## The lab: two namespaces and a virtual cable
 
+![Diagram: the namespaces wlpeer and wlhub are joined by a virtual cable standing in for the internet, and an encrypted WireGuard tunnel runs between wg-peer and wg-hub over it](diagrams/wireguard-lab.svg)
+
 ```text
  [wlpeer namespace]                 [wlhub namespace]
  wlv-peer 10.99.0.2  <----- veth ----->  wlv-hub 10.99.0.1     (the "internet": plain, unencrypted)

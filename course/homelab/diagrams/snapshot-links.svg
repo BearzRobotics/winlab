@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 250" role="img" aria-label="Two snapshots each list a photo and a text file. The unchanged photo is one copy of data with two names; the changed text file has two separate copies" font-family="Segoe UI, sans-serif">
+  <title>Hard-link snapshots: names and data</title>
+  <style>
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.5 }
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    .wire { stroke: #57606a; stroke-width: 1.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .dim { fill: #57606a }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+
+  <text class="bold" x="90" y="22" text-anchor="middle">snap1 (names)</text>
+  <text class="bold" x="630" y="22" text-anchor="middle">snap2 (names)</text>
+  <text class="bold" x="360" y="22" text-anchor="middle">data on disk</text>
+
+  <rect class="box" x="20" y="40" width="140" height="40" rx="5"/>
+  <text x="90" y="65" text-anchor="middle">p1.bin</text>
+  <rect class="box" x="560" y="40" width="140" height="40" rx="5"/>
+  <text x="630" y="65" text-anchor="middle">p1.bin</text>
+  <rect class="zone-user" x="260" y="40" width="200" height="40" rx="5"/>
+  <text x="360" y="65" text-anchor="middle">inode 265452, 2 links</text>
+  <line class="wire" x1="160" y1="60" x2="258" y2="60" marker-end="url(#arrow)"/>
+  <line class="wire" x1="560" y1="60" x2="462" y2="60" marker-end="url(#arrow)"/>
+
+  <rect class="box" x="20" y="120" width="140" height="40" rx="5"/>
+  <text x="90" y="145" text-anchor="middle">d1.txt</text>
+  <rect class="zone-kernel" x="260" y="104" width="200" height="34" rx="5"/>
+  <text x="360" y="126" text-anchor="middle">old d1.txt (265447)</text>
+  <rect class="box" x="560" y="156" width="140" height="40" rx="5"/>
+  <text x="630" y="181" text-anchor="middle">d1.txt</text>
+  <rect class="zone-kernel" x="260" y="158" width="200" height="34" rx="5"/>
+  <text x="360" y="180" text-anchor="middle">new d1.txt (265458)</text>
+  <line class="wire" x1="160" y1="134" x2="258" y2="123" marker-end="url(#arrow)"/>
+  <line class="wire" x1="560" y1="176" x2="462" y2="176" marker-end="url(#arrow)"/>
+
+  <text class="dim" x="20" y="224" font-size="13">Each snapshot looks complete. Unchanged data is stored once, under two names.</text>
+  <text class="dim" x="20" y="244" font-size="13">Writing INTO a shared file would change it in both snapshots.</text>
+</svg>
