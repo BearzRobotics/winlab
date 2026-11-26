@@ -22,6 +22,14 @@ System
 
 So on **Server 2022** logons were already audited for success and failure. I did not check a Windows 10 or 11 machine, and you should not assume it is the same: look at yours. To change a setting: `auditpol /set /subcategory:"Logon" /success:enable /failure:enable` (I ran it; it printed the same line back). The page [Audit Logon Events](https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/auditing/basic-audit-logon-events) describes the setting; I only confirmed it loads.
 
+![Diagram: activity is written to the Security log only if the audit policy audits it; the log has a limited size and can be cleared, so copy events elsewhere](diagrams/win-audit-flow.svg)
+
+```text
+ activity -> audit policy? --yes--> Security log (limited size; can be cleared) -> copy elsewhere
+                    |
+                    no --> never written
+```
+
 ## A failed logon: event 4625
 
 I made a lab account (`net user wlvictim ... /add`), then tried to connect to the machine's own `IPC$` share twice with a wrong password: once as the real account and once as one that does not exist. `net use` answered both times `System error 1326` (the user name or password is incorrect), which tells the person nothing about *which* was wrong, which is the point. The log tells the defender more:

@@ -22,20 +22,12 @@ evaluation_criteria = [
 ]
 
 [[references]]
-title = "Event 4625: An account failed to log on"
-url = "https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/auditing/event-4625"
-
-[[references]]
-title = "Event 4624: An account was successfully logged on"
-url = "https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/auditing/event-4624"
-
-[[references]]
-title = "Event 1102: The audit log was cleared"
-url = "https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/auditing/event-1102"
-
-[[references]]
 title = "Audit Logon Events"
 url = "https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/auditing/basic-audit-logon-events"
+
+[[references]]
+title = "Event 4625: An account failed to log on"
+url = "https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/auditing/event-4625"
 
 [[references]]
 title = "Get-WinEvent"
@@ -44,3 +36,12 @@ url = "https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.
 [[references]]
 title = "wevtutil"
 url = "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/wevtutil"
+
+[[references]]
+title = "Event 1102: The audit log was cleared"
+url = "https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/auditing/event-1102"
+
+[[references]]
+title = "Event 4624: An account was successfully logged on"
+url = "https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/auditing/event-4624"
+
