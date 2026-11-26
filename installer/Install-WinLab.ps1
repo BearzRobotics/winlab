@@ -30,9 +30,15 @@ try {
   if (-not [Environment]::Is64BitOperatingSystem) { throw 'WinLab needs 64-bit Windows.' }
   if (-not (Test-Path $zip)) { throw "payload.zip was not found next to the installer ($here)." }
 
+  # The window stays visible during a normal install, so say what is happening in it.
+  Write-Host "Installing WinLab for this user into $InstallDir"
+  Write-Host 'Keep this window open; a message box appears when it is finished.'
+
+  Write-Host '[1/4] Closing a running copy, if there is one...'
   # Stop a running copy so its files can be replaced.
   Get-Process winlab -ErrorAction SilentlyContinue | Where-Object { $_.Path -like "$InstallDir\*" } | Stop-Process -Force
 
+  Write-Host '[2/4] Unpacking the program and course files...'
   # Replace the program and content folders; leave anything else in the folder alone.
   New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
   foreach ($d in 'course', 'labs', 'paths', 'quizzes', 'certs', 'images', 'docs') {
@@ -47,6 +53,7 @@ try {
   $version = (Get-Content (Join-Path $InstallDir 'VERSION.txt') -ErrorAction SilentlyContinue | Select-Object -First 1)
   if (-not $version) { $version = '0' }
 
+  Write-Host '[3/4] Adding the Start menu shortcut...'
   if (-not $NoShortcut) {
     $lnk = Join-Path ([Environment]::GetFolderPath('Programs')) 'WinLab.lnk'
     $sh = New-Object -ComObject WScript.Shell
@@ -55,6 +62,7 @@ try {
     $s.Save()
   }
 
+  Write-Host '[4/4] Adding WinLab to Installed apps...'
   $size = [int]((Get-ChildItem $InstallDir -Recurse -File | Measure-Object Length -Sum).Sum / 1KB)
   New-Item -Path $keyPath -Force | Out-Null
   $props = @{
@@ -68,8 +76,9 @@ try {
   New-ItemProperty -Path $keyPath -Name NoRepair -Value 1 -PropertyType DWord -Force | Out-Null
 
   if ($Quiet) { "Installed WinLab $version to $InstallDir"; exit 0 }
+  Write-Host "Done: WinLab $version is installed. Answer the message box to close this window."
   Add-Type -AssemblyName System.Windows.Forms
-  $r = [Windows.Forms.MessageBox]::Show("WinLab $version is installed in:`n$InstallDir`n`nStart it now? (Later: Start menu > WinLab.)", 'WinLab setup', 'YesNo', 'Information')
+  $r =[Windows.Forms.MessageBox]::Show("WinLab $version is installed in:`n$InstallDir`n`nStart it now? (Later: Start menu > WinLab.)", 'WinLab setup', 'YesNo', 'Information')
   if ($r -eq 'Yes') { Start-Process -FilePath $exe -WorkingDirectory $InstallDir }
   exit 0
 } catch {
