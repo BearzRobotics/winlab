@@ -118,6 +118,13 @@ When the file arrived the same client succeeded. **Copy the package files, then 
 $ ln -sfn r2 /srv/wl-hosting/current.new; mv -T /srv/wl-hosting/current.new /srv/wl-hosting/current
 ```
 
+![Diagram: the web server serves the symlink current; one rename moves it from the old tree r1 to the new tree r2](diagrams/symlink-swap.svg)
+
+```text
+ server -> current -> r1   (old tree, kept for rollback)
+ server -> current -> r2   after: mv -T current.new current
+```
+
 `mv -T` is one atomic rename, so a request sees the old tree or the new one. nginx followed the symlink in my tests (its default allows it; I did not test `disable_symlinks`). Keep the previous tree (`r1`) for a while: a client in the middle of a download may still be reading from it, and it is your **rollback**: point the symlink back.
 
 ## Mirror it

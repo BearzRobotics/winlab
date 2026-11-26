@@ -24,6 +24,10 @@ evaluation_criteria = [
 ]
 
 [[references]]
+title = "ngx_http_core_module.html#location"
+url = "https://nginx.org/en/docs/http/ngx_http_core_module.html#location"
+
+[[references]]
 title = "nginx: ngx_http_core_module, location"
 url = "https://nginx.org/en/docs/http/ngx_http_core_module.html"
 
@@ -42,3 +46,4 @@ url = "https://github.com/alpinelinux/apk-tools/blob/master/doc/apk-repositories
 [[references]]
 title = "createrepo_c"
 url = "https://rpm-software-management.github.io/createrepo_c/"
+

@@ -96,3 +96,4 @@ By path, in the order the owner works through them.
 | `packaging.apt-repository` | reviewed 2026-11-26: already explains each result; added 1 diagram (trust chain). Tests are from the earlier run |
 | `packaging.dnf-repository` | reviewed 2026-11-26: already explains each result; added 1 diagram (two signatures). Tests are from the earlier run |
 | `packaging.apk-repository` | reviewed 2026-11-26: already explains each result; added 1 diagram (layout). Tests are from the earlier run |
+| `packaging.hosting-a-repository` | reviewed 2026-11-26: already explains each result; added 1 diagram (symlink swap). Tests are from the earlier run |
