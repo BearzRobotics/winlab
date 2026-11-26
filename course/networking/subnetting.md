@@ -1,6 +1,6 @@
 *Draft for owner review.* Every network problem that starts "it can reach some machines but not others" needs one skill: looking at an address and a mask and knowing who is on the same network. That skill is subnetting. It looks like maths, but with a handful of numbers memorised it is quick and mechanical, and you can check every answer with a built-in tool.
 
-Addresses here are samples from private and documentation ranges.
+Addresses here are samples from private and documentation ranges. The worked answers were checked with a small calculator in Windows PowerShell 5.1 and 7.6 (`tests/verification/powershell/subnet1.ps1`), and the different-masks case was run in an AlmaLinux 9.8 lab VM (`tests/verification/networking/mask1.sh`).
 
 ## An address and a mask
 
@@ -78,6 +78,13 @@ A `/21` mask is `255.255.248.0`. The interesting octet is the *third* (248), so 
 
 Notice the broadcast ends in `.255` and spans into the next third-octet value: the "next multiple minus 1" applies to the interesting octet, and all octets after it become 255.
 
+![Diagram: the last octet split into four equal blocks of 64, and below into unequal blocks of 128, 64, 32 and 4 with some left free](diagrams/subnet-blocks.svg)
+
+```text
+ /26 blocks:  | 0-63 | 64-127 | 128-191 | 192-255 |        .130 is in 128-191
+ unequal:     |     0-127     | 128-191 | 192-223 |224-227| 228-255 free
+```
+
 ## Check your answer with the system
 
 You can ask PowerShell to do the binary AND of an address and a mask. The result is the network address:
@@ -90,6 +97,34 @@ $mask = [IPAddress]'255.255.255.192'
 ```
 
 That matches example 1. This works for IPv4 only. (Computing the broadcast with a bitwise NOT overflows in PowerShell, so use the block-size method for that.)
+
+For the broadcast and range too, do the same arithmetic on whole numbers:
+
+```powershell
+function Get-Subnet([string]$Cidr) {
+    $address, $prefix = $Cidr -split '/'
+    $b = ([Net.IPAddress]$address).GetAddressBytes(); [array]::Reverse($b)
+    $ip = [uint64][BitConverter]::ToUInt32($b, 0)
+    $size = [uint64][math]::Pow(2, 32 - [int]$prefix)
+    $network = $ip - ($ip % $size)                      # round down to a multiple of the block size
+    function Dotted([uint64]$v) { (24, 16, 8, 0 | ForEach-Object { [math]::Floor($v / [math]::Pow(2, $_)) % 256 }) -join '.' }
+    [pscustomobject]@{ Network = Dotted $network; Broadcast = Dotted ($network + $size - 1); Hosts = $size - 2 }
+}
+Get-Subnet 172.16.45.200/21        # Network 172.16.40.0, Broadcast 172.16.47.255, Hosts 2046
+```
+
+Look at its one real step, `$ip - ($ip % $size)`: it **is** the block-size method. (It is not meant for `/31` or `/32`.)
+
+On Linux, `ipcalc` (see `man ipcalc`) does it where installed. It was present on the AlmaLinux image, though versions differ between distributions:
+
+```text
+$ ipcalc -n -b -m 172.16.45.200/21
+NETMASK=255.255.248.0
+BROADCAST=172.16.47.255
+NETWORK=172.16.40.0
+```
+
+**Use a calculator to check, not instead of understanding:** in a fault you need to see at a glance whether two addresses share a network.
 
 To see the mask a machine really uses ([`Get-NetIPAddress`](https://learn.microsoft.com/powershell/module/nettcpip/get-netipaddress)):
 
@@ -124,6 +159,19 @@ This is why a **wrong mask** causes strange failures. Take two hosts:
 
 A sends directly to B; B answers via the router, or not at all if there is no route. One side works, the other does not, and traffic may flow one way only. When two hosts disagree, compare their masks first.
 
+**Measured, with no router at all:** I connected two hosts with those two settings.
+
+| Question | Answer |
+|---|---|
+| A: `ip route get 192.168.1.200` | `dev vea`: local, send directly |
+| B: `ip route get 192.168.1.20` | `Network is unreachable` |
+| A pings B | 100 % loss |
+| What B received | A's `ARP, Request who-has 192.168.1.200` |
+| What B sent back | **Nothing**, not even an ARP reply |
+| After giving B a `/24` | Replies arrive |
+
+So here it did not get as far as a one-way ping: A never learned B's hardware address, because B, with no route back to A, did not answer. From A this looks like **"the host is down"**, although it is up, connected and received the question. (Other operating systems, or a router on the wire, can behave differently.)
+
 ## Special ranges
 
 | Range | Name | Meaning |
@@ -155,6 +203,23 @@ Split `192.168.1.0/24` into four equal subnets: you need 2 bits (2 to the 2nd is
 | 4 | 192.168.1.192/26 | .193 to .254 | .255 |
 
 For a different need, ask "how many hosts?": for 50 hosts you need at least 52 addresses, which means a block of 64 (`/26`). A block of 32 (`/27`, 30 usable) is too small. Always round up to the next power of two, and remember the two reserved addresses.
+
+### Different sizes: largest first
+
+Real networks need blocks of **different** sizes (this is **VLSM**, variable-length subnet masks). The rule that avoids mistakes: **place the largest first, and start every block at a multiple of its own size.**
+
+`192.168.1.0/24` for 100 office PCs, 50 phones, 25 printers and one router-to-router link:
+
+| Need | Smallest block | Subnet | Range of the block | Usable |
+|---|---|---|---|---|
+| 100 | 128 (`/25`) | `192.168.1.0/25` | .0 to .127 | 126 |
+| 50 | 64 (`/26`) | `192.168.1.128/26` | .128 to .191 | 62 |
+| 25 | 32 (`/27`) | `192.168.1.192/27` | .192 to .223 | 30 |
+| 2 | 4 (`/30`) | `192.168.1.224/30` | .224 to .227 | 2 |
+
+`.228` to `.255` remain free for growth.
+
+**Not every address can start a block.** `192.168.1.96/26` is not a subnet: blocks of 64 start at 0, 64, 128 and 192, so 96 is a **host inside `192.168.1.64/26`**. If a plan or a command gives a "network address" that is not a multiple of the block size, something is wrong.
 
 ## IPv6 in one page
 
@@ -193,6 +258,7 @@ Work these without a calculator, then check with the PowerShell snippet above (f
 5. `10.0.12.201/22`: network, broadcast, number of usable hosts.
 6. You need a subnet for 100 devices. What is the smallest prefix that fits? How many would be left over?
 7. A machine in `192.168.0.0/16` space has the address `169.254.18.7`. What most likely happened?
+8. Is `10.1.1.40/27` a network address? If not, which subnet is it in?
 
 **Answers.**
 
@@ -203,6 +269,7 @@ Work these without a calculator, then check with the PowerShell snippet above (f
 5. `/22` mask is `255.255.252.0`, block size 4 in the third octet. 12 is a multiple of 4, so the network is `10.0.12.0` and the broadcast is `10.0.15.255`. Usable hosts: 2 to the 10th, minus 2 = 1,022.
 6. 100 plus 2 reserved needs at least 102 addresses, so a block of 128: `/25` (126 usable). 26 usable addresses would be left over.
 7. The machine asked for an address by DHCP and got no answer, so it gave itself a link-local `169.254.x.x` address. Look at the DHCP server, the network path to it, and the cable or Wi-Fi.
+8. No: blocks of 32 start at 0, 32, 64 and so on. It is a host in `10.1.1.32/27`.
 
 ## Practice
 

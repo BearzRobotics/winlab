@@ -82,3 +82,4 @@ By path, in the order the owner works through them.
 | `networking.routing-and-gateways` | deepened 2026-11-26: total metric versus RouteMetric (the lesson's sort was misleading), Find-NetRoute, bad gateways on both systems, which commands persist, 1 diagram (`route1.ps1`, `route1.sh`). tracert not tested |
 | `networking.dns` | deepened 2026-11-26: reading dig output, the kinds of 'no' (+short and Resolve-DnsName hide them), TTL countdown, 1 diagram (`dns1.sh`, `dns2.ps1`). SERVFAIL not reproduced |
 | `networking.dhcp` | deepened 2026-11-26: a real exchange from client, server log and capture; renewal; full pool and missing server look the same to the client; 1 diagram (`dhcp1.sh`). Not tested: Windows DHCP role, relay, rogue server |
+| `networking.subnetting` | deepened 2026-11-26: worked answers machine-checked (5.1 and 7.6), a calculator, unequal subnet sizes, mismatched masks measured (no ARP reply), 1 diagram (`subnet1.ps1`, `mask1.sh`) |

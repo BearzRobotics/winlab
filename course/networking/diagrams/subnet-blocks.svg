@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 270" role="img" aria-label="The last octet from 0 to 255 split into four equal blocks of 64, and below it split into blocks of 128, 64, 32 and smaller" font-family="Segoe UI, sans-serif">
+  <title>Splitting 192.168.1.0/24</title>
+  <style>
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.5 }
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .dim { fill: #57606a }
+  </style>
+
+  <text class="bold" x="40" y="22">four equal /26 blocks (last octet)</text>
+  <rect class="zone-user" x="40" y="34" width="160" height="44" rx="3"/>
+  <text x="120" y="61" text-anchor="middle">0 to 63</text>
+  <rect class="box" x="200" y="34" width="160" height="44" rx="3"/>
+  <text x="280" y="61" text-anchor="middle">64 to 127</text>
+  <rect class="zone-kernel" x="360" y="34" width="160" height="44" rx="3"/>
+  <text class="bold" x="440" y="61" text-anchor="middle">128 to 191</text>
+  <rect class="box" x="520" y="34" width="160" height="44" rx="3"/>
+  <text x="600" y="61" text-anchor="middle">192 to 255</text>
+  <text class="dim" x="40" y="100" font-size="13">.130 falls in 128 to 191: network .128, broadcast .191, hosts .129 to .190.</text>
+
+  <text class="bold" x="40" y="142">unequal sizes, largest first</text>
+  <rect class="zone-user" x="40" y="154" width="320" height="44" rx="3"/>
+  <text x="200" y="181" text-anchor="middle">/25: 0 to 127</text>
+  <rect class="box" x="360" y="154" width="160" height="44" rx="3"/>
+  <text x="440" y="181" text-anchor="middle">/26: 128-191</text>
+  <rect class="zone-user" x="520" y="154" width="80" height="44" rx="3"/>
+  <text x="560" y="181" text-anchor="middle" font-size="13">/27</text>
+  <rect class="box" x="600" y="154" width="10" height="44"/>
+  <rect class="zone-kernel" x="610" y="154" width="70" height="44" rx="3"/>
+  <text x="645" y="181" text-anchor="middle" font-size="13">free</text>
+  <text class="dim" x="40" y="222" font-size="13">A /27 from 192 to 223, then a /30 at 224 to 227 (the thin box). 228 to 255 are free.</text>
+  <text class="dim" x="40" y="248" font-size="13">Every block starts at a multiple of its own size.</text>
+</svg>

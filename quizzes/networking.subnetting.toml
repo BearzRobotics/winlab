@@ -587,3 +587,31 @@ choices = ["That the network and broadcast addresses are reserved", "That DHCP u
 answers = ["That the network and broadcast addresses are reserved"]
 explanation = "Usable hosts are 2 to the power of the host bits, minus 2."
 review = "Common mistakes"
+
+# ---- Added when the lesson was deepened ----
+
+[[question]]
+id = "vlsm-order"
+type = "choice"
+prompt = "When dividing a block into subnets of different sizes, which should you place first?"
+choices = ["The largest", "The smallest", "Whichever was requested first", "The one with the most routers"]
+answers = ["The largest"]
+explanation = "And start each block at a multiple of its own size."
+review = "Different sizes: largest first"
+
+[[question]]
+id = "not-a-boundary"
+type = "short"
+prompt = "192.168.1.96/26 is a host in which subnet? Give it as address/prefix."
+answers = ["192.168.1.64/26"]
+explanation = "Blocks of 64 start at 0, 64, 128 and 192."
+review = "Different sizes: largest first"
+
+[[question]]
+id = "no-arp-reply"
+type = "choice"
+prompt = "In the lesson's test with mismatched masks and no router, what did host B send back to A's ARP request?"
+choices = ["Nothing", "An ARP reply, but no ping reply", "A TCP reset", "A DHCP offer"]
+answers = ["Nothing"]
+explanation = "B had no route to A, so from A the host seemed to be down."
+review = "Same network or not?"

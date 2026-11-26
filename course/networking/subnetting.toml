@@ -3,7 +3,7 @@ id = "networking.subnetting"
 title = "IP addressing and subnetting"
 summary = "Read an IPv4 address and prefix, find the network, broadcast and usable range, decide whether two hosts share a network, plus the special ranges and the basics of IPv6."
 content = "subnetting.md"
-estimated_minutes = 60
+estimated_minutes = 90
 level = 3
 objectives = [
   "Convert between dotted decimal, binary and prefix length",
@@ -22,25 +22,54 @@ evaluation_criteria = [
 ]
 
 [[references]]
-title = "IPv4 address space (IANA special-purpose registry)"
-url = "https://www.iana.org/assignments/iana-ipv4-special-registry/iana-ipv4-special-registry.xhtml"
-
-[[references]]
-title = "IPv6 addressing architecture (RFC 4291)"
-url = "https://www.rfc-editor.org/rfc/rfc4291"
-
-[[references]]
-title = "RFC 1918: Address allocation for private internets"
-url = "https://www.rfc-editor.org/rfc/rfc1918"
-
-[[references]]
 title = "RFC 4632: Classless Inter-domain Routing (CIDR)"
 url = "https://www.rfc-editor.org/rfc/rfc4632"
+
+[[references]]
+title = "rfc3021"
+url = "https://www.rfc-editor.org/rfc/rfc3021"
 
 [[references]]
 title = "Get-NetIPAddress (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/module/nettcpip/get-netipaddress"
 
 [[references]]
+title = "ipconfig"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/ipconfig"
+
+[[references]]
+title = "rfc5737"
+url = "https://www.rfc-editor.org/rfc/rfc5737"
+
+[[references]]
+title = "RFC 1918: Address allocation for private internets"
+url = "https://www.rfc-editor.org/rfc/rfc1918"
+
+[[references]]
+title = "rfc3022"
+url = "https://www.rfc-editor.org/rfc/rfc3022"
+
+[[references]]
+title = "rfc3927"
+url = "https://www.rfc-editor.org/rfc/rfc3927"
+
+[[references]]
+title = "IPv6 addressing architecture (RFC 4291)"
+url = "https://www.rfc-editor.org/rfc/rfc4291"
+
+[[references]]
+title = "rfc4861"
+url = "https://www.rfc-editor.org/rfc/rfc4861"
+
+[[references]]
+title = "rfc4862"
+url = "https://www.rfc-editor.org/rfc/rfc4862"
+
+[[references]]
+title = "IPv4 address space (IANA special-purpose registry)"
+url = "https://www.iana.org/assignments/iana-ipv4-special-registry/iana-ipv4-special-registry.xhtml"
+
+[[references]]
 title = "ip-address(8) manual page"
 url = "https://man7.org/linux/man-pages/man8/ip-address.8.html"
+
