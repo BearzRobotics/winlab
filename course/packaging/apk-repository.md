@@ -11,6 +11,13 @@ This is the third format lesson. The shape of the work is the one in `packaging.
 - **Layout rule** (from apk-repositories(5), and confirmed by what the client asked my server for): for a repository of this kind `url` is the **base URL**; the index is at **`$base_url/$arch/Packages.adb`** and packages by default at **`$base_url/$arch/$name-$version.apk`**. `$arch` is the **architecture of the package**, which for a script package is `noarch`.
 - **Keys** are public keys in `/etc/apk/keys/` (Chimera ships its own there, e.g. `x86_64@chimera-linux.org-669d70ff.rsa.pub`).
 
+![Diagram: the index is under the client's architecture directory, and each package under the directory of its own architecture, such as noarch](diagrams/apk-layout.svg)
+
+```text
+ main/x86_64/Packages.adb             index: the client's architecture
+ main/noarch/wl-hello-1.0-r0.apk      package: its own architecture
+```
+
 The real Chimera repository follows this layout: `https://repo.chimera-linux.org/current/main/x86_64/Packages.adb` answered `200` with a length of 1,215,483 bytes.
 
 ## A signing key
