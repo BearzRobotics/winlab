@@ -1,6 +1,6 @@
 *Draft for owner review.* Most servers run Linux, and you work on them through a **shell**: a program that reads what you type and runs it. The usual one is **bash**. This lesson is the first day on the command line: moving around, handling files **without destroying them**, reading and searching text, understanding permissions, redirecting output, managing processes, and writing and running your first script. It uses only what ships with the system, so it works on a server you have just logged into.
 
-**What was tested, and where.** Everything below was run in **bash 5.3.9** on **Ubuntu 26.04 (WSL2)** (`tests/verification/bash/basics1.sh`; `whichimpl.sh` lists the tool versions). A fact worth knowing before you compare outputs: on this Ubuntu most of the small utilities (`ls`, `cat`, `head`, `tail`, `wc`, `sort`, `stat`, `date`, `mkdir`, `mktemp`...) are the **uutils (Rust) coreutils 0.8.0**, while `cp`, `mv`, `rm` and `df` are **GNU coreutils 9.7**, and `find`, `xargs`, `grep`, `sed` and `gawk` are GNU. Other distributions (AlmaLinux, Debian, Alpine's BusyBox) ship different implementations, so **exact error wording and a few options differ**; where I saw something that depends on the implementation, the text says so. Not tested: macOS and BSD (their `ls`, `sed -i` and `date` differ), and the interactive keyboard features (listed at the end, not exercised).
+**What was tested, and where.** Everything below was run in **bash 5.3.9** on **Ubuntu 26.04 (WSL2)** (`tests/verification/bash/basics1.sh`; `whichimpl.sh` lists the tool versions). A fact worth knowing before you compare outputs: on this Ubuntu most of the small utilities (`ls`, `cat`, `head`, `tail`, `wc`, `sort`, `stat`, `date`, `mkdir`, `mktemp`...) are the **uutils (Rust) coreutils 0.8.0**, while `cp`, `mv`, `rm` and `df` are **GNU coreutils 9.7**, and `find`, `xargs`, `grep`, `sed` and `gawk` are GNU. Other distributions (AlmaLinux, Debian, Alpine's BusyBox) ship different implementations, so **exact error wording and a few options differ**; where I saw something that depends on the implementation, the text says so. The outputs added under *Who you are*, *Processes and jobs* and *A first look at the system* come from the **Ubuntu 24.04.5** lab VM (`tests/verification/bash/basics2.sh`). Not tested: macOS and BSD (their `ls`, `sed -i` and `date` differ), and the interactive keyboard features (listed at the end, not exercised).
 
 You will practise in a Linux lab VM or WSL. Exercises only touch your home folder or a scratch folder; start a throwaway one with `cd "$(mktemp -d)"`.
 
@@ -116,7 +116,29 @@ chmod u+x script.sh      # add execute for the owner
 chmod 640 file           # rw- for owner, r-- for group, --- for others
 ```
 
+**Reading `id`** (in the lab VM):
+
+```text
+uid=1000(labadmin) gid=1000(labadmin) groups=1000(labadmin),27(sudo)
+```
+
+`uid` is your user number and name (**0 is root**), `gid` your **primary** group (new files get it), and `groups` **every** group you belong to. Here `sudo` is the one that matters: on Ubuntu its members may use `sudo`. A group added to your account appears only after you **sign in again**.
+
 A permission has three bits, **r**ead (4), **w**rite (2), e**x**ecute (1), for three classes: **u**ser (owner), **g**roup, **o**thers. Add the digits: `755` is `rwxr-xr-x`, `600` is `rw-------`. I confirmed: `chmod u+x` gave `-rwxr--r--`, then `go-r` gave `-rwx------`, then `755` and `600` gave the expected strings.
+
+Three system files show letters beyond `rwx`:
+
+```text
+-rw-r-----  1 root shadow    916 /etc/shadow
+drwxrwxrwt 14 root root     4096 /tmp
+-rwsr-xr-x  1 root root    64152 /usr/bin/passwd
+```
+
+| What you see | Meaning |
+|---|---|
+| `/etc/shadow`: `rw-r-----`, group `shadow` | Only root may write it and only root and that group read it: it holds password hashes |
+| `/tmp` ends in **`t`** (the **sticky bit**) | Anyone may create files, but only a file's owner (or the directory's owner, or root) may remove or rename it |
+| `passwd` has **`s`** where the owner's `x` would be (**set-user-ID**) | The program runs **with its owner's rights** (root), so you can change your own password. An unexpected set-user-ID program is a serious security finding |
 
 - **New files start at `644` and new folders at `755`** because of the **umask** (`0022` on my machine). In a subshell with `umask 077`, new files were `600` and folders `700`.
 - **A script without the execute bit cannot be run as `./script`:** `Permission denied` (status **126**). `bash script` still ran it, because you are starting bash, which only needs to *read* the file.
@@ -160,6 +182,13 @@ cmd1 |& cmd2        # pipe both streams (bash)
 cmd | tee file      # print AND save
 ```
 
+![Diagram: redirections are applied left to right. Redirect to the file and then 2>&1 sends both streams to the file; 2>&1 first leaves errors on the screen](diagrams/redirect-order.svg)
+
+```text
+ > f 2>&1 :  1=f first, then 2 copies 1  ->  both in f
+ 2>&1 > f :  2 copies 1 (the screen) first, then 1=f  ->  errors stay on screen
+```
+
 What I saw, including the traps:
 
 - `ls nosuch > out.txt 2> err.txt` left `out.txt` **empty** and the message in `err.txt`.
@@ -200,6 +229,32 @@ wait                # wait for background jobs
 timeout 1 sleep 5   # run a command with a time limit
 ```
 
+**Reading `ps -ef`:**
+
+```text
+UID    PID  PPID  C STIME TTY      TIME CMD
+root     1     0 12 21:45 ?    00:00:02 /sbin/init
+root     2     0  0 21:45 ?    00:00:00 [kthreadd]
+```
+
+`UID` is who it runs as, `PID` its number, `PPID` its parent's, `STIME` when it started, `TTY` the terminal (`?` means none: usually a service), `TIME` the **processor time used** (not how long it has existed) and `CMD` the command line. Names in `[brackets]` are kernel threads. PID 1 is the first process, from which services descend.
+
+To ask for the columns you want, use `ps -o`:
+
+```text
+    PID    PPID USER     STAT     ELAPSED %CPU %MEM   RSS COMMAND
+   1167    1154 root     S          00:00  0.0  0.0  1620 sleep 40
+```
+
+| Column | Meaning |
+|---|---|
+| `STAT` | `R` running or ready, **`S` sleeping** (waiting: normal for most), `D` waiting uninterruptibly (often on disk), `T` stopped, `Z` zombie (finished, not yet collected by its parent) |
+| `ELAPSED` | How long it has existed |
+| `%CPU` | Processor time divided by lifetime: **an average**, not "right now" |
+| `RSS` | Memory in RAM, in KiB |
+
+`ps -eo pid,user,%cpu,%mem,rss,comm --sort=-rss | head` lists the biggest memory users ([ps(1)](https://man7.org/linux/man-pages/man1/ps.1.html)); `top` shows the figures live.
+
 Facts from the run:
 
 - `ps` showed the background `sleep` with the shell as its parent (`ppid` = `$$`) and state `S` (sleeping).
@@ -236,6 +291,30 @@ grep -r needle tree                # search text inside files, recursively
 | `du -sh folder` | how big a folder is (`12K` for my test tree) |
 | `free -h` | memory |
 | `uptime` | time up, users, load average |
+
+### Reading the answers
+
+```text
+$ df -h / /boot
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sda1        19G  1.7G   17G   9% /
+/dev/sda16      881M   64M  756M   8% /boot
+
+$ free -h
+               total        used        free      shared  buff/cache   available
+Mem:           1.9Gi       278Mi       1.6Gi       1.0Mi       185Mi       1.6Gi
+Swap:             0B          0B          0B
+
+$ uptime
+ 21:45:23 up 0 min,  2 users,  load average: 0.13, 0.03, 0.01
+$ nproc
+2
+```
+
+- **`df`** ([manual](https://man7.org/linux/man-pages/man1/df.1.html)): one line per file system. **`Use%` and `Mounted on`** are what to read; a file system near 100 % makes programs fail in confusing ways. `Used` plus `Avail` can be less than `Size`, because some space is reserved.
+- **`free`** ([manual](https://man7.org/linux/man-pages/man1/free.1.html)): read **`available`**, not `free`. Linux uses spare memory as a file cache (`buff/cache`) and gives it back when needed. `Swap: 0B` means this machine has no swap.
+- **`uptime`** ([manual](https://man7.org/linux/man-pages/man1/uptime.1.html)): how long since the last boot (**an unexpectedly short time means it restarted**), how many sign-ins, and the **load average** over 1, 5 and 15 minutes: roughly the number of processes running or waiting. Compare it with the number of processors (`nproc`, here 2): a load that **stays** well above it means work is queuing. On Linux the figure also counts processes waiting on disk, so high load does not always mean a busy processor. Comparing the three numbers shows whether it is rising or falling.
+
 
 ## Your first script
 

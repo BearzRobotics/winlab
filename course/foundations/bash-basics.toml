@@ -32,6 +32,22 @@ evaluation_criteria = [
 ]
 
 [[references]]
+title = "ps.1.html"
+url = "https://man7.org/linux/man-pages/man1/ps.1.html"
+
+[[references]]
+title = "df.1.html"
+url = "https://man7.org/linux/man-pages/man1/df.1.html"
+
+[[references]]
+title = "free.1.html"
+url = "https://man7.org/linux/man-pages/man1/free.1.html"
+
+[[references]]
+title = "uptime.1.html"
+url = "https://man7.org/linux/man-pages/man1/uptime.1.html"
+
+[[references]]
 title = "Bash Reference Manual (Chet Ramey)"
 url = "https://tiswww.case.edu/php/chet/bash/bashref.html"
 
@@ -70,3 +86,4 @@ url = "https://man7.org/linux/man-pages/man7/signal.7.html"
 [[references]]
 title = "uutils coreutils (the Rust coreutils used by recent Ubuntu)"
 url = "https://github.com/uutils/coreutils"
+

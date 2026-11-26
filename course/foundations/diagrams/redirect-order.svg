@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 270" role="img" aria-label="Redirections are applied from left to right. With greater-than file then 2 to 1, both streams go to the file. With 2 to 1 first, the error stream copies the screen before standard output is moved to the file" font-family="Segoe UI, sans-serif">
+  <title>Redirections happen left to right</title>
+  <style>
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.5 }
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    .wire { stroke: #57606a; stroke-width: 1.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .mono { font-family: Consolas, monospace }
+    .dim { fill: #57606a }
+  </style>
+
+  <text class="bold mono" x="180" y="22" text-anchor="middle">cmd &gt; f 2&gt;&amp;1</text>
+  <text class="bold mono" x="540" y="22" text-anchor="middle">cmd 2&gt;&amp;1 &gt; f</text>
+
+  <rect class="box" x="20" y="38" width="320" height="46" rx="5"/>
+  <text x="180" y="58" text-anchor="middle" font-size="13">start: 1 = screen, 2 = screen</text>
+  <text class="dim" x="180" y="76" text-anchor="middle" font-size="13">(1 is output, 2 is errors)</text>
+  <rect class="box" x="380" y="38" width="320" height="46" rx="5"/>
+  <text x="540" y="58" text-anchor="middle" font-size="13">start: 1 = screen, 2 = screen</text>
+
+  <rect class="zone-user" x="20" y="96" width="320" height="46" rx="5"/>
+  <text x="180" y="124" text-anchor="middle" font-size="13">&gt; f  makes  1 = f</text>
+  <rect class="zone-user" x="380" y="96" width="320" height="46" rx="5"/>
+  <text x="540" y="116" text-anchor="middle" font-size="13">2&gt;&amp;1 copies where 1 is NOW</text>
+  <text x="540" y="134" text-anchor="middle" font-size="13">so 2 = screen</text>
+
+  <rect class="zone-user" x="20" y="154" width="320" height="46" rx="5"/>
+  <text x="180" y="174" text-anchor="middle" font-size="13">2&gt;&amp;1 copies where 1 is NOW</text>
+  <text x="180" y="192" text-anchor="middle" font-size="13">so 2 = f</text>
+  <rect class="zone-user" x="380" y="154" width="320" height="46" rx="5"/>
+  <text x="540" y="182" text-anchor="middle" font-size="13">&gt; f  makes  1 = f</text>
+
+  <rect class="zone-kernel" x="20" y="212" width="320" height="42" rx="5"/>
+  <text class="bold" x="180" y="238" text-anchor="middle">both in the file</text>
+  <rect class="zone-kernel" x="380" y="212" width="320" height="42" rx="5"/>
+  <text class="bold" x="540" y="238" text-anchor="middle">errors still on the screen</text>
+</svg>

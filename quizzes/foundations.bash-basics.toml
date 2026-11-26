@@ -487,3 +487,41 @@ choices = ["cd /tmp/work is not checked, so rm -rf * may run elsewhere", "sort l
 answers = ["cd /tmp/work is not checked, so rm -rf * may run elsewhere", "sort list.txt > list.txt empties the file", "for f in $(ls) splits names on spaces", "echo -e under a #!/bin/sh shebang is not portable"]
 explanation = "Also rm -rf * versus ./* and unquoted $f."
 review = "Good habits"
+
+# ---- Added when the lesson was deepened ----
+
+[[question]]
+id = "ps-time"
+type = "choice"
+prompt = "What does the TIME column of ps -ef show?"
+choices = ["Processor time the process has used", "How long since it started", "The time of day it started", "Time until it ends"]
+answers = ["Processor time the process has used"]
+explanation = "STIME is the start; elapsed time can be asked for with etime."
+review = "Processes and jobs"
+
+[[question]]
+id = "load-nproc"
+type = "choice"
+prompt = "A machine with 2 processors shows a load average that stays near 12. What does it suggest?"
+choices = ["Much work is waiting, on the processor or on disk", "The machine is idle", "It has 12 processors", "It has been up 12 days"]
+answers = ["Much work is waiting, on the processor or on disk"]
+explanation = "Compare load with the processor count; on Linux disk waits count too."
+review = "Reading the answers"
+
+[[question]]
+id = "free-avail"
+type = "choice"
+prompt = "In free -h, which column tells you how much memory programs can still get?"
+choices = ["available", "free", "buff/cache", "shared"]
+answers = ["available"]
+explanation = "Cache is given back when needed."
+review = "Reading the answers"
+
+[[question]]
+id = "setuid-s"
+type = "choice"
+prompt = "ls -l shows -rwsr-xr-x for /usr/bin/passwd. What does the s mean?"
+choices = ["The program runs with its owner's rights", "The file is a socket", "The file is hidden", "Only its owner may run it"]
+answers = ["The program runs with its owner's rights"]
+explanation = "That is set-user-ID."
+review = "Who you are and what you may do"
