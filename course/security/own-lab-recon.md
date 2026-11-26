@@ -17,7 +17,7 @@ LISTEN 0      4096             [::]:22    [::]:*            users:(("sshd",pid=9
 
 That was Ubuntu 24.04 (AlmaLinux 9.8 showed `0.0.0.0:111` and `[::]:111` for `rpcbind` as well as port 22). Read the **Local Address** column: `127.0.0.x` means *this machine only*; `0.0.0.0` and `[::]` mean *every interface*, the ones other machines can reach. The `("systemd",pid=1,...)` next to `sshd` means systemd holds the socket (socket activation), which the `linux.systemd-advanced` lesson explains.
 
-![Diagram: a listener on 127.0.0.1 can be reached only from the same machine; one on 0.0.0.0 or [::] can also be reached by other machines if no firewall stops them](diagrams/listen-reach.svg)
+![Diagram: a listener on 127.0.0.1 can be reached only from the same machine; one on 0.0.0.0 or the IPv6 any-address can also be reached by other machines if no firewall stops them](diagrams/listen-reach.svg)
 
 ```text
  another machine ---> 0.0.0.0 / [::]     reachable (unless a firewall stops it)
