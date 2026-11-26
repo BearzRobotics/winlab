@@ -11,6 +11,15 @@ A **share** is a named folder (`labfiles`) published by the server. A client con
 
 Most "it connects but I cannot save" problems are the second system disagreeing with the first.
 
+![Diagram: a request must pass sign-in, the share's rules, Linux file permissions and, where SELinux is enforcing, the file label; each gate fails with its own sign](diagrams/samba-gates.svg)
+
+```text
+ sign in -> share rules -> Linux owner and mode -> SELinux label -> file
+ LOGON_FAILURE   ACCESS_DENIED (tree connect)         avc denial in the audit log
+```
+
+When something fails, work out **which gate** said no before changing anything.
+
 ## Install, users and a share
 
 ```text

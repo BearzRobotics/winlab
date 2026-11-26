@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 250" role="img" aria-label="A client request must pass sign-in, the share's rules, Linux file permissions and on AlmaLinux the SELinux label. Each gate has its own error or log" font-family="Segoe UI, sans-serif">
+  <title>Every gate must say yes</title>
+  <style>
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.5 }
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    .wire { stroke: #57606a; stroke-width: 1.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .dim { fill: #57606a }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+
+  <rect class="zone-user" x="10" y="40" width="132" height="70" rx="6"/>
+  <text class="bold" x="76" y="70" text-anchor="middle">1. sign in</text>
+  <text x="76" y="92" text-anchor="middle" font-size="13">Samba password</text>
+  <line class="wire" x1="142" y1="75" x2="166" y2="75" marker-end="url(#arrow)"/>
+  <rect class="zone-user" x="168" y="40" width="132" height="70" rx="6"/>
+  <text class="bold" x="234" y="70" text-anchor="middle">2. the share</text>
+  <text x="234" y="92" text-anchor="middle" font-size="13">smb.conf rules</text>
+  <line class="wire" x1="300" y1="75" x2="324" y2="75" marker-end="url(#arrow)"/>
+  <rect class="zone-kernel" x="326" y="40" width="132" height="70" rx="6"/>
+  <text class="bold" x="392" y="70" text-anchor="middle">3. Linux files</text>
+  <text x="392" y="92" text-anchor="middle" font-size="13">owner and mode</text>
+  <line class="wire" x1="458" y1="75" x2="482" y2="75" marker-end="url(#arrow)"/>
+  <rect class="zone-kernel" x="484" y="40" width="132" height="70" rx="6"/>
+  <text class="bold" x="550" y="70" text-anchor="middle">4. SELinux</text>
+  <text x="550" y="92" text-anchor="middle" font-size="13">file label</text>
+  <line class="wire" x1="616" y1="75" x2="640" y2="75" marker-end="url(#arrow)"/>
+  <rect class="box" x="642" y="48" width="68" height="54" rx="6"/>
+  <text class="bold" x="676" y="80" text-anchor="middle">file</text>
+
+  <text x="76" y="140" text-anchor="middle" font-size="13">LOGON_FAILURE</text>
+  <text x="234" y="140" text-anchor="middle" font-size="13">ACCESS_DENIED</text>
+  <text x="234" y="158" text-anchor="middle" font-size="13">at tree connect</text>
+  <text x="550" y="140" text-anchor="middle" font-size="13">ACCESS_DENIED,</text>
+  <text x="550" y="158" text-anchor="middle" font-size="13">avc in audit log</text>
+  <text class="dim" x="10" y="200" font-size="13">The errors shown are the ones this lesson produced. Gate 4 applies where SELinux is enforcing,</text>
+  <text class="dim" x="10" y="222" font-size="13">as on the AlmaLinux VM.</text>
+</svg>
