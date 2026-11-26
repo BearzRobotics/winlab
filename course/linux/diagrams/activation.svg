@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 260" role="img" aria-label="A timer unit, a socket unit and a path unit each start a service: on a schedule, on a connection, or when a file appears. systemd-run makes a temporary unit from a command line" font-family="Segoe UI, sans-serif">
+  <title>What can start a service</title>
+  <style>
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.5 }
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    .wire { stroke: #57606a; stroke-width: 1.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .dim { fill: #57606a }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+
+  <rect class="zone-kernel" x="10" y="20" width="250" height="52" rx="6"/>
+  <text class="bold" x="135" y="42" text-anchor="middle">name.timer</text>
+  <text x="135" y="62" text-anchor="middle" font-size="13">a time or an interval</text>
+  <rect class="zone-kernel" x="10" y="90" width="250" height="52" rx="6"/>
+  <text class="bold" x="135" y="112" text-anchor="middle">name.socket</text>
+  <text x="135" y="132" text-anchor="middle" font-size="13">a client connects</text>
+  <rect class="zone-kernel" x="10" y="160" width="250" height="52" rx="6"/>
+  <text class="bold" x="135" y="182" text-anchor="middle">name.path</text>
+  <text x="135" y="202" text-anchor="middle" font-size="13">a file or folder appears or changes</text>
+
+  <line class="wire" x1="260" y1="46" x2="458" y2="100" marker-end="url(#arrow)"/>
+  <line class="wire" x1="260" y1="116" x2="458" y2="116" marker-end="url(#arrow)"/>
+  <line class="wire" x1="260" y1="186" x2="458" y2="134" marker-end="url(#arrow)"/>
+
+  <rect class="zone-user" x="460" y="82" width="250" height="70" rx="6"/>
+  <text class="bold" x="585" y="108" text-anchor="middle">a service</text>
+  <text x="585" y="134" text-anchor="middle" font-size="13">name.service (or name@ for each)</text>
+
+  <text class="dim" x="10" y="246" font-size="13">systemd-run creates temporary units from a command line, including one-off timers.</text>
+</svg>
