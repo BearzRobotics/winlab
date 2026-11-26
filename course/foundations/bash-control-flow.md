@@ -209,6 +209,14 @@ Four traps, all reproduced:
 
 1. **The last line without a newline is dropped.** For `one\ntwo\nthree` (no final newline) the plain loop printed `[one][two]` and **lost `three`**. Fix: `while IFS= read -r line || [ -n "$line" ]; do ...` (printed all three). The same happened in dash and ash; the guard worked in all three.
 2. **A command inside the loop that reads standard input steals the rest of the file.** With five lines, `while read -r n; do ...; cat > /dev/null; done < five.txt` printed `got 1;` and **stopped**: `cat` consumed lines 2 to 5. `sed -n 1p` inside the loop did the same. The fix is to give the inner command its own input: `cat < /dev/null`. Any command that reads stdin can do this; running `ssh` inside such a loop is a well-known case (its `-n` option exists for this, from its documentation; I did not test ssh here).
+
+![Diagram: read and a command in the loop body share the file; cat takes the remaining lines so the loop runs once; with its input redirected from /dev/null the loop runs five times](diagrams/loop-stdin.svg)
+
+```text
+ shared input:      read gets line 1, cat takes lines 2-5  ->  loop runs once
+ cat < /dev/null:   read gets every line, cat reads nothing ->  loop runs five times
+```
+
 3. **A pipeline runs the loop in a subshell:** `printf 'a\nb\n' | while read -r _; do ((c++)); done` left `c=0`, while `done < <(printf 'a\nb\n')` left `c=2`.
 4. **File names with spaces or newlines:** loop with `find ... -print0 | while IFS= read -r -d '' f` (or `< <(find ... -print0)` to keep variables). My test read 3 names including one containing a newline.
 
