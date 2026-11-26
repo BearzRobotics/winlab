@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 330" role="img" aria-label="Discover and Request are broadcast from address 0.0.0.0 to 255.255.255.255; Offer and Ack come from the server. Later, renewal is a Request and Ack sent directly between client and server" font-family="Segoe UI, sans-serif">
+  <title>The first lease, and a renewal</title>
+  <style>
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    .wire { stroke: #57606a; stroke-width: 1.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .dim { fill: #57606a }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+
+  <rect class="zone-user" x="20" y="10" width="140" height="34" rx="5"/>
+  <text class="bold" x="90" y="32" text-anchor="middle">client</text>
+  <rect class="zone-kernel" x="560" y="10" width="140" height="34" rx="5"/>
+  <text class="bold" x="630" y="32" text-anchor="middle">DHCP server</text>
+
+  <line class="wire" x1="90" y1="76" x2="628" y2="76" marker-end="url(#arrow)"/>
+  <text x="360" y="70" text-anchor="middle">Discover: broadcast, from 0.0.0.0</text>
+  <line class="wire" x1="630" y1="116" x2="92" y2="116" marker-end="url(#arrow)"/>
+  <text x="360" y="110" text-anchor="middle">Offer: you may have this address</text>
+  <line class="wire" x1="90" y1="156" x2="628" y2="156" marker-end="url(#arrow)"/>
+  <text x="360" y="150" text-anchor="middle">Request: broadcast, I take that offer</text>
+  <line class="wire" x1="630" y1="196" x2="92" y2="196" marker-end="url(#arrow)"/>
+  <text x="360" y="190" text-anchor="middle">Ack: the lease starts</text>
+
+  <text class="dim" x="360" y="228" text-anchor="middle">about half way through the lease</text>
+  <line class="wire" x1="90" y1="262" x2="628" y2="262" marker-end="url(#arrow)"/>
+  <text x="360" y="256" text-anchor="middle">Request: sent directly to the server</text>
+  <line class="wire" x1="630" y1="300" x2="92" y2="300" marker-end="url(#arrow)"/>
+  <text x="360" y="294" text-anchor="middle">Ack: lease extended</text>
+</svg>

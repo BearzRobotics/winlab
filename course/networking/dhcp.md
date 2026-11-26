@@ -1,6 +1,6 @@
 *Draft for owner review.* Almost every client on every network gets its address from DHCP rather than from a person typing it in. When DHCP works nobody notices it; when it does not, a machine has no usable network and the symptoms look like a dozen other problems. This lesson shows how the exchange works, how to read what it gave you, and how to tell a DHCP fault from everything else.
 
-Addresses in the examples are samples; the field names and layout are real output.
+**What was tested.** The sections marked *measured* use a private DHCP server (**dnsmasq**) and two clients (**dhclient**) inside an **AlmaLinux 9.8** lab VM, each in its own network namespace and joined by a virtual switch connected to nothing else (`tests/verification/networking/dhcp1.sh`; SELinux was set to permissive for the test, and the lease was only 2 minutes). Windows output shows the layout with sample addresses. **Not tested:** the Windows DHCP Server role, relay agents, rogue servers, and a Windows client's failure behaviour.
 
 ## What DHCP does
 
@@ -27,6 +27,60 @@ A client with no address cannot talk to anyone, so the first messages are **broa
 
 Only after the Acknowledge does the client configure its interface. Because step 1 is a broadcast, and broadcasts stop at a router, **a DHCP server must be on the client's own network, or a router must forward the request** (see relay agents below).
 
+![Diagram: Discover and Request are broadcast from 0.0.0.0; the server replies with Offer and Ack; later a renewal is a Request and an Ack sent directly between them](diagrams/dhcp-exchange.svg)
+
+```text
+ client --Discover (broadcast, from 0.0.0.0)--> server
+ client <------------- Offer ------------------ server
+ client --Request (broadcast) ----------------> server
+ client <------------- Ack -------------------- server        lease starts
+ ... about half way:
+ client --Request (directly to the server) ---> server  <--Ack--
+```
+
+### The exchange, watched (measured)
+
+**The client** (`dhclient -v`) printed each step:
+
+```text
+DHCPDISCOVER on eth0 to 255.255.255.255 port 67 interval 7 (xid=0x10012a06)
+DHCPOFFER of 192.168.77.124 from 192.168.77.1
+DHCPREQUEST for 192.168.77.124 on eth0 to 255.255.255.255 port 67 (xid=0x10012a06)
+DHCPACK of 192.168.77.124 from 192.168.77.1 (xid=0x10012a06)
+bound to 192.168.77.124 -- renewal in 60 seconds.
+```
+
+**The server's log** showed the same four from its side, naming each client by **MAC address**:
+
+```text
+DHCPDISCOVER(eth0) 52:6c:b5:a0:6a:b4
+DHCPOFFER(eth0) 192.168.77.124 52:6c:b5:a0:6a:b4
+DHCPREQUEST(eth0) 192.168.77.124 52:6c:b5:a0:6a:b4
+DHCPACK(eth0) 192.168.77.124 52:6c:b5:a0:6a:b4
+```
+
+**On the wire**, captured with `sudo tcpdump -n -i eth0 -vv 'udp port 67 or udp port 68'` (shortened):
+
+```text
+0.0.0.0.bootpc > 255.255.255.255.bootps: ... Request from 52:6c:b5:a0:6a:b4, xid 0x10012a06
+      DHCP-Message (53), length 1: Discover
+192.168.77.1.bootps > 192.168.77.124.bootpc: [bad udp cksum ...] ... Reply, xid 0x10012a06
+      Your-IP 192.168.77.124
+      DHCP-Message (53), length 1: Offer
+      Server-ID (54), length 4: 192.168.77.1
+      Lease-Time (51), length 4: 120
+```
+
+| In the capture | Meaning |
+|---|---|
+| `bootpc`, `bootps` | The client port (68) and server port (67), by their old names |
+| `0.0.0.0` to `255.255.255.255` | A client with no address, broadcasting |
+| `xid` | A transaction number: it ties the replies to the request |
+| `Requested-IP`, `Server-ID` (in the Request) | Which offer the client is accepting |
+| `bad udp cksum` on the **server's own** packets | Normal when capturing on the sending machine, where the checksum is filled in later. It is not a fault |
+
+The server **offered** and **recorded** the lease (`dnsmasq`'s lease file held the expiry time, MAC and address).
+
 ## Leases and renewal
 
 The address is *leased*, not owned. The lease has a length (8 hours in the example below, set by the administrator; many home routers use 24 hours). The client does not wait for expiry:
@@ -35,7 +89,11 @@ The address is *leased*, not owned. The lease has a length (8 hours in the examp
 - If that fails, at about **87.5 %** (T2) it broadcasts to *any* server to **rebind**.
 - If the lease expires with no answer, it must stop using the address.
 
-Those percentages are the defaults in [RFC 2131](https://www.rfc-editor.org/rfc/rfc2131); servers can change them. This is why a DHCP server that is down for an hour usually causes no immediate problem for machines that are already running, and why the failures appear later, for machines that restart or whose lease ran out.
+Those percentages are the defaults in [RFC 2131](https://www.rfc-editor.org/rfc/rfc2131); servers can change them.
+
+**Measured:** with a 2-minute lease the client said it would renew in 60 seconds. The renewal was **only a Request and an Ack**, sent **from the client's address straight to the server** (`192.168.77.124 > 192.168.77.1`), with no Discover and no broadcast. The client reported `reason=RENEW` with the same address.
+
+ This is why a DHCP server that is down for an hour usually causes no immediate problem for machines that are already running, and why the failures appear later, for machines that restart or whose lease ran out.
 
 ## Reading a lease on Windows
 
@@ -134,6 +192,20 @@ There is no gateway, so the machine can talk only to others on the same link. Wo
 
 Note that a missing or wrong answer is the **server side**; a client that never sends a Discover (disabled adapter, DHCP turned off on the client) is a different fault, and `DHCP Enabled : No` shows it at once.
 
+### What a client sees, and what only the server knows (measured)
+
+| Situation | The client showed | The server's log |
+|---|---|---|
+| **No server at all** | `DHCPDISCOVER` again and again, with growing intervals; **no address** | (no server) |
+| **Pool full** (a range of one address, second client) | **the same**: `DHCPDISCOVER` again and again, no address | **`DHCPDISCOVER(eth0) d6:7b:e1:83:71:02 no address available`** |
+| Reservation for the client's MAC | Received the reserved address `192.168.77.200` | |
+
+**From the client these two failures look identical.** Only the server's log tells them apart, so when a client gets nothing, ask: **did the Discover reach the server?** If the log shows it, read what the server said. If it does not, the problem is on the path: link, VLAN, relay or firewall. A packet capture on each side answers the same question.
+
+This Linux client (`dhclient`) gave itself **no address at all** when nothing answered (`ip -4 addr` showed none), so `169.254` is not guaranteed on Linux: it depends on the software managing the connection. (I stopped the client after 25 seconds.)
+
+A reservation is set on the server by the client's MAC address (`dhcp-host=MAC,192.168.77.200` in dnsmasq).
+
 ## Releasing and renewing the lease
 
 On Windows, from an elevated Command Prompt:
@@ -167,6 +239,7 @@ Whatever you choose, **write it down**: an address plan that lists which ranges 
 - **Releasing the lease over a remote session.**
 - **Ignoring the `DHCP Server` field**, so a rogue server goes unnoticed for days.
 - **A very long lease on a busy guest network**, which fills the pool with machines that left hours ago.
+- **Diagnosing from the client alone**, when the server's log would say whether the request arrived and why it was refused.
 
 ## Check yourself
 

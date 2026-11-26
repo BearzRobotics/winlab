@@ -339,3 +339,32 @@ choices = ["Writing down an address plan: which ranges are DHCP, reserved and st
 answers = ["Writing down an address plan: which ranges are DHCP, reserved and static"]
 explanation = "A documented plan stops static addresses drifting into the DHCP range."
 review = "Static or DHCP?"
+
+# ---- Added when the lesson was deepened ----
+
+[[question]]
+id = "pool-full-vs-none"
+type = "choice"
+prompt = "A client keeps sending Discover and gets nothing. How can you tell a full address pool from a missing server?"
+choices = ["Look at the server's log or capture on the server side", "From the client's messages alone", "By pinging 8.8.8.8", "By flushing the DNS cache"]
+answers = ["Look at the server's log or capture on the server side"]
+explanation = "In the lesson both looked the same to the client; the server logged 'no address available'."
+review = "What a client sees, and what only the server knows (measured)"
+
+[[question]]
+id = "renew-unicast"
+type = "choice"
+prompt = "How did the renewal in the lesson differ from the first lease?"
+choices = ["Only a Request and an Ack, sent directly to the server", "It started again with a broadcast Discover", "It used TCP", "The client released the address first"]
+answers = ["Only a Request and an Ack, sent directly to the server"]
+explanation = "Broadcast is used again only if renewing with that server fails."
+review = "Leases and renewal"
+
+[[question]]
+id = "bad-cksum"
+type = "choice"
+prompt = "tcpdump on the DHCP server shows 'bad udp cksum' on its own replies, and clients work. What is it?"
+choices = ["Normal when capturing on the sender, before the checksum is filled in", "A broken network card", "An attack", "A wrong lease time"]
+answers = ["Normal when capturing on the sender, before the checksum is filled in"]
+explanation = "Capture on the other side to confirm."
+review = "The exchange, watched (measured)"
