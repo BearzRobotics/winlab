@@ -3,7 +3,7 @@ id = "endpoints.update-and-policy"
 title = "Windows updates and policy settings"
 summary = "How Windows Update works, where policy values live, how to find the setting that is winning, and how to edit registry policy safely."
 content = "update-and-policy.md"
-estimated_minutes = 35
+estimated_minutes = 80
 level = 2
 objectives = [
   "Explain the update services and name the update types and deployment rings",
@@ -22,9 +22,42 @@ evaluation_criteria = [
 ]
 
 [[references]]
-title = "Windows Update for Business (Microsoft Learn)"
+title = "Windows Update client policies (Microsoft Learn)"
 url = "https://learn.microsoft.com/windows/deployment/update/waas-manage-updates-wufb"
+
+[[references]]
+title = "Quick guide to Windows as a service (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/deployment/update/waas-quick-start"
+
+[[references]]
+title = "Get-HotFix (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.management/get-hotfix"
+
+[[references]]
+title = "IUpdateHistoryEntry (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/win32/api/wuapi/nn-wuapi-iupdatehistoryentry"
+
+[[references]]
+title = "OperationResultCode (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/win32/api/wuapi/ne-wuapi-operationresultcode"
+
+[[references]]
+title = "Get-WindowsUpdateLog (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/windowsupdate/get-windowsupdatelog"
 
 [[references]]
 title = "gpresult (Microsoft Learn)"
 url = "https://learn.microsoft.com/windows-server/administration/windows-commands/gpresult"
+
+[[references]]
+title = "gpupdate (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/gpupdate"
+
+[[references]]
+title = "reg export (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/reg-export"
+
+[[references]]
+title = "reg import (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/reg-import"
+

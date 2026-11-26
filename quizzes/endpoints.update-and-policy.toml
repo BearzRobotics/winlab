@@ -80,7 +80,7 @@ type = "short"
 prompt = "Which command shows which Group Policy objects applied, as a summary? Type the command with its option."
 answers = ["gpresult /r"]
 explanation = "gpresult /h report.html writes the full report."
-review = "Finding what applies"
+review = "Finding who set it"
 
 [[question]]
 id = "policy-returns"
@@ -89,7 +89,7 @@ prompt = "You delete a policy value and it comes back after a restart. What does
 choices = ["A managed source re-applies it; remove it at the source, not on the machine", "The registry is corrupt", "Windows is out of date", "The value was never there"]
 answers = ["A managed source re-applies it; remove it at the source, not on the machine"]
 explanation = "Settings shows 'some settings are managed by your organization' on an enrolled device."
-review = "Finding what applies"
+review = "Finding who set it"
 
 [[question]]
 id = "export-first"
@@ -108,3 +108,59 @@ choices = ["Often not: removing the value returns the setting to its default, wh
 answers = ["Often not: removing the value returns the setting to its default, while 0 is an explicit setting"]
 explanation = "Removing a policy value returns a setting to its default."
 review = "Editing registry policy safely"
+
+# ---- Added when the lesson was deepened ----
+
+[[question]]
+id = "stopped-manual"
+type = "choice"
+prompt = "wuauserv shows Stopped with StartType Manual. What should you conclude?"
+choices = ["That alone is not a fault: it starts when needed", "Updates are broken", "The service has been deleted", "A virus stopped it"]
+answers = ["That alone is not a fault: it starts when needed"]
+explanation = "Disabled would be a fault."
+review = "Check the services"
+
+[[question]]
+id = "resultcode-4"
+type = "choice"
+prompt = "In Windows Update Agent history, what does ResultCode 4 mean?"
+choices = ["Failed", "Succeeded", "In progress", "Not started"]
+answers = ["Failed"]
+explanation = "2 is succeeded; read HResult for the failure code."
+review = "What has been installed"
+
+[[question]]
+id = "found-not-installed"
+type = "choice"
+prompt = "The log says 'Windows Update successfully found 1 updates.' What does that show?"
+choices = ["A search worked; it does not show that anything was installed", "One update was installed", "The machine is up to date", "An update failed"]
+answers = ["A search worked; it does not show that anything was installed"]
+explanation = "Follow search, find, download, install."
+review = "The update log"
+
+[[question]]
+id = "gpupdate-direct"
+type = "choice"
+prompt = "A value was written directly under SOFTWARE\\Policies. What did gpupdate /force do to it in the lesson?"
+choices = ["Left it in place", "Deleted it", "Set it to 0", "Moved it into a GPO"]
+answers = ["Left it in place"]
+explanation = "gpresult did not report it either."
+review = "What `gpresult` does not show"
+
+[[question]]
+id = "import-merges"
+type = "choice"
+prompt = "A value was added after a reg export. What happens to it when the export is imported?"
+choices = ["It stays", "It is deleted", "It is set to 0", "The import fails"]
+answers = ["It stays"]
+explanation = "Import merges the file into the registry."
+review = "Importing a backup does not undo everything"
+
+[[question]]
+id = "not-v"
+type = "choice"
+prompt = "Why is if (-not $v) a poor test for whether a policy value is configured?"
+choices = ["It is true both when the value is absent and when it is 0", "It is always false", "It deletes the value", "It only works in PowerShell 7"]
+answers = ["It is true both when the value is absent and when it is 0"]
+explanation = "Check GetValueNames() to see whether it exists."
+review = "Absent, 0 and 1 are three different states"
