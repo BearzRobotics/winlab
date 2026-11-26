@@ -93,3 +93,4 @@ By path, in the order the owner works through them.
 | `homelab.file-sharing-samba` | reviewed 2026-11-26: already explains each result; added 1 diagram (permission gates). Tests are from the earlier run |
 | `homelab.wireguard-and-exposure` | reviewed 2026-11-26: already explains each result; its text drawing is now SVG. Tests are from the earlier run |
 | `homelab.backups` | reviewed 2026-11-26: already explains each result; added 1 diagram (hard-link snapshots). Tests are from the earlier run |
+| `packaging.apt-repository` | reviewed 2026-11-26: already explains each result; added 1 diagram (trust chain). Tests are from the earlier run |

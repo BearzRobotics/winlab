@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 230" role="img" aria-label="The web server serves the symlink current. A new tree is built beside the old one, then one rename moves the symlink to it. The old tree is kept for rollback" font-family="Segoe UI, sans-serif">
+  <title>Publishing by swapping a symlink</title>
+  <style>
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.5 }
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    .wire { stroke: #57606a; stroke-width: 1.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .dim { fill: #57606a }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+
+  <rect class="box" x="10" y="80" width="140" height="56" rx="6"/>
+  <text class="bold" x="80" y="104" text-anchor="middle">web server</text>
+  <text x="80" y="126" text-anchor="middle" font-size="13">serves current</text>
+  <line class="wire" x1="150" y1="108" x2="236" y2="108" marker-end="url(#arrow)"/>
+  <rect class="zone-kernel" x="238" y="80" width="150" height="56" rx="6"/>
+  <text class="bold" x="313" y="104" text-anchor="middle">current</text>
+  <text x="313" y="126" text-anchor="middle" font-size="13">a symlink</text>
+
+  <rect class="box" x="520" y="24" width="190" height="56" rx="6"/>
+  <text class="bold" x="615" y="48" text-anchor="middle">r1</text>
+  <text x="615" y="70" text-anchor="middle" font-size="13">old tree: keep it</text>
+  <rect class="zone-user" x="520" y="136" width="190" height="56" rx="6"/>
+  <text class="bold" x="615" y="160" text-anchor="middle">r2</text>
+  <text x="615" y="182" text-anchor="middle" font-size="13">new, built completely</text>
+
+  <line class="wire" x1="388" y1="96" x2="518" y2="54" marker-end="url(#arrow)"/>
+  <text x="446" y="60" text-anchor="middle" font-size="13">before</text>
+  <line class="wire" x1="388" y1="120" x2="518" y2="162" marker-end="url(#arrow)"/>
+  <text x="440" y="164" text-anchor="middle" font-size="13">after mv -T</text>
+  <text class="dim" x="10" y="218" font-size="13">One rename: a request gets the old tree or the new one. Point it back to roll back.</text>
+</svg>

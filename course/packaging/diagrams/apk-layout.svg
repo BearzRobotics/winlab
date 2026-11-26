@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 250" role="img" aria-label="An apk repository: the signed index is in the client's architecture directory, but each package is fetched from the directory of its own architecture, so noarch packages live in a noarch directory" font-family="Segoe UI, sans-serif">
+  <title>Where apk looks</title>
+  <style>
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.5 }
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    .wire { stroke: #57606a; stroke-width: 1.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .dim { fill: #57606a }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+
+  <rect class="box" x="260" y="20" width="200" height="40" rx="6"/>
+  <text class="bold" x="360" y="46" text-anchor="middle">main/  (the base URL)</text>
+  <line class="wire" x1="310" y1="60" x2="190" y2="94" marker-end="url(#arrow)"/>
+  <line class="wire" x1="410" y1="60" x2="530" y2="94" marker-end="url(#arrow)"/>
+
+  <rect class="zone-user" x="40" y="96" width="300" height="76" rx="6"/>
+  <text class="bold" x="190" y="122" text-anchor="middle">x86_64/</text>
+  <text x="190" y="146" text-anchor="middle">Packages.adb (signed index)</text>
+  <text x="190" y="164" text-anchor="middle" font-size="13">the CLIENT's architecture</text>
+
+  <rect class="zone-kernel" x="380" y="96" width="300" height="76" rx="6"/>
+  <text class="bold" x="530" y="122" text-anchor="middle">noarch/</text>
+  <text x="530" y="146" text-anchor="middle">wl-hello-1.0-r0.apk</text>
+  <text x="530" y="164" text-anchor="middle" font-size="13">the PACKAGE's architecture</text>
+
+  <text class="dim" x="40" y="208" font-size="13">In the lesson's first try the package sat beside the index, and the client got HTTP 404</text>
+  <text class="dim" x="40" y="230" font-size="13">for main/noarch/.</text>
+</svg>

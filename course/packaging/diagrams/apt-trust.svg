@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 170" role="img" aria-label="apt trust chain: the trusted key signs the Release file, which holds the hash of Packages, which holds the hash of every deb package" font-family="Segoe UI, sans-serif">
+  <title>One key, then hashes all the way down</title>
+  <style>
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.5 }
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    .wire { stroke: #57606a; stroke-width: 1.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .dim { fill: #57606a }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+
+  <rect class="zone-kernel" x="10" y="40" width="130" height="60" rx="6"/>
+  <text class="bold" x="75" y="66" text-anchor="middle">trusted key</text>
+  <text x="75" y="88" text-anchor="middle" font-size="13">on the client</text>
+  <line class="wire" x1="140" y1="70" x2="216" y2="70" marker-end="url(#arrow)"/>
+  <text x="178" y="60" text-anchor="middle" font-size="13">signs</text>
+  <rect class="zone-user" x="218" y="40" width="130" height="60" rx="6"/>
+  <text class="bold" x="283" y="66" text-anchor="middle">Release</text>
+  <text x="283" y="88" text-anchor="middle" font-size="13">(InRelease)</text>
+  <line class="wire" x1="348" y1="70" x2="414" y2="70" marker-end="url(#arrow)"/>
+  <text x="381" y="60" text-anchor="middle" font-size="13">hash of</text>
+  <rect class="box" x="416" y="40" width="120" height="60" rx="6"/>
+  <text class="bold" x="476" y="76" text-anchor="middle">Packages</text>
+  <line class="wire" x1="536" y1="70" x2="602" y2="70" marker-end="url(#arrow)"/>
+  <text x="569" y="60" text-anchor="middle" font-size="13">hash of</text>
+  <rect class="box" x="604" y="40" width="106" height="60" rx="6"/>
+  <text class="bold" x="657" y="66" text-anchor="middle">each</text>
+  <text class="bold" x="657" y="88" text-anchor="middle">.deb</text>
+  <text class="dim" x="10" y="140" font-size="13">Change any byte of any file and a hash, or the signature, stops matching.</text>
+</svg>

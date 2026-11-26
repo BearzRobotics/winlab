@@ -27,21 +27,22 @@ title = "Debian wiki: DebianRepository/Format"
 url = "https://wiki.debian.org/DebianRepository/Format"
 
 [[references]]
-title = "Debian wiki: DebianRepository/Setup"
-url = "https://wiki.debian.org/DebianRepository/Setup"
-
-[[references]]
-title = "sources.list(5) (Signed-By)"
-url = "https://manpages.debian.org/stable/apt/sources.list.5.en.html"
-
-[[references]]
-title = "apt-ftparchive(1)"
-url = "https://manpages.debian.org/stable/apt-utils/apt-ftparchive.1.en.html"
+title = "dpkg-deb(1)"
+url = "https://manpages.debian.org/stable/dpkg/dpkg-deb.1.en.html"
 
 [[references]]
 title = "dpkg-scanpackages(1)"
 url = "https://manpages.debian.org/stable/dpkg-dev/dpkg-scanpackages.1.en.html"
 
 [[references]]
-title = "dpkg-deb(1)"
-url = "https://manpages.debian.org/stable/dpkg/dpkg-deb.1.en.html"
+title = "apt-ftparchive(1)"
+url = "https://manpages.debian.org/stable/apt-utils/apt-ftparchive.1.en.html"
+
+[[references]]
+title = "sources.list(5) (Signed-By)"
+url = "https://manpages.debian.org/stable/apt/sources.list.5.en.html"
+
+[[references]]
+title = "Debian wiki: DebianRepository/Setup"
+url = "https://wiki.debian.org/DebianRepository/Setup"
+

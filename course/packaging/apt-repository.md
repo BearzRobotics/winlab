@@ -11,6 +11,12 @@ Two parts, and clients read them in this order:
 
 The [Debian repository format](https://wiki.debian.org/DebianRepository/Format) wiki page describes all of this (I confirmed it loads and skimmed its structure; I did not read it end to end). The trust chain is: the client trusts **one key**; that key signs `Release`; `Release` holds the hash of `Packages`; `Packages` holds the hash of every `.deb`. Change any byte anywhere and a hash stops matching.
 
+![Diagram: the trusted key signs Release, which holds the hash of Packages, which holds the hash of every deb](diagrams/apt-trust.svg)
+
+```text
+ trusted key --signs--> Release --hash of--> Packages --hash of--> each .deb
+```
+
 ## Make a signing key
 
 Use a key that exists **only for this repository**, in its own GnuPG home so it never mixes with your personal keys:

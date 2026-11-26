@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 230" role="img" aria-label="dnf has two separate checks: repo_gpgcheck verifies the signature on repomd.xml, the index; gpgcheck verifies the signature inside each RPM package. Both are off unless asked for" font-family="Segoe UI, sans-serif">
+  <title>Two signatures, two settings</title>
+  <style>
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.5 }
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    .wire { stroke: #57606a; stroke-width: 1.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .dim { fill: #57606a }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+
+  <rect class="zone-kernel" x="10" y="30" width="200" height="60" rx="6"/>
+  <text class="bold" x="110" y="56" text-anchor="middle">repo_gpgcheck=1</text>
+  <text x="110" y="78" text-anchor="middle" font-size="13">checks the index</text>
+  <line class="wire" x1="210" y1="60" x2="268" y2="60" marker-end="url(#arrow)"/>
+  <rect class="zone-user" x="270" y="30" width="200" height="60" rx="6"/>
+  <text class="bold" x="370" y="56" text-anchor="middle">repomd.xml</text>
+  <text x="370" y="78" text-anchor="middle" font-size="13">with repomd.xml.asc</text>
+  <line class="wire" x1="470" y1="60" x2="528" y2="60" marker-end="url(#arrow)"/>
+  <rect class="box" x="530" y="30" width="180" height="60" rx="6"/>
+  <text class="bold" x="620" y="56" text-anchor="middle">other metadata</text>
+  <text x="620" y="78" text-anchor="middle" font-size="13">listed by checksum</text>
+
+  <rect class="zone-kernel" x="10" y="118" width="200" height="60" rx="6"/>
+  <text class="bold" x="110" y="144" text-anchor="middle">gpgcheck=1</text>
+  <text x="110" y="166" text-anchor="middle" font-size="13">checks each package</text>
+  <line class="wire" x1="210" y1="148" x2="268" y2="148" marker-end="url(#arrow)"/>
+  <rect class="zone-user" x="270" y="118" width="200" height="60" rx="6"/>
+  <text class="bold" x="370" y="144" text-anchor="middle">each .rpm</text>
+  <text x="370" y="166" text-anchor="middle" font-size="13">signed with rpmsign</text>
+
+  <text class="dim" x="10" y="214" font-size="13">The documentation says both default to off. Their keys are stored separately.</text>
+</svg>
