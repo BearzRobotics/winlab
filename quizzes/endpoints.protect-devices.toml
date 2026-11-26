@@ -51,11 +51,11 @@ review = "Microsoft Defender Antivirus"
 [[question]]
 id = "passive-mode"
 type = "choice"
-prompt = "What does it mean when Defender reports passive mode?"
-choices = ["A third-party antivirus may have switched Defender to passive mode; that is expected", "Defender is broken", "The firewall is off", "BitLocker is on"]
-answers = ["A third-party antivirus may have switched Defender to passive mode; that is expected"]
-explanation = "Real-time protection should still be on from some product, and signatures recent."
-review = "Microsoft Defender Antivirus"
+prompt = "A non-Microsoft antivirus is installed on a Windows Server that is not onboarded to Defender for Endpoint. What happens to Defender Antivirus?"
+choices = ["It is not switched off automatically; that has to be done manually", "It is deleted automatically", "It always enters passive mode by itself", "It turns the firewall off"]
+answers = ["It is not switched off automatically; that has to be done manually"]
+explanation = "Client Windows disables Defender automatically; Server does not."
+review = "Another antivirus product"
 
 [[question]]
 id = "bitlocker-purpose"
@@ -109,3 +109,68 @@ choices = ["The checks are the same facts you read with the commands in the less
 answers = ["The checks are the same facts you read with the commands in the lesson"]
 explanation = "Encryption on, firewall on, OS version recent: all readable on the machine."
 review = "Compliance"
+
+# ---- Added when the lesson was deepened ----
+
+[[question]]
+id = "connection-profile"
+type = "choice"
+prompt = "Which command shows which firewall profile each network connection is using?"
+choices = ["Get-NetConnectionProfile", "Get-NetFirewallRule", "Get-MpPreference", "net accounts"]
+answers = ["Get-NetConnectionProfile"]
+explanation = "A rule for a different profile does nothing on that connection."
+review = "Which profile is in use?"
+
+[[question]]
+id = "activestore"
+type = "choice"
+prompt = "Get-NetFirewallProfile shows DefaultInboundAction as NotConfigured. How do you see what is in force?"
+choices = ["Add -PolicyStore ActiveStore", "Assume it is Allow", "Reinstall the firewall", "Use Get-MpComputerStatus"]
+answers = ["Add -PolicyStore ActiveStore"]
+explanation = "In the lab the active value was Block."
+review = "Is it on, and what does it do by default?"
+
+[[question]]
+id = "block-wins"
+type = "choice"
+prompt = "An allow rule and a block rule both match an inbound connection. What happens?"
+choices = ["It is blocked", "It is allowed", "The newest rule wins", "Windows asks the user"]
+answers = ["It is blocked"]
+explanation = "Microsoft documents that explicit block rules take precedence over conflicting allow rules."
+review = "How it decides"
+
+[[question]]
+id = "duplicate-rule"
+type = "choice"
+prompt = "What happens if you run New-NetFirewallRule twice with the same DisplayName?"
+choices = ["You get two rules", "The first is replaced", "It fails with an error", "Nothing happens"]
+answers = ["You get two rules"]
+explanation = "Check for the rule before creating it."
+review = "Allow one port, not everything"
+
+[[question]]
+id = "signature-age"
+type = "choice"
+prompt = "Real-time protection is on and AntivirusSignatureAge is 2312. What is the right conclusion?"
+choices = ["The signatures are years old and must be updated", "The machine is fully protected", "Defender is disabled", "2312 is a version number"]
+answers = ["The signatures are years old and must be updated"]
+explanation = "The age is in days."
+review = "Microsoft Defender Antivirus"
+
+[[question]]
+id = "exclusion"
+type = "choice"
+prompt = "During an investigation you find a Defender exclusion for a user's Downloads folder. How should you treat it?"
+choices = ["As a finding: files there are not checked, so find out who added it and why", "As normal", "As proof the folder is safe", "As a firewall problem"]
+answers = ["As a finding: files there are not checked, so find out who added it and why"]
+explanation = "Event 5007 records configuration changes."
+review = "Exclusions are a finding until explained"
+
+[[question]]
+id = "protection-status"
+type = "choice"
+prompt = "Which line of manage-bde -status tells you whether the volume is actually protected?"
+choices = ["Protection Status", "Size", "BitLocker Version", "Identification Field"]
+answers = ["Protection Status"]
+explanation = "A disk can be fully encrypted while protection is off."
+review = "Checking it"

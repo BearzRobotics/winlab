@@ -63,3 +63,4 @@ By path, in the order the owner works through them.
 | `foundations.ps-modules-and-remoting` | deepened 2026-11-26: fixed a broken heading, reading Get-Job and module lists, 1 diagram (`jobs3.ps1`); the VM remoting results are from 2026-11-21 |
 | `foundations.ps-system-admin-scripting` | deepened 2026-11-26: reading log properties and task result codes, safe-change diagram; VM results are from the earlier run |
 | `foundations.ps-advanced` | deepened 2026-11-26: how to measure and read timings, logging diagram (`adv3.ps1`); VM logging results are from the earlier run |
+| `endpoints.protect-devices` | rewritten 2026-11-26 (Server 2022 VM; 1 diagram; `protect1.ps1`, `protect2.ps1`); **fixed a wrong passive-mode claim**. Not tested: real traffic filtering, BitLocker, third-party antivirus, a management service, Windows 10 and 11 |

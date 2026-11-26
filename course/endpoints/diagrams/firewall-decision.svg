@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 330" role="img" aria-label="How an inbound connection is decided: if the profile is off it is allowed; otherwise a matching block rule blocks it; otherwise a matching allow rule allows it; otherwise the default inbound action applies, normally block" font-family="Segoe UI, sans-serif">
+  <title>How Windows Defender Firewall decides about an inbound connection</title>
+  <style>
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.5 }
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    .wire { stroke: #57606a; stroke-width: 1.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .dim { fill: #57606a }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+
+  <text class="bold" x="200" y="22" text-anchor="middle">an inbound connection arrives</text>
+  <line class="wire" x1="200" y1="30" x2="200" y2="46" marker-end="url(#arrow)"/>
+
+  <rect class="box" x="40" y="48" width="320" height="42" rx="6"/>
+  <text x="200" y="74" text-anchor="middle">is this network's profile ON?</text>
+  <line class="wire" x1="360" y1="69" x2="468" y2="69" marker-end="url(#arrow)"/>
+  <text x="414" y="60" text-anchor="middle" font-size="13">no</text>
+  <rect class="zone-kernel" x="470" y="48" width="240" height="42" rx="6"/>
+  <text class="bold" x="590" y="74" text-anchor="middle">allowed, rules ignored</text>
+  <line class="wire" x1="200" y1="90" x2="200" y2="116" marker-end="url(#arrow)"/>
+  <text x="212" y="108" font-size="13">yes</text>
+
+  <rect class="box" x="40" y="118" width="320" height="42" rx="6"/>
+  <text x="200" y="144" text-anchor="middle">does a BLOCK rule match?</text>
+  <line class="wire" x1="360" y1="139" x2="468" y2="139" marker-end="url(#arrow)"/>
+  <text x="414" y="130" text-anchor="middle" font-size="13">yes</text>
+  <rect class="zone-kernel" x="470" y="118" width="240" height="42" rx="6"/>
+  <text class="bold" x="590" y="144" text-anchor="middle">blocked</text>
+  <line class="wire" x1="200" y1="160" x2="200" y2="186" marker-end="url(#arrow)"/>
+  <text x="212" y="178" font-size="13">no</text>
+
+  <rect class="box" x="40" y="188" width="320" height="42" rx="6"/>
+  <text x="200" y="214" text-anchor="middle">does an ALLOW rule match?</text>
+  <line class="wire" x1="360" y1="209" x2="468" y2="209" marker-end="url(#arrow)"/>
+  <text x="414" y="200" text-anchor="middle" font-size="13">yes</text>
+  <rect class="zone-user" x="470" y="188" width="240" height="42" rx="6"/>
+  <text class="bold" x="590" y="214" text-anchor="middle">allowed</text>
+  <line class="wire" x1="200" y1="230" x2="200" y2="256" marker-end="url(#arrow)"/>
+  <text x="212" y="248" font-size="13">no</text>
+
+  <rect class="zone-kernel" x="40" y="258" width="320" height="42" rx="6"/>
+  <text class="bold" x="200" y="284" text-anchor="middle">default inbound action: Block</text>
+  <text class="dim" x="40" y="322" font-size="13">Simplified. A rule must also match the profile, port, address and program.</text>
+</svg>

@@ -3,7 +3,7 @@ id = "endpoints.protect-devices"
 title = "Protecting Windows devices: firewall, Defender, encryption"
 summary = "Check and restore the firewall and malware protection, understand BitLocker and device compliance, with built-in tools."
 content = "protect-devices.md"
-estimated_minutes = 35
+estimated_minutes = 70
 level = 3
 objectives = [
   "Read and restore Windows Defender Firewall profile state",
@@ -21,9 +21,54 @@ evaluation_criteria = [
 ]
 
 [[references]]
-title = "Windows Defender Firewall (Microsoft Learn)"
-url = "https://learn.microsoft.com/windows/security/operating-system-security/network-security/windows-firewall/"
+title = "Get-NetFirewallProfile (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/netsecurity/get-netfirewallprofile"
+
+[[references]]
+title = "Windows Firewall rules (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/security/operating-system-security/network-security/windows-firewall/rules"
+
+[[references]]
+title = "New-NetFirewallRule (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/netsecurity/new-netfirewallrule"
+
+[[references]]
+title = "Set-NetFirewallProfile (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/netsecurity/set-netfirewallprofile"
+
+[[references]]
+title = "Get-MpComputerStatus (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/defender/get-mpcomputerstatus"
+
+[[references]]
+title = "Defender Antivirus event IDs (Microsoft Learn)"
+url = "https://learn.microsoft.com/defender-endpoint/troubleshoot-microsoft-defender-antivirus"
+
+[[references]]
+title = "Defender Antivirus compatibility with other products (Microsoft Learn)"
+url = "https://learn.microsoft.com/defender-endpoint/microsoft-defender-antivirus-compatibility"
+
+[[references]]
+title = "Defender Antivirus exclusions (Microsoft Learn)"
+url = "https://learn.microsoft.com/defender-endpoint/configure-exclusions-microsoft-defender-antivirus"
 
 [[references]]
 title = "BitLocker overview (Microsoft Learn)"
 url = "https://learn.microsoft.com/windows/security/operating-system-security/data-protection/bitlocker/"
+
+[[references]]
+title = "BitLocker operations guide (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/security/operating-system-security/data-protection/bitlocker/operations-guide"
+
+[[references]]
+title = "Interactive logon: Machine inactivity limit (Microsoft Learn)"
+url = "https://learn.microsoft.com/previous-versions/windows/it-pro/windows-10/security/threat-protection/security-policy-settings/interactive-logon-machine-inactivity-limit"
+
+[[references]]
+title = "Device compliance policies in Intune (Microsoft Learn)"
+url = "https://learn.microsoft.com/intune/intune-service/protect/device-compliance-get-started"
+
+[[references]]
+title = "Windows Defender Firewall (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/security/operating-system-security/network-security/windows-firewall/"
+
