@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 240" role="img" aria-label="Windows permission entries are checked in order: explicit deny, explicit allow, then inherited entries from the parent, deny before allow, then from the grandparent. If nothing grants access, it is denied" font-family="Segoe UI, sans-serif">
+  <title>The usual order of Windows permission entries</title>
+  <style>
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.5 }
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    .wire { stroke: #57606a; stroke-width: 1.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .dim { fill: #57606a }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+
+  <text class="bold" x="170" y="24" text-anchor="middle">set on the item (explicit)</text>
+  <text class="bold" x="540" y="24" text-anchor="middle">inherited from above</text>
+
+  <rect class="zone-kernel" x="20" y="40" width="140" height="56" rx="6"/>
+  <text class="bold" x="90" y="74" text-anchor="middle">1. deny</text>
+  <line class="wire" x1="160" y1="68" x2="188" y2="68" marker-end="url(#arrow)"/>
+  <rect class="zone-user" x="190" y="40" width="140" height="56" rx="6"/>
+  <text class="bold" x="260" y="74" text-anchor="middle">2. allow</text>
+  <line class="wire" x1="330" y1="68" x2="388" y2="68" marker-end="url(#arrow)"/>
+  <rect class="zone-kernel" x="390" y="40" width="140" height="56" rx="6"/>
+  <text class="bold" x="460" y="74" text-anchor="middle">3. deny</text>
+  <line class="wire" x1="530" y1="68" x2="558" y2="68" marker-end="url(#arrow)"/>
+  <rect class="zone-user" x="560" y="40" width="140" height="56" rx="6"/>
+  <text class="bold" x="630" y="74" text-anchor="middle">4. allow</text>
+  <text class="dim" x="540" y="118" text-anchor="middle" font-size="13">parent first, then grandparent, and so on</text>
+
+  <rect class="box" x="20" y="140" width="680" height="44" rx="6"/>
+  <text x="360" y="167" text-anchor="middle">So an explicit allow can win over an inherited deny.</text>
+  <text class="dim" x="20" y="212" font-size="13">Simplified: Windows checks entries until the requested rights are all granted, or one is denied.</text>
+  <text class="dim" x="20" y="232" font-size="13">Rights that no entry grants are refused.</text>
+</svg>

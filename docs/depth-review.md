@@ -71,3 +71,4 @@ By path, in the order the owner works through them.
 | `operations.operational-procedures` | rewritten 2026-11-26 (worked examples, 2 diagrams; restore test `restore1.ps1` in 5.1 and 7.6). Examples are invented |
 | `hardware.hardware-concepts` | rewritten 2026-11-26 (Server 2022 and AlmaLinux VMs; 1 diagram; `hw1.ps1`, `hw1.sh`). Not tested: physical hardware, RAID, SMART, POST codes |
 | `hardware.mobile-devices` | rewritten 2026-11-26 (1 diagram; sources cited). **Nothing tested: no mobile device available**; needs a reviewer with real devices |
+| `security.security-fundamentals` | rewritten 2026-11-26 (Server 2022 and AlmaLinux VMs; 1 diagram; `secfund1.ps1`, `secfund1.sh`). **Fixed:** 'deny wins' was too broad, and passwd -l does not stop SSH keys. Not tested: domain accounts, share permissions, POSIX ACLs, Ubuntu |

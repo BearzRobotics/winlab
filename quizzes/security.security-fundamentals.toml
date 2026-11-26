@@ -33,11 +33,11 @@ review = "Least privilege"
 [[question]]
 id = "deny-wins"
 type = "choice"
-prompt = "A folder lets Alice read, but she is also in a group with a deny entry. Can she read it?"
-choices = ["No: deny wins", "Yes: allow wins", "Only on Linux", "Only as administrator"]
-answers = ["No: deny wins"]
-explanation = "The effective result combines allow and deny entries, and deny wins."
-review = "Permissions"
+prompt = "A file has an inherited deny for a group Alice is in, and an explicit allow for Alice. Can she read it?"
+choices = ["Yes: the explicit allow comes before the inherited deny", "No: deny always wins", "Only if she is an administrator", "Only after a restart"]
+answers = ["Yes: the explicit allow comes before the inherited deny"]
+explanation = "On the same level deny wins; an explicit entry comes before an inherited one."
+review = "\"Deny wins\" is only half true"
 
 [[question]]
 id = "icacls"
@@ -144,4 +144,60 @@ prompt = "Should you turn SELinux off to fix a 403?"
 choices = ["No: correct the label (semanage fcontext, restorecon)", "Yes, always", "Only on Fridays", "Only for root"]
 answers = ["No: correct the label (semanage fcontext, restorecon)"]
 explanation = "SELinux denies anything the policy does not allow, even for root."
+review = "Mandatory access control on Linux"
+
+# ---- Added when the lesson was deepened ----
+
+[[question]]
+id = "passwd-lock-key"
+type = "choice"
+prompt = "After passwd -l, can the user still sign in with an SSH key?"
+choices = ["Yes: only the password is locked", "No: the account is fully disabled", "Only from the console", "Only if they are root"]
+answers = ["Yes: only the password is locked"]
+explanation = "Expire the account with usermod --expiredate 1, and deal with open sessions and jobs."
+review = "Locking a Linux password does not lock the account"
+
+[[question]]
+id = "recreate-sid"
+type = "choice"
+prompt = "A Windows account is deleted and a new one is created with the same name. What happens to the old file permissions?"
+choices = ["They still refer to the old SID, so the new account does not get them", "They move to the new account", "They are deleted from every file", "They apply to everyone"]
+answers = ["They still refer to the old SID, so the new account does not get them"]
+explanation = "Disable instead of delete when you may need it again."
+review = "Deleting is not reversible"
+
+[[question]]
+id = "owner-set"
+type = "choice"
+prompt = "A file has mode 044 and you own it. Can you read it with cat?"
+choices = ["No: only the owner set applies to the owner, and it is empty", "Yes: others can read it", "Yes: owners can always read", "Only through the group"]
+answers = ["No: only the owner set applies to the owner, and it is empty"]
+explanation = "Exactly one of the three sets applies."
+review = "Linux"
+
+[[question]]
+id = "dir-delete"
+type = "choice"
+prompt = "Which permission decides whether you can delete a file on Linux?"
+choices = ["Write (with execute) on the directory that holds it", "Write on the file", "Read on the file", "Execute on the file"]
+answers = ["Write (with execute) on the directory that holds it"]
+explanation = "The sticky bit restricts it further, as on /tmp."
+review = "Linux"
+
+[[question]]
+id = "high-level"
+type = "choice"
+prompt = "whoami /groups shows 'Mandatory Label\\High Mandatory Level'. What does it tell you?"
+choices = ["The process is elevated", "The user's password is strong", "The account is disabled", "The machine is in a domain"]
+answers = ["The process is elevated"]
+explanation = "An administrator's ordinary window runs at Medium."
+review = "Reading `whoami`"
+
+[[question]]
+id = "moved-label"
+type = "choice"
+prompt = "A file is moved from /tmp into a web folder and the server refuses it although its permissions are fine. What is likely?"
+choices = ["It kept its old SELinux label", "mv changed its owner to root", "The web server needs chmod 777", "The file is too small"]
+answers = ["It kept its old SELinux label"]
+explanation = "Check with ls -Z and matchpathcon; fix with restorecon."
 review = "Mandatory access control on Linux"
