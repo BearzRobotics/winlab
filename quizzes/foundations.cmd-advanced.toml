@@ -368,3 +368,41 @@ choices = ["Small glue, installers, and places where PowerShell is unavailable",
 answers = ["Small glue, installers, and places where PowerShell is unavailable"]
 explanation = "For example recovery environments."
 review = "When to leave cmd"
+
+# ---- Added when the lesson was deepened ----
+
+[[question]]
+id = "pipe-injection"
+type = "choice"
+prompt = "A script validates input with echo(!x!| findstr. What can a user do with input such as 5&somecommand?"
+choices = ["Make the command run, because each side of the pipe is a new cmd that re-reads the text", "Nothing: !x! is always safe", "Only crash the script", "Change the PATH permanently"]
+answers = ["Make the command run, because each side of the pipe is a new cmd that re-reads the text"]
+explanation = "In the lesson's test the input was even accepted as digits."
+review = "A \"digits only\" check that ran the user's commands"
+
+[[question]]
+id = "digits-check"
+type = "choice"
+prompt = "How does the lesson's safe check decide that input is a number?"
+choices = ["It deletes every digit from a copy and rejects the input if anything is left", "It pipes the input to findstr", "It uses set /a and reads ERRORLEVEL", "It tests the first character only"]
+answers = ["It deletes every digit from a copy and rejects the input if anything is left"]
+explanation = "The input stays in delayed-expansion variables and never goes through a pipe."
+review = "Menus and input validation"
+
+[[question]]
+id = "array-order"
+type = "choice"
+prompt = "An emulated array has eleven elements. In what order does set arr[ list them?"
+choices = ["Text order, so arr[10] and arr[11] come before arr[1]", "Number order", "The order they were created", "Random order"]
+answers = ["Text order, so arr[10] and arr[11] come before arr[1]"]
+explanation = "Use for /l from 1 to the count when order matters."
+review = "Emulated arrays"
+
+[[question]]
+id = "tasklist-info"
+type = "choice"
+prompt = "for /f reads tasklist /fo csv /nh for a process that is not running. What happens?"
+choices = ["The body runs once, with the INFO message as the result", "The body does not run", "An error stops the script", "ERRORLEVEL becomes 9009"]
+answers = ["The body runs once, with the INFO message as the result"]
+explanation = "Check the first field before acting, especially before taskkill."
+review = "Waiting, parallel jobs and processes"

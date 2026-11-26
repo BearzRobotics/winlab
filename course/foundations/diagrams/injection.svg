@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 250" role="img" aria-label="Why percent expansion obeys an ampersand inside a value and delayed expansion does not" font-family="Segoe UI, sans-serif">
+  <title>Percent and exclamation expansion with special characters</title>
+  <style>
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.5 }
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    .wire { stroke: #57606a; stroke-width: 1.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .dim { fill: #57606a }
+    .mono { font-family: Consolas, monospace }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+
+  <text class="dim" x="10" y="20" font-size="13">the variable name holds:  amp &amp; sand</text>
+
+  <text class="bold mono" x="10" y="52" font-size="15">echo %name%</text>
+  <rect class="box" x="10" y="64" width="310" height="44" rx="5"/>
+  <text x="165" y="91" text-anchor="middle">1. insert the text:  echo amp &amp; sand</text>
+  <line class="wire" x1="320" y1="86" x2="378" y2="86" marker-end="url(#arrow)"/>
+  <rect class="zone-kernel" x="380" y="64" width="330" height="44" rx="5"/>
+  <text class="bold" x="545" y="91" text-anchor="middle">2. sees &amp; : TWO commands, sand runs</text>
+
+  <text class="bold mono" x="10" y="156" font-size="15">echo !name!</text>
+  <rect class="box" x="10" y="168" width="310" height="44" rx="5"/>
+  <text x="165" y="195" text-anchor="middle">1. look for &amp; : there is none yet</text>
+  <line class="wire" x1="320" y1="190" x2="378" y2="190" marker-end="url(#arrow)"/>
+  <rect class="zone-user" x="380" y="168" width="330" height="44" rx="5"/>
+  <text class="bold" x="545" y="195" text-anchor="middle">2. insert the text: prints amp &amp; sand</text>
+  <text class="dim" x="10" y="240" font-size="13">Text that you did not write belongs in !name!.</text>
+</svg>

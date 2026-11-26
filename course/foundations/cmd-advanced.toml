@@ -3,7 +3,7 @@ id = "foundations.cmd-advanced"
 title = "Advanced CMD: parsing, arrays, strings, system tools and knowing when to stop"
 summary = "How cmd parses a line in phases, double expansion with call, the ! character and delayed expansion, emulated arrays and string functions, recursion, menus, parallel jobs, reg and process tools, mixing in PowerShell, performance, and when to move to PowerShell."
 content = "cmd-advanced.md"
-estimated_minutes = 90
+estimated_minutes = 110
 level = 4
 objectives = [
   "Predict surprises by the order in which cmd expands percent variables, handles special characters and expands !var!",
@@ -28,8 +28,16 @@ evaluation_criteria = [
 ]
 
 [[references]]
-title = "cmd (Microsoft Learn)"
-url = "https://learn.microsoft.com/windows-server/administration/windows-commands/cmd"
+title = "Environment variables (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/win32/procthread/environment-variables"
+
+[[references]]
+title = "tasklist (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/tasklist"
+
+[[references]]
+title = "taskkill (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/taskkill"
 
 [[references]]
 title = "reg (Microsoft Learn)"
@@ -44,14 +52,6 @@ title = "reg add (Microsoft Learn)"
 url = "https://learn.microsoft.com/windows-server/administration/windows-commands/reg-add"
 
 [[references]]
-title = "tasklist (Microsoft Learn)"
-url = "https://learn.microsoft.com/windows-server/administration/windows-commands/tasklist"
-
-[[references]]
-title = "taskkill (Microsoft Learn)"
-url = "https://learn.microsoft.com/windows-server/administration/windows-commands/taskkill"
-
-[[references]]
 title = "shutdown (Microsoft Learn)"
 url = "https://learn.microsoft.com/windows-server/administration/windows-commands/shutdown"
 
@@ -60,9 +60,10 @@ title = "systeminfo (Microsoft Learn)"
 url = "https://learn.microsoft.com/windows-server/administration/windows-commands/systeminfo"
 
 [[references]]
+title = "cmd (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/cmd"
+
+[[references]]
 title = "choice (Microsoft Learn)"
 url = "https://learn.microsoft.com/windows-server/administration/windows-commands/choice"
 
-[[references]]
-title = "Environment variables (Microsoft Learn)"
-url = "https://learn.microsoft.com/windows/win32/procthread/environment-variables"

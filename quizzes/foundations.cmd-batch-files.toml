@@ -400,3 +400,50 @@ choices = ["A credential store or Task Scheduler's stored account, never the scr
 answers = ["A credential store or Task Scheduler's stored account, never the script text"]
 explanation = "Anything in the script is readable by whoever can read the script."
 review = "Security"
+
+# ---- Added when the lesson was deepened ----
+
+[[question]]
+id = "echo-amp"
+type = "choice"
+prompt = "A script runs: echo %folder%  and folder holds 'amp & sand'. What happens?"
+choices = ["The & is obeyed, so 'sand' runs as a command", "It prints amp & sand", "cmd escapes it automatically", "Nothing is printed"]
+answers = ["The & is obeyed, so 'sand' runs as a command"]
+explanation = "Percent expansion happens before cmd looks for special characters."
+review = "Why it is written this way: a bug I shipped and found"
+
+[[question]]
+id = "echo-safe"
+type = "choice"
+prompt = "How can a script safely print text that came from outside?"
+choices = ["Put it in a variable and print !name! with delayed expansion on", "Print %name% twice", "Add pause first", "Use echo %~1"]
+answers = ["Put it in a variable and print !name! with delayed expansion on"]
+explanation = "Delayed expansion inserts the text after special characters have been handled."
+review = "Why it is written this way: a bug I shipped and found"
+
+[[question]]
+id = "log-redirect"
+type = "choice"
+prompt = "A logging subroutine does >> \"%LOG%\" echo %~1 and is called with \"size > 5\". What did the test show?"
+choices = ["A file named 5 was created", "The text was logged exactly", "The script reported a syntax error", "The log was deleted"]
+answers = ["A file named 5 was created"]
+explanation = "The > inside the text was treated as a redirection."
+review = "Why it is written this way: a bug I shipped and found"
+
+[[question]]
+id = "call-help"
+type = "choice"
+prompt = "What did 'call backup.cmd /?' print?"
+choices = ["call's own help, without reaching the script", "The script's usage line", "Nothing", "A syntax error"]
+answers = ["call's own help, without reaching the script"]
+explanation = "Run the script directly or with cmd /c to pass /? to it."
+review = "Why it is written this way: a bug I shipped and found"
+
+[[question]]
+id = "call-caret"
+type = "choice"
+prompt = "Started with call, an argument containing ^ arrived changed. How?"
+choices = ["The ^ was doubled", "The ^ was removed", "It became a space", "It became &"]
+answers = ["The ^ was doubled"]
+explanation = "call reads its line a second time."
+review = "Why it is written this way: a bug I shipped and found"

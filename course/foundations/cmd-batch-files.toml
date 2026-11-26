@@ -3,7 +3,7 @@ id = "foundations.cmd-batch-files"
 title = "Writing dependable batch files"
 summary = "A script template, argument parsing and validation, logging with locale-independent timestamps, configuration files, elevation checks, starting and calling programs, running unattended, debugging, security, and a complete worked backup script."
 content = "cmd-batch-files.md"
-estimated_minutes = 90
+estimated_minutes = 110
 level = 3
 objectives = [
   "Start every script from a template with setlocal, pushd and an explicit exit code",
@@ -27,16 +27,16 @@ evaluation_criteria = [
 ]
 
 [[references]]
-title = "cmd (Microsoft Learn)"
-url = "https://learn.microsoft.com/windows-server/administration/windows-commands/cmd"
-
-[[references]]
 title = "pushd (Microsoft Learn)"
 url = "https://learn.microsoft.com/windows-server/administration/windows-commands/pushd"
 
 [[references]]
 title = "popd (Microsoft Learn)"
 url = "https://learn.microsoft.com/windows-server/administration/windows-commands/popd"
+
+[[references]]
+title = "cmd (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/cmd"
 
 [[references]]
 title = "start (Microsoft Learn)"
@@ -61,3 +61,4 @@ url = "https://learn.microsoft.com/windows-server/administration/windows-command
 [[references]]
 title = "Microsoft Edit (GitHub)"
 url = "https://github.com/microsoft/edit"
+

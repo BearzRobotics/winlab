@@ -1,10 +1,18 @@
-*Draft for owner review.* This is the last cmd lesson, and it is the one that makes you dangerous. It covers how cmd *really* parses a line (the part Microsoft does not document), double expansion, emulated arrays and string functions, recursion, menus, parallel jobs, driving the registry, services and processes from the command line, mixing in PowerShell, and, importantly, how to decide when to stop using cmd. Every example was run on Windows 11 and the output shown is real.
+*Draft for owner review.* This is the last cmd lesson, and it is the one that makes you dangerous. It covers how cmd *really* parses a line (the part Microsoft does not document), double expansion, emulated arrays and string functions, recursion, menus, parallel jobs, driving the registry, services and processes from the command line, mixing in PowerShell, and, importantly, how to decide when to stop using cmd. The examples were run on Windows 11 and the output shown is real; the newer results (input validation, array listing, `tasklist`, recursion depth) come from `tests/verification/cmd/adv3.cmd`, `adv4.cmd` and `adv5.ps1`. Windows 10 was not tested.
 
 You should be comfortable with the four earlier cmd lessons (basics, variables, control flow, batch files) first.
 
 ## How cmd parses a line
 
 Microsoft documents the commands but not the parser. What follows is the **observed** order of work, enough to predict nearly every surprise. cmd processes a line (or a whole `( ... )` block) in phases:
+
+![Diagram: cmd goes through percent expansion, special characters, for variables, delayed expansion, then redirections and running; text inserted in the first phase is examined for special characters afterwards](diagrams/cmd-phases.svg)
+
+```text
+ 1. percent %var% %1  -->  2. special characters & | < > ( ) ^  -->  3. for variables %%i
+                                                                          |
+              5. redirections, pipes, run  <--  4. delayed !var!  <-------+
+```
 
 1. **Percent expansion.** `%var%` and `%1` are replaced with their values (`%%` becomes `%`). This happens for the *whole block* before anything in it runs.
 2. **Special characters.** The line is split at unquoted `& | < > ( )` and `^` escapes are processed.
@@ -80,7 +88,7 @@ arr[2]=banana
 arr[3]=cherry
 ```
 
-(This runs with delayed expansion on.) `set arr` lists **every variable whose name starts with `arr`**, which gives you a free way to dump the whole "array", and `for /f "tokens=1,* delims==" %%a in ('set arr[') do ...` walks them. Variable names can also carry a "key": `set "user.alice=admin"` and `set "user.bob=staff"` make an associative array you can list with `set user.`.
+(This runs with delayed expansion on.) `set arr` lists **every variable whose name starts with `arr`**, which gives you a free way to dump the whole "array", and `for /f "tokens=1,* delims==" %%a in ('set arr[') do ...` walks them. Walking three elements that way printed `arr[1] holds apple`, `arr[2] holds banana` and `arr[3] holds kiwi fruit`. **The listing is in text order, not number order**: with eleven elements, `set arr[` listed `arr[10]` and `arr[11]` **before** `arr[1]`. Where order matters, count with `for /l` from 1 to the count instead. Variable names can also carry a "key": `set "user.alice=admin"` and `set "user.bob=staff"` make an associative array you can list with `set user.`.
 
 Limits: all values are text; the [documentation for environment variables](https://learn.microsoft.com/windows/win32/procthread/environment-variables) gives 32,767 characters as the maximum for a single user-defined variable and for the whole environment block of a process; and any one `set` line you type or build is also bound by the 8191-character cmd line limit. It is fine for dozens of items and wrong for thousands.
 
@@ -148,20 +156,55 @@ endlocal & set "%2=%res%"
 exit /b 0
 ```
 
-cmd limits how deeply `setlocal` and `call` can nest, and a runaway recursion ends with an error, so recursion is for small depths (the factorial above worked for 5). A loop is almost always better.
+cmd limits how deeply this can go. A subroutine that calls itself reached a depth of 300 on the test PC, with and without `setlocal`; asked for 1000, **the whole batch file was aborted**:
+
+```text
+******  B A T C H   R E C U R S I O N  exceeds STACK limits ******
+Recursion Count=312, Stack Usage=90 percent
+******       B A T C H   PROCESSING IS   A B O R T E D      ******
+```
+
+The number depends on how much each level does, so do not rely on it. Recursion is for small depths (the factorial above worked for 5), and a loop is almost always better.
 
 ## Menus and input validation
 
-`choice` is the dependable one-key prompt: `choice /c YNQ /m "Continue"` sets `%errorlevel%` to 1, 2 or 3 for the key pressed. Test the highest number first (`if errorlevel 3` ...). For typed input use a validation loop:
+`choice` is the dependable one-key prompt: `choice /c YNQ /m "Continue"` sets `%errorlevel%` to 1, 2 or 3 for the key pressed. Test the highest number first (`if errorlevel 3` ...). For typed input use a validation loop. This one needs delayed expansion on:
 
-```
+```bat
 :ask
 set "x="
 set /p "x=Enter a number: "
+if not defined x goto ask
+set "rest=!x!"
+for /l %%d in (0,1,9) do if defined rest set "rest=!rest:%%d=!"
+if defined rest (echo digits only & goto ask)
+```
+
+It deletes every digit from a copy of the input; if **anything is left**, the input was not a number. The input is only ever used as `!x!` and is never sent through a pipe. Fed `abc`, `4a2`, `12 34`, `"7"`, `!x!`, `%TEMP%` and the hostile lines below through standard input, it rejected each one, asked again and accepted `42`, and **no file was created** (`adv5.ps1`). Both `choice` and this loop stop and wait, so keep them out of unattended scripts.
+
+### A "digits only" check that ran the user's commands
+
+An earlier version of this lesson validated with a pipe, a pattern you will find in many scripts:
+
+```bat
 echo(!x!| findstr /r "^[0-9][0-9]*$" >nul || (echo digits only & goto ask)
 ```
 
-Both stop and wait, so keep them out of unattended scripts.
+It handled `42`, `abc` and `12 34` correctly, so it looked right. Then I tried hostile input:
+
+| Input | What happened |
+|---|---|
+| `5&echo.> pwned.txt` | **Accepted as digits**, and the command after `&` **ran**: `pwned.txt` was created |
+| `5>made.txt` | Rejected, but **`made.txt` had already been created** |
+| `5\|echo x> piped.txt` | Rejected, but `piped.txt` had been created |
+
+**Each side of a pipe runs in a new cmd, which reads the text again**, so the protection that `!x!` gives was lost. With a destructive command in place of `echo`, and a script running as administrator, this is how a "number" prompt hands over the machine.
+
+The lessons to keep:
+
+- **Do not pipe untrusted text** through `echo ... |`.
+- **A check is not tested until you have tried to break it.** Try `&`, `|`, `>`, `<`, `^`, quotes, `!` and `%`.
+- If the input is complicated, validate it in **PowerShell**, where a variable's contents are not re-read as code.
 
 ## Waiting, parallel jobs and processes
 
@@ -176,6 +219,8 @@ taskkill /im notepad.exe /f
 ```
 
 `/fo csv /nh` gives output that is easy to parse with `for /f`. `taskkill /f` kills without asking, so check the image name or PID first.
+
+Parsing it with `for /f "tokens=1,2 delims=," %%a in ('tasklist ... /fo csv /nh')` gave `%%b` as `"8976"`, **with quotes**; `%%~b` gave `8976`. **When nothing matches**, `tasklist` prints `INFO: No tasks are running which match the specified criteria.` instead of a CSV row, and the loop **read that message as a result**: its body ran once with the whole sentence in `%%a`. Check the first field (it should start with the image name you asked for) before acting on it, above all before a `taskkill`.
 
 ## System administration from cmd
 
@@ -255,6 +300,8 @@ A good migration method: keep the cmd file as a thin launcher that calls a Power
 - **Using `call` expansion** for something a subroutine argument would do.
 - **Building "arrays" bigger than the environment can hold.**
 - **Recursing deeply** instead of looping.
+- **Validating input by piping it** (`echo !x!| findstr ...`): the new cmd obeys `&`, `|` and `>` inside it.
+- **Treating `tasklist`'s INFO message as a process.**
 - **Starting a process per loop iteration** and wondering why it takes minutes.
 - **Forgetting that `reg add` to `HKLM` needs elevation** and that registry edits have no undo without an export.
 - **Parsing localized output** of `systeminfo` or `netstat`.
@@ -279,5 +326,7 @@ A good migration method: keep the cmd file as a thin launcher that calls a Power
 6. Name three signs that a cmd script should be a PowerShell script.
 7. How do you wait five seconds in a script that has no console input?
 8. What should you always do before changing a registry key from a script?
+9. Why did `echo(!x!| findstr ...` run commands typed by the user, although `!x!` is normally safe?
+10. Your loop over `tasklist` output acts although no such process is running. Why?
 
-**Expected answers:** (1) `%var%` first, then special characters, then `for` variables, then `!var!`, then redirections; (2) the first phase turns `%%%name%%%` into `%color%` and `call` expands it again, so it prints the value of the variable whose name is stored in `name`; (3) write `^!` in the `set`, or best, set the value with delayed expansion off and read it with `!var!`; (4) it tests whether `!s:~N,1!` is empty and increments N until the slice runs out; (5) `set` with a prefix lists every variable whose name starts with it; (6) parsing tool output with `findstr`, needing arrays/JSON/error handling, and a script over a few hundred lines; (7) `ping -n 6 127.0.0.1 >nul`, because `timeout` fails when its input is redirected; (8) export the key with `reg export` so you have an undo.
+**Expected answers:** (1) `%var%` first, then special characters, then `for` variables, then `!var!`, then redirections; (2) the first phase turns `%%%name%%%` into `%color%` and `call` expands it again, so it prints the value of the variable whose name is stored in `name`; (3) write `^!` in the `set`, or best, set the value with delayed expansion off and read it with `!var!`; (4) it tests whether `!s:~N,1!` is empty and increments N until the slice runs out; (5) `set` with a prefix lists every variable whose name starts with it; (6) parsing tool output with `findstr`, needing arrays/JSON/error handling, and a script over a few hundred lines; (7) `ping -n 6 127.0.0.1 >nul`, because `timeout` fails when its input is redirected; (8) export the key with `reg export` so you have an undo; (9) each side of a pipe runs in a new cmd that reads the text again and obeys its special characters; (10) `tasklist` prints an INFO sentence when nothing matches, and `for /f` reads it like a row.

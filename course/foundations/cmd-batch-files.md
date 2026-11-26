@@ -1,4 +1,4 @@
-*Draft for owner review.* The earlier CMD lessons gave you the language. This one is about writing **scripts you would trust**: ones that accept arguments, validate them, log what they do, run unattended from Task Scheduler, check for elevation, call other tools correctly, and can be debugged when they go wrong. It ends with a complete worked script. Examples were run on Windows 11; where a result depends on your machine (such as whether you are elevated), the text says so.
+*Draft for owner review.* The earlier CMD lessons gave you the language. This one is about writing **scripts you would trust**: ones that accept arguments, validate them, log what they do, run unattended from Task Scheduler, check for elevation, call other tools correctly, and can be debugged when they go wrong. It ends with a complete worked script. Examples were run on Windows 11; where a result depends on your machine (such as whether you are elevated), the text says so. The complete script and the special-character tests are in `tests/verification/cmd/batch2.ps1`. Task Scheduler runs and Windows 10 were not tested.
 
 ## A script template
 
@@ -83,6 +83,8 @@ Use `echo` for messages, and remember its quirks:
 - Send errors to **stderr** with `echo message 1>&2`, so a caller can separate them.
 
 **A log** is the only record of an unattended run:
+
+(The tiny subroutine below is fine for **fixed** messages that you wrote. It is **not safe for text from outside**, such as file names: see *Why it is written this way* under the complete script.)
 
 ```
 set "LOG=%TEMP%\backup.log"
@@ -213,7 +215,8 @@ When a line misbehaves, run it **at the prompt** with the same values, or add `e
 
 Batch scripts routinely run with high rights and read untrusted text (arguments, file names, files). Treat input as hostile:
 
-- **Quote every expansion**: `"%~1"`, `"%%f"`, `"%var%"`.
+- **Quote every expansion** used as a path or an argument: `"%~1"`, `"%%f"`, `"%var%"`.
+- **Quoting is not enough for `echo`.** To print or log text from outside, put it in a variable and use `!name!` with delayed expansion on (see the complete script below).
 - **Never run a command built from user input** without validating it: a value like `x & del ...` becomes two commands if it is pasted in unquoted.
 - **Guard deletes.** Before `del` or `rd /s`, check the variable is not empty and points where you expect (`if "%target%"=="" exit /b 1`), and rehearse with the dry-run pattern.
 - **Use full paths** (or `%SystemRoot%\System32\`) for system tools in privileged scripts, and be aware of the current-directory search rule from the first lesson. For tools you installed (coreutils, util-core, anything outside `System32`), keep their folder on `PATH`, and when a tool's name collides with a cmd **built-in** (`echo`, `mkdir`, `type`, `copy` and so on) call it by its **full path**: cmd matches built-ins before programs, and adding `.exe` does not reliably escape that (cmd read `echo.exe hi` as the built-in `echo` and printed `exe hi`). In PowerShell, by contrast, writing `name.exe` is the right way to stop an alias or function from intercepting a program (see the PowerShell basics lesson).
@@ -222,39 +225,114 @@ Batch scripts routinely run with high rights and read untrusted text (arguments,
 
 ## A complete script
 
-```
+```bat
 @echo off
-setlocal EnableExtensions
+setlocal EnableExtensions DisableDelayedExpansion
 rem backup.cmd SOURCE [DESTROOT]  -- exit codes: 0 ok, 1 copy failed, 2 usage, 3 not a folder
+rem Text that came from outside (paths) is only ever printed with !name!, in :say and :log.
 
 set "SELF=%~nx0"
-if "%~1"=="" (echo usage: %SELF% SOURCE [DESTROOT] & exit /b 2)
-if "%~1"=="/?" (echo usage: %SELF% SOURCE [DESTROOT] & exit /b 0)
-if not exist "%~1\" (echo not a folder: %~1 & exit /b 3)
+if "%~1"=="/?" goto help
+if "%~1"=="" goto usage
 
 set "SRC=%~1"
 set "DEST=%~2"
 if not defined DEST set "DEST=%TEMP%\backups"
+set "MSG=not a folder: %SRC%"
+if not exist "%SRC%\" (call :say & exit /b 3)
 
 for /f %%a in ('powershell -NoProfile -Command "Get-Date -Format yyyyMMdd-HHmmss"') do set "TS=%%a"
 set "TARGET=%DEST%\backup-%TS%"
 set "LOG=%DEST%\backup.log"
 
-if not exist "%DEST%\" mkdir "%DEST%" || (echo cannot create %DEST% & exit /b 1)
->> "%LOG%" echo %TS% start %SRC% to %TARGET%
+set "MSG=cannot create %DEST%"
+if not exist "%DEST%\" mkdir "%DEST%" || (call :say & exit /b 1)
+
+set "MSG=start %SRC% to %TARGET%"
+call :log
 
 robocopy "%SRC%" "%TARGET%" /e /r:1 /w:1 >nul
-if errorlevel 8 (
-    >> "%LOG%" echo %TS% FAILED code %errorlevel%
-    echo backup failed
-    exit /b 1
-)
->> "%LOG%" echo %TS% ok
-echo backup ok: %TARGET%
+set "RC=%ERRORLEVEL%"
+if %RC% geq 8 goto failed
+
+set "MSG=ok"
+call :log
+set "MSG=backup ok: %TARGET%"
+call :say
+exit /b 0
+
+:failed
+set "MSG=FAILED, robocopy code %RC%"
+call :log
+call :say
+exit /b 1
+
+:help
+echo usage: %SELF% SOURCE [DESTROOT]
+exit /b 0
+
+:usage
+echo usage: %SELF% SOURCE [DESTROOT]
+exit /b 2
+
+:say
+setlocal EnableDelayedExpansion
+echo(!MSG!
+endlocal
+exit /b 0
+
+:log
+setlocal EnableDelayedExpansion
+>> "!LOG!" echo(!TS! !MSG!
+endlocal
 exit /b 0
 ```
 
-It validates arguments with distinct codes, builds paths from variables (quoted), uses a locale-independent timestamp, treats robocopy's success codes properly, logs, and ends with an explicit code. Compare each part with the sections above.
+It validates arguments with distinct codes, builds paths from variables (quoted), uses a locale-independent timestamp, saves robocopy's code **at once** and treats its success codes properly, logs, and ends with an explicit code. Compare each part with the sections above.
+
+### Why it is written this way: a bug I shipped and found
+
+An earlier version of this lesson ended with a shorter script that **looked** right: every path was quoted where it was *used as a path*. But it printed and logged them like this:
+
+```bat
+>> "%LOG%" echo %TS% start %SRC% to %TARGET%
+if not exist "%~1\" (echo not a folder: %~1 & exit /b 3)
+```
+
+Run against awkward folder names, it did this:
+
+| Source folder | What happened |
+|---|---|
+| `amp & sand` | `'sand' is not recognized as an internal or external command`: **part of the folder name ran as a command**. The log line was cut off at `amp` |
+| a missing `gone (old)` | The message was cut off at `gone (old`: the `)` in the name closed the block |
+
+A folder called `x & del ...` would have run the `del`. The copy itself succeeded, so a quick test would never have shown it.
+
+![Diagram: with percent expansion the text of a variable becomes part of the line before cmd looks for special characters, so an ampersand inside it is obeyed; with delayed expansion cmd finds the special characters first and inserts the text afterwards](diagrams/injection.svg)
+
+```text
+ echo %name%    1. insert the text   -->  echo amp & sand
+                2. look for & | < >   -->  TWO commands:  echo amp   and   sand
+
+ echo !name!    1. look for & | < >   -->  one command:   echo !name!
+                2. insert the text    -->  prints:  amp & sand
+```
+
+That is the order from the first lesson: `%` is expanded **before** cmd looks for special characters, `!` **after**. So **text from outside belongs in `!name!`**. The new script also keeps delayed expansion **off** while it stores the paths, so that a `!` in a folder name is not lost.
+
+The same trap is in the usual one-line logging subroutine. With `>> "%LOG%" echo %~1`:
+
+| Call | What happened |
+|---|---|
+| `call :log "saved A & B"` | The log got `saved A `, and `B` **ran as a command** |
+| `call :log "size > 5"` | The text after `>` was treated as a file: **a file named `5` was created** |
+
+Printing the same two messages from a variable with `!msg!` logged both exactly. The rewritten script was run against folders named with spaces, `&`, parentheses, `!` and `^`; its tests are in `tests/verification/cmd/batch2.ps1`. That is not proof for every possible name: **test your own scripts with hostile names**.
+
+Two results from that testing are about **`call`**, not about this script:
+
+- Started with `call`, the folder `hat ^ it` arrived as `hat ^^ it` and was reported as not found. Started without `call`, it was backed up. **`call` reads its line a second time and doubled the `^`.**
+- `call backup.cmd /?` did not reach the script at all: it printed **`call`'s own help**. The `/?` branch works when the script is run directly or with `cmd /c`.
 
 ## Common mistakes
 
@@ -268,6 +346,8 @@ It validates arguments with distinct codes, builds paths from variables (quoted)
 - **Checking the wrong exit code** (`robocopy`'s are a bit mask).
 - **A script that needs administrator rights but does not test for it.**
 - **Building commands from untrusted input.**
+- **`echo %path%` for a path you did not choose:** an `&` in it runs a command.
+- **Testing only with tidy names:** use spaces, `&`, `(`, `)`, `!` and `^`.
 
 ## Practice
 
@@ -287,5 +367,6 @@ It validates arguments with distinct codes, builds paths from variables (quoted)
 6. Name four things that differ when a script runs from Task Scheduler.
 7. Why should a script that runs elevated not be writable by standard users?
 8. What does a dry-run variable give you?
+9. Why can `echo %folder%` run a command, while `echo !folder!` cannot?
 
-**Expected answers:** (1) `pushd` maps a temporary drive letter for a UNC path and `popd` removes it; `cd /d` cannot change to a UNC path; (2) the embedded quotes unbalance the test and cmd reports a syntax error, so quote the whole argument; (3) ask PowerShell: `Get-Date -Format yyyyMMdd-HHmmss`; (4) run a command that needs administrator rights, such as `net session` or `fltmc`, and test its exit code; (5) the first does not wait and the second waits and returns the program's exit code; (6) no console or user, no mapped drives, a different account and profile folders, a different working directory and often `PATH`; (7) a standard user could edit it and so run their own commands with administrator rights; (8) a safe rehearsal that prints what would happen before anything is deleted or changed.
+**Expected answers:** (1) `pushd` maps a temporary drive letter for a UNC path and `popd` removes it; `cd /d` cannot change to a UNC path; (2) the embedded quotes unbalance the test and cmd reports a syntax error, so quote the whole argument; (3) ask PowerShell: `Get-Date -Format yyyyMMdd-HHmmss`; (4) run a command that needs administrator rights, such as `net session` or `fltmc`, and test its exit code; (5) the first does not wait and the second waits and returns the program's exit code; (6) no console or user, no mapped drives, a different account and profile folders, a different working directory and often `PATH`; (7) a standard user could edit it and so run their own commands with administrator rights; (8) a safe rehearsal that prints what would happen before anything is deleted or changed; (9) `%folder%` is inserted before cmd looks for `&` and other special characters, so they are obeyed; `!folder!` is inserted after.
