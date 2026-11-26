@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 220" role="img" aria-label="Files and web replies are bytes; they are decoded to text, parsed to objects, worked on, and converted back" font-family="Segoe UI, sans-serif">
+  <title>From bytes to objects and back</title>
+  <style>
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.5 }
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    .wire { stroke: #57606a; stroke-width: 1.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .dim { fill: #57606a }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+
+  <rect class="zone-kernel" x="10" y="40" width="180" height="64" rx="6"/>
+  <text class="bold" x="100" y="68" text-anchor="middle">bytes</text>
+  <text x="100" y="90" text-anchor="middle" font-size="13">file, web reply</text>
+  <line class="wire" x1="190" y1="72" x2="266" y2="72" marker-end="url(#arrow)"/>
+  <text x="228" y="62" text-anchor="middle" font-size="13">decode</text>
+  <rect class="box" x="268" y="40" width="180" height="64" rx="6"/>
+  <text class="bold" x="358" y="68" text-anchor="middle">text</text>
+  <text x="358" y="90" text-anchor="middle" font-size="13">every value is a string</text>
+  <line class="wire" x1="448" y1="72" x2="524" y2="72" marker-end="url(#arrow)"/>
+  <text x="486" y="62" text-anchor="middle" font-size="13">parse</text>
+  <rect class="zone-user" x="526" y="40" width="184" height="64" rx="6"/>
+  <text class="bold" x="618" y="68" text-anchor="middle">objects</text>
+  <text x="618" y="90" text-anchor="middle" font-size="13">sort, filter, change</text>
+
+  <text class="dim" x="228" y="132" text-anchor="middle" font-size="13">wrong encoding:</text>
+  <text class="dim" x="228" y="150" text-anchor="middle" font-size="13">garbled characters</text>
+  <text class="dim" x="486" y="132" text-anchor="middle" font-size="13">ConvertFrom-Json,</text>
+  <text class="dim" x="486" y="150" text-anchor="middle" font-size="13">Import-Csv, [xml]</text>
+  <text class="bold" x="10" y="190">Going back (Export-Csv, ConvertTo-Json, Set-Content) can lose data too:</text>
+  <text class="dim" x="10" y="212" font-size="13">depth limits, types turned into text, an encoding the reader does not expect.</text>
+</svg>

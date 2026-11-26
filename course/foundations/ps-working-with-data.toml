@@ -3,7 +3,7 @@ id = "foundations.ps-working-with-data"
 title = "PowerShell: files, text, CSV, JSON, XML and the web"
 summary = "Paths and the -LiteralPath trap, reading and writing text with the encoding differences between 5.1 and 7 and Linux, Select-String, CSV and its all-strings trap, JSON depth and one-element-array traps, XML, comparing data, and Invoke-RestMethod and Invoke-WebRequest including HTTP errors."
 content = "ps-working-with-data.md"
-estimated_minutes = 120
+estimated_minutes = 140
 level = 3
 objectives = [
   "Build and take apart paths portably, and use -LiteralPath for names that come from data",
@@ -28,22 +28,6 @@ evaluation_criteria = [
 ]
 
 [[references]]
-title = "Get-Content (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.management/get-content"
-
-[[references]]
-title = "Set-Content (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.management/set-content"
-
-[[references]]
-title = "Add-Content (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.management/add-content"
-
-[[references]]
-title = "Out-File (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/out-file"
-
-[[references]]
 title = "Join-Path (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.management/join-path"
 
@@ -56,6 +40,10 @@ title = "about_Wildcards (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_wildcards"
 
 [[references]]
+title = "Get-Content (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.management/get-content"
+
+[[references]]
 title = "about_Character_Encoding (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_character_encoding"
 
@@ -64,20 +52,28 @@ title = "Understanding file encoding in VS Code and PowerShell (Microsoft Learn)
 url = "https://learn.microsoft.com/powershell/scripting/dev-cross-plat/vscode/understanding-file-encoding"
 
 [[references]]
-title = "about_Regular_Expressions (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_regular_expressions"
-
-[[references]]
 title = "Select-String (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/select-string"
+
+[[references]]
+title = "about_Regular_Expressions (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_regular_expressions"
 
 [[references]]
 title = "Import-Csv (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/import-csv"
 
 [[references]]
+title = "RFC 4180: Common Format and MIME Type for CSV Files"
+url = "https://www.rfc-editor.org/rfc/rfc4180"
+
+[[references]]
 title = "Export-Csv (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/export-csv"
+
+[[references]]
+title = "RFC 8259: The JSON Data Interchange Format"
+url = "https://www.rfc-editor.org/rfc/rfc8259"
 
 [[references]]
 title = "ConvertFrom-Json (Microsoft Learn)"
@@ -112,9 +108,14 @@ title = "Invoke-WebRequest (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/invoke-webrequest"
 
 [[references]]
-title = "RFC 8259: The JSON Data Interchange Format"
-url = "https://www.rfc-editor.org/rfc/rfc8259"
+title = "Set-Content (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.management/set-content"
 
 [[references]]
-title = "RFC 4180: Common Format and MIME Type for CSV Files"
-url = "https://www.rfc-editor.org/rfc/rfc4180"
+title = "Add-Content (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.management/add-content"
+
+[[references]]
+title = "Out-File (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/out-file"
+

@@ -1,4 +1,13 @@
-*Draft for owner review.* Most real scripts are glue between data formats: read a log, parse a CSV export, call a JSON API, write a report, edit a config file. PowerShell makes each of these short, and each has a trap that silently corrupts data: a file written in the wrong encoding, numbers that are really strings, JSON cut off at depth 2, a path with brackets treated as a wildcard. This lesson covers files and paths, text, regular expressions, CSV, JSON, XML, comparing data and the web cmdlets, with the traps shown from real output on **Windows PowerShell 5.1**, **PowerShell 7 on Windows** and **PowerShell 7 on Linux**.
+*Draft for owner review.* Most real scripts are glue between data formats: read a log, parse a CSV export, call a JSON API, write a report, edit a config file. PowerShell makes each of these short, and each has a trap that silently corrupts data: a file written in the wrong encoding, numbers that are really strings, JSON cut off at depth 2, a path with brackets treated as a wildcard. This lesson covers files and paths, text, regular expressions, CSV, JSON, XML, comparing data and the web cmdlets, with the traps shown from real output on **Windows PowerShell 5.1**, **PowerShell 7 on Windows** and **PowerShell 7 on Linux**. The newer traps (rewriting a file onto itself, `Compare-Object`, and badly formed CSV) come from `tests/verification/powershell/data3.ps1`, run on Windows in 5.1.26100 and 7.6.10.
+
+![Diagram: bytes from a file or web reply are decoded into text, parsed into objects, worked on, and converted back; encoding, parsing and converting back can each lose or garble data](diagrams/ps-data-flow.svg)
+
+```text
+ bytes --decode--> text --parse--> objects  (sort, filter, change)  --convert back--> text --encode--> bytes
+   ^ wrong encoding garbles          ^ every parsed CSV value is text        ^ depth limits and types are lost
+```
+
+When data comes out wrong, **find the step where it went wrong**: look at the raw bytes, then the text, then the objects (`Get-Member`).
 
 Reminder from the earlier lessons: scripts use full cmdlet names (no aliases), and an external program is written with its extension (`curl.exe`, not `curl`).
 
@@ -69,6 +78,18 @@ Other writing notes:
 - On Windows the line ending is CR+LF and on Linux LF. A file you generate for another platform needs the other ending, which `-replace "`r`n","`n"` and `-NoNewline` can produce.
 - To write safely, write to a **temporary file in the same folder and rename** it over the target, so a crash cannot leave a half-written file.
 
+### Never rewrite a file while you are reading it
+
+A pipeline **streams**, so the writer can start before the reader has finished. Editing a file in place this way is dangerous:
+
+| What I ran | What happened (5.1 and 7.6) |
+|---|---|
+| `Get-Content same.txt \| Set-Content same.txt` | Failed: `The process cannot access the file ... because it is being used by another process.` The contents **survived** |
+| `Get-Content clob.txt \| Out-File clob.txt` | **The file ended up empty.** No error reached my `catch` |
+| `(Get-Content same.txt) \| Set-Content same.txt` | Worked: the parentheses read the **whole** file first |
+
+**Do not rely on being saved by an error.** Read into a variable (or use parentheses), then write; better, write a new file and rename it over the old one (above), after keeping a copy.
+
 ## Searching text with `Select-String`
 
 [`Select-String`](https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/select-string) is PowerShell's `grep`/`findstr`, and it returns **objects** with the line, the line number, the file and the regex match groups:
@@ -119,6 +140,32 @@ $emp | Select-Object Name, Dept,
 ```
 
 That `@{ Name = ...; Expression = ... }` is a **calculated property**: a property you define from a script block (`n`/`e` are accepted abbreviations).
+
+### A badly formed CSV is read without complaint
+
+I imported this file:
+
+```text
+Name,Dept,Salary
+Ann,IT,5000
+Bo,HR
+Cy,IT,4000,extra
+```
+
+All three rows were accepted: Bo's `Salary` was **empty** and Cy's fourth value, `extra`, **vanished**. Nothing was reported. A **misspelled column** is just as quiet: `$row.Salery` is empty. `Measure-Object Salery -Sum` gave an empty sum; Windows PowerShell 5.1 also raised an error (`...the value of argument "Property" is not valid`), but **PowerShell 7.6 reported nothing**. Only a **repeated header** was refused (`The member "Name" is already present.`).
+
+So **check the data you import** before you use it:
+
+```powershell
+$rows = Import-Csv .\emp.csv
+$columns = $rows[0].PSObject.Properties.Name
+foreach ($needed in 'Name', 'Dept', 'Salary') {
+    if ($needed -notin $columns) { throw "column '$needed' is missing" }
+}
+$bad = @($rows | Where-Object { $_.Salary -notmatch '^\d+$' })
+if ($bad.Count) { throw "$($bad.Count) row(s) have no usable salary" }
+```
+
 
 ### Summaries
 
@@ -221,7 +268,17 @@ x           =>
 b           <=
 ```
 
-[`Compare-Object`](https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/compare-object) reports differences: `<=` only in the reference (first) set, `=>` only in the difference (second) set; `-IncludeEqual` shows what matches, and `-Property` compares chosen properties of objects. [`Get-FileHash`](https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/get-filehash) returns a checksum (`-Algorithm SHA256`, which is 64 hex characters) to verify a download or detect a changed file. `ConvertFrom-StringData` turns `key=value` lines into a hashtable (`(ConvertFrom-StringData "a=1`nb=two").b` gives `two`).
+[`Compare-Object`](https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/compare-object) reports differences: `<=` only in the reference (first) set, `=>` only in the difference (second) set; `-IncludeEqual` shows what matches, and `-Property` compares chosen properties of objects. **Know what it ignores**, because "no differences" can be wrong for your purpose:
+
+| Comparison | Differences reported |
+|---|---|
+| `'one','two','three'` with `'three','one','two'` (same lines, **other order**) | **0** |
+| the same with `-SyncWindow 0` (compare position by position) | 6 lines of differences |
+| `'ABC'` with `'abc'` | **0**; with `-CaseSensitive`, 2 |
+| two objects with the same `Name` but `Size` 1 and 2, **no `-Property`** | **0** |
+| the same with `-Property Name,Size` | 2 |
+
+To compare objects, **always name the properties** that matter. To check two files are identical, compare hashes (`Get-FileHash`), which notice order, case and every byte. [`Get-FileHash`](https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/get-filehash) returns a checksum (`-Algorithm SHA256`, which is 64 hex characters) to verify a download or detect a changed file. `ConvertFrom-StringData` turns `key=value` lines into a hashtable (`(ConvertFrom-StringData "a=1`nb=two").b` gives `two`).
 
 ## The web: `Invoke-RestMethod` and `Invoke-WebRequest`
 
@@ -301,6 +358,9 @@ PowerShell 7 adds **`-SkipHttpErrorCheck`**, which returns the response object e
 - **Hard-coding secrets** in URLs, headers or scripts.
 - **Catching only one exception type** for HTTP errors across 5.1 and 7.
 - **Assuming 5.1 and 7 write the same bytes or return the same types.**
+- **`Get-Content x | Out-File x`** (or any rewrite of a file you are still reading).
+- **Trusting `Compare-Object`'s silence** about order, case or properties you did not name.
+- **Using imported CSV columns without checking that they exist and are filled.**
 
 ## Read this script
 
@@ -339,5 +399,7 @@ The lab for this lesson asks for a script that reads a JSON settings file and us
 6. What is the difference between `Invoke-RestMethod` and `Invoke-WebRequest`?
 7. How do you get the HTTP status when a request fails, in 5.1 and in 7?
 8. Why is `curl` unsafe to use in a script?
+9. Two lists hold the same lines in a different order. What does `Compare-Object` report, and how do you compare positions?
+10. Why did `Get-Content file | Out-File file` leave the file empty?
 
-**Expected answers:** (1) `-Path` treats `[ ]`, `*` and `?` as wildcards, so a literal name with brackets is not found; (2) UTF-16 LE with a BOM (`FF FE 68 00 ...`) in 5.1, and UTF-8 without a BOM (`68 69 0D 0A`) in 7; (3) `Import-Csv` values are strings, so `+` concatenates; (4) it replaces them with their string form (`"@{c=1}"`) without failing; (5) the first gives `[7]` and the second `7`, because piping unrolls the array; (6) `Invoke-RestMethod` returns the parsed body (objects), `Invoke-WebRequest` returns a response object with status, headers and content; (7) catch the exception and read `[int]$_.Exception.Response.StatusCode` (a `WebException` in 5.1, an `HttpResponseException` in 7), or in 7 use `-SkipHttpErrorCheck`; (8) in 5.1 it is an alias of `Invoke-WebRequest` and in 7 it runs `curl.exe`, so the same line means different things; write `curl.exe` or the PowerShell cmdlet.
+**Expected answers:** (1) `-Path` treats `[ ]`, `*` and `?` as wildcards, so a literal name with brackets is not found; (2) UTF-16 LE with a BOM (`FF FE 68 00 ...`) in 5.1, and UTF-8 without a BOM (`68 69 0D 0A`) in 7; (3) `Import-Csv` values are strings, so `+` concatenates; (4) it replaces them with their string form (`"@{c=1}"`) without failing; (5) the first gives `[7]` and the second `7`, because piping unrolls the array; (6) `Invoke-RestMethod` returns the parsed body (objects), `Invoke-WebRequest` returns a response object with status, headers and content; (7) catch the exception and read `[int]$_.Exception.Response.StatusCode` (a `WebException` in 5.1, an `HttpResponseException` in 7), or in 7 use `-SkipHttpErrorCheck`; (8) in 5.1 it is an alias of `Invoke-WebRequest` and in 7 it runs `curl.exe`, so the same line means different things; write `curl.exe` or the PowerShell cmdlet; (9) no differences; `-SyncWindow 0` compares position by position; (10) the writer opened (and emptied) the file while the pipeline was still reading it; read it all first.

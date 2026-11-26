@@ -475,3 +475,41 @@ choices = ["Objects with a Region property, not strings", "A list of strings", "
 answers = ["Objects with a Region property, not strings"]
 explanation = "Add -ExpandProperty to get the values."
 review = "Read this script"
+
+# ---- Added when the lesson was deepened ----
+
+[[question]]
+id = "same-file-outfile"
+type = "choice"
+prompt = "What happened when the lesson ran Get-Content clob.txt | Out-File clob.txt?"
+choices = ["The file ended up empty", "The file was duplicated", "Nothing changed", "Only the last line remained"]
+answers = ["The file ended up empty"]
+explanation = "Read the whole file first, or write a new file and rename it."
+review = "Never rewrite a file while you are reading it"
+
+[[question]]
+id = "compare-order"
+type = "choice"
+prompt = "Two arrays hold the same lines in a different order. What does Compare-Object report by default?"
+choices = ["No differences", "Every line", "Only the first line", "An error"]
+answers = ["No differences"]
+explanation = "Use -SyncWindow 0 to compare position by position."
+review = "Comparing and checking data"
+
+[[question]]
+id = "compare-objects"
+type = "choice"
+prompt = "How do you make Compare-Object notice that a Size property differs between two objects?"
+choices = ["Name the properties with -Property", "Add -Force", "Sort them first", "Use -IncludeEqual"]
+answers = ["Name the properties with -Property"]
+explanation = "Without -Property the lesson's two objects compared as equal."
+review = "Comparing and checking data"
+
+[[question]]
+id = "csv-short-row"
+type = "choice"
+prompt = "A CSV row has fewer fields than the header. What does Import-Csv do?"
+choices = ["Reads it silently with the missing value empty", "Stops with an error", "Skips the row with a warning", "Fills it with 0"]
+answers = ["Reads it silently with the missing value empty"]
+explanation = "Check imported data before using it."
+review = "A badly formed CSV is read without complaint"
