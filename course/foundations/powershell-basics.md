@@ -142,7 +142,7 @@ Stop-Process -Name <string[]> [-PassThru] [-Force] [-WhatIf] [-Confirm] [<Common
 Stop-Process [-InputObject] <Process[]> [-PassThru] [-Force] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
-![Diagram: in the syntax line Stop-Process [-Id] <int[]> [-PassThru], brackets around -Id mean the name may be left out, <int[]> means one number or a list and is required, and a bracketed switch is optional](diagrams/ps-syntax.svg)
+![Diagram: reading the syntax of Stop-Process. Brackets around the Id parameter name mean the name may be left out; its value type means one whole number or a list of them and is required; a switch written in brackets is optional](diagrams/ps-syntax.svg)
 
 ```text
  Stop-Process  [-Id] <int[]>   [-PassThru]  [-Force] ...
