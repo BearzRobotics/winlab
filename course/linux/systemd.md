@@ -99,6 +99,13 @@ $ systemctl disable --now wl-hello
 
 **`enable` = make a symlink in a `.wants` directory (taking effect at boot); `start` = run it now.** `enable --now` and `disable --now` do both. This is the same distinction as a service that "works now but is gone after a reboot", which is a common troubleshooting scenario.
 
+![Diagram: start runs the unit now and it is gone after a reboot; enable creates a symlink so it starts at boot but does not start it now; enable --now does both](diagrams/start-enable.svg)
+
+```text
+ systemctl start   -> running now, gone after a reboot           (is-active)
+ systemctl enable  -> symlink in .wants: starts at boot, not now (is-enabled)
+```
+
 ### Masking
 
 ```text

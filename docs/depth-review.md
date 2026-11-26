@@ -106,3 +106,4 @@ By path, in the order the owner works through them.
 | `security.windows-hardening-checks` | reviewed 2026-11-26: already explains each result; added 1 diagram (baseline results). Tests are from the earlier run |
 | `security.linux-logging-and-detection` | reviewed 2026-11-26: already explains each result; added 1 diagram (log paths). Tests are from the earlier run |
 | `linux.init-systems-compared` | reviewed 2026-11-26: already says what was tested for each row; added 1 diagram (stopping a dependency) |
+| `linux.systemd` | reviewed 2026-11-26: already explains each result; added 1 diagram (start and enable) |

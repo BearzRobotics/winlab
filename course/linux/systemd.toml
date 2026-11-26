@@ -48,10 +48,6 @@ title = "systemd.special(7): targets"
 url = "https://www.freedesktop.org/software/systemd/man/latest/systemd.special.html"
 
 [[references]]
-title = "systemd.kill(5)"
-url = "https://www.freedesktop.org/software/systemd/man/latest/systemd.kill.html"
-
-[[references]]
 title = "systemctl(1)"
 url = "https://www.freedesktop.org/software/systemd/man/latest/systemctl.html"
 
@@ -62,3 +58,8 @@ url = "https://www.freedesktop.org/software/systemd/man/latest/journalctl.html"
 [[references]]
 title = "journald.conf(5)"
 url = "https://www.freedesktop.org/software/systemd/man/latest/journald.conf.html"
+
+[[references]]
+title = "systemd.kill(5)"
+url = "https://www.freedesktop.org/software/systemd/man/latest/systemd.kill.html"
+

@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 240" role="img" aria-label="start runs the unit now and does not survive a reboot. enable creates a symlink in a target's wants directory so the unit starts at boot, without starting it now. enable --now does both" font-family="Segoe UI, sans-serif">
+  <title>start acts now; enable acts at boot</title>
+  <style>
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.5 }
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    .wire { stroke: #57606a; stroke-width: 1.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .mono { font-family: Consolas, monospace }
+    .dim { fill: #57606a }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+
+  <rect class="box" x="20" y="40" width="230" height="52" rx="6"/>
+  <text class="bold mono" x="135" y="72" text-anchor="middle">systemctl start</text>
+  <line class="wire" x1="250" y1="66" x2="398" y2="66" marker-end="url(#arrow)"/>
+  <rect class="zone-user" x="400" y="40" width="300" height="52" rx="6"/>
+  <text class="bold" x="550" y="62" text-anchor="middle">running NOW</text>
+  <text x="550" y="82" text-anchor="middle" font-size="13">gone after a reboot</text>
+
+  <rect class="box" x="20" y="128" width="230" height="52" rx="6"/>
+  <text class="bold mono" x="135" y="160" text-anchor="middle">systemctl enable</text>
+  <line class="wire" x1="250" y1="154" x2="398" y2="154" marker-end="url(#arrow)"/>
+  <rect class="zone-kernel" x="400" y="128" width="300" height="52" rx="6"/>
+  <text class="bold" x="550" y="150" text-anchor="middle">a symlink in a .wants folder</text>
+  <text x="550" y="170" text-anchor="middle" font-size="13">starts at boot; NOT started now</text>
+
+  <text class="dim" x="20" y="220" font-size="13">enable --now does both. is-active answers "now"; is-enabled answers "at boot".</text>
+</svg>
