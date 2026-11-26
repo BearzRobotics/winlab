@@ -503,3 +503,14 @@ choices = ["sed -i on /etc/passwd with an unescaped, unchecked user name", "grep
 answers = ["sed -i on /etc/passwd with an unescaped, unchecked user name", "grep -q in a pipeline under pipefail", "A predictable temp name /tmp/report.$$", "for f in $(grep -l ...) breaks on names with spaces"]
 explanation = "Also unquoted $user, user as a regex, and no check for $1."
 review = "Reading an unknown script (text processing)"
+
+# ---- Added when the lesson was deepened ----
+
+[[question]]
+id = "pipeline-no-sort"
+type = "choice"
+prompt = "You leave out the first sort in awk ... | sort | uniq -c | sort -rn, and the equal lines are never adjacent. What do the counts show?"
+choices = ["Every line with a count of 1", "The correct totals", "An error", "Only the largest"]
+answers = ["Every line with a count of 1"]
+explanation = "uniq counts runs of adjacent equal lines."
+review = "The counting pipeline, stage by stage"

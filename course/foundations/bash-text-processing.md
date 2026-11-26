@@ -135,6 +135,27 @@ sort file | uniq -c   # count duplicates          uniq -d / -u   # only duplicat
 - `sort -c file` **checks** if sorted (`disorder: 2` was reported); **`sort -o file file`** is safe for sorting a file in place (the `-o` output is written after reading), whereas `sort file > file` **empties it** (`bash-basics`).
 - **`comm`** compares two **sorted** files: `-12` shows lines in both (`b c`), `-23` only in the first. **`join`** joins two sorted files on a key (`1 alice admin`). **`diff -u`** shows changes (`-b`, `+c`).
 
+### The counting pipeline, stage by stage
+
+`awk '{print $1}' access.log | sort | uniq -c | sort -rn | head -2` answers "which addresses appear most?". Here is what **each stage hands on**, for a six-line log (`tests/verification/bash/ts3.sh`):
+
+![Diagram: awk takes one column, sort puts equal lines together, uniq -c counts each run, sort -rn puts the biggest count first and head keeps the top lines](diagrams/top-n-pipeline.svg)
+
+```text
+ awk (one column) -> sort (equal lines together) -> uniq -c (count runs) -> sort -rn (biggest first) -> head
+```
+
+| After | Output (one line per row, shown across) |
+|---|---|
+| the file | `10.0.0.7 GET /a 200`, `10.0.0.2 GET /b 404`, ... six lines |
+| `awk '{print $1}'` | `.7` `.2` `.7` `.9` `.7` `.2` |
+| `sort` | `.2` `.2` `.7` `.7` `.7` `.9` |
+| `uniq -c` | `2 .2`, `3 .7`, `1 .9` |
+| `sort -rn` | `3 .7`, `2 .2`, `1 .9` |
+| `head -2` | `3 .7`, `2 .2` |
+
+(Addresses shortened: `.7` is `10.0.0.7`.) **Without the first `sort`**, `uniq -c` printed six lines, each with a count of **1**, because no two equal addresses were next to each other. When a pipeline's answer looks wrong, **cut it off after each stage** and read the output until you find the stage that changed it wrongly.
+
 ## `sed`: the stream editor
 
 `sed` reads lines, applies commands, writes the result. Without `-i` **it never changes the file**: output goes to standard output.

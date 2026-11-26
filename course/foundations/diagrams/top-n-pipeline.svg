@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 230" role="img" aria-label="A pipeline: awk extracts the first column, sort brings equal lines together, uniq -c counts adjacent lines, sort -rn orders by count, head keeps the top ones" font-family="Segoe UI, sans-serif">
+  <title>Each stage has one job</title>
+  <style>
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.5 }
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    .wire { stroke: #57606a; stroke-width: 1.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .mono { font-family: Consolas, monospace }
+    .dim { fill: #57606a }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+
+  <rect class="box" x="10" y="40" width="116" height="52" rx="5"/>
+  <text class="bold mono" x="68" y="72" text-anchor="middle">awk</text>
+  <line class="wire" x1="126" y1="66" x2="156" y2="66" marker-end="url(#arrow)"/>
+  <rect class="zone-kernel" x="158" y="40" width="116" height="52" rx="5"/>
+  <text class="bold mono" x="216" y="72" text-anchor="middle">sort</text>
+  <line class="wire" x1="274" y1="66" x2="304" y2="66" marker-end="url(#arrow)"/>
+  <rect class="zone-user" x="306" y="40" width="116" height="52" rx="5"/>
+  <text class="bold mono" x="364" y="72" text-anchor="middle">uniq -c</text>
+  <line class="wire" x1="422" y1="66" x2="452" y2="66" marker-end="url(#arrow)"/>
+  <rect class="zone-kernel" x="454" y="40" width="116" height="52" rx="5"/>
+  <text class="bold mono" x="512" y="72" text-anchor="middle">sort -rn</text>
+  <line class="wire" x1="570" y1="66" x2="600" y2="66" marker-end="url(#arrow)"/>
+  <rect class="box" x="602" y="40" width="108" height="52" rx="5"/>
+  <text class="bold mono" x="656" y="72" text-anchor="middle">head</text>
+
+  <text x="68" y="120" text-anchor="middle" font-size="13">take one</text>
+  <text x="68" y="140" text-anchor="middle" font-size="13">column</text>
+  <text x="216" y="120" text-anchor="middle" font-size="13">put equal lines</text>
+  <text x="216" y="140" text-anchor="middle" font-size="13">together</text>
+  <text x="364" y="120" text-anchor="middle" font-size="13">count each run</text>
+  <text x="364" y="140" text-anchor="middle" font-size="13">of equal lines</text>
+  <text x="512" y="120" text-anchor="middle" font-size="13">biggest count</text>
+  <text x="512" y="140" text-anchor="middle" font-size="13">first</text>
+  <text x="656" y="120" text-anchor="middle" font-size="13">keep the</text>
+  <text x="656" y="140" text-anchor="middle" font-size="13">top lines</text>
+
+  <text class="dim" x="10" y="190" font-size="13">Without the first sort, uniq -c counts only neighbours, and every line may show 1.</text>
+  <text class="dim" x="10" y="214" font-size="13">Build it one stage at a time and look at what comes out of each.</text>
+</svg>

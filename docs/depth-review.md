@@ -88,3 +88,4 @@ By path, in the order the owner works through them.
 | `foundations.bash-variables-and-expansion` | deepened 2026-11-26: reviewed (already detailed); added one line followed through every step, 1 diagram (`expand4.sh`) |
 | `foundations.bash-control-flow` | reviewed 2026-11-26: already explains every trap with its output; added 1 diagram (loop input) |
 | `foundations.bash-functions-and-scripts` | reviewed 2026-11-26: already detailed, with real output; added 1 diagram (lock descriptors) |
+| `foundations.bash-text-processing` | reviewed 2026-11-26: already detailed; added the counting pipeline stage by stage, 1 diagram (`ts3.sh`) |
