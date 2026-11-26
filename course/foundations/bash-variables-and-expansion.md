@@ -78,7 +78,7 @@ args {a,b}.txt ~ "$who" $who $ext "$ext" $((2+3))
 | `'single'` | everything literal | `args '$f *.txt'` gave one word `[$f *.txt]` |
 | `"double"` | `$`, `` ` ``, `\` still work; no splitting, no globbing | `args "$f *.txt"` with `f="my notes.txt"` gave one word `[my notes.txt *.txt]` |
 | `\x` | the next character is literal | `args a\ b` gave `[a b]` (one word) |
-| `$'...'` | bash-only: backslash escapes like `\t`, `\n` | `args $'a\tb'` gave one word with a tab |
+| `$'...'` | backslash escapes like `\t`, `\n`. Not safe in `sh` scripts: added to POSIX only in 2024, and the tested dash lacks it | `args $'a\tb'` gave one word with a tab |
 | mixed | quoting pieces of one word | `a"b c"d` gave one word `[ab cd]` |
 
 ### The unquoted variable is the bug

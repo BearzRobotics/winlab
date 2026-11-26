@@ -388,10 +388,10 @@ review = "Bashisms: who accepts what?"
 [[question]]
 id = "s-dollar"
 type = "choice"
-prompt = "Why is $'a\\tb' a \"silent\" bashism in dash?"
-choices = ["It prints a literal $ before the text instead of failing", "It is an error", "It is POSIX", "It prints nothing"]
+prompt = "In the lesson's test, what made $'a\\tb' dangerous in dash?"
+choices = ["It prints a literal $ before the text instead of failing", "It stops the script with a syntax error", "It deletes the backslash sequence", "It prints nothing"]
 answers = ["It prints a literal $ before the text instead of failing"]
-explanation = "ash and the FreeBSD sh handled it like bash."
+explanation = "ash and the FreeBSD sh handled it like bash. POSIX 2024 added $'...', but the tested dash does not have it yet."
 review = "Bashisms: who accepts what?"
 
 # ---- checking ----

@@ -236,6 +236,8 @@ Each row was run in all three shells. "**silent**" means the shell accepted the 
 | `local -n` | `bad variable name` | `bad variable name` | `Illegal option -n` | SC3043 |
 | `wait -n` | `Illegal option -n` | works | `Illegal option -n` | SC3045 |
 
+One correction to how you read the `$'a\tb'` row: the **2024 edition of POSIX added `$'...'`** ([section 2.2.4](https://pubs.opengroup.org/onlinepubs/9799919799/utilities/V3_chap02.html)), so it is no longer only a bash feature. The tested dash still does not have it, and ShellCheck 0.11.0 still reports it, so for a `#!/bin/sh` script keep treating it as **not portable yet** and use `printf`.
+
 What the table says:
 
 1. **dash is the strictest of the three.** Almost everything that fails in dash is a bashism. When it fails in dash and passes in bash, **it is not POSIX**, whatever ash or the FreeBSD `sh` say.

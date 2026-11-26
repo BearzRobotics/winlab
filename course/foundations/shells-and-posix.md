@@ -6,6 +6,13 @@
 
 When you run `./script.sh`, **the kernel**, not your shell, reads the first line. If it starts with `#!` (the *shebang*), the rest names the interpreter, and the kernel runs `interpreter script.sh`. See [execve(2)](https://man7.org/linux/man-pages/man2/execve.2.html).
 
+![Diagram: running ./script.sh makes the kernel read the shebang line and start that program; running dash script.sh makes dash run the file and ignore the line](diagrams/shebang.svg)
+
+```text
+ ./script.sh     -> kernel reads the #! line -> that program runs the file
+ dash script.sh  -> dash runs the file         (the #! line is ignored)
+```
+
 ```bash
 #!/usr/bin/env bash
 echo "hello from $0"
@@ -88,7 +95,8 @@ Why the **silent** ones happen, because each is a parsing fact, not luck:
 
 - **`&>`**: dash reads `ls /nonexistent &> out` as `ls /nonexistent &` (run in the background) followed by `> out` (create an empty file). The error appears on your terminal, the status is 0, and the "log file" is empty.
 - **`((x = 2 + 3))`**: dash reads two nested subshells `( ( x = 2 + 3 ) )`, so it tries to run a command called... `x`.
-- **`echo -e`** and **`$'...'`**: neither is POSIX; dash's `echo` always interprets backslashes and prints the `-e` itself.
+- **`echo -e`** is not POSIX: dash's `echo` always interprets backslashes and prints the `-e` itself.
+- **`$'...'`** came from other shells. The **2024 edition of POSIX added it** ([section 2.2.4, Dollar-Single-Quotes](https://pubs.opengroup.org/onlinepubs/9799919799/utilities/V3_chap02.html)), but the dash 0.5.12 tested here does not have it, so it printed a literal `$`. A feature can be in the standard and still be missing from the `sh` that runs your script. ShellCheck 0.11.0 still reports it for `sh` (SC3003).
 - **`{1..3}`**: brace expansion is a bash feature; other shells pass the text through.
 - **`[[` in busybox ash** is accepted but is only `[` under another name in my test, so a pattern like `a*` is compared literally. A script can pass its tests and be wrong.
 

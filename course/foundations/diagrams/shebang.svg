@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 220" role="img" aria-label="Running ./script.sh: the kernel reads the first line and starts the interpreter named there. Running dash script.sh: the shell you typed runs the file and the first line is ignored as a comment" font-family="Segoe UI, sans-serif">
+  <title>Who chooses the interpreter</title>
+  <style>
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.5 }
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    .wire { stroke: #57606a; stroke-width: 1.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .mono { font-family: Consolas, monospace }
+    .dim { fill: #57606a }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+
+  <rect class="box" x="10" y="24" width="200" height="52" rx="6"/>
+  <text class="bold mono" x="110" y="56" text-anchor="middle">./script.sh</text>
+  <line class="wire" x1="210" y1="50" x2="248" y2="50" marker-end="url(#arrow)"/>
+  <rect class="zone-kernel" x="250" y="24" width="200" height="52" rx="6"/>
+  <text class="bold" x="350" y="46" text-anchor="middle">the KERNEL</text>
+  <text x="350" y="66" text-anchor="middle" font-size="13">reads the #! line</text>
+  <line class="wire" x1="450" y1="50" x2="488" y2="50" marker-end="url(#arrow)"/>
+  <rect class="zone-user" x="490" y="24" width="220" height="52" rx="6"/>
+  <text class="bold" x="600" y="46" text-anchor="middle">that program runs it</text>
+  <text x="600" y="66" text-anchor="middle" font-size="13">the one the #! line names</text>
+
+  <rect class="box" x="10" y="112" width="200" height="52" rx="6"/>
+  <text class="bold mono" x="110" y="144" text-anchor="middle">dash script.sh</text>
+  <line class="wire" x1="210" y1="138" x2="488" y2="138" marker-end="url(#arrow)"/>
+  <rect class="zone-user" x="490" y="112" width="220" height="52" rx="6"/>
+  <text class="bold" x="600" y="134" text-anchor="middle">dash runs it</text>
+  <text x="600" y="154" text-anchor="middle" font-size="13">the #! line is ignored</text>
+
+  <text class="dim" x="10" y="204" font-size="13">So testing with "bash script.sh" tells you nothing about a #!/bin/sh script.</text>
+</svg>

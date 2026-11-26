@@ -111,3 +111,4 @@ By path, in the order the owner works through them.
 | `linux.dinit-basics` | reviewed 2026-11-26: already explains each result; added 1 diagram (the boot chain). Tests are from the earlier run |
 | `linux.dinit-service-files` | reviewed 2026-11-26: already explains each result; added 1 diagram (dependency kinds). Tests are from the earlier run |
 | `linux.dinit-in-practice` | reviewed 2026-11-26: already explains each result; added 1 diagram (user services at logout). Tests are from the earlier run |
+| `foundations.shells-and-posix` | reviewed 2026-11-26: already explains each result; fixed the claim that $'...' is not POSIX (added in POSIX 2024, checked in the spec); added 1 diagram (who chooses the interpreter). Shell tests are from the earlier run |
