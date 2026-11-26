@@ -36,12 +36,12 @@ title = "POSIX Utilities index (The Open Group)"
 url = "https://pubs.opengroup.org/onlinepubs/9799919799/idx/utilities.html"
 
 [[references]]
-title = "dash(1) manual page (Debian)"
-url = "https://manpages.debian.org/unstable/dash/dash.1.en.html"
-
-[[references]]
 title = "sh(1) manual page (FreeBSD)"
 url = "https://man.freebsd.org/cgi/man.cgi?query=sh"
+
+[[references]]
+title = "dash(1) manual page (Debian)"
+url = "https://manpages.debian.org/unstable/dash/dash.1.en.html"
 
 [[references]]
 title = "ShellCheck wiki"
@@ -50,3 +50,4 @@ url = "https://www.shellcheck.net/wiki/"
 [[references]]
 title = "BusyBox"
 url = "https://busybox.net/"
+

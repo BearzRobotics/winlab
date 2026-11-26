@@ -94,6 +94,14 @@ Use **`IFS= read -r`** to read a line exactly. In **dash, ash and the FreeBSD sh
 n=0; printf "a\nb\nc\n" | while read -r l; do n=$((n+1)); done; echo "n=$n"    ->  n=0     (all three)
 ```
 
+![Diagram: the while loop at the end of a pipeline runs in a subshell with its own copy of n, which is thrown away, so the script still has n equal to 0](diagrams/pipeline-subshell.svg)
+
+```text
+ script: n=0
+   printf ... | [ subshell: its copy of n reaches 3, then the copy is gone ]
+ script: n is still 0
+```
+
 Fixes that worked in all three:
 
 ```text
