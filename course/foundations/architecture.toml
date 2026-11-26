@@ -3,10 +3,12 @@ id = "foundations.architecture"
 title = "How Windows is organized"
 summary = "Kernel mode and user mode, processes, services, sessions, users, SIDs and where things live on disk, each observed from both the graphical tools and the command line, plus a terminal-first working setup."
 content = "architecture.md"
-estimated_minutes = 50
+estimated_minutes = 100
 level = 1
 objectives = [
   "Explain the difference between kernel mode and user mode and why it matters when troubleshooting",
+  "Trace how a program asks the kernel to do work, and measure user time against kernel time",
+  "Read driver, process and service listings: say what is normal and what to check next",
   "Distinguish a program, a process, a thread and a service",
   "Look up a running process, its owner, session, parent and the path it was started from, with Task Manager, tasklist, Get-Process and Get-CimInstance",
   "Describe what a logon session and a user profile are, and why services run in session 0",
@@ -87,3 +89,83 @@ url = "https://learn.microsoft.com/windows/terminal/"
 [[references]]
 title = "Microsoft Edit (GitHub)"
 url = "https://github.com/microsoft/edit"
+
+[[references]]
+title = "Virtual address spaces (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-hardware/drivers/gettingstarted/virtual-address-spaces"
+
+[[references]]
+title = "Overview of Windows components (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-hardware/drivers/kernel/overview-of-windows-components"
+
+[[references]]
+title = "Process.PrivilegedProcessorTime (Microsoft Learn)"
+url = "https://learn.microsoft.com/dotnet/api/system.diagnostics.process.privilegedprocessortime"
+
+[[references]]
+title = "Overview of UMDF (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-hardware/drivers/wdf/overview-of-the-umdf"
+
+[[references]]
+title = "Bug checks (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-hardware/drivers/debugger/bug-checks--blue-screens-"
+
+[[references]]
+title = "Kernel-mode dump files (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-hardware/drivers/debugger/kernel-mode-dump-files"
+
+[[references]]
+title = "Driver signing (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-hardware/drivers/install/driver-signing"
+
+[[references]]
+title = "SetupAPI logging (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-hardware/drivers/install/setupapi-logging--windows-vista-and-later-"
+
+[[references]]
+title = "Child processes (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/win32/procthread/child-processes"
+
+[[references]]
+title = "LocalSystem account (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/win32/services/localsystem-account"
+
+[[references]]
+title = "Service host grouping (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/application-management/svchost-service-refactoring"
+
+[[references]]
+title = "sc.exe config (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/sc-config"
+
+[[references]]
+title = "Automatically starting services (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/win32/services/automatically-starting-services"
+
+[[references]]
+title = "Service trigger events (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/win32/services/service-trigger-events"
+
+[[references]]
+title = "syscalls(2) (man7.org)"
+url = "https://man7.org/linux/man-pages/man2/syscalls.2.html"
+
+[[references]]
+title = "time(7) (man7.org)"
+url = "https://man7.org/linux/man-pages/man7/time.7.html"
+
+[[references]]
+title = "Microsoft Edit wiki (GitHub)"
+url = "https://github.com/microsoft/edit/wiki"
+
+[[references]]
+title = "Get-Process (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.management/get-process"
+
+[[references]]
+title = "Set-Service (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.management/set-service"
+
+[[references]]
+title = "set (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/set_1"

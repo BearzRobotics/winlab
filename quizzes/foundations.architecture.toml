@@ -365,3 +365,94 @@ choices = ["Windows Terminal", "Task Manager", "Notepad", "File Explorer"]
 answers = ["Windows Terminal"]
 explanation = "It is a host for several shells side by side."
 review = "Working from the terminal"
+
+# ---- Added with the expanded lesson ----
+
+[[question]]
+id = "space-shared"
+type = "choice"
+prompt = "Why can one faulty kernel-mode driver crash the whole machine?"
+choices = ["Kernel-mode code shares one address space, so nothing walls the driver off", "Drivers are always larger than applications", "Every driver runs as a separate service", "User-mode programs depend on every driver"]
+answers = ["Kernel-mode code shares one address space, so nothing walls the driver off"]
+explanation = "Each user-mode process has a private address space; kernel-mode code does not."
+review = "Private memory: each process has its own map"
+
+[[question]]
+id = "denied-who"
+type = "choice"
+prompt = "Two programs run by the same user both get 'Access is denied' on a file. Why?"
+choices = ["The kernel checks that user's permission, whichever program asks", "Both programs have the same bug", "The disk driver is faulty", "Only one program may open any file"]
+answers = ["The kernel checks that user's permission, whichever program asks"]
+explanation = "The permission check happens in the kernel, so changing programs does not get round it."
+review = "A request, step by step"
+
+[[question]]
+id = "time-user"
+type = "choice"
+prompt = "A loop that only does arithmetic is timed. Where is most of its processor time?"
+choices = ["User time", "Kernel (privileged) time", "Both are always equal", "Neither is recorded"]
+answers = ["User time"]
+explanation = "Arithmetic needs no help from the kernel."
+review = "Watching a program cross the line"
+
+[[question]]
+id = "time-kernel"
+type = "choice"
+prompt = "A process shows much more kernel time than user time. What is the right conclusion?"
+choices = ["It is a clue that it asks the system to do much work, or that a driver spends the time; investigate", "It proves a driver is faulty", "It is certainly malware", "The program is idle"]
+answers = ["It is a clue that it asks the system to do much work, or that a driver spends the time; investigate"]
+explanation = "The split narrows the search. It does not by itself name the cause."
+review = "Watching a program cross the line"
+
+[[question]]
+id = "linkdate"
+type = "choice"
+prompt = "What does the Link Date column of driverquery show?"
+choices = ["When the driver file was built", "When the driver was installed", "When the driver last ran", "When Windows was installed"]
+answers = ["When the driver file was built"]
+explanation = "It is not an install date, and it is often blank."
+review = "Seeing the drivers"
+
+[[question]]
+id = "driver-event"
+type = "short"
+prompt = "Which System log event ID records 'a service was installed', including drivers installed as services? (number only)"
+answers = ["7045"]
+explanation = "Filter event 7045 for a service type of kernel mode driver."
+review = "Seeing the drivers"
+
+[[question]]
+id = "driver-stopped"
+type = "choice"
+prompt = "Many drivers show State 'Stopped'. What does that usually mean?"
+choices = ["Nothing is wrong: many are for hardware or features not in use", "Each one has crashed", "Windows is damaged", "They are unsigned"]
+answers = ["Nothing is wrong: many are for hardware or features not in use"]
+explanation = "On the lesson's test PC more than half of the listed drivers were stopped."
+review = "Seeing the drivers"
+
+[[question]]
+id = "parent-gone"
+type = "choice"
+prompt = "A process's ParentProcessId matches no running process. What does that tell you?"
+choices = ["The parent has exited, which by itself is not suspicious", "The process is malware", "The process is a driver", "Windows must be restarted"]
+answers = ["The parent has exited, which by itself is not suspicious"]
+explanation = "Children can outlive parents, and PIDs can later be reused by unrelated processes."
+review = "Seeing processes from the command line"
+
+[[question]]
+id = "svchost-which"
+type = "choice"
+prompt = "A svchost.exe is using a lot of processor time. What should you do before ending it?"
+choices = ["Find which services are inside it, for example with tasklist /svc", "End it at once", "Delete svchost.exe", "Disable every Manual service"]
+answers = ["Find which services are inside it, for example with tasklist /svc"]
+explanation = "Ending a service host ends every service inside it."
+review = "Which process is a service?"
+
+[[question]]
+id = "svc-auto-stopped"
+type = "choice"
+prompt = "An Automatic service is Stopped. Which is the best reading?"
+choices = ["Worth a look, but not proof of a fault", "Windows is broken", "It is disabled", "It has never been installed"]
+answers = ["Worth a look, but not proof of a fault"]
+explanation = "Some services finish their job or wait for a trigger and stop."
+review = "Services"
