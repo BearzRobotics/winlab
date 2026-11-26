@@ -100,6 +100,14 @@ if ($script:fails) { "{0} check(s) failed" -f $script:fails; exit 1 } else { 'no
 
 Run it from an elevated PowerShell: `powershell -NoProfile -ExecutionPolicy Bypass -File .\wl-winbaseline.ps1`. Each check sits inside `Check`, so a command that fails (a cmdlet missing, a service off) is reported as a `FAIL ... could not check` line instead of ending the run silently.
 
+![Diagram: each check reports PASS, FAIL or REVIEW; a FAIL, including a check that could not run, makes the script exit 1; REVIEW lists need a person](diagrams/baseline-results.svg)
+
+```text
+ check -> PASS    matches the rule
+       -> FAIL    breaks it, or could not check (exit 1)
+       -> REVIEW  a list a person must judge
+```
+
 ## Run on a fresh server
 
 ```text

@@ -26,18 +26,6 @@ title = "Windows security baselines"
 url = "https://learn.microsoft.com/en-us/windows/security/operating-system-security/device-management/windows-security-configuration-framework/windows-security-baselines"
 
 [[references]]
-title = "Get-NetFirewallProfile"
-url = "https://learn.microsoft.com/en-us/powershell/module/netsecurity/get-netfirewallprofile"
-
-[[references]]
-title = "Get-SmbServerConfiguration"
-url = "https://learn.microsoft.com/en-us/powershell/module/smbshare/get-smbserverconfiguration"
-
-[[references]]
-title = "Detect, enable and disable SMBv1, SMBv2 and SMBv3"
-url = "https://learn.microsoft.com/en-us/windows-server/storage/file-server/troubleshoot/detect-enable-and-disable-smbv1-v2-v3"
-
-[[references]]
 title = "SMB signing overview"
 url = "https://learn.microsoft.com/en-us/windows-server/storage/file-server/smb-signing-overview"
 
@@ -50,9 +38,30 @@ title = "Account lockout threshold"
 url = "https://learn.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/account-lockout-threshold"
 
 [[references]]
+title = "Get-NetFirewallProfile"
+url = "https://learn.microsoft.com/en-us/powershell/module/netsecurity/get-netfirewallprofile"
+
+[[references]]
+title = "Get-SmbServerConfiguration"
+url = "https://learn.microsoft.com/en-us/powershell/module/smbshare/get-smbserverconfiguration"
+
+[[references]]
+title = "Detect, enable and disable SMBv1, SMBv2 and SMBv3"
+url = "https://learn.microsoft.com/en-us/windows-server/storage/file-server/troubleshoot/detect-enable-and-disable-smbv1-v2-v3"
+
+[[references]]
+title = "get-localgroupmember"
+url = "https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.localaccounts/get-localgroupmember"
+
+[[references]]
 title = "Get-MpComputerStatus"
 url = "https://learn.microsoft.com/en-us/powershell/module/defender/get-mpcomputerstatus"
 
 [[references]]
 title = "Get-HotFix"
 url = "https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.management/get-hotfix"
+
+[[references]]
+title = "account-lockout-policy"
+url = "https://learn.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/account-lockout-policy"
+

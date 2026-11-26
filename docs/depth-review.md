@@ -103,3 +103,4 @@ By path, in the order the owner works through them.
 | `security.threat-modelling` | reviewed 2026-11-26: already explains each result; added 1 diagram (trust boundaries). Tests are from the earlier run |
 | `security.incident-response-linux` | reviewed 2026-11-26: already explains each result; added 1 diagram (collection order). Tests are from the earlier run |
 | `security.linux-hardening-checks` | reviewed 2026-11-26: already explains each result; added 1 diagram (first value wins). Tests are from the earlier run |
+| `security.windows-hardening-checks` | reviewed 2026-11-26: already explains each result; added 1 diagram (baseline results). Tests are from the earlier run |
