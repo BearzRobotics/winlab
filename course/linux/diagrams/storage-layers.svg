@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300" role="img" aria-label="Storage layers: a disk is split into partitions; with LVM, physical volumes form a volume group from which logical volumes are cut; a file system is made on a partition or logical volume and mounted at a folder" font-family="Segoe UI, sans-serif">
+  <title>The layers of Linux storage</title>
+  <style>
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.5 }
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    .wire { stroke: #57606a; stroke-width: 1.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .dim { fill: #57606a }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+
+  <text class="bold" x="180" y="22" text-anchor="middle">plain partition</text>
+  <text class="bold" x="540" y="22" text-anchor="middle">with LVM</text>
+
+  <rect class="zone-user" x="60" y="34" width="240" height="40" rx="6"/>
+  <text x="180" y="59" text-anchor="middle">folder (mount point) /boot</text>
+  <rect class="zone-user" x="420" y="34" width="240" height="40" rx="6"/>
+  <text x="540" y="59" text-anchor="middle">folder /srv/lvdata</text>
+  <line class="wire" x1="180" y1="94" x2="180" y2="76" marker-end="url(#arrow)"/>
+  <line class="wire" x1="540" y1="94" x2="540" y2="76" marker-end="url(#arrow)"/>
+  <text x="192" y="90" font-size="13">mount</text>
+
+  <rect class="zone-kernel" x="60" y="96" width="240" height="40" rx="6"/>
+  <text class="bold" x="180" y="121" text-anchor="middle">file system (xfs)</text>
+  <rect class="zone-kernel" x="420" y="96" width="240" height="40" rx="6"/>
+  <text class="bold" x="540" y="121" text-anchor="middle">file system (ext4)</text>
+
+  <rect class="box" x="420" y="146" width="240" height="36" rx="6"/>
+  <text x="540" y="169" text-anchor="middle">logical volume: labvg/data</text>
+  <rect class="box" x="420" y="192" width="240" height="36" rx="6"/>
+  <text x="540" y="215" text-anchor="middle">volume group: labvg</text>
+
+  <rect class="box" x="60" y="146" width="240" height="82" rx="6"/>
+  <text x="180" y="192" text-anchor="middle">partition: /dev/sda3</text>
+  <rect class="box" x="420" y="238" width="240" height="36" rx="6"/>
+  <text x="540" y="261" text-anchor="middle">physical volume(s)</text>
+  <rect class="box" x="60" y="238" width="240" height="36" rx="6"/>
+  <text x="180" y="261" text-anchor="middle">disk: /dev/sda</text>
+  <text class="dim" x="60" y="294" font-size="13">A physical volume is a disk, a partition or another block device given to LVM.</text>
+</svg>

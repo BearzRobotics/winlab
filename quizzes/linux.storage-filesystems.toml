@@ -60,9 +60,9 @@ review = "Mounting by hand"
 [[question]]
 id = "target-busy"
 type = "choice"
-prompt = "umount says 'target is busy'. Which commands show who is using it?"
-choices = ["findmnt and lsof +D /srv/data, or fuser -vm /srv/data", "mkfs and blkid", "df and lsblk", "mount -a and daemon-reload"]
-answers = ["findmnt and lsof +D /srv/data, or fuser -vm /srv/data"]
+prompt = "umount says 'target is busy'. What shows who is using it?"
+choices = ["fuser -vm /srv/data (or lsof, if installed)", "mkfs and blkid", "df and lsblk", "mount -a and daemon-reload"]
+answers = ["fuser -vm /srv/data (or lsof, if installed)"]
 explanation = "Something is using the mount; find it before detaching."
 review = "Mounting by hand"
 
@@ -135,3 +135,68 @@ choices = ["Make a deliberate decision, not a guess", "Delete them at once", "Ig
 answers = ["Make a deliberate decision, not a guess"]
 explanation = "The fix is to mount it and make the fstab entry correct."
 review = "The problem pattern"
+
+# ---- Added when the lesson was deepened ----
+
+[[question]]
+id = "df-not-mounted"
+type = "choice"
+prompt = "Nothing is mounted at /mnt/wl. What does df -h /mnt/wl show?"
+choices = ["The file system that holds the folder, such as the root file system", "An error saying nothing is mounted", "An empty file system of size 0", "Nothing at all"]
+answers = ["The file system that holds the folder, such as the root file system"]
+explanation = "Test for a mount with findmnt or mountpoint."
+review = "`df` and `findmnt`"
+
+[[question]]
+id = "deleted-open"
+type = "choice"
+prompt = "A log was deleted but df shows no space freed, and du cannot account for the usage. What is the likely cause?"
+choices = ["A process still has the deleted file open", "The disk is broken", "df is cached for a day", "The file was not really deleted by root"]
+answers = ["A process still has the deleted file open"]
+explanation = "The space is freed when the last handle closes, usually by restarting the service."
+review = "2. A deleted file that is still open"
+
+[[question]]
+id = "inodes"
+type = "choice"
+prompt = "Creating files fails with 'No space left on device' while df -h shows 1% used. Which command shows the cause?"
+choices = ["df -i", "du -sh", "lsblk -f", "blkid"]
+answers = ["df -i"]
+explanation = "The file system has run out of inodes."
+review = "3. Out of inodes"
+
+[[question]]
+id = "nofail-silent"
+type = "choice"
+prompt = "An fstab line with nofail has a wrong UUID. What did mount -a do in the lesson?"
+choices = ["Printed nothing, exited 0 and mounted nothing", "Printed an error and exited 32", "Mounted a different disk", "Stopped the system"]
+answers = ["Printed nothing, exited 0 and mounted nothing"]
+explanation = "Prove a mount with findmnt."
+review = "What the mistakes look like"
+
+[[question]]
+id = "mkfs-script"
+type = "choice"
+prompt = "In the lesson, mkfs.ext4 ran on a device that already held ext4, with input from /dev/null. What happened?"
+choices = ["It overwrote the file system without asking", "It refused and required -f", "It kept the old files", "It mounted the old file system"]
+answers = ["It overwrote the file system without asking"]
+explanation = "Check the device yourself; mkfs.xfs refused in the same situation."
+review = "Creating a file system"
+
+[[question]]
+id = "vfree"
+type = "choice"
+prompt = "Which output tells you whether a volume group has unused space for growing a logical volume?"
+choices = ["VFree in vgs", "Use% in df", "RM in lsblk", "UUID in blkid"]
+answers = ["VFree in vgs"]
+explanation = "vgs describes the pool."
+review = "LVM: volumes you can grow"
+
+[[question]]
+id = "lvextend-r"
+type = "choice"
+prompt = "You run lvextend without -r. What is the result?"
+choices = ["The volume grows, but the file system does not until it is grown too", "The files are deleted", "The command always fails", "Both grow anyway"]
+answers = ["The volume grows, but the file system does not until it is grown too"]
+explanation = "-r grows the file system in the same step."
+review = "LVM: volumes you can grow"

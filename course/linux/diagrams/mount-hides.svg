@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 210" role="img" aria-label="When nothing is mounted, files written to the folder go to the root file system; after mounting, those files are hidden behind the mounted file system until it is unmounted" font-family="Segoe UI, sans-serif">
+  <title>A mount covers what is in the folder</title>
+  <style>
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.5 }
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    .wire { stroke: #57606a; stroke-width: 1.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .dim { fill: #57606a }
+  </style>
+
+  <text class="bold" x="170" y="24" text-anchor="middle">NOT mounted</text>
+  <rect class="box" x="30" y="36" width="280" height="40" rx="6"/>
+  <text x="170" y="61" text-anchor="middle">ls /mnt/wl shows under.txt</text>
+  <rect class="zone-user" x="30" y="86" width="280" height="60" rx="6"/>
+  <text class="bold" x="170" y="112" text-anchor="middle">root file system</text>
+  <text x="170" y="134" text-anchor="middle" font-size="13">under.txt is stored here</text>
+
+  <text class="bold" x="550" y="24" text-anchor="middle">mounted</text>
+  <rect class="box" x="410" y="36" width="280" height="40" rx="6"/>
+  <text x="550" y="61" text-anchor="middle">ls /mnt/wl shows lost+found</text>
+  <rect class="zone-kernel" x="410" y="86" width="280" height="40" rx="6"/>
+  <text class="bold" x="550" y="111" text-anchor="middle">the mounted file system</text>
+  <rect class="zone-user" x="410" y="136" width="280" height="40" rx="6"/>
+  <text x="550" y="161" text-anchor="middle" font-size="13">under.txt: still there, hidden</text>
+
+  <text class="dim" x="30" y="200" font-size="13">The hidden file still uses space on the root file system. Unmounting shows it again.</text>
+</svg>

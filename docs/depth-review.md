@@ -64,3 +64,4 @@ By path, in the order the owner works through them.
 | `foundations.ps-system-admin-scripting` | deepened 2026-11-26: reading log properties and task result codes, safe-change diagram; VM results are from the earlier run |
 | `foundations.ps-advanced` | deepened 2026-11-26: how to measure and read timings, logging diagram (`adv3.ps1`); VM logging results are from the earlier run |
 | `endpoints.protect-devices` | rewritten 2026-11-26 (Server 2022 VM; 1 diagram; `protect1.ps1`, `protect2.ps1`); **fixed a wrong passive-mode claim**. Not tested: real traffic filtering, BitLocker, third-party antivirus, a management service, Windows 10 and 11 |
+| `linux.storage-filesystems` | rewritten 2026-11-26 (AlmaLinux 9.8 VM; 2 diagrams, new LVM and 'why is it full' sections; `storage1.sh`). Not tested: a second disk, Ubuntu output, XFS growth, shrinking, boot with a broken fstab |
