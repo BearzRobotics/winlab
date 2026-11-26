@@ -76,6 +76,37 @@ TimeCreated              Id LevelDisplayName ProviderName
 
 `Level` 1 is critical, 2 error, 3 warning, 4 information. The **Id** and **ProviderName** together identify an event, which is what you search for. Always **read the message** of an event that fits your time window (`| Select-Object -First 1 -ExpandProperty Message`), and treat noisy repeats (the DistributedCOM warning 10016 above is common and usually harmless) with care: an event that happens every day is not the cause of a problem that began on Monday. From Command Prompt, [`wevtutil qe System /c:3 /rd:true /f:text`](https://learn.microsoft.com/windows-server/administration/windows-commands/wevtutil) shows the newest events as text.
 
+### Is it new, or has it always been there?
+
+A healthy machine logs errors and warnings. Before you chase one, ask **how often it happens and when it started**. Group the log by source and ID:
+
+```powershell
+$all = Get-WinEvent -FilterHashtable @{ LogName = 'System'; Level = 1, 2, 3 }
+$all | Group-Object ProviderName, Id | Sort-Object Count -Descending |
+    Select-Object Count, Name,
+        @{ n = 'First'; e = { ($_.Group.TimeCreated | Measure-Object -Minimum).Minimum } },
+        @{ n = 'Last';  e = { ($_.Group.TimeCreated | Measure-Object -Maximum).Maximum } }
+```
+
+On a freshly started Windows Server 2022 lab VM (`tests/verification/powershell/method1.ps1`):
+
+```text
+Count Name                                    First                 Last
+    5 Microsoft-Windows-WinRM, 10149          11/8/2026 3:10:45 AM  11/26/2026 6:01:40 PM
+    5 Microsoft-Windows-DistributedCOM, 10016 11/8/2026 3:17:25 AM  11/26/2026 9:12:26 PM
+    2 Microsoft-Windows-Time-Service, 134     11/8/2026 11:10:08 AM 11/8/2026 11:10:10 AM
+    2 Service Control Manager, 7034           11/8/2026 3:39:08 AM  11/26/2026 6:01:40 PM
+```
+
+| Pattern | What it suggests |
+|---|---|
+| Many times, **first seen long before** the problem | Background: unlikely to be the cause |
+| **First seen just before** the problem began | A strong lead |
+| A burst at the time of the failure, then nothing | Part of that incident: read each message |
+| Old, but **suddenly much more frequent** | Something changed: look at when the rate rose |
+
+To list only the kinds **never seen before** a given moment, keep the groups whose first time is later than it. Two cautions: the log only goes back as far as it has room for, so "first seen" means **first still kept**; and if the machine's clock changed, times can mislead.
+
 ### Services and processes
 
 ```
@@ -100,7 +131,7 @@ Update      KB5127694 10/24/2026 12:00:00 AM
 Update      KB5054156 10/18/2026 12:00:00 AM
 ```
 
-[`Get-HotFix`](https://learn.microsoft.com/powershell/module/microsoft.powershell.management/get-hotfix) lists installed updates. A problem that began the day after one was installed is a lead, not proof.
+[`Get-HotFix`](https://learn.microsoft.com/powershell/module/microsoft.powershell.management/get-hotfix) lists installed updates. A problem that began the day after one was installed is a lead, not proof. It does **not** list every change: drivers, applications, settings and some updates are missing (see the updates and policy lesson).
 
 ### Linux
 
@@ -131,6 +162,22 @@ Write each hypothesis so a test could disprove it: "the user is no longer in the
 The best test is read-only and separates two hypotheses: its result must differ depending on which one is true. If hypothesis A says the account lacks a permission and B says the printer is down, "print from a second account" separates them.
 
 When a test *must* change something, change **one** thing, note it, and be ready to put it back.
+
+### Halve the problem
+
+When many things could be broken, test **near the middle** of the chain. The result removes about half of them.
+
+![Diagram: browser, address, name, port, service and data form a chain; testing whether the port can be reached tells you whether the fault is before or after it](diagrams/halve-problem.svg)
+
+```text
+ browser - address - name - [PORT] - service - data
+                              ^ test here first
+ cannot connect: look left (name, then address, firewall)     connects: look right (service log, data)
+```
+
+Why start at the port? One command (`Test-NetConnection server -Port 443` on Windows) says whether you can reach it, and either answer narrows the search a great deal. A failure there still needs reading: **refused** and **timed out** point to different causes (see the networking lessons). The same idea works elsewhere: for a script that fails, check the values **halfway** through; for "it stopped working last week", test a version or configuration from **halfway** back.
+
+**Compare with something that works** whenever you can: another user, another machine, the same machine yesterday. Then reduce the differences one at a time.
 
 ## Step 6: repair, and keep a way back
 
@@ -215,6 +262,7 @@ Put the **symptom as the user described it** in the record: the next person will
 - **Declaring victory without repeating the reproduction.**
 - **Starting a stopped service without asking why it stopped.**
 - **Assuming the user's explanation of the cause is the cause.** Take the symptom from them and find the cause yourself.
+- **Chasing an old, harmless event** because it says "Error".
 
 ## Check your understanding
 

@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 260" role="img" aria-label="A chain from the user to the data in six links. Testing the middle link tells you which half holds the fault; repeat on that half" font-family="Segoe UI, sans-serif">
+  <title>Test the middle, keep the broken half</title>
+  <style>
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.5 }
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    .wire { stroke: #57606a; stroke-width: 1.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .dim { fill: #57606a }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+
+  <text class="bold" x="10" y="24">"The intranet page will not load"</text>
+  <rect class="zone-user" x="10" y="44" width="100" height="46" rx="5"/>
+  <text x="60" y="72" text-anchor="middle">browser</text>
+  <rect class="zone-user" x="130" y="44" width="100" height="46" rx="5"/>
+  <text x="180" y="72" text-anchor="middle">address</text>
+  <rect class="zone-user" x="250" y="44" width="100" height="46" rx="5"/>
+  <text x="300" y="72" text-anchor="middle">name</text>
+  <rect class="zone-kernel" x="370" y="44" width="100" height="46" rx="5"/>
+  <text class="bold" x="420" y="72" text-anchor="middle">port</text>
+  <rect class="box" x="490" y="44" width="100" height="46" rx="5"/>
+  <text x="540" y="72" text-anchor="middle">service</text>
+  <rect class="box" x="610" y="44" width="100" height="46" rx="5"/>
+  <text x="660" y="72" text-anchor="middle">data</text>
+
+  <line class="wire" x1="420" y1="130" x2="420" y2="94" marker-end="url(#arrow)"/>
+  <text class="bold" x="420" y="150" text-anchor="middle">1. test here first: can I connect to the port?</text>
+
+  <rect class="zone-user" x="10" y="174" width="340" height="52" rx="6"/>
+  <text class="bold" x="180" y="196" text-anchor="middle">no: the fault is on this side</text>
+  <text x="180" y="216" text-anchor="middle" font-size="13">test the name next, then the address</text>
+  <rect class="box" x="370" y="174" width="340" height="52" rx="6"/>
+  <text class="bold" x="540" y="196" text-anchor="middle">yes: look further along</text>
+  <text x="540" y="216" text-anchor="middle" font-size="13">the service's log, then its data</text>
+  <text class="dim" x="10" y="252" font-size="13">Each test removes about half of what could be wrong.</text>
+</svg>

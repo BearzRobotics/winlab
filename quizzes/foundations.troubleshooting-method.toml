@@ -383,3 +383,23 @@ choices = ["It can hide a fault and destroy evidence", "Restarting is not allowe
 answers = ["It can hide a fault and destroy evidence"]
 explanation = "Note what you saw before restarting."
 review = "Common mistakes"
+
+# ---- Added when the lesson was deepened ----
+
+[[question]]
+id = "first-seen"
+type = "choice"
+prompt = "Which event is the stronger lead for a problem that began Tuesday?"
+choices = ["A kind first seen on Monday night", "One that has fired daily for months at the same rate", "Any event marked Error, whatever its date", "The oldest event in the log"]
+answers = ["A kind first seen on Monday night"]
+explanation = "Group by source and ID and compare first-seen times with the start of the problem."
+review = "Is it new, or has it always been there?"
+
+[[question]]
+id = "halve"
+type = "choice"
+prompt = "A web page will not load and many things could be wrong. Why test whether the port can be reached early?"
+choices = ["It sits near the middle of the chain, so either answer rules out much of it", "It repairs the connection", "It is the only test that works", "It restarts the service"]
+answers = ["It sits near the middle of the chain, so either answer rules out much of it"]
+explanation = "Then test the middle of the half that remains."
+review = "Halve the problem"
