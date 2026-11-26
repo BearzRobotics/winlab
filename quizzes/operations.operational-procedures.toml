@@ -137,3 +137,68 @@ choices = ["Keep scripts under version control", "Give them clear names", "Test 
 answers = ["Keep scripts under version control", "Give them clear names", "Test them on a lab machine first", "Log what they change"]
 explanation = "Do not run unfamiliar scripts on a production machine."
 review = "Scripts and automation as procedure"
+
+# ---- Added when the lesson was deepened ----
+
+[[question]]
+id = "record-old-value"
+type = "choice"
+prompt = "Why should a problem record include the old value of a setting you changed?"
+choices = ["So the change can be undone and others can see what was wrong", "To make the record longer", "Because the ticket system requires numbers", "To prove who was at fault"]
+answers = ["So the change can be undone and others can see what was wrong"]
+explanation = "Record what each check showed and what the value was before."
+review = "A weak record and a useful one"
+
+[[question]]
+id = "backout-decide"
+type = "choice"
+prompt = "Which makes a back-out plan useful during a change window?"
+choices = ["How to go back, how long it takes, and the time by which you decide", "The words 'restore from backup'", "A list of people to blame", "No plan, to save time"]
+answers = ["How to go back, how long it takes, and the time by which you decide"]
+explanation = "And know the point of no return."
+review = "A worked change request"
+
+[[question]]
+id = "mirror-not-backup"
+type = "choice"
+prompt = "Why is a mirrored disk not a backup?"
+choices = ["A deletion or an encrypted file is mirrored too", "Mirrors are slower", "It uses too much power", "It cannot hold large files"]
+answers = ["A deletion or an encrypted file is mirrored too"]
+explanation = "It protects against a failed disk only."
+review = "Backups and recovery"
+
+[[question]]
+id = "incremental-restore"
+type = "choice"
+prompt = "A full backup was made Sunday and incrementals Monday to Wednesday. What is needed to restore Wednesday's state?"
+choices = ["The full and all three incrementals", "The full and Wednesday's incremental only", "Wednesday's incremental only", "The full only"]
+answers = ["The full and all three incrementals"]
+explanation = "Each incremental holds changes since the previous backup."
+review = "Full, incremental and differential"
+
+[[question]]
+id = "compress-hidden"
+type = "choice"
+prompt = "In the lesson's restore test, which file did Compress-Archive silently leave out?"
+choices = ["The one with the Hidden attribute", "The largest one", "The newest one", "A file in a subfolder"]
+answers = ["The one with the Hidden attribute"]
+explanation = "The command reported success; only the comparison found it."
+review = "A restore test finds what the backup hid"
+
+[[question]]
+id = "promise-update"
+type = "choice"
+prompt = "A user asks when it will be fixed and you do not know. What is the better promise?"
+choices = ["A time for your next update", "Ten minutes", "Tomorrow, definitely", "No reply until it is fixed"]
+answers = ["A time for your next update"]
+explanation = "And send it, even with no news."
+review = "Communication and professionalism"
+
+[[question]]
+id = "disk-leaving"
+type = "choice"
+prompt = "Before a disk leaves your control, what must happen?"
+choices = ["Its data must be sanitised", "Its files must be moved to the Recycle Bin", "It needs a quick format only", "It needs a new label"]
+answers = ["Its data must be sanitised"]
+explanation = "Deleting or quick formatting is not enough."
+review = "Safety and the work environment"

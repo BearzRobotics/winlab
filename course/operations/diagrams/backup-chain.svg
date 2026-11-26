@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 270" role="img" aria-label="With incremental backups a restore on Thursday needs the full backup and every incremental since; with differential backups it needs the full backup and only the latest differential" font-family="Segoe UI, sans-serif">
+  <title>What a restore needs: incremental and differential</title>
+  <style>
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.5 }
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .dim { fill: #57606a }
+  </style>
+
+  <text class="bold" x="170" y="22" text-anchor="middle">Sun</text>
+  <text class="bold" x="310" y="22" text-anchor="middle">Mon</text>
+  <text class="bold" x="450" y="22" text-anchor="middle">Tue</text>
+  <text class="bold" x="590" y="22" text-anchor="middle">Wed</text>
+
+  <text class="bold" x="10" y="66">incremental</text>
+  <rect class="zone-user" x="110" y="40" width="120" height="42" rx="5"/>
+  <text x="170" y="66" text-anchor="middle">full</text>
+  <rect class="zone-user" x="250" y="40" width="120" height="42" rx="5"/>
+  <text x="310" y="66" text-anchor="middle">+ Mon</text>
+  <rect class="zone-user" x="390" y="40" width="120" height="42" rx="5"/>
+  <text x="450" y="66" text-anchor="middle">+ Tue</text>
+  <rect class="zone-user" x="530" y="40" width="120" height="42" rx="5"/>
+  <text x="590" y="66" text-anchor="middle">+ Wed</text>
+  <text class="dim" x="110" y="106" font-size="13">Each holds changes since the previous backup. A restore needs ALL four.</text>
+
+  <text class="bold" x="10" y="166">differential</text>
+  <rect class="zone-user" x="110" y="140" width="120" height="42" rx="5"/>
+  <text x="170" y="166" text-anchor="middle">full</text>
+  <rect class="box" x="250" y="140" width="120" height="42" rx="5"/>
+  <text x="310" y="166" text-anchor="middle">Mon</text>
+  <rect class="box" x="390" y="140" width="120" height="42" rx="5"/>
+  <text x="450" y="166" text-anchor="middle">Mon-Tue</text>
+  <rect class="zone-user" x="530" y="140" width="120" height="42" rx="5"/>
+  <text x="590" y="166" text-anchor="middle">Mon-Wed</text>
+  <text class="dim" x="110" y="206" font-size="13">Each holds changes since the last FULL. A restore needs TWO (blue).</text>
+  <text class="dim" x="10" y="248" font-size="13">Restoring the state of Wednesday evening. Losing one link of a chain loses what depends on it.</text>
+</svg>

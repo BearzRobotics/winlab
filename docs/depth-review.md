@@ -68,3 +68,4 @@ By path, in the order the owner works through them.
 | `linux.containers-podman` | rewritten 2026-11-26 (AlmaLinux 9.8, Podman 5.8.2; 1 diagram; `podman1.sh`). Not tested: pulling, other distributions, user services, reboot, `--init`, `--no-cache` |
 | `endpoints.endpoint-management` | rewritten 2026-11-26 (Server 2022 VM; 1 diagram; `endpoint1.ps1`). Not tested: Intune, Entra ID, Autopilot, a successful MSI install, client Windows |
 | `endpoints.update-and-policy` | rewritten 2026-11-26 (Server 2022 VM; 1 diagram; `update1.ps1`). Not tested: installing updates, WSUS, MDM, domain GPOs, gpedit, client Windows |
+| `operations.operational-procedures` | rewritten 2026-11-26 (worked examples, 2 diagrams; restore test `restore1.ps1` in 5.1 and 7.6). Examples are invented |

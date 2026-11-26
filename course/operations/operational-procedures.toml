@@ -3,13 +3,14 @@ id = "operations.operational-procedures"
 title = "Operational procedures: documentation, change and recovery"
 summary = "Problem records, change management, backups, communication and safety habits for IT support and administration."
 content = "operational-procedures.md"
-estimated_minutes = 30
+estimated_minutes = 60
 level = 1
 objectives = [
   "Write a problem record with the problem, evidence, change and verification",
   "Describe the steps of a change request including risk and a back-out plan",
   "Explain the 3-2-1 backup rule and the terms RPO and RTO",
   "Describe professional communication with users and when to escalate",
+  "Test a restore by comparing paths and file hashes",
 ]
 prerequisites = ["foundations.troubleshooting-method"]
 windows_features = []
@@ -21,5 +22,38 @@ evaluation_criteria = [
 ]
 
 [[references]]
+title = "NIST SP 800-128, security-focused configuration management"
+url = "https://csrc.nist.gov/pubs/sp/800/128/upd1/final"
+
+[[references]]
 title = "ITIL change enablement (overview)"
 url = "https://www.axelos.com/certifications/itil-service-management"
+
+[[references]]
+title = "CISA, data backup options"
+url = "https://www.cisa.gov/sites/default/files/publications/data_backup_options.pdf"
+
+[[references]]
+title = "NIST glossary: recovery point objective"
+url = "https://csrc.nist.gov/glossary/term/recovery_point_objective"
+
+[[references]]
+title = "NIST glossary: recovery time objective"
+url = "https://csrc.nist.gov/glossary/term/recovery_time_objective"
+
+[[references]]
+title = "NIST SP 800-34, contingency planning"
+url = "https://csrc.nist.gov/pubs/sp/800/34/r1/upd1/final"
+
+[[references]]
+title = "Compress-Archive (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.archive/compress-archive"
+
+[[references]]
+title = "Get-FileHash (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/get-filehash"
+
+[[references]]
+title = "NIST SP 800-88, media sanitization"
+url = "https://csrc.nist.gov/pubs/sp/800/88/r2/final"
+
