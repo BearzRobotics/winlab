@@ -90,6 +90,18 @@ Built: format and validator (`docs/quizzes.md`), the quiz window, and results st
 - **Optional WSL builder:** for a distro that ships only an ISO with a squashfs root, WinLab may later offer "build from ISO" using WSL (`unsquashfs`, `mkfs.ext4 -d`) plus Windows `qemu-img`. WSL is a free Windows feature and is treated like QEMU: detected, never installed by WinLab, instructions shown when missing. Verified on the author's machine: Ubuntu-26.04 under WSL2 has `unsquashfs`, `mksquashfs`, `mkfs.ext4`.
 - Images live in `%LOCALAPPDATA%\WinLab\images`, VMs in `%LOCALAPPDATA%\WinLab\vms\<id>`. A GUI "Lab machines" page (catalog, downloads, build, QEMU/winget hint) is planned; today it is command-line only.
 
+## Python track (planned; owner agreed 2026-11-26; no lessons written)
+
+An optional track, **Python for administrators**. Only the basics are general; **everything after the basics is administration-focused**. It is not a general programming course. Write it after the current drafts have had owner testing, using what the CMD and PowerShell review shows.
+
+- **Basics, taught through admin tasks:** files and paths, text, CSV and JSON, running other programs safely, error handling and exit codes, command-line arguments.
+- **Beyond the basics:** administration work, including when to choose Python over bash or PowerShell.
+- **Read and audit other people's code,** as in the other scripting tracks.
+- **Standard library first** (limited internet). Virtual environments and `pip` get a later lesson of their own, with the risks of installing unfamiliar packages.
+- **Versions:** say which version each lesson needs and teach the differences. Lesson output so far shows 3.12.3 on Ubuntu and 3.9.25 on AlmaLinux; the owner's Windows PC has 3.15.2.
+- **Labs:** script labs support CMD, PowerShell and bash; Python needs adding as a lab language. The Linux lab VMs already run Python. The Windows lab VM has not been checked.
+- **Host Python is optional:** the app does not need it. If the track has learners run Python on Windows, the setup window may list it as optional, for this track only, with a command to copy. WinLab never installs it.
+
 ## Learning paths
 
 Goal-based paths, soft prerequisites and test-out-by-quiz are designed in `docs/learning-paths.md` (not yet implemented).
