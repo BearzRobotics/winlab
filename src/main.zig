@@ -2620,6 +2620,12 @@ fn check(gpa: std.mem.Allocator, io: std.Io, dir: []const u8) !void {
         const doc = try winlab.md.Document.parse(a, body, .{ .extensions = winlab.md.Extensions.gfm });
         const drawings = try loadDrawings(a, io, course.root, entry.dir, doc.root, &diagram_problems);
         diagram_count += drawings.len;
+        // An image that is not alone in its paragraph is silently shown as its description, so count the links.
+        const named = std.mem.count(u8, body, ".svg)");
+        if (named > drawings.len and drawings.len + diagram_problems < named) {
+            std.debug.print("{s}: {d} SVG image(s) in the text but {d} drawn: each must be alone in its own paragraph, outside lists and tables\n", .{ entry.lesson.id, named, drawings.len });
+            diagram_problems += named - drawings.len;
+        }
     }
     std.debug.print("{d} diagram(s), {d} problem(s)\n", .{ diagram_count, diagram_problems });
     if (cat.problems.len != 0 or lab_problems != 0 or cert_problems != 0 or quiz_problems != 0 or path_problems != 0 or diagram_problems != 0) std.process.exit(1);
