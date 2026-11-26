@@ -72,7 +72,7 @@ type = "choice"
 prompt = "Why is deleting a former employee's account usually worse than disabling it?"
 choices = ["A disabled account can be turned back on; deleting loses its history", "Deleting is slower", "Disabled accounts cannot sign in anyway", "Deleting is not possible"]
 answers = ["A disabled account can be turned back on; deleting loses its history"]
-explanation = "Disable-LocalUser on Windows, passwd -l on Linux."
+explanation = "Disable-LocalUser on Windows. On Linux expire the account (usermod --expiredate 1): locking the password alone does not stop an SSH key."
 review = "Accounts and passwords"
 
 [[question]]
