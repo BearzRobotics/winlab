@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 210" role="img" aria-label="Activity is checked against the audit policy; only audited activity is written to the Security log, which overwrites its oldest events when full, so events should be copied elsewhere" font-family="Segoe UI, sans-serif">
+  <title>What reaches the Security log, and what is lost</title>
+  <style>
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.5 }
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    .wire { stroke: #57606a; stroke-width: 1.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .dim { fill: #57606a }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+
+  <rect class="box" x="10" y="40" width="130" height="60" rx="6"/>
+  <text class="bold" x="75" y="66" text-anchor="middle">activity</text>
+  <text x="75" y="88" text-anchor="middle" font-size="13">a sign-in</text>
+  <line class="wire" x1="140" y1="70" x2="186" y2="70" marker-end="url(#arrow)"/>
+  <rect class="zone-kernel" x="188" y="40" width="160" height="60" rx="6"/>
+  <text class="bold" x="268" y="66" text-anchor="middle">audit policy</text>
+  <text x="268" y="88" text-anchor="middle" font-size="13">is it audited?</text>
+  <line class="wire" x1="348" y1="70" x2="394" y2="70" marker-end="url(#arrow)"/>
+  <text x="371" y="60" text-anchor="middle" font-size="13">yes</text>
+  <rect class="zone-user" x="396" y="40" width="150" height="60" rx="6"/>
+  <text class="bold" x="471" y="66" text-anchor="middle">Security log</text>
+  <text x="471" y="88" text-anchor="middle" font-size="13">limited size</text>
+  <line class="wire" x1="546" y1="70" x2="592" y2="70" marker-end="url(#arrow)"/>
+  <rect class="box" x="594" y="40" width="116" height="60" rx="6"/>
+  <text class="bold" x="652" y="66" text-anchor="middle">a copy</text>
+  <text x="652" y="88" text-anchor="middle" font-size="13">elsewhere</text>
+
+  <line class="wire" x1="268" y1="100" x2="268" y2="132" marker-end="url(#arrow)"/>
+  <text x="282" y="124" font-size="13">no</text>
+  <text class="bold" x="268" y="154" text-anchor="middle">never written</text>
+  <line class="wire" x1="471" y1="100" x2="471" y2="132" marker-end="url(#arrow)"/>
+  <text x="471" y="154" text-anchor="middle" font-size="13">full or cleared: old events go</text>
+  <text class="dim" x="10" y="196" font-size="13">In the lab, after a clear, only event 1102 (the log was cleared) remained.</text>
+</svg>

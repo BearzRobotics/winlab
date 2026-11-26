@@ -22,14 +22,6 @@ evaluation_criteria = [
 ]
 
 [[references]]
-title = "Nmap Reference Guide"
-url = "https://nmap.org/book/man.html"
-
-[[references]]
-title = "Nmap: Legal Issues"
-url = "https://nmap.org/book/legal-issues.html"
-
-[[references]]
 title = "ss(8)"
 url = "https://man7.org/linux/man-pages/man8/ss.8.html"
 
@@ -38,5 +30,14 @@ title = "bash(1), Redirections (/dev/tcp), Debian manual page"
 url = "https://manpages.debian.org/stable/bash/bash.1.en.html"
 
 [[references]]
+title = "Nmap Reference Guide"
+url = "https://nmap.org/book/man.html"
+
+[[references]]
+title = "Nmap: Legal Issues"
+url = "https://nmap.org/book/legal-issues.html"
+
+[[references]]
 title = "NIST SP 800-115 (planning and conducting technical tests)"
 url = "https://csrc.nist.gov/pubs/sp/800/115/final"
+

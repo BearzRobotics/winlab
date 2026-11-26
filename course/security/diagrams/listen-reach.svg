@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 240" role="img" aria-label="A service listening on 127.0.0.1 can be reached only from the same machine. One listening on 0.0.0.0 can be reached from other machines too, unless a firewall stops them. ss looks from inside; nmap connects like a client" font-family="Segoe UI, sans-serif">
+  <title>Who can reach a listener</title>
+  <style>
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.5 }
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    .wire { stroke: #57606a; stroke-width: 1.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .dim { fill: #57606a }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+
+  <rect class="box" x="10" y="64" width="170" height="60" rx="6"/>
+  <text class="bold" x="95" y="90" text-anchor="middle">another machine</text>
+  <text x="95" y="112" text-anchor="middle" font-size="13">a remote client</text>
+
+  <rect class="box" x="360" y="20" width="350" height="170" rx="8"/>
+  <text class="bold" x="535" y="44" text-anchor="middle">this machine</text>
+  <rect class="zone-kernel" x="380" y="60" width="310" height="50" rx="5"/>
+  <text class="bold" x="535" y="82" text-anchor="middle">0.0.0.0 or [::]</text>
+  <text x="535" y="101" text-anchor="middle" font-size="13">every interface</text>
+  <rect class="zone-user" x="380" y="124" width="310" height="50" rx="5"/>
+  <text class="bold" x="535" y="146" text-anchor="middle">127.0.0.1</text>
+  <text x="535" y="165" text-anchor="middle" font-size="13">this machine only</text>
+
+  <line class="wire" x1="180" y1="86" x2="378" y2="86" marker-end="url(#arrow)"/>
+  <text x="268" y="76" text-anchor="middle" font-size="13">if no firewall stops it</text>
+  <line class="wire" x1="180" y1="118" x2="262" y2="140"/>
+  <text class="bold" x="276" y="150" text-anchor="middle">X</text>
+
+  <text class="dim" x="10" y="212" font-size="13">ss -tlnp looks from inside and names the process.</text>
+  <text class="dim" x="10" y="232" font-size="13">nmap connects like a client. A difference between the two views is something to explain.</text>
+</svg>
