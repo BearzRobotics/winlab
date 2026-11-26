@@ -93,6 +93,15 @@ A triggered service **starts only after an outside event** says so, for example 
 | `prepared-by: X` | like `depends-on`, but X is also restarted when this service restarts | not tested |
 | `depends-on.d`, `depends-ms.d`, `waits-for.d: DIR` | one dependency per name in DIR | `waits-for.d` is how `boot`, `enable` and groups work (basics lesson) |
 
+![Diagram: depends-on fails and stops with the other service; depends-ms fails with it but survives its later stop; waits-for starts anyway and stays](diagrams/dinit-deps.svg)
+
+```text
+              other fails to start     other stops later
+ depends-on:  this fails too           this stops
+ depends-ms:  this fails too           this stays
+ waits-for:   this starts anyway       this stays
+```
+
 When the dependency **fails to start**:
 
 ```text

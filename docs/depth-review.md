@@ -109,3 +109,4 @@ By path, in the order the owner works through them.
 | `linux.systemd` | reviewed 2026-11-26: already explains each result; added 1 diagram (start and enable) |
 | `linux.systemd-advanced` | reviewed 2026-11-26: already explains each result; added 1 diagram (what starts a service) |
 | `linux.dinit-basics` | reviewed 2026-11-26: already explains each result; added 1 diagram (the boot chain). Tests are from the earlier run |
+| `linux.dinit-service-files` | reviewed 2026-11-26: already explains each result; added 1 diagram (dependency kinds). Tests are from the earlier run |
