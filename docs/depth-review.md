@@ -25,6 +25,7 @@ These are close to outlines and need to be written, not polished.
 | `foundations.cmd-batch-files` | deepened 2026-11-26: the example script ran part of a folder name as a command; rewritten and tested with hostile names (`batch2.ps1`), 1 diagram |
 | `foundations.cmd-text-and-files` | deepened 2026-11-26: reading fc and mirror output, findstr on LF and UTF-16 files, forfiles ages, 1 diagram (`text2.cmd`) |
 | `foundations.cmd-advanced` | deepened 2026-11-26: **fixed a command injection in the input check**; array order, tasklist trap, recursion limit, 1 diagram (`adv3.cmd`, `adv4.cmd`, `adv5.ps1`). The CMD series is done |
+| `foundations.powershell-basics` | deepened 2026-11-26: reading tables, Get-Member and SYNTAX, silent typo and comparison traps, the Format-Table trap shown, 2 diagrams (`basics2.ps1`) |
 | `endpoints.endpoint-management` | 409 | 1 | Parts need a management service that is not set up here |
 | `endpoints.update-and-policy` | 410 | 2 | Windows; the Windows lab VM |
 | `linux.containers-podman` | 417 | 3 | AlmaLinux VM, internet to pull an image |
@@ -60,3 +61,4 @@ By path, in the order the owner works through them.
 | `foundations.cmd-batch-files` | deepened 2026-11-26: the example script ran part of a folder name as a command; rewritten and tested with hostile names (`batch2.ps1`), 1 diagram |
 | `foundations.cmd-text-and-files` | deepened 2026-11-26: reading fc and mirror output, findstr on LF and UTF-16 files, forfiles ages, 1 diagram (`text2.cmd`) |
 | `foundations.cmd-advanced` | deepened 2026-11-26: **fixed a command injection in the input check**; array order, tasklist trap, recursion limit, 1 diagram (`adv3.cmd`, `adv4.cmd`, `adv5.ps1`). The CMD series is done |
+| `foundations.powershell-basics` | deepened 2026-11-26: reading tables, Get-Member and SYNTAX, silent typo and comparison traps, the Format-Table trap shown, 2 diagrams (`basics2.ps1`) |

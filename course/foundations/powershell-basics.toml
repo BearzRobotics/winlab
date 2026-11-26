@@ -3,7 +3,7 @@ id = "foundations.powershell-basics"
 title = "PowerShell fundamentals"
 summary = "Windows PowerShell 5.1 versus PowerShell 7, starting it, Verb-Noun cmdlets, aliases and parameters, common parameters and -WhatIf, help, objects and the pipeline, formatting versus data, providers and drives, running scripts, execution policy and profiles."
 content = "powershell-basics.md"
-estimated_minutes = 90
+estimated_minutes = 130
 level = 1
 objectives = [
   "Tell Windows PowerShell 5.1 from PowerShell 7, and say which to target for a given job",
@@ -28,12 +28,24 @@ evaluation_criteria = [
 ]
 
 [[references]]
-title = "PowerShell documentation (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/"
+title = "Installing PowerShell on Linux (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/scripting/install/installing-powershell-on-linux"
+
+[[references]]
+title = "Using Visual Studio Code for PowerShell development (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/scripting/dev-cross-plat/vscode/using-vscode"
 
 [[references]]
 title = "Get-Command (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/get-command"
+
+[[references]]
+title = "about_Aliases (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_aliases"
+
+[[references]]
+title = "about_CommonParameters (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_commonparameters"
 
 [[references]]
 title = "Get-Help (Microsoft Learn)"
@@ -68,20 +80,28 @@ title = "ForEach-Object (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/foreach-object"
 
 [[references]]
-title = "about_Aliases (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_aliases"
-
-[[references]]
-title = "about_CommonParameters (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_commonparameters"
-
-[[references]]
 title = "about_Pipelines (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_pipelines"
 
 [[references]]
+title = "format-table"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/format-table"
+
+[[references]]
+title = "out-file"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/out-file"
+
+[[references]]
 title = "about_Providers (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_providers"
+
+[[references]]
+title = "example.com"
+url = "https://example.com"
+
+[[references]]
+title = "PowerShell on Linux and macOS: differences (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/scripting/whats-new/unix-support"
 
 [[references]]
 title = "about_Execution_Policies (Microsoft Learn)"
@@ -100,13 +120,6 @@ title = "Start-Transcript (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.host/start-transcript"
 
 [[references]]
-title = "Installing PowerShell on Linux (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/scripting/install/installing-powershell-on-linux"
+title = "PowerShell documentation (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/"
 
-[[references]]
-title = "PowerShell on Linux and macOS: differences (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/scripting/whats-new/unix-support"
-
-[[references]]
-title = "Using Visual Studio Code for PowerShell development (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/scripting/dev-cross-plat/vscode/using-vscode"

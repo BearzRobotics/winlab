@@ -1,6 +1,6 @@
 *Draft for owner review.* PowerShell is a shell and a scripting language built around **objects** instead of text. That one difference changes how you filter, combine and reuse results, and it is why PowerShell scales from a one-line query to a thousand-line module. This lesson is the foundation for the whole PowerShell series: what it is, how to start it, how commands are named and discovered, how the pipeline works, how to read help, and how scripts are allowed to run. Every command here only reads information.
 
-All output shown was produced on Windows 11 with **Windows PowerShell 5.1** and **PowerShell 7**, and where they differ the text says so.
+All output shown was produced on Windows 11 with **Windows PowerShell 5.1** and **PowerShell 7**, and where they differ the text says so. The results on reading output, syntax lines and comparisons come from `tests/verification/powershell/basics2.ps1`, run in 5.1.26100 and 7.6.10; numbers and process names on your machine will differ.
 
 ## Two PowerShells
 
@@ -130,7 +130,40 @@ Update-Help
 
 [`Get-Help`](https://learn.microsoft.com/powershell/module/microsoft.powershell.core/get-help) shows the syntax, description and examples. Help for the `about_*` topics explains concepts and language features. **`Update-Help`** downloads current help files; it needs network access and an elevated prompt, and until you run it you see abbreviated help. It is optional; the online documentation at learn.microsoft.com is the same content, and `Get-Help Get-Process -Online` opens it in a browser.
 
-Read the **SYNTAX** block as follows: a parameter in square brackets is optional; a parameter *and* its value both in brackets is optional; `<String[]>` means a list of strings is accepted. Learning to read this block is the single most useful PowerShell skill.
+### Reading the SYNTAX block
+
+Learning to read this block is **the single most useful PowerShell skill**: it tells you what a cmdlet accepts without any examples. `Get-Command Stop-Process -Syntax` prints just that part (both editions printed these three lines):
+
+```text
+Stop-Process [-Id] <int[]> [-PassThru] [-Force] [-WhatIf] [-Confirm] [<CommonParameters>]
+
+Stop-Process -Name <string[]> [-PassThru] [-Force] [-WhatIf] [-Confirm] [<CommonParameters>]
+
+Stop-Process [-InputObject] <Process[]> [-PassThru] [-Force] [-WhatIf] [-Confirm] [<CommonParameters>]
+```
+
+![Diagram: in the syntax line Stop-Process [-Id] <int[]> [-PassThru], brackets around -Id mean the name may be left out, <int[]> means one number or a list and is required, and a bracketed switch is optional](diagrams/ps-syntax.svg)
+
+```text
+ Stop-Process  [-Id] <int[]>   [-PassThru]  [-Force] ...
+      |          |      |           |
+  the cmdlet     |      |           +-- all in [ ]: optional (a switch has no value)
+                 |      +-- <int[]>: whole numbers, one or a list ([] means "a list"); required
+                 +-- [ ] around only the NAME: you may give the number by position
+```
+
+| What you see | What it means |
+|---|---|
+| `-Name <string[]>` | This parameter is **required** in this form, and you must write `-Name` |
+| `[-Id] <int[]>` | The value is **required**, but the name may be omitted: `Stop-Process 1234` |
+| `[-Force]` | **Optional** switch |
+| `[[-Path] <string[]>]` | The whole thing is optional; if given, the name may be omitted |
+| `<string[]>` | One string **or several**, separated by commas |
+| `[<CommonParameters>]` | It also takes the common parameters (above) |
+
+**Each line is a separate way of calling the cmdlet** (a *parameter set*). You use **one line's** parameters at a time. `-Name` and `-Id` are on different lines, so `Stop-Process -Name notepad -Id 1 -WhatIf` failed with `Parameter set cannot be resolved using the specified named parameters.` When you see that message, you have mixed two lines.
+
+`Get-Help Stop-Process -Parameter Name` then describes one parameter, including whether it **accepts pipeline input**: here `-Name` and `-Id` both accept it **by property name**, so objects that have a `Name` or `Id` property can be piped into `Stop-Process`. Rehearse with `-WhatIf`.
 
 ## Objects, not text
 
@@ -145,6 +178,57 @@ Get-Process | Get-Member
 Get-Process explorer | Select-Object Name, Id, StartTime, WorkingSet
 ```
 
+### Reading the default table
+
+`Get-Process -Id $PID` (your own PowerShell) in the two editions:
+
+```text
+Handles  NPM(K)    PM(K)      WS(K)     CPU(s)     Id  SI ProcessName          (5.1)
+-------  ------    -----      -----     ------     --  -- -----------
+    579      29    59084      71496       0.48   8080   1 powershell
+
+ NPM(K)    PM(M)      WS(M)     CPU(s)      Id  SI ProcessName                  (7.6)
+ ------    -----      -----     ------      --  -- -----------
+     56    32.52      83.78       0.55   13556   1 pwsh
+```
+
+| Column | Meaning |
+|---|---|
+| `WS` | **Working set**: memory the process has in physical RAM now. The usual "how much memory is it using" |
+| `PM` | Paged memory: memory private to the process that can be paged to disk |
+| `NPM` | Non-paged memory, usually small |
+| `CPU(s)` | **Seconds** of processor time used since it started, not a percentage |
+| `Id` / `SI` | Process ID / session ID |
+
+**Check the unit in the heading.** 5.1 showed memory in **kilobytes** (`WS(K)`), 7.6 in **megabytes** (`WS(M)`), and 7 had no `Handles` column. A script must never read these columns: it should use the properties, which are in **bytes** (`WorkingSet64`) in both.
+
+The table shows **8 of the properties**; the object had **67** properties in 5.1 and **69** in 7 (plus 19 methods). `Format-List *` shows them all with their values.
+
+### Reading `Get-Member`
+
+```text
+Get-Process -Id $PID | Get-Member -Name Id, Name, WorkingSet64, Kill, StartTime
+
+   TypeName: System.Diagnostics.Process
+
+Name         MemberType    Definition
+----         ----------    ----------
+Id           Property      int Id {get;}
+Name         AliasProperty Name = ProcessName
+WorkingSet64 Property      long WorkingSet64 {get;}
+Kill         Method        void Kill()
+StartTime    Property      datetime StartTime {get;}
+```
+
+| Part | Read it as |
+|---|---|
+| `TypeName` | What kind of object this is. Search the web for this name to find its documentation |
+| `Property` | A piece of data. The type comes first: `int`, `long`, `datetime`. `{get;}` means you can read it but not set it |
+| `AliasProperty` | Another name for a property: `Name` is `ProcessName` |
+| `Method` | Something the object can **do**. `Kill()` ends the process: calling a method has no `-WhatIf` |
+
+(PowerShell 7 listed a second form of `Kill` and extra members such as `Parent`.)
+
 This is the difference from cmd: there you cut text with `for /f` and `findstr`; here you ask for a property by name, and it still works if the display format changes.
 
 ## The pipeline
@@ -156,7 +240,46 @@ Get-Process | Where-Object { $_.WorkingSet -gt 200MB }
 Get-Process | Sort-Object WorkingSet -Descending | Select-Object -First 5 Name, Id, WorkingSet
 ```
 
-`$_` is the current object. The workhorse cmdlets:
+`$_` is the current object.
+
+![Diagram: Get-Process produces 215 objects, Where-Object keeps 18, Sort-Object orders them and Select-Object keeps 3 with chosen properties](diagrams/ps-pipeline.svg)
+
+```text
+ Get-Process --> Where-Object --> Sort-Object --> Select-Object
+ 215 objects     18 objects       18, in order    3 objects (Name, Id, MB)
+```
+
+**Build a pipeline one stage at a time**, looking at each result. On the test PC, `Get-Process` gave 215 objects and keeping those over 100 MB left 18; sorting and then taking three, with a calculated `MB` column, printed:
+
+```powershell
+Get-Process | Where-Object { $_.WorkingSet64 -gt 100MB } |
+    Sort-Object WorkingSet64 -Descending |
+    Select-Object -First 3 Name, Id, @{n='MB'; e={ [int]($_.WorkingSet64 / 1MB) }}
+```
+
+```text
+Name       Id  MB
+----       --  --
+explorer 8976 466
+MsMpEng  5384 437
+...
+```
+
+`100MB` is real PowerShell: `KB`, `MB` and `GB` after a number multiply it. `@{n='MB'; e={...}}` makes a **calculated property**: `n` is its name, `e` the expression for each object.
+
+Two traps that produce **no error**:
+
+| What I ran | Result |
+|---|---|
+| `(Get-Process -Id $PID).WorkingSte` (misspelled) | Nothing. **A property that does not exist is empty, not an error** |
+| `Get-Process \| Where-Object { $_.WorkingSte -gt 1 }` | **0** processes: the typo filtered everything out |
+| `'10' -gt 9` | `False` |
+| `10 -gt '9'` | `True` |
+| `'10' -gt '9'` | `False` |
+
+So when a filter returns **nothing**, check the property name with `Get-Member` before you believe it. And in a comparison, **the value on the left decides the type**: with text on the left, `'10'` and `9` are compared as text, and `1` sorts before `9`. Values read from files and command output are often text: convert them (`[int]$value`).
+
+The workhorse cmdlets:
 
 | Cmdlet | Job |
 |---|---|
@@ -189,7 +312,22 @@ Because the objects are real, `Measure-Object` can add a property: `Get-ChildIte
 Get-Service | Sort-Object Status | Format-Table Name, Status
 ```
 
-Reversing the order breaks things, because after `Format-Table` the pipeline holds formatting instructions, not services. When you want to save data use `Export-Csv`, `ConvertTo-Json` or `Out-File` (the working-with-data lesson covers them). See [`Format-Table`](https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/format-table) and [`Out-File`](https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/out-file).
+Reversing the order breaks things, because after `Format-Table` the pipeline holds formatting instructions, not services. This is what that means. After `Format-Table`, the objects in the pipeline were of types such as `FormatStartData`, `GroupStartData` and `FormatEntryData`. Sorting them failed (`Operation is not valid due to the current state of the object.`), and exporting them to CSV produced pages of internal data:
+
+```text
+"ClassId2e4f51ef21dd47e99d3c952918aff9cd","pageHeaderEntry","pageFooterEntry","autosizeInfo",...
+"033ecb2bc07a4d43b5ef94ed5a35d280",,,,"Microsoft.PowerShell.Commands.Internal.Format.TableHeaderInfo...
+```
+
+The same export with `Select-Object Name, Id` in place of `Format-Table` produced the file you want:
+
+```text
+"Name","Id"
+"AggregatorHost","6792"
+"amdfendrsr","3580"
+```
+
+**`Select-Object` chooses data; `Format-*` makes a picture of it.** When you want to save data use `Export-Csv`, `ConvertTo-Json` or `Out-File` (the working-with-data lesson covers them). See [`Format-Table`](https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/format-table) and [`Out-File`](https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/out-file).
 
 ## Providers and drives
 
@@ -391,5 +529,8 @@ The errors-and-debugging lesson covers this properly.
 6. Why should scripts avoid aliases?
 7. How do you list the registry keys under `HKCU:\Software`, and why does the same cmdlet work?
 8. How do you run a script that is in the current folder?
+9. In `[-Id] <int[]> [-Force]`, which parts must you give?
+10. `Get-Process | Where-Object { $_.WorkingSte -gt 1 }` returns nothing. Why is there no error?
+11. Why can `'10' -gt 9` be False?
 
-**Expected answers:** (1) the full set of properties and methods; (2) it outputs display instructions, not the original objects; (3) no, it prevents accidental script runs but does not stop a user from running the same commands interactively; (4) Windows PowerShell 5.1 and PowerShell 7; (5) it shows what the command would do without doing it; use it before any change; (6) they are shorter but harder to read, and they can be redefined; (7) `Get-ChildItem HKCU:\Software`; providers expose different data stores through one set of cmdlets; (8) `.\script.ps1`, because PowerShell does not run from the current folder by name.
+**Expected answers:** (1) the full set of properties and methods; (2) it outputs display instructions, not the original objects; (3) no, it prevents accidental script runs but does not stop a user from running the same commands interactively; (4) Windows PowerShell 5.1 and PowerShell 7; (5) it shows what the command would do without doing it; use it before any change; (6) they are shorter but harder to read, and they can be redefined; (7) `Get-ChildItem HKCU:\Software`; providers expose different data stores through one set of cmdlets; (8) `.\script.ps1`, because PowerShell does not run from the current folder by name; (9) a number or list of numbers, with or without writing `-Id`; `-Force` is optional; (10) a property that does not exist is simply empty, so nothing passes the filter; (11) the left value is text, so both are compared as text, and `1` sorts before `9`.

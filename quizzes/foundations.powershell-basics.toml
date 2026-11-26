@@ -640,3 +640,58 @@ prompt = "Which Invoke-WebRequest switch avoids the Internet Explorer engine in 
 answers = ["-UseBasicParsing"]
 explanation = "PowerShell 7 does not need it."
 review = "The `curl` trap"
+
+# ---- Added when the lesson was deepened ----
+
+[[question]]
+id = "syntax-brackets-name"
+type = "choice"
+prompt = "In the syntax [-Id] <int[]>, what do the brackets around -Id alone mean?"
+choices = ["The value is required, but you may leave out the name -Id", "The whole parameter is optional", "Id must be a list of at least two", "It is a switch"]
+answers = ["The value is required, but you may leave out the name -Id"]
+explanation = "If the value were optional too, the brackets would enclose both."
+review = "Reading the SYNTAX block"
+
+[[question]]
+id = "param-set"
+type = "choice"
+prompt = "Stop-Process -Name notepad -Id 1 fails with 'Parameter set cannot be resolved'. Why?"
+choices = ["-Name and -Id belong to different syntax lines, and you use one line at a time", "notepad is not running", "-Id must come first", "Stop-Process has no -Name"]
+answers = ["-Name and -Id belong to different syntax lines, and you use one line at a time"]
+explanation = "Each SYNTAX line is a parameter set."
+review = "Reading the SYNTAX block"
+
+[[question]]
+id = "ws-units"
+type = "choice"
+prompt = "Get-Process shows WS(K) in one edition and WS(M) in another. What should a script use?"
+choices = ["The property WorkingSet64, which is in bytes in both", "The column text", "CPU(s)", "The first column"]
+answers = ["The property WorkingSet64, which is in bytes in both"]
+explanation = "Columns are for people; properties are the data."
+review = "Reading the default table"
+
+[[question]]
+id = "get-member-method"
+type = "choice"
+prompt = "Get-Member lists Kill with MemberType Method. What is a method?"
+choices = ["Something the object can do", "A piece of data you can read", "An alias for a property", "A help topic"]
+answers = ["Something the object can do"]
+explanation = "Calling a method has no -WhatIf, so be sure first."
+review = "Reading `Get-Member`"
+
+[[question]]
+id = "typo-silent"
+type = "choice"
+prompt = "A Where-Object filter on a misspelled property returns nothing. What does PowerShell report?"
+choices = ["Nothing: a missing property is just empty", "An error naming the property", "A warning", "All objects"]
+answers = ["Nothing: a missing property is just empty"]
+explanation = "Check names with Get-Member before believing an empty result."
+review = "The pipeline"
+
+[[question]]
+id = "left-type"
+type = "short"
+prompt = "What does '10' -gt 9 give? (True or False)"
+answers = ["false"]
+explanation = "The left value decides the type; as text, 10 sorts before 9."
+review = "The pipeline"

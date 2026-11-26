@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 200" role="img" aria-label="Objects flow through the pipeline: all processes, filtered, sorted, then the first three are selected" font-family="Segoe UI, sans-serif">
+  <title>Objects flowing through a pipeline</title>
+  <style>
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .wire { stroke: #57606a; stroke-width: 1.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .dim { fill: #57606a }
+    .mono { font-family: Consolas, monospace }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+
+  <rect class="zone-user" x="10" y="30" width="150" height="66" rx="6"/>
+  <text class="mono" x="85" y="56" text-anchor="middle" font-size="13">Get-Process</text>
+  <text class="bold" x="85" y="82" text-anchor="middle">215 objects</text>
+  <line class="wire" x1="160" y1="63" x2="192" y2="63" marker-end="url(#arrow)"/>
+  <rect class="zone-user" x="194" y="30" width="150" height="66" rx="6"/>
+  <text class="mono" x="269" y="56" text-anchor="middle" font-size="13">Where-Object</text>
+  <text class="bold" x="269" y="82" text-anchor="middle">18 objects</text>
+  <line class="wire" x1="344" y1="63" x2="376" y2="63" marker-end="url(#arrow)"/>
+  <rect class="zone-user" x="378" y="30" width="150" height="66" rx="6"/>
+  <text class="mono" x="453" y="56" text-anchor="middle" font-size="13">Sort-Object</text>
+  <text class="bold" x="453" y="82" text-anchor="middle">18, in order</text>
+  <line class="wire" x1="528" y1="63" x2="560" y2="63" marker-end="url(#arrow)"/>
+  <rect class="zone-user" x="562" y="30" width="148" height="66" rx="6"/>
+  <text class="mono" x="636" y="56" text-anchor="middle" font-size="13">Select-Object</text>
+  <text class="bold" x="636" y="82" text-anchor="middle">3 objects</text>
+
+  <text class="dim" x="85" y="122" text-anchor="middle" font-size="13">every property</text>
+  <text class="dim" x="269" y="122" text-anchor="middle" font-size="13">keep over 100 MB</text>
+  <text class="dim" x="453" y="122" text-anchor="middle" font-size="13">largest first</text>
+  <text class="dim" x="636" y="122" text-anchor="middle" font-size="13">Name, Id, MB only</text>
+  <text class="bold" x="10" y="172">Run it one step at a time, adding a stage only when the last one is right.</text>
+</svg>
