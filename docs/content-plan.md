@@ -90,9 +90,11 @@ Built: format and validator (`docs/quizzes.md`), the quiz window, and results st
 - **Optional WSL builder:** for a distro that ships only an ISO with a squashfs root, WinLab may later offer "build from ISO" using WSL (`unsquashfs`, `mkfs.ext4 -d`) plus Windows `qemu-img`. WSL is a free Windows feature and is treated like QEMU: detected, never installed by WinLab, instructions shown when missing. Verified on the author's machine: Ubuntu-26.04 under WSL2 has `unsquashfs`, `mksquashfs`, `mkfs.ext4`.
 - Images live in `%LOCALAPPDATA%\WinLab\images`, VMs in `%LOCALAPPDATA%\WinLab\vms\<id>`. A GUI "Lab machines" page (catalog, downloads, build, QEMU/winget hint) is planned; today it is command-line only.
 
-## Python track (planned; owner agreed 2026-11-26; no lessons written)
+## Python track (started 2026-11-26)
 
-An optional track, **Python for administrators**. Only the basics are general; **everything after the basics is administration-focused**. It is not a general programming course. Write it after the current drafts have had owner testing, using what the CMD and PowerShell review shows.
+An optional track, **Python for administrators** (`paths/python-admin.toml`). Only the basics are general; **everything after the basics is administration-focused**. It is not a general programming course. (The owner asked on 2026-11-26 to start now rather than after the current drafts are tested.)
+
+**Written (draft):** `foundations.python-basics`, run on 3.15.2 (Windows) and 3.14.4 (Ubuntu, WSL); **not** run on 3.9 or 3.12. It has no labs yet. **Proposed next, not yet agreed:** (2) files, CSV, JSON and logs; (3) arguments with `argparse`, errors, exit statuses and logging; (4) running other programs safely with `subprocess`; (5) reading and auditing other people's scripts; later, virtual environments and `pip`.
 
 - **Basics, taught through admin tasks:** files and paths, text, CSV and JSON, running other programs safely, error handling and exit codes, command-line arguments.
 - **Beyond the basics:** administration work, including when to choose Python over bash or PowerShell.

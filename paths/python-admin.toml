@@ -1,0 +1,11 @@
+schema_version = 1
+id = "python-admin"
+title = "Python for administrators (just started)"
+goal = "Write, read and audit Python scripts that administer Windows and Linux machines."
+audience = "Administrators who already use a shell. This path is new: only its first lesson is written."
+order = 45
+
+[[stage]]
+title = "Python basics"
+entry_hint = "New to Python? Start here. Already comfortable? Take the quiz to test out."
+lessons = ["foundations.python-basics"]

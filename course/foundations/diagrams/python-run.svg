@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300" role="img" aria-label="How Python runs a file" font-family="Segoe UI, sans-serif">
+  <title>How Python runs a file</title>
+  <style>
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.5 }
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    .wire { stroke: #57606a; stroke-width: 1.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+
+  <rect class="box" x="130" y="10" width="160" height="34" rx="5"/>
+  <text x="210" y="32" text-anchor="middle">script.py</text>
+  <line class="wire" x1="210" y1="44" x2="210" y2="70" marker-end="url(#arrow)"/>
+
+  <rect class="zone-user" x="40" y="70" width="340" height="52" rx="6"/>
+  <text class="bold" x="210" y="92" text-anchor="middle">1. Read and compile</text>
+  <text x="210" y="112" text-anchor="middle">the WHOLE file</text>
+
+  <line class="wire" x1="380" y1="96" x2="460" y2="96" marker-end="url(#arrow)"/>
+  <rect class="zone-kernel" x="460" y="70" width="250" height="52" rx="6"/>
+  <text class="bold" x="585" y="92" text-anchor="middle">Syntax or indent error</text>
+  <text x="585" y="112" text-anchor="middle">NOTHING runs</text>
+
+  <line class="wire" x1="210" y1="122" x2="210" y2="156" marker-end="url(#arrow)"/>
+
+  <rect class="zone-user" x="40" y="156" width="340" height="52" rx="6"/>
+  <text class="bold" x="210" y="178" text-anchor="middle">2. Run from the top</text>
+  <text x="210" y="198" text-anchor="middle">one line after another</text>
+
+  <line class="wire" x1="380" y1="182" x2="460" y2="182" marker-end="url(#arrow)"/>
+  <rect class="zone-kernel" x="460" y="156" width="250" height="68" rx="6"/>
+  <text class="bold" x="585" y="178" text-anchor="middle">Other error on a line</text>
+  <text x="585" y="198" text-anchor="middle">stops THERE; earlier</text>
+  <text x="585" y="215" text-anchor="middle">lines already happened</text>
+
+  <line class="wire" x1="210" y1="208" x2="210" y2="246" marker-end="url(#arrow)"/>
+  <rect class="box" x="80" y="246" width="260" height="40" rx="5"/>
+  <text x="210" y="271" text-anchor="middle">3. Finished: exit status 0</text>
+</svg>

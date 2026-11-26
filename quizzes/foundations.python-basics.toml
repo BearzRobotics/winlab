@@ -1,0 +1,287 @@
+schema_version = 1
+lesson = "foundations.python-basics"
+# Draft for owner review. A bank of 32; each attempt asks 10, favouring questions missed last time.
+draw = 10
+
+[[question]]
+id = "choose-windows"
+type = "choice"
+prompt = "You need to change Windows service settings on a few PCs. Which is usually the better tool?"
+choices = ["PowerShell, which has cmdlets for it and passes objects", "Python, because it is always installed on Windows", "A spreadsheet", "Python, because shells cannot manage services"]
+answers = ["PowerShell, which has cmdlets for it and passes objects"]
+explanation = "Windows usually does not include Python, and PowerShell is built for this."
+review = "When to reach for Python"
+
+[[question]]
+id = "linux-name"
+type = "choice"
+prompt = "Why should instructions for Linux say python3 rather than python?"
+choices = ["Some systems have python3 but no python command", "python is a different language", "python3 runs without an interpreter", "python only works as root"]
+answers = ["Some systems have python3 but no python command"]
+explanation = "On the test Ubuntu, typing python gave 'command not found' (status 127)."
+review = "Which Python am I running?"
+
+[[question]]
+id = "which-exe"
+type = "short"
+prompt = "Which attribute of the sys module holds the path of the running interpreter? (write it as sys.name)"
+answers = ["sys.executable"]
+explanation = "Ask Python itself; the command name may point somewhere else."
+review = "Which Python am I running?"
+
+[[question]]
+id = "version-compare"
+type = "choice"
+prompt = "How should a script check that it has at least Python 3.9?"
+choices = ["sys.version_info >= (3, 9)", "sys.version >= '3.9'", "sys.executable >= 39", "len(sys.version) > 3"]
+answers = ["sys.version_info >= (3, 9)"]
+explanation = "As text, '3.9' sorts after '3.14'. Compare the number tuple."
+review = "Which Python am I running?"
+
+[[question]]
+id = "quote-51"
+type = "choice"
+prompt = "python -c 'print(\"hi there\")' worked in PowerShell 7 but gave a SyntaxError in Windows PowerShell 5.1. Why?"
+choices = ["5.1 lost the inner double quotes on the way to Python", "5.1 cannot start Python", "Python 3 does not allow print", "-c only works on Linux"]
+answers = ["5.1 lost the inner double quotes on the way to Python"]
+explanation = "The shell reads the quotes first. Putting code in a file avoids the problem."
+review = "Quoting `-c` differs between shells"
+
+[[question]]
+id = "crlf"
+type = "choice"
+prompt = "./script.py fails with: env: 'python3\\r': No such file or directory. What is wrong?"
+choices = ["The file has Windows line endings", "Python is not installed", "The file is not text", "The script needs administrator rights"]
+answers = ["The file has Windows line endings"]
+explanation = "The carriage return became part of the program name on the shebang line."
+review = "Scripts on Linux: the shebang"
+
+[[question]]
+id = "no-shebang"
+type = "choice"
+prompt = "A .py file with no shebang is run as ./file.py from bash. What happens?"
+choices = ["Bash runs it as a shell script, so lines such as 'import sys' are treated as commands", "Python runs it anyway", "Linux refuses every file without a shebang", "It is compiled first"]
+answers = ["Bash runs it as a shell script, so lines such as 'import sys' are treated as commands"]
+explanation = "On the test machine 'import' was ImageMagick's screen-capture program."
+review = "Scripts on Linux: the shebang"
+
+[[question]]
+id = "run-windows"
+type = "choice"
+prompt = "On Windows, what is the dependable way to run a script and get its output and exit status?"
+choices = ["python script.py", "Double-click it", "Type only script.py", "Open it in Notepad"]
+answers = ["python script.py"]
+explanation = "Running .\\script.py depends on that PC's file association; in the test it showed no output."
+review = "Scripts on Windows"
+
+[[question]]
+id = "syntax-nothing"
+type = "choice"
+prompt = "A script has a syntax error on its last line. What ran before the error appeared?"
+choices = ["Nothing", "Every line before the last", "Only the imports", "A random half of the file"]
+answers = ["Nothing"]
+explanation = "The whole file is compiled before any line runs."
+review = "How Python runs your file"
+
+[[question]]
+id = "name-partway"
+type = "choice"
+prompt = "A script deletes files, then reaches a line with a misspelled name. What is true?"
+choices = ["The earlier deletions have already happened", "Python undoes them", "Nothing ran", "Python skips the bad line"]
+answers = ["The earlier deletions have already happened"]
+explanation = "A NameError is found only when its line runs."
+review = "How Python runs your file"
+
+[[question]]
+id = "pycompile"
+type = "choice"
+prompt = "python -m py_compile script.py succeeds. What does that show?"
+choices = ["The file has no syntax error", "The script is correct", "The script is safe", "The script ran without errors"]
+answers = ["The file has no syntax error"]
+explanation = "It compiles without running, and checks nothing else."
+review = "How Python runs your file"
+
+[[question]]
+id = "tabs"
+type = "choice"
+prompt = "Mixing tabs and spaces in indentation raises which error?"
+choices = ["TabError", "KeyError", "ValueError", "No error"]
+answers = ["TabError"]
+explanation = "Set the editor to insert spaces."
+review = "Indentation is the structure"
+
+[[question]]
+id = "indent-meaning"
+type = "choice"
+prompt = "A print line is moved left, out of a for loop, with correct indentation. What happens?"
+choices = ["It runs once after the loop, with no error", "IndentationError", "It still runs every time round", "The loop stops working"]
+answers = ["It runs once after the loop, with no error"]
+explanation = "Indentation says what belongs to the loop."
+review = "Indentation is the structure"
+
+[[question]]
+id = "str-times"
+type = "short"
+prompt = "n = \"5\". What does n * 3 give? (type only the characters, without quotes)"
+answers = ["555"]
+explanation = "n is text, so it is repeated."
+review = "Text is not a number"
+
+[[question]]
+id = "floor-div"
+type = "short"
+prompt = "What is 7 // 2 ? (number only)"
+answers = ["3"]
+explanation = "// divides and rounds down; 7 / 2 is 3.5."
+review = "Values and their types"
+
+[[question]]
+id = "float-eq"
+type = "choice"
+prompt = "What does 0.1 + 0.2 == 0.3 give?"
+choices = ["False", "True", "An error", "None"]
+answers = ["False"]
+explanation = "The sum is 0.30000000000000004. Do not test floats for exact equality."
+review = "Values and their types"
+
+[[question]]
+id = "fstring"
+type = "choice"
+prompt = "free = 12.3456. What does f\"{free:.1f}\" give?"
+choices = ["12.3", "12.3456", "12", "12.35"]
+answers = ["12.3"]
+explanation = ".1f formats with one decimal place."
+review = "Strings you will use every day"
+
+[[question]]
+id = "path-trap"
+type = "choice"
+prompt = "Why does print(\"C:\\new\\table.txt\") give two lines?"
+choices = ["\\n is a new line and \\t a tab inside ordinary quotes", "The path is too long", "Windows adds a line break", "print splits at colons"]
+answers = ["\\n is a new line and \\t a tab inside ordinary quotes"]
+explanation = "Use a raw string, forward slashes or pathlib."
+review = "Windows paths and the backslash"
+
+[[question]]
+id = "pathlib"
+type = "choice"
+prompt = "p = Path(\"logs\") / \"app.log\". What has happened on disk?"
+choices = ["Nothing: building a path creates and checks nothing", "The folder was created", "An empty file was created", "Python checked that the file exists"]
+answers = ["Nothing: building a path creates and checks nothing"]
+explanation = "Use exists() to ask."
+review = "Windows paths and the backslash"
+
+[[question]]
+id = "encoding"
+type = "choice"
+prompt = "How should a script open a UTF-8 text file so that it behaves the same on different systems?"
+choices = ["Pass encoding=\"utf-8\" to open", "Rely on the default", "Open it as numbers", "Rename it to .utf8"]
+answers = ["Pass encoding=\"utf-8\" to open"]
+explanation = "The default depends on the Python version and system."
+review = "Text, bytes and encodings"
+
+[[question]]
+id = "alias-list"
+type = "choice"
+prompt = "keep = ['a']; delete = keep; delete.append('b'). What is keep now?"
+choices = ["['a', 'b']", "['a']", "['b']", "An error"]
+answers = ["['a', 'b']"]
+explanation = "Both names are the same list. Use keep.copy() for another one."
+review = "Two names, one list"
+
+[[question]]
+id = "remove-loop"
+type = "choice"
+prompt = "Why can removing items from a list while looping over it leave some behind?"
+choices = ["The list shifts under the loop, so an item is skipped", "remove() only works once", "Lists cannot be changed", "The loop copies the list first"]
+answers = ["The list shifts under the loop, so an item is skipped"]
+explanation = "Loop over a copy or build a new list."
+review = "Two names, one list"
+
+[[question]]
+id = "dict-get"
+type = "choice"
+prompt = "ports = {'ssh': 22}. What does ports.get('smtp', 25) return?"
+choices = ["25", "None", "A KeyError", "22"]
+answers = ["25"]
+explanation = "get returns the default for a missing key; ports['smtp'] would raise KeyError."
+review = "Lists and dictionaries"
+
+[[question]]
+id = "false-text"
+type = "choice"
+prompt = "Which value counts as true in an if?"
+choices = ["The text \"False\"", "0", "An empty list", "None"]
+answers = ["The text \"False\""]
+explanation = "It is a non-empty string."
+review = "Decisions, loops and truth"
+
+[[question]]
+id = "range"
+type = "choice"
+prompt = "What does list(range(1, 4)) give?"
+choices = ["[1, 2, 3]", "[1, 2, 3, 4]", "[0, 1, 2, 3]", "[4]"]
+answers = ["[1, 2, 3]"]
+explanation = "The end is not included."
+review = "Decisions, loops and truth"
+
+[[question]]
+id = "no-return"
+type = "short"
+prompt = "What does a function with no return statement give back? (one word)"
+answers = ["None"]
+explanation = "A body such as 'x * 2' calculates and throws the result away."
+review = "Functions"
+
+[[question]]
+id = "traceback-first"
+type = "choice"
+prompt = "Which part of a traceback should you read first?"
+choices = ["The last line, with the error type and message", "The first line", "The longest line", "Only the file names"]
+answers = ["The last line, with the error type and message"]
+explanation = "Then work upwards: where it happened, and how the program got there."
+review = "Reading a traceback"
+
+[[question]]
+id = "print-status"
+type = "choice"
+prompt = "A script only prints 'FAILED: disk full' and ends. What exit status does it report?"
+choices = ["0, success", "1", "2", "No status"]
+answers = ["0, success"]
+explanation = "Printing does not set the status. Exit non-zero."
+review = "Arguments and exit status"
+
+[[question]]
+id = "exit-true"
+type = "short"
+prompt = "What exit status does sys.exit(True) produce? (number only)"
+answers = ["1"]
+explanation = "1 means failure. Pass numbers."
+review = "Arguments and exit status"
+
+[[question]]
+id = "shadow"
+type = "choice"
+prompt = "A downloaded folder holds report.py (which does 'import json') and a file json.py. You run report.py normally. What happens?"
+choices = ["The local json.py runs instead of the standard module", "Python always prefers the standard module", "Python refuses to start", "json.py is ignored because it has no shebang"]
+answers = ["The local json.py runs instead of the standard module"]
+explanation = "The script's folder is searched first."
+review = "Before you run someone else's script"
+
+[[question]]
+id = "isolated"
+type = "multi"
+prompt = "What is true of python -I script.py? Select all that apply."
+choices = ["The script's folder is left out of the import search", "PYTHON environment variables are ignored", "The script cannot delete files", "The script runs in a sandbox"]
+answers = ["The script's folder is left out of the import search", "PYTHON environment variables are ignored"]
+explanation = "It changes how Python starts; the script keeps all your rights."
+review = "Before you run someone else's script"
+
+[[question]]
+id = "import-runs"
+type = "choice"
+prompt = "What happens to top-level statements in helper.py when another script does 'import helper'?"
+choices = ["They run at that moment", "They are skipped", "They run only if main() is called", "They run when the program ends"]
+answers = ["They run at that moment"]
+explanation = "So read the local files a script imports, not only the script."
+review = "Before you run someone else's script"

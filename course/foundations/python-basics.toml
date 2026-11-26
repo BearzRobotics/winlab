@@ -1,0 +1,105 @@
+schema_version = 1
+id = "foundations.python-basics"
+title = "Python basics for administrators"
+summary = "Which Python you are running, running scripts on Windows and Linux, how Python executes a file, indentation, types, strings and paths, lists and dictionaries, tracebacks, exit statuses, and how to check a script before you run it."
+content = "python-basics.md"
+estimated_minutes = 150
+level = 1
+objectives = [
+  "Decide when Python suits a job better than PowerShell or bash",
+  "Find which interpreter and version a command runs, on Windows and Linux",
+  "Run a script with arguments, and avoid the quoting, shebang and line-ending traps",
+  "Explain why a syntax error runs nothing but other errors stop a script partway",
+  "Work with numbers, text, paths, lists and dictionaries, and avoid their common traps",
+  "Read a traceback from the bottom up",
+  "Return a truthful exit status",
+  "Check someone else's script before running it, including the import-shadowing trap and isolated mode",
+]
+prerequisites = []
+privilege = "standard"
+evaluation_criteria = [
+  "Learner reports the path and version of the interpreter that a script actually uses",
+  "Learner takes a traceback and names the error, the failing line and the likely cause",
+  "Learner's script returns different exit statuses for success, a found problem and bad arguments",
+  "Learner finds the faults in the delete script from the practice section without running it",
+]
+
+[[references]]
+title = "The Python tutorial (Python documentation)"
+url = "https://docs.python.org/3/tutorial/index.html"
+
+[[references]]
+title = "Using the interpreter (Python documentation)"
+url = "https://docs.python.org/3/tutorial/interpreter.html"
+
+[[references]]
+title = "Command line and environment (Python documentation)"
+url = "https://docs.python.org/3/using/cmdline.html"
+
+[[references]]
+title = "Using Python on Windows (Python documentation)"
+url = "https://docs.python.org/3/using/windows.html"
+
+[[references]]
+title = "Using Python on Unix platforms (Python documentation)"
+url = "https://docs.python.org/3/using/unix.html"
+
+[[references]]
+title = "sys (Python documentation)"
+url = "https://docs.python.org/3/library/sys.html"
+
+[[references]]
+title = "pathlib (Python documentation)"
+url = "https://docs.python.org/3/library/pathlib.html"
+
+[[references]]
+title = "Control flow (Python documentation)"
+url = "https://docs.python.org/3/tutorial/controlflow.html"
+
+[[references]]
+title = "Data structures (Python documentation)"
+url = "https://docs.python.org/3/tutorial/datastructures.html"
+
+[[references]]
+title = "Errors and exceptions (Python documentation)"
+url = "https://docs.python.org/3/tutorial/errors.html"
+
+[[references]]
+title = "Built-in exceptions (Python documentation)"
+url = "https://docs.python.org/3/library/exceptions.html"
+
+[[references]]
+title = "Built-in types (Python documentation)"
+url = "https://docs.python.org/3/library/stdtypes.html"
+
+[[references]]
+title = "Modules (Python documentation)"
+url = "https://docs.python.org/3/tutorial/modules.html"
+
+[[references]]
+title = "__main__ (Python documentation)"
+url = "https://docs.python.org/3/library/__main__.html"
+
+[[references]]
+title = "Lexical analysis (Python documentation)"
+url = "https://docs.python.org/3/reference/lexical_analysis.html"
+
+[[references]]
+title = "py_compile (Python documentation)"
+url = "https://docs.python.org/3/library/py_compile.html"
+
+[[references]]
+title = "Programming FAQ (Python documentation)"
+url = "https://docs.python.org/3/faq/programming.html"
+
+[[references]]
+title = "Input and output (Python documentation)"
+url = "https://docs.python.org/3/tutorial/inputoutput.html"
+
+[[references]]
+title = "Floating-point arithmetic (Python documentation)"
+url = "https://docs.python.org/3/tutorial/floatingpoint.html"
+
+[[references]]
+title = "PEP 686: Make UTF-8 mode default"
+url = "https://peps.python.org/pep-0686/"
