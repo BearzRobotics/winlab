@@ -87,3 +87,4 @@ By path, in the order the owner works through them.
 | `foundations.bash-basics` | deepened 2026-11-26: reading id, special permission bits, ps columns, df, free and uptime (Ubuntu 24.04 VM), 1 diagram (`basics2.sh`) |
 | `foundations.bash-variables-and-expansion` | deepened 2026-11-26: reviewed (already detailed); added one line followed through every step, 1 diagram (`expand4.sh`) |
 | `foundations.bash-control-flow` | reviewed 2026-11-26: already explains every trap with its output; added 1 diagram (loop input) |
+| `foundations.bash-functions-and-scripts` | reviewed 2026-11-26: already detailed, with real output; added 1 diagram (lock descriptors) |

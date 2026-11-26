@@ -247,6 +247,13 @@ With two copies, the first printed `got the lock` and the second printed `anothe
 
 **A `flock` surprise:** after `kill -9` of the script, I could **not** take the lock (`no`), because the script's child `sleep 30` had **inherited descriptor 9** and kept the lock alive; once the stray `sleep` was gone, the lock was free (`yes`). Starting the child as `sleep 30 9>&-` (closing the descriptor for it) released the lock immediately when the script died (`yes`). Close the lock descriptor for long-running children you start.
 
+![Diagram: a child that inherits descriptor 9 keeps the lock after the script is killed; a child started with 9>&- does not, so the lock is released](diagrams/flock-inherit.svg)
+
+```text
+ script (holds fd 9) -> child inherits fd 9 -> script killed -> lock STILL held by the child
+ script (holds fd 9) -> child with 9>&-     -> script killed -> lock released
+```
+
 ## Where is my script?
 
 `$0` is how it was **started**, not an absolute path:

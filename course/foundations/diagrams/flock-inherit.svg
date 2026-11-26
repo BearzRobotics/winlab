@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 260" role="img" aria-label="A child process inherits the script's open lock descriptor. Killing the script leaves the child holding the lock. Starting the child with descriptor 9 closed means the lock is released when the script dies" font-family="Segoe UI, sans-serif">
+  <title>Who still holds the lock?</title>
+  <style>
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.5 }
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    .wire { stroke: #57606a; stroke-width: 1.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .dim { fill: #57606a }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+
+  <text class="bold" x="180" y="22" text-anchor="middle">child inherits fd 9</text>
+  <rect class="box" x="20" y="34" width="150" height="52" rx="5"/>
+  <text class="bold" x="95" y="58" text-anchor="middle">script</text>
+  <text x="95" y="78" text-anchor="middle" font-size="13">killed with -9</text>
+  <rect class="zone-kernel" x="190" y="34" width="150" height="52" rx="5"/>
+  <text class="bold" x="265" y="58" text-anchor="middle">sleep 30</text>
+  <text x="265" y="78" text-anchor="middle" font-size="13">fd 9 still open</text>
+  <line class="wire" x1="265" y1="86" x2="265" y2="128" marker-end="url(#arrow)"/>
+  <rect class="zone-kernel" x="90" y="130" width="250" height="46" rx="5"/>
+  <text class="bold" x="215" y="158" text-anchor="middle">lock is STILL HELD</text>
+
+  <text class="bold" x="540" y="22" text-anchor="middle">sleep 30 9&gt;&amp;-</text>
+  <rect class="box" x="380" y="34" width="150" height="52" rx="5"/>
+  <text class="bold" x="455" y="58" text-anchor="middle">script</text>
+  <text x="455" y="78" text-anchor="middle" font-size="13">killed with -9</text>
+  <rect class="box" x="550" y="34" width="150" height="52" rx="5"/>
+  <text class="bold" x="625" y="58" text-anchor="middle">sleep 30</text>
+  <text x="625" y="78" text-anchor="middle" font-size="13">no fd 9</text>
+  <line class="wire" x1="455" y1="86" x2="455" y2="128" marker-end="url(#arrow)"/>
+  <rect class="zone-user" x="400" y="130" width="250" height="46" rx="5"/>
+  <text class="bold" x="525" y="158" text-anchor="middle">lock is released</text>
+
+  <text class="dim" x="20" y="214" font-size="13">The kernel releases a flock lock when every descriptor referring to it is closed.</text>
+  <text class="dim" x="20" y="238" font-size="13">A child gets copies of the script's descriptors unless you close them for it.</text>
+</svg>
