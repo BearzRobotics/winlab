@@ -127,3 +127,50 @@ choices = ["A different network", "A different charger and cable", "Safe mode", 
 answers = ["A different network", "A different charger and cable", "Safe mode"]
 explanation = "Isolate by changing one thing at a time."
 review = "Troubleshooting routine"
+
+# ---- Added when the lesson was deepened ----
+
+[[question]]
+id = "external-screen"
+type = "choice"
+prompt = "A laptop's built-in screen is blank but an external monitor shows the desktop. What does that show?"
+choices = ["The computer and graphics output are working; look at the built-in panel, backlight, cable or settings", "The processor has failed", "The memory has failed", "The operating system is not installed"]
+answers = ["The computer and graphics output are working; look at the built-in panel, backlight, cable or settings"]
+explanation = "It narrows the fault; it is not yet a diagnosis."
+review = "Laptop display faults"
+
+[[question]]
+id = "link-local"
+type = "choice"
+prompt = "A device on Wi-Fi has an address starting 169.254. What does it suggest?"
+choices = ["It gave itself a link-local address, usually because DHCP did not answer", "It is connected through a VPN", "The signal is weak", "It has a public internet address"]
+answers = ["It gave itself a link-local address, usually because DHCP did not answer"]
+explanation = "Check the router or DHCP server."
+review = "Full bars, no internet"
+
+[[question]]
+id = "captive-portal"
+type = "choice"
+prompt = "On a guest network the device is connected with an address, but apps fail until a web page is accepted. What is this?"
+choices = ["A captive portal", "A broken antenna", "A swollen battery", "An APN error"]
+answers = ["A captive portal"]
+explanation = "Open a browser and complete the sign-in or terms page."
+review = "Full bars, no internet"
+
+[[question]]
+id = "wipe-offline"
+type = "choice"
+prompt = "You send a remote wipe to a lost phone that is switched off. What is true?"
+choices = ["It has not been erased yet; it must receive the command", "It is erased immediately", "The carrier erases it", "The battery runs the wipe while off"]
+answers = ["It has not been erased yet; it must receive the command"]
+explanation = "Encryption and a screen lock protect the data meanwhile."
+review = "Lost or stolen"
+
+[[question]]
+id = "reset-account"
+type = "choice"
+prompt = "Why confirm the user's account password before a factory reset?"
+choices = ["Theft protection may require it afterwards, and without it the device may be unusable", "The reset deletes the account from the provider", "It speeds up the reset", "It is needed to charge the device"]
+answers = ["Theft protection may require it afterwards, and without it the device may be unusable"]
+explanation = "Also check the backup and the second factor."
+review = "Before you reset anything"

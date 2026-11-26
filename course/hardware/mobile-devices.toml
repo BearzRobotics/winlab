@@ -3,7 +3,7 @@ id = "hardware.mobile-devices"
 title = "Mobile devices: types, connectivity, management and troubleshooting"
 summary = "Laptops, tablets and phones, wireless connectivity, mobile device management and a troubleshooting routine."
 content = "mobile-devices.md"
-estimated_minutes = 25
+estimated_minutes = 60
 level = 1
 objectives = [
   "Name the device types and what distinguishes each",
@@ -21,5 +21,46 @@ evaluation_criteria = [
 ]
 
 [[references]]
+title = "Determine battery cycle count for Mac laptops (Apple Support)"
+url = "https://support.apple.com/en-us/102888"
+
+[[references]]
+title = "RFC 3927, IPv4 link-local addresses"
+url = "https://www.rfc-editor.org/rfc/rfc3927"
+
+[[references]]
+title = "Intune device enrollment guide (Microsoft Learn)"
+url = "https://learn.microsoft.com/intune/intune-service/fundamentals/deployment-guide-enrollment"
+
+[[references]]
+title = "NIST SP 800-124, mobile device security"
+url = "https://csrc.nist.gov/pubs/sp/800/124/r2/final"
+
+[[references]]
+title = "App protection policies (Microsoft Learn)"
+url = "https://learn.microsoft.com/intune/intune-service/apps/app-protection-policy"
+
+[[references]]
+title = "Wipe devices with Intune (Microsoft Learn)"
+url = "https://learn.microsoft.com/intune/intune-service/remote-actions/devices-wipe"
+
+[[references]]
+title = "Reset an Android device (Android Help)"
+url = "https://support.google.com/android/answer/6088915"
+
+[[references]]
+title = "Erase iPhone (Apple Support)"
+url = "https://support.apple.com/guide/iphone/erase-iphone-iph7a2a9399b/ios"
+
+[[references]]
+title = "Android theft protection (Android Help)"
+url = "https://support.google.com/android/answer/9459346"
+
+[[references]]
+title = "Activation Lock for iPhone and iPad (Apple Support)"
+url = "https://support.apple.com/en-us/108794"
+
+[[references]]
 title = "CompTIA A+ certification information"
 url = "https://www.comptia.org/en-us/certifications/a/"
+
