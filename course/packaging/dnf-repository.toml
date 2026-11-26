@@ -27,13 +27,14 @@ title = "DNF configuration reference (gpgcheck, repo_gpgcheck)"
 url = "https://dnf.readthedocs.io/en/latest/conf_ref.html"
 
 [[references]]
-title = "createrepo_c"
-url = "https://rpm-software-management.github.io/createrepo_c/"
-
-[[references]]
 title = "rpmsign(8) (Debian manual page)"
 url = "https://manpages.debian.org/stable/rpm/rpmsign.8.en.html"
 
 [[references]]
+title = "createrepo_c"
+url = "https://rpm-software-management.github.io/createrepo_c/"
+
+[[references]]
 title = "RPM documentation"
 url = "https://rpm-software-management.github.io/rpm/manual/"
+

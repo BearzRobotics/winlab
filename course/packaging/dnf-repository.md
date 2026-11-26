@@ -11,6 +11,13 @@ dnf's documentation ([`dnf.conf` reference](https://dnf.readthedocs.io/en/latest
 
 Three consequences, all of which the test below shows. **Each protects something different**: `gpgcheck` says this *RPM* was signed by a key you trust (so a changed or substituted package is rejected); `repo_gpgcheck` says the *index* is genuine (so the list of what is available and what hashes to expect cannot be swapped). **Neither is on unless you ask**, per that page: a hand-written `.repo` file that omits them verifies nothing (a distribution's own defaults may differ; I did not check AlmaLinux's global `dnf.conf`). And **the two keys can be the same key or different ones**; I used one key for both.
 
+![Diagram: repo_gpgcheck verifies the signed index repomd.xml; gpgcheck verifies the signature on each RPM](diagrams/dnf-signatures.svg)
+
+```text
+ repo_gpgcheck=1 --> repomd.xml (+ .asc) --checksums--> other metadata
+ gpgcheck=1      --> each .rpm (signed with rpmsign)
+```
+
 ## Make a key, a package and a repository
 
 The same repository-only key as in the apt lesson (an ed25519 key, `gpg --quick-generate-key ... ed25519 sign never`, empty passphrase because this one is a throwaway). Public half exported as text: `gpg --export --armor > wl-repo.asc` (400 bytes).
