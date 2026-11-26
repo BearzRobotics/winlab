@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 250" role="img" aria-label="What a successful run proves about portability. In bash: nothing. In busybox ash or the FreeBSD sh: little, because each accepts some extras. In dash: the most of these, but some bashisms are silently misread, so also run ShellCheck" font-family="Segoe UI, sans-serif">
+  <title>What a passing run proves</title>
+  <style>
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.5 }
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .dim { fill: #57606a }
+  </style>
+
+  <text class="bold" x="150" y="22" text-anchor="middle">it ran correctly in...</text>
+  <text class="bold" x="505" y="22" text-anchor="middle">what that tells you</text>
+
+  <rect class="box" x="10" y="36" width="280" height="46" rx="5"/>
+  <text x="150" y="64" text-anchor="middle">bash</text>
+  <rect class="zone-kernel" x="300" y="36" width="410" height="46" rx="5"/>
+  <text x="505" y="64" text-anchor="middle">nothing: it accepts nearly everything</text>
+
+  <rect class="box" x="10" y="92" width="280" height="46" rx="5"/>
+  <text x="150" y="120" text-anchor="middle">busybox ash, or FreeBSD sh</text>
+  <rect class="zone-kernel" x="300" y="92" width="410" height="46" rx="5"/>
+  <text x="505" y="120" text-anchor="middle">little: each accepts its own extras</text>
+
+  <rect class="box" x="10" y="148" width="280" height="46" rx="5"/>
+  <text class="bold" x="150" y="176" text-anchor="middle">dash</text>
+  <rect class="zone-user" x="300" y="148" width="410" height="46" rx="5"/>
+  <text x="505" y="176" text-anchor="middle">the most of these three, but not proof</text>
+
+  <text class="dim" x="10" y="226" font-size="13">Some bashisms run in dash and do something else (&amp;&gt;, echo -e). Run ShellCheck -s sh too.</text>
+</svg>

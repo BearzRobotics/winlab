@@ -22,6 +22,14 @@ Chimera Linux:        ls -l /bin/sh   ->  -rwxr-xr-x 1 root root 204216 Oct 15 1
 
 From memory and **not tested here**: Debian also uses dash; Alpine uses busybox ash; Red Hat family systems (including AlmaLinux) link `sh` to bash, which then runs in a POSIX-compatible mode but still accepts many extensions. So a `#!/bin/sh` script that "works on my RHEL box" may fail on Ubuntu. The only way to know a script is portable is to **run it under strict shells**, and the strictest of the three here is dash.
 
+![Diagram: a pass in bash proves nothing, a pass in busybox ash or the FreeBSD sh proves little, and a pass in dash proves the most of the three but is not proof](diagrams/sh-strictness.svg)
+
+```text
+ ran correctly in bash                  -> proves nothing
+ ran correctly in ash or FreeBSD sh     -> proves little
+ ran correctly in dash                  -> the most of the three, not proof (add ShellCheck -s sh)
+```
+
 How to run a script under a specific shell without changing its shebang:
 
 ```sh

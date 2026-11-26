@@ -40,13 +40,14 @@ title = "dash(1) manual page (Debian)"
 url = "https://manpages.debian.org/unstable/dash/dash.1.en.html"
 
 [[references]]
-title = "sh(1) manual page (FreeBSD, the shell Chimera's sh comes from)"
-url = "https://man.freebsd.org/cgi/man.cgi?query=sh"
+title = "ShellCheck wiki"
+url = "https://www.shellcheck.net/wiki/"
 
 [[references]]
 title = "BusyBox"
 url = "https://busybox.net/"
 
 [[references]]
-title = "ShellCheck wiki"
-url = "https://www.shellcheck.net/wiki/"
+title = "sh(1) manual page (FreeBSD, the shell Chimera's sh comes from)"
+url = "https://man.freebsd.org/cgi/man.cgi?query=sh"
+

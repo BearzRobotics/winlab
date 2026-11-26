@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 240" role="img" aria-label="In printf piped to a while loop, the loop runs in a subshell. It counts to 3 in its own copy of n, which is thrown away when the pipeline ends, so the script still has n equal to 0" font-family="Segoe UI, sans-serif">
+  <title>Why the counter is lost</title>
+  <style>
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.5 }
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    .wire { stroke: #57606a; stroke-width: 1.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .mono { font-family: Consolas, monospace }
+    .dim { fill: #57606a }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+
+  <rect class="zone-user" x="10" y="20" width="700" height="52" rx="6"/>
+  <text class="bold" x="360" y="42" text-anchor="middle">your script:  n=0</text>
+  <text x="360" y="62" text-anchor="middle" font-size="13">after the pipeline it prints n=0</text>
+
+  <rect class="box" x="60" y="124" width="200" height="56" rx="6"/>
+  <text class="bold mono" x="160" y="158" text-anchor="middle">printf (3 lines)</text>
+  <line class="wire" x1="260" y1="152" x2="358" y2="152" marker-end="url(#arrow)"/>
+  <text class="mono" x="309" y="142" text-anchor="middle">|</text>
+  <rect class="zone-kernel" x="360" y="124" width="290" height="56" rx="6"/>
+  <text class="bold" x="505" y="148" text-anchor="middle">while loop in a SUBSHELL</text>
+  <text x="505" y="170" text-anchor="middle" font-size="13">its own copy of n reaches 3</text>
+
+  <line class="wire" x1="360" y1="72" x2="460" y2="122" marker-end="url(#arrow)"/>
+  <text x="440" y="94" font-size="13">starts with a copy</text>
+
+  <text class="dim" x="10" y="220" font-size="13">The copy ends with the pipeline. Nothing flows back. Seen in dash, busybox ash and FreeBSD sh.</text>
+</svg>
