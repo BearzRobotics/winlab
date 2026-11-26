@@ -66,3 +66,4 @@ By path, in the order the owner works through them.
 | `endpoints.protect-devices` | rewritten 2026-11-26 (Server 2022 VM; 1 diagram; `protect1.ps1`, `protect2.ps1`); **fixed a wrong passive-mode claim**. Not tested: real traffic filtering, BitLocker, third-party antivirus, a management service, Windows 10 and 11 |
 | `linux.storage-filesystems` | rewritten 2026-11-26 (AlmaLinux 9.8 VM; 2 diagrams, new LVM and 'why is it full' sections; `storage1.sh`). Not tested: a second disk, Ubuntu output, XFS growth, shrinking, boot with a broken fstab |
 | `linux.containers-podman` | rewritten 2026-11-26 (AlmaLinux 9.8, Podman 5.8.2; 1 diagram; `podman1.sh`). Not tested: pulling, other distributions, user services, reboot, `--init`, `--no-cache` |
+| `endpoints.endpoint-management` | rewritten 2026-11-26 (Server 2022 VM; 1 diagram; `endpoint1.ps1`). Not tested: Intune, Entra ID, Autopilot, a successful MSI install, client Windows |

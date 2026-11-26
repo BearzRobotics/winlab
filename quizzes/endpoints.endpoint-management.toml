@@ -105,10 +105,10 @@ review = "Applications"
 id = "wmic-avoid"
 type = "choice"
 prompt = "What does the lesson say about wmic product get name?"
-choices = ["It is legacy and slow, so avoid it on servers", "It is the best way to install apps", "It is the only way to list apps", "It silently installs MSI files"]
-answers = ["It is legacy and slow, so avoid it on servers"]
-explanation = "Prefer Get-Package or winget where present."
-review = "Applications"
+choices = ["Avoid it: it is slow and can make Windows Installer reconfigure products", "It is the best way to install apps", "It is the only way to list apps", "It silently installs MSI files"]
+answers = ["Avoid it: it is slow and can make Windows Installer reconfigure products"]
+explanation = "Use the Uninstall registry keys, or Get-Package or winget where present."
+review = "What is installed? The inventory"
 
 [[question]]
 id = "update-rings"
@@ -127,3 +127,59 @@ choices = ["To answer which machines have not updated", "To hide devices from us
 answers = ["To answer which machines have not updated"]
 explanation = "What is where and which version, so gaps are visible."
 review = "Update strategy"
+
+# ---- Added when the lesson was deepened ----
+
+[[question]]
+id = "dsreg-hybrid"
+type = "choice"
+prompt = "dsregcmd shows AzureAdJoined : YES and DomainJoined : YES. What is the device's state?"
+choices = ["Microsoft Entra hybrid joined", "Not joined", "Only domain joined", "A personal device with a work account"]
+answers = ["Microsoft Entra hybrid joined"]
+explanation = "Read the two lines together."
+review = "Reading a device's state"
+
+[[question]]
+id = "wow6432"
+type = "choice"
+prompt = "On 64-bit Windows, where can a 32-bit program's uninstall entry be?"
+choices = ["Under SOFTWARE\\WOW6432Node", "Only under SOFTWARE\\Microsoft", "In the Security log", "Under SYSTEM\\Services"]
+answers = ["Under SOFTWARE\\WOW6432Node"]
+explanation = "In the lesson's VM it was the only entry."
+review = "What is installed? The inventory"
+
+[[question]]
+id = "win32-product"
+type = "choice"
+prompt = "Why avoid querying the Win32_Product class to list software?"
+choices = ["It can make Windows Installer check and reconfigure installed MSI products", "It deletes software", "It needs the internet", "It only works on Home"]
+answers = ["It can make Windows Installer check and reconfigure installed MSI products"]
+explanation = "Read the Uninstall registry keys instead."
+review = "What is installed? The inventory"
+
+[[question]]
+id = "msiexec-wait"
+type = "choice"
+prompt = "How do you get msiexec's real exit code from PowerShell?"
+choices = ["Start-Process with -Wait -PassThru, then read ExitCode", "Read $LASTEXITCODE on the next line", "Read $?", "Pipe msiexec to Out-String and count lines"]
+answers = ["Start-Process with -Wait -PassThru, then read ExitCode"]
+explanation = "The plain line does not wait."
+review = "Silent installation: wait for it"
+
+[[question]]
+id = "code-1641"
+type = "multi"
+prompt = "Which MSI exit codes mean success? Select all that apply."
+choices = ["0", "3010", "1641", "1619"]
+answers = ["0", "3010", "1641"]
+explanation = "3010 needs a restart; 1641 started one; 1619 means the package could not be opened."
+review = "Silent installation: wait for it"
+
+[[question]]
+id = "version-compare"
+type = "choice"
+prompt = "What does '10.0' -gt '9.0' return when both are text?"
+choices = ["False", "True", "An error", "10"]
+answers = ["False"]
+explanation = "Cast both to [version]."
+review = "A detection rule"

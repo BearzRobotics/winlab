@@ -3,7 +3,7 @@ id = "endpoints.endpoint-management"
 title = "Endpoint management concepts: provisioning, enrollment and apps"
 summary = "Provisioning approaches, join versus enroll, policy targeting, application deployment and update rings, with local equivalents."
 content = "endpoint-management.md"
-estimated_minutes = 35
+estimated_minutes = 70
 level = 3
 objectives = [
   "Compare manual install, imaging, provisioning packages and Autopilot",
@@ -22,9 +22,54 @@ evaluation_criteria = [
 ]
 
 [[references]]
-title = "Windows Autopilot (Microsoft Learn)"
-url = "https://learn.microsoft.com/autopilot/"
+title = "Answer files (unattend.xml) (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-hardware/manufacture/desktop/update-windows-settings-and-scripts-create-your-own-answer-file-sxs"
 
 [[references]]
-title = "Microsoft Intune documentation"
-url = "https://learn.microsoft.com/mem/intune/"
+title = "Provisioning packages (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/configuration/provisioning-packages/provisioning-packages"
+
+[[references]]
+title = "Windows Autopilot (Microsoft Learn)"
+url = "https://learn.microsoft.com/autopilot/overview"
+
+[[references]]
+title = "Device identity in Microsoft Entra ID (Microsoft Learn)"
+url = "https://learn.microsoft.com/entra/identity/devices/overview"
+
+[[references]]
+title = "Intune device enrollment guide (Microsoft Learn)"
+url = "https://learn.microsoft.com/intune/intune-service/fundamentals/deployment-guide-enrollment"
+
+[[references]]
+title = "Troubleshoot devices with dsregcmd (Microsoft Learn)"
+url = "https://learn.microsoft.com/entra/identity/devices/troubleshoot-device-dsregcmd"
+
+[[references]]
+title = "Add Win32 apps to Intune (Microsoft Learn)"
+url = "https://learn.microsoft.com/intune/intune-service/apps/apps-win32-add"
+
+[[references]]
+title = "Uninstall registry key (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/win32/msi/uninstall-registry-key"
+
+[[references]]
+title = "Get-Package (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/packagemanagement/get-package"
+
+[[references]]
+title = "WinGet (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/package-manager/winget/"
+
+[[references]]
+title = "Windows Installer reconfigured all applications (Microsoft Learn)"
+url = "https://learn.microsoft.com/troubleshoot/windows-server/admin-development/windows-installer-reconfigured-all-applications"
+
+[[references]]
+title = "msiexec (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/msiexec"
+
+[[references]]
+title = "MsiExec error messages (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/win32/msi/error-codes"
+

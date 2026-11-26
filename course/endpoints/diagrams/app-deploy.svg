@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 260" role="img" aria-label="App deployment: detect whether it is installed; if so stop; otherwise check requirements, install silently while waiting, read the exit code, then detect again" font-family="Segoe UI, sans-serif">
+  <title>What a managed app deployment does on each device</title>
+  <style>
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.5 }
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    .wire { stroke: #57606a; stroke-width: 1.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .dim { fill: #57606a }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+
+  <rect class="zone-user" x="10" y="30" width="170" height="62" rx="6"/>
+  <text class="bold" x="95" y="56" text-anchor="middle">1. detect</text>
+  <text x="95" y="78" text-anchor="middle" font-size="13">already installed?</text>
+  <line class="wire" x1="180" y1="61" x2="276" y2="61" marker-end="url(#arrow)"/>
+  <text x="228" y="52" text-anchor="middle" font-size="13">no</text>
+  <rect class="box" x="278" y="30" width="170" height="62" rx="6"/>
+  <text class="bold" x="363" y="56" text-anchor="middle">2. requirements</text>
+  <text x="363" y="78" text-anchor="middle" font-size="13">OS, space, other apps</text>
+  <line class="wire" x1="448" y1="61" x2="508" y2="61" marker-end="url(#arrow)"/>
+  <rect class="zone-kernel" x="510" y="30" width="200" height="62" rx="6"/>
+  <text class="bold" x="610" y="56" text-anchor="middle">3. install, and WAIT</text>
+  <text x="610" y="78" text-anchor="middle" font-size="13">silently, with a log</text>
+  <line class="wire" x1="610" y1="92" x2="610" y2="146" marker-end="url(#arrow)"/>
+  <rect class="box" x="510" y="148" width="200" height="62" rx="6"/>
+  <text class="bold" x="610" y="174" text-anchor="middle">4. exit code</text>
+  <text x="610" y="196" text-anchor="middle" font-size="13">0, 3010, or a failure</text>
+  <line class="wire" x1="510" y1="179" x2="450" y2="179" marker-end="url(#arrow)"/>
+  <rect class="zone-user" x="278" y="148" width="170" height="62" rx="6"/>
+  <text class="bold" x="363" y="174" text-anchor="middle">5. detect again</text>
+  <text x="363" y="196" text-anchor="middle" font-size="13">the real proof</text>
+
+  <line class="wire" x1="95" y1="92" x2="95" y2="146" marker-end="url(#arrow)"/>
+  <text x="108" y="124" font-size="13">yes</text>
+  <rect class="box" x="10" y="148" width="170" height="62" rx="6"/>
+  <text x="95" y="184" text-anchor="middle">nothing to do</text>
+  <text class="dim" x="10" y="244" font-size="13">Uninstall needs its own command, and the same checks the other way round.</text>
+</svg>
