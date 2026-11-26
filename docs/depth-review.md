@@ -67,3 +67,4 @@ By path, in the order the owner works through them.
 | `foundations.ps-functions-and-scripts` | deepened 2026-11-26: pipeline binding by property name, silent binding surprises, 1 diagram (`fn4.ps1`) |
 | `foundations.ps-errors-and-debugging` | deepened 2026-11-26: reading error messages, errors that let a script continue and exit 0, 1 diagram (`err3.ps1`) |
 | `foundations.ps-working-with-data` | deepened 2026-11-26: rewriting a file onto itself, what Compare-Object ignores, silent CSV problems, 1 diagram (`data3.ps1`) |
+| `foundations.ps-modules-and-remoting` | deepened 2026-11-26: fixed a broken heading, reading Get-Job and module lists, 1 diagram (`jobs3.ps1`); the VM remoting results are from 2026-11-21 |

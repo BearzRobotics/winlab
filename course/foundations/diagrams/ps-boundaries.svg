@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 270" role="img" aria-label="Jobs and remoting run in another process or computer; only values you pass go across, and results come back as copies; a second hop from the remote computer to another one is refused by default" font-family="Segoe UI, sans-serif">
+  <title>What crosses the boundary</title>
+  <style>
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.5 }
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    .wire { stroke: #57606a; stroke-width: 1.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .dim { fill: #57606a }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+
+  <rect class="zone-user" x="10" y="30" width="190" height="120" rx="8"/>
+  <text class="bold" x="105" y="56" text-anchor="middle">your session</text>
+  <text x="105" y="86" text-anchor="middle" font-size="13">your variables</text>
+  <text x="105" y="108" text-anchor="middle" font-size="13">live objects, methods</text>
+
+  <line class="wire" x1="200" y1="66" x2="318" y2="66" marker-end="url(#arrow)"/>
+  <text x="259" y="56" text-anchor="middle" font-size="12">$using: / -ArgumentList</text>
+  <line class="wire" x1="318" y1="116" x2="202" y2="116" marker-end="url(#arrow)"/>
+  <text x="259" y="136" text-anchor="middle" font-size="12">copies of results</text>
+
+  <rect class="zone-kernel" x="320" y="30" width="190" height="120" rx="8"/>
+  <text class="bold" x="415" y="56" text-anchor="middle">job or server A</text>
+  <text x="415" y="86" text-anchor="middle" font-size="13">another process</text>
+  <text x="415" y="108" text-anchor="middle" font-size="13">sees none of your variables</text>
+
+  <line class="wire" x1="510" y1="90" x2="558" y2="90"/>
+  <text class="bold" x="534" y="82" text-anchor="middle" font-size="15">X</text>
+  <rect class="box" x="560" y="56" width="150" height="68" rx="8"/>
+  <text class="bold" x="635" y="84" text-anchor="middle">server B</text>
+  <text x="635" y="106" text-anchor="middle" font-size="13">the second hop</text>
+
+  <text class="bold" x="10" y="190">Results are DATA: properties arrive, methods such as Kill() do not.</text>
+  <text class="dim" x="10" y="216" font-size="13">By default your credentials are not passed on from server A to server B.</text>
+  <text class="dim" x="10" y="238" font-size="13">A remote Get-Process result cannot stop that process; act inside the remote script block instead.</text>
+</svg>

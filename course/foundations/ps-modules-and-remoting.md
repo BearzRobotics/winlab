@@ -27,6 +27,15 @@ Remove-Module Pester
 
 Since PowerShell 3, **calling a command from an installed module loads the module automatically**, which I saw in my test: merely running `Get-Command Get-Greeting` loaded the module, and after `Remove-Module`, calling the command loaded it again. Explicit `Import-Module` is still the clearest thing to write in a script, because it fails early with a clear message if the module is missing.
 
+**Reading `Get-Module -ListAvailable`.** Narrowed to one built-in module and a few columns, the two editions showed:
+
+| Edition | ModuleType | Version | Exported commands |
+|---|---|---|---|
+| 5.1 | `Manifest` | 3.1.0.0 | 94 |
+| 7.6 | `Manifest` | 7.0.0.0 | 66 |
+
+`ModuleType` says how the module is built (`Manifest` means it is described by a `.psd1`); `Version` matters when several are installed; and the **same module name can offer different commands** in each edition, which is one reason a script that works in one fails in the other.
+
 ### Writing a module
 
 A minimal module is a folder with a `.psm1` file and a manifest, in a version folder on `PSModulePath`:
@@ -143,6 +152,31 @@ $job | Remove-Job
 
 `Receive-Job` returns the output (and by default **removes** it from the job; add `-Keep` to read again), `Wait-Job` blocks until it finishes, and `Get-Job` shows the state (`Running`, `Completed`, `Failed`).
 
+**Reading `Get-Job`.** Three jobs, one finished, one failed and one still running (5.1; the columns were the same in 7):
+
+```text
+Id     Name      PSJobTypeName   State         HasMoreData     Location       Command
+--     ----      -------------   -----         -----------     --------       -------
+1      works     BackgroundJob   Completed     True            localhost      Start-Sleep 1; '...
+3      fails     BackgroundJob   Failed        False           localhost      Get-Item C:\nope...
+5      busy      BackgroundJob   Running       True            localhost      Start-Sleep 60
+```
+
+| Column | What to look at |
+|---|---|
+| `State` | `Running`, `Completed`, `Failed` or `Stopped`. **Check it before trusting the output** |
+| `HasMoreData` | `True` while there is output to receive. After one `Receive-Job` on `works` it became `False`, and a second receive returned **nothing** (use `-Keep` to read twice) |
+| `Command` | Cut off; `Format-List *` shows it whole |
+
+For the failed job, `Receive-Job -ErrorAction Stop` raised `Cannot find path 'C:\nope-nope' because it does not exist.`, and the same text was in `$job.ChildJobs[0].JobStateInfo.Reason.Message`. `Stop-Job` moved the running job to `Stopped`, and `Remove-Job` cleared them all. The numbers in `Id` jump by two because each job has a child job of its own.
+
+![Diagram: only values you pass cross into a job or remote computer, and results come back as copies without methods; from the first remote computer, your credentials are not passed on to a second one](diagrams/ps-boundaries.svg)
+
+```text
+ your session  --- $using: / -ArgumentList --->  job or server A  ---X--->  server B (second hop)
+ live objects  <--------- copies of results ----  another process; sees none of your variables
+```
+
 ### Four things that surprise people
 
 1. **The job cannot see your variables.** It is another process:
@@ -200,7 +234,9 @@ Get-PSSessionConfiguration
 Access is denied. To run this cmdlet, start PowerShell with the "Run as administrator" option.
 ```
 
-That is the **default behaviour**: by default only administrators (and, on servers, members of the Remote Management Users group) may connect to the standard endpoint, and listing or changing endpoint configurations needs an elevated session. ### What I saw on a Windows Server 2022 VM
+That is the **default behaviour**: by default only administrators (and, on servers, members of the Remote Management Users group) may connect to the standard endpoint, and listing or changing endpoint configurations needs an elevated session.
+
+### What I saw on a Windows Server 2022 VM
 
 I repeated the test on a lab VM running Windows Server 2022 (Windows PowerShell 5.1.20348), logged in as `Administrator` through the VM's SSH control channel. There the session **was elevated**, `Get-PSSessionConfiguration` listed the endpoints (`microsoft.powershell` and others), and WinRM listened on HTTP port 5985 with Negotiate and Kerberos enabled. Yet `Invoke-Command -ComputerName localhost` **still failed with "Access is denied"**. The reason is the login: an SSH session is a *network logon* whose credentials cannot be reused to open a second connection, so connecting from inside it to WinRM is a **second hop** in miniature (see below). With an **explicit credential** it worked:
 
