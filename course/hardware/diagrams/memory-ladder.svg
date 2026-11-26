@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 270" role="img" aria-label="Storage levels from fastest and smallest to slowest and largest: CPU cache, RAM, solid state drive, spinning disk. When RAM runs out, data moves down to disk and the machine slows" font-family="Segoe UI, sans-serif">
+  <title>Fast and small at the top, slow and large at the bottom</title>
+  <style>
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.5 }
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    .wire { stroke: #57606a; stroke-width: 1.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .dim { fill: #57606a }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+
+  <rect class="zone-user" x="240" y="20" width="200" height="42" rx="6"/>
+  <text class="bold" x="340" y="46" text-anchor="middle">CPU cache</text>
+  <rect class="zone-user" x="180" y="72" width="320" height="42" rx="6"/>
+  <text class="bold" x="340" y="98" text-anchor="middle">RAM: working memory</text>
+  <rect class="zone-kernel" x="120" y="124" width="440" height="42" rx="6"/>
+  <text class="bold" x="340" y="150" text-anchor="middle">SSD (SATA or NVMe)</text>
+  <rect class="box" x="60" y="176" width="560" height="42" rx="6"/>
+  <text class="bold" x="340" y="202" text-anchor="middle">spinning disk (HDD)</text>
+
+  <line class="wire" x1="30" y1="210" x2="30" y2="30" marker-end="url(#arrow)"/>
+  <text x="40" y="40" font-size="13">faster</text>
+  <line class="wire" x1="660" y1="30" x2="660" y2="210" marker-end="url(#arrow)"/>
+  <text x="650" y="208" text-anchor="end" font-size="13">larger</text>
+  <text class="dim" x="60" y="244" font-size="13">The blue levels forget at power-off. Out of RAM, the system moves data down to disk</text>
+  <text class="dim" x="60" y="264" font-size="13">(paging or swap), and everything that waits for it slows down.</text>
+</svg>

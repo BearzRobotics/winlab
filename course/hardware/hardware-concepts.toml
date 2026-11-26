@@ -3,7 +3,7 @@ id = "hardware.hardware-concepts"
 title = "Hardware concepts and reading what a machine reports"
 summary = "CPU, RAM, storage, RAID, firmware and virtualization concepts, plus built-in commands that report hardware on Windows and Linux."
 content = "hardware-concepts.md"
-estimated_minutes = 35
+estimated_minutes = 70
 level = 1
 objectives = [
   "Name the main hardware parts and the symptom each produces when it fails",
@@ -22,9 +22,58 @@ evaluation_criteria = [
 ]
 
 [[references]]
-title = "Get-CimInstance (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/module/cimcmdlets/get-ciminstance"
+title = "md(4) manual page"
+url = "https://man7.org/linux/man-pages/man4/md.4.html"
+
+[[references]]
+title = "Win32_Processor (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/win32/cimwin32prov/win32-processor"
+
+[[references]]
+title = "Win32_PhysicalMemory (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/win32/cimwin32prov/win32-physicalmemory"
+
+[[references]]
+title = "Get-PhysicalDisk (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/storage/get-physicaldisk"
+
+[[references]]
+title = "CM_PROB_FAILED_INSTALL (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-hardware/drivers/install/cm-prob-failed-install"
+
+[[references]]
+title = "Device Manager error messages (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-hardware/drivers/install/device-manager-error-messages"
 
 [[references]]
 title = "lscpu(1) manual page"
 url = "https://man7.org/linux/man-pages/man1/lscpu.1.html"
+
+[[references]]
+title = "free(1) manual page"
+url = "https://man7.org/linux/man-pages/man1/free.1.html"
+
+[[references]]
+title = "proc_meminfo(5) manual page"
+url = "https://man7.org/linux/man-pages/man5/proc_meminfo.5.html"
+
+[[references]]
+title = "systemd-detect-virt(1) manual page"
+url = "https://man7.org/linux/man-pages/man1/systemd-detect-virt.1.html"
+
+[[references]]
+title = "dmesg(1) manual page"
+url = "https://man7.org/linux/man-pages/man1/dmesg.1.html"
+
+[[references]]
+title = "smartmontools"
+url = "https://www.smartmontools.org/"
+
+[[references]]
+title = "NIST SP 800-145, the NIST definition of cloud computing"
+url = "https://csrc.nist.gov/pubs/sp/800/145/final"
+
+[[references]]
+title = "Get-CimInstance (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/cimcmdlets/get-ciminstance"
+

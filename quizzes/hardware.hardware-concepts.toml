@@ -136,3 +136,59 @@ choices = ["IaaS gives the virtual machine; SaaS gives only the application", "S
 answers = ["IaaS gives the virtual machine; SaaS gives only the application"]
 explanation = "They differ in how much you manage yourself."
 review = "Virtualization and cloud, briefly"
+
+# ---- Added when the lesson was deepened ----
+
+[[question]]
+id = "free-available"
+type = "choice"
+prompt = "In free -h output, which column best shows how much memory programs can still get?"
+choices = ["available", "free", "shared", "total"]
+answers = ["available"]
+explanation = "Cache can be given back to programs, so free alone is misleading."
+review = "Linux"
+
+[[question]]
+id = "rota-vm"
+type = "choice"
+prompt = "Inside a VM, lsblk shows ROTA 1 for the disk. What does it prove about the physical drive?"
+choices = ["Nothing reliable: it describes the virtual disk", "The physical drive is a spinning disk", "The physical drive is an SSD", "The drive is failing"]
+answers = ["Nothing reliable: it describes the virtual disk"]
+explanation = "Cross-check with another source."
+review = "When the report is wrong"
+
+[[question]]
+id = "code-28"
+type = "choice"
+prompt = "A device shows Device Manager code 28 (CM_PROB_FAILED_INSTALL). What is the problem?"
+choices = ["No working driver is installed", "The device is physically broken", "The disk is full", "The device is disabled by a user"]
+answers = ["No working driver is installed"]
+explanation = "It is a driver problem until shown otherwise."
+review = "Reading the hardware with built-in tools"
+
+[[question]]
+id = "event-41"
+type = "choice"
+prompt = "What do System events 41 and 6008 tell you?"
+choices = ["Windows did not shut down cleanly, but not why", "The disk has failed", "The memory is faulty", "An update was installed"]
+answers = ["Windows did not shut down cleanly, but not why"]
+explanation = "Power loss, a crash or the power button can all cause them."
+review = "Evidence the machine keeps"
+
+[[question]]
+id = "raid-capacity"
+type = "choice"
+prompt = "How much usable space does RAID 6 give with four 4 TB disks?"
+choices = ["8 TB", "12 TB", "16 TB", "4 TB"]
+answers = ["8 TB"]
+explanation = "Two disks' worth holds parity."
+review = "Storage types and RAID"
+
+[[question]]
+id = "log-noise"
+type = "choice"
+prompt = "Which kernel message deserves the most attention?"
+choices = ["A new, repeating disk I/O error at the time of the symptom", "Any line containing the word warning", "A single start-up warning that has always been there", "A message about the clock at boot on a healthy machine"]
+answers = ["A new, repeating disk I/O error at the time of the symptom"]
+explanation = "Healthy machines log some errors and warnings too."
+review = "Evidence the machine keeps"

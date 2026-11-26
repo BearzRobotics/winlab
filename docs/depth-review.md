@@ -69,3 +69,4 @@ By path, in the order the owner works through them.
 | `endpoints.endpoint-management` | rewritten 2026-11-26 (Server 2022 VM; 1 diagram; `endpoint1.ps1`). Not tested: Intune, Entra ID, Autopilot, a successful MSI install, client Windows |
 | `endpoints.update-and-policy` | rewritten 2026-11-26 (Server 2022 VM; 1 diagram; `update1.ps1`). Not tested: installing updates, WSUS, MDM, domain GPOs, gpedit, client Windows |
 | `operations.operational-procedures` | rewritten 2026-11-26 (worked examples, 2 diagrams; restore test `restore1.ps1` in 5.1 and 7.6). Examples are invented |
+| `hardware.hardware-concepts` | rewritten 2026-11-26 (Server 2022 and AlmaLinux VMs; 1 diagram; `hw1.ps1`, `hw1.sh`). Not tested: physical hardware, RAID, SMART, POST codes |
