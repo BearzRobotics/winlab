@@ -19,13 +19,6 @@ These are close to outlines and need to be written, not polished.
 | `endpoints.protect-devices` | 339 | 2 | Windows; the Windows lab VM |
 | `linux.storage-filesystems` | 359 | 5 | AlmaLinux and Ubuntu lab VMs |
 | `windows-admin.registry-and-filesystems` | 368 | 3 | Windows; the Windows lab VM |
-| `foundations.cmd-basics` | deepened 2026-11-26: reading dir/tree, overwrite and delete behaviour, which failures ERRORLEVEL shows, 2 diagrams, a broken line fixed (batteries `basics2.cmd`, `basics3.cmd`) |
-| `foundations.cmd-variables-and-expansion` | deepened 2026-11-26: missing variables, watching expansion with echo on, silent arithmetic errors, 2 diagrams (`vars2.cmd`) |
-| `foundations.cmd-control-flow` | deepened 2026-11-26: real loop output, CSV and silent-failure traps, robocopy codes, 2 diagrams (`flow2.cmd`) |
-| `foundations.cmd-batch-files` | deepened 2026-11-26: the example script ran part of a folder name as a command; rewritten and tested with hostile names (`batch2.ps1`), 1 diagram |
-| `foundations.cmd-text-and-files` | deepened 2026-11-26: reading fc and mirror output, findstr on LF and UTF-16 files, forfiles ages, 1 diagram (`text2.cmd`) |
-| `foundations.cmd-advanced` | deepened 2026-11-26: **fixed a command injection in the input check**; array order, tasklist trap, recursion limit, 1 diagram (`adv3.cmd`, `adv4.cmd`, `adv5.ps1`). The CMD series is done |
-| `foundations.powershell-basics` | deepened 2026-11-26: reading tables, Get-Member and SYNTAX, silent typo and comparison traps, the Format-Table trap shown, 2 diagrams (`basics2.ps1`) |
 | `endpoints.endpoint-management` | 409 | 1 | Parts need a management service that is not set up here |
 | `endpoints.update-and-policy` | 410 | 2 | Windows; the Windows lab VM |
 | `linux.containers-podman` | 417 | 3 | AlmaLinux VM, internet to pull an image |
