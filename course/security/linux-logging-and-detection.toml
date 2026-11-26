@@ -23,20 +23,16 @@ evaluation_criteria = [
 ]
 
 [[references]]
-title = "journalctl(1)"
-url = "https://www.freedesktop.org/software/systemd/man/latest/journalctl.html"
-
-[[references]]
 title = "journald.conf(5)"
 url = "https://www.freedesktop.org/software/systemd/man/latest/journald.conf.html"
 
 [[references]]
-title = "last(1) and lastb(1)"
-url = "https://man7.org/linux/man-pages/man1/last.1.html"
+title = "NIST SP 800-92, Guide to Computer Security Log Management"
+url = "https://csrc.nist.gov/pubs/sp/800/92/final"
 
 [[references]]
-title = "sshd_config(5)"
-url = "https://man.openbsd.org/sshd_config"
+title = "last(1) and lastb(1)"
+url = "https://man7.org/linux/man-pages/man1/last.1.html"
 
 [[references]]
 title = "auditctl(8)"
@@ -51,5 +47,10 @@ title = "aureport(8)"
 url = "https://man7.org/linux/man-pages/man8/aureport.8.html"
 
 [[references]]
-title = "NIST SP 800-92, Guide to Computer Security Log Management"
-url = "https://csrc.nist.gov/pubs/sp/800/92/final"
+title = "journalctl(1)"
+url = "https://www.freedesktop.org/software/systemd/man/latest/journalctl.html"
+
+[[references]]
+title = "sshd_config(5)"
+url = "https://man.openbsd.org/sshd_config"
+

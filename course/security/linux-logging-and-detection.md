@@ -20,6 +20,13 @@ Two places, with the same events in both on these machines:
 | Successful-login database | `/var/log/wtmp` (read with `last`) | the same |
 | Journal kept across reboots? | yes (`/var/log/journal` exists) | **no** (`/var/log/journal` does not exist) |
 
+![Diagram: sshd and sudo messages reach the journal and rsyslog's text log, logins reach btmp and wtmp, and kernel watch rules reach auditd](diagrams/linux-log-paths.svg)
+
+```text
+ sshd, sudo -> journal, auth.log or secure; logins -> btmp (lastb), wtmp (last)
+ kernel watch rules -> auditd (ausearch, aureport)
+```
+
 The last row matters: on the AlmaLinux image the journal is **volatile**, it lives in `/run` and is gone after a reboot (`Storage=auto` in `journald.conf` keeps a persistent journal only if `/var/log/journal` exists; see [journald.conf(5)](https://www.freedesktop.org/software/systemd/man/latest/journald.conf.html)). The text file `/var/log/secure` is what survives there. An attacker's first visit can be the last thing a volatile journal remembers, so decide where your evidence lives **before** you need it. The NIST log-management guide, [SP 800-92](https://csrc.nist.gov/pubs/sp/800/92/final), covers log rotation, archival and retention for exactly this reason (I read those sections' headings; the guide is long and I did not read it all). The `alma-journal-volatile` lab in this course covers the fix.
 
 ## What a failed SSH login looks like
