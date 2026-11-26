@@ -116,6 +116,13 @@ ip netns exec wllan ip link set wlveth1 up
 MAC=$(ip netns exec wllan cat /sys/class/net/wlveth1/address)
 ```
 
+![Diagram: dnsmasq on the VM and dhclient in the namespace wllan, joined by a virtual cable; without its own resolv.conf in /etc/netns, the client's helper writes the VM's real resolv.conf](diagrams/dnsmasq-netns.svg)
+
+```text
+ [VM: dnsmasq, wlveth0 192.168.50.1] ==veth== [namespace wllan: dhclient, wlveth1]
+ /etc/resolv.conf  <--- written by the client unless /etc/netns/wllan/resolv.conf exists
+```
+
 A second dnsmasq instance, serving **only** that interface:
 
 ```text

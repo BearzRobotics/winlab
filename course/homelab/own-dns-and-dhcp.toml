@@ -32,3 +32,4 @@ url = "https://man7.org/linux/man-pages/man8/ip-netns.8.html"
 [[references]]
 title = "systemd-resolved.service(8)"
 url = "https://www.freedesktop.org/software/systemd/man/latest/systemd-resolved.service.html"
+

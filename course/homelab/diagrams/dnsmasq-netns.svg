@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 270" role="img" aria-label="The test network: dnsmasq on one end of a virtual cable and a client in a network namespace on the other. The namespace isolates the network but not files: without its own resolv.conf the client's helper wrote the host's" font-family="Segoe UI, sans-serif">
+  <title>The private DHCP test network</title>
+  <style>
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.5 }
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    .wire { stroke: #57606a; stroke-width: 1.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .dim { fill: #57606a }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+
+  <rect class="box" x="10" y="26" width="300" height="130" rx="8"/>
+  <text class="bold" x="160" y="48" text-anchor="middle">the VM itself</text>
+  <rect class="zone-user" x="30" y="60" width="260" height="40" rx="5"/>
+  <text x="160" y="85" text-anchor="middle">dnsmasq (DHCP and DNS)</text>
+  <text x="160" y="130" text-anchor="middle" font-size="13">wlveth0: 192.168.50.1</text>
+
+  <line class="wire" x1="310" y1="125" x2="408" y2="125"/>
+  <text x="359" y="116" text-anchor="middle" font-size="13">veth pair</text>
+
+  <rect class="box" x="410" y="26" width="300" height="130" rx="8"/>
+  <text class="bold" x="560" y="48" text-anchor="middle">namespace wllan</text>
+  <rect class="zone-user" x="430" y="60" width="260" height="40" rx="5"/>
+  <text x="560" y="85" text-anchor="middle">dhclient</text>
+  <text x="560" y="130" text-anchor="middle" font-size="13">wlveth1: gets 192.168.50.11</text>
+
+  <line class="wire" x1="560" y1="156" x2="560" y2="190" marker-end="url(#arrow)"/>
+  <rect class="zone-kernel" x="10" y="192" width="300" height="42" rx="5"/>
+  <text x="160" y="218" text-anchor="middle">the VM's /etc/resolv.conf</text>
+  <rect class="zone-user" x="410" y="192" width="300" height="42" rx="5"/>
+  <text x="560" y="218" text-anchor="middle" font-size="13">/etc/netns/wllan/resolv.conf</text>
+  <line class="wire" x1="450" y1="170" x2="312" y2="204" marker-end="url(#arrow)"/>
+  <text class="bold" x="360" y="174" text-anchor="middle" font-size="13">without it</text>
+  <text class="dim" x="10" y="260" font-size="13">The namespace separates the network, not the files, unless you give it its own copy.</text>
+</svg>
