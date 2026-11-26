@@ -311,3 +311,32 @@ choices = ["Its own subnet works; nothing beyond it does", "Everything works", "
 answers = ["Its own subnet works; nothing beyond it does"]
 explanation = "The gateway cannot be reached directly, so off-subnet traffic has nowhere to go."
 review = "A bottom-up routine"
+
+# ---- Added when the lesson was deepened ----
+
+[[question]]
+id = "tnc-same"
+type = "choice"
+prompt = "Test-NetConnection shows TcpTestSucceeded : False. What can you conclude about refused versus timed out?"
+choices = ["Nothing: it prints False for both", "It was refused", "It timed out", "The name did not resolve"]
+answers = ["Nothing: it prints False for both"]
+explanation = "Get the socket error from a TcpClient exception."
+review = "What each looks like"
+
+[[question]]
+id = "curl-28"
+type = "choice"
+prompt = "On Linux, curl exits with 28 and 'Connection timed out'. What does that suggest?"
+choices = ["Nothing came back: packets are being dropped or the host is unreachable", "The port refused the connection", "The name does not exist", "The page was not found"]
+answers = ["Nothing came back: packets are being dropped or the host is unreachable"]
+explanation = "Exit 7 is a failure to connect, such as refused; 6 is a name that did not resolve."
+review = "What each looks like"
+
+[[question]]
+id = "dns-timeout"
+type = "choice"
+prompt = "A lookup fails with 'the timeout period expired' instead of 'does not exist'. What is the difference?"
+choices = ["The DNS server did not answer at all", "The server answered that there is no such name", "The hosts file has a typo", "The name is cached"]
+answers = ["The DNS server did not answer at all"]
+explanation = "Check the server address and the path to it."
+review = "Which tool obeys the hosts file?"

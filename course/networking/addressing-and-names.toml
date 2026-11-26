@@ -3,7 +3,7 @@ id = "networking.addressing-and-names"
 title = "Networking basics: addresses, names and ports"
 summary = "The overview of the networking track: a layered model and a bottom-up routine that tells no address, wrong gateway, wrong DNS and blocked port apart, using built-in tools on Windows and Linux."
 content = "addressing-and-names.md"
-estimated_minutes = 45
+estimated_minutes = 80
 level = 2
 objectives = [
   "Read an IPv4 address and prefix and say whether two hosts share a network",
@@ -19,14 +19,6 @@ evaluation_criteria = [
   "Learner works through the bottom-up routine on a lab VM and records the first failing step",
   "Learner explains why an APIPA address (169.254.x.x) appears",
 ]
-
-[[references]]
-title = "Test-NetConnection (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/module/nettcpip/test-netconnection"
-
-[[references]]
-title = "ip(8) manual page"
-url = "https://man7.org/linux/man-pages/man8/ip.8.html"
 
 [[references]]
 title = "RFC 791: Internet Protocol"
@@ -49,9 +41,22 @@ title = "Get-NetIPConfiguration (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/module/nettcpip/get-netipconfiguration"
 
 [[references]]
+title = "ip(8) manual page"
+url = "https://man7.org/linux/man-pages/man8/ip.8.html"
+
+[[references]]
 title = "nsswitch.conf(5) manual page"
 url = "https://man7.org/linux/man-pages/man5/nsswitch.conf.5.html"
 
 [[references]]
 title = "IANA service name and transport protocol port number registry"
 url = "https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml"
+
+[[references]]
+title = "Test-NetConnection (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/nettcpip/test-netconnection"
+
+[[references]]
+title = "curl.1.html"
+url = "https://man7.org/linux/man-pages/man1/curl.1.html"
+
