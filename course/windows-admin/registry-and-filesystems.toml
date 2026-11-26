@@ -3,14 +3,16 @@ id = "windows-admin.registry-and-filesystems"
 title = "The Windows registry, startup locations and file systems"
 summary = "Hives, keys and values, safe registry editing, where programs start from, NTFS versus other file systems, and finding what fills a disk."
 content = "registry-and-filesystems.md"
-estimated_minutes = 40
+estimated_minutes = 120
 level = 3
 objectives = [
   "Name the registry hives and the types of value",
-  "Read, create and remove a value with PowerShell and export a key first",
-  "List the places a program can start automatically",
+  "Read values with their types, change them safely with PowerShell, and avoid the traps that destroy or silently change settings",
+  "Export a key before changing it and say what an import will not undo",
+  "Find what starts a program, and say what a single listing misses",
   "Compare NTFS, ReFS, FAT32 and exFAT",
-  "Find what is using disk space and explain why a full system drive causes odd failures",
+  "Find what is using disk space, read the results critically and explain why a full system drive causes odd failures",
+  "Tell junctions, symbolic links and hard links apart and delete around them carefully",
 ]
 prerequisites = ["foundations.powershell-basics"]
 windows_features = ["Registry Editor", "Disk Management", "File Explorer"]
@@ -26,5 +28,110 @@ title = "Registry (Microsoft Learn)"
 url = "https://learn.microsoft.com/windows/win32/sysinfo/registry"
 
 [[references]]
-title = "File systems overview (Microsoft Learn)"
-url = "https://learn.microsoft.com/windows-server/storage/file-server/file-system-overview"
+title = "Structure of the registry (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/win32/sysinfo/structure-of-the-registry"
+
+[[references]]
+title = "Predefined keys (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/win32/sysinfo/predefined-keys"
+
+[[references]]
+title = "Registry value types (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/win32/sysinfo/registry-value-types"
+
+[[references]]
+title = "about_Registry_Provider (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_registry_provider"
+
+[[references]]
+title = "Get-ItemProperty (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.management/get-itemproperty"
+
+[[references]]
+title = "reg query (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/reg-query"
+
+[[references]]
+title = "New-ItemProperty (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.management/new-itemproperty"
+
+[[references]]
+title = "Set-ItemProperty (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.management/set-itemproperty"
+
+[[references]]
+title = "New-Item (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.management/new-item"
+
+[[references]]
+title = "reg export (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/reg-export"
+
+[[references]]
+title = "reg import (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/reg-import"
+
+[[references]]
+title = "Registry keys affected by WOW64 (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/win32/winprog64/shared-registry-keys"
+
+[[references]]
+title = "Registry hives (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/win32/sysinfo/registry-hives"
+
+[[references]]
+title = "Run and RunOnce registry keys (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/win32/setupapi/run-and-runonce-registry-keys"
+
+[[references]]
+title = "Win32_StartupCommand (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/win32/cimwin32prov/win32-startupcommand"
+
+[[references]]
+title = "NTFS overview (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/storage/file-server/ntfs-overview"
+
+[[references]]
+title = "File system functionality comparison (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/win32/fileio/filesystem-functionality-comparison"
+
+[[references]]
+title = "ReFS overview (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/storage/refs/refs-overview"
+
+[[references]]
+title = "Get-Volume (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/storage/get-volume"
+
+[[references]]
+title = "chkdsk (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/chkdsk"
+
+[[references]]
+title = "Repair-Volume (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/storage/repair-volume"
+
+[[references]]
+title = "fsutil volume (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/fsutil-volume"
+
+[[references]]
+title = "mklink (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/mklink"
+
+[[references]]
+title = "Hard links and junctions (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/win32/fileio/hard-links-and-junctions"
+
+[[references]]
+title = "Symbolic links (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/win32/fileio/symbolic-links"
+
+[[references]]
+title = "File attribute constants (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/win32/fileio/file-attribute-constants"
+
+[[references]]
+title = "attrib (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/attrib"
+

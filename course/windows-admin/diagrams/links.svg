@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 250" role="img" aria-label="A junction or symbolic link points at a path; a hard link is a second name for the same file data" font-family="Segoe UI, sans-serif">
+  <title>Junctions, symbolic links and hard links</title>
+  <style>
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.5 }
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    .wire { stroke: #57606a; stroke-width: 1.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .dim { fill: #57606a }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+
+  <text class="bold" x="10" y="24">Junction or symbolic link: a signpost to a PATH</text>
+  <rect class="zone-kernel" x="10" y="40" width="170" height="40" rx="5"/>
+  <text x="95" y="65" text-anchor="middle">junction  (a link)</text>
+  <line class="wire" x1="180" y1="60" x2="278" y2="60" marker-end="url(#arrow)"/>
+  <rect class="box" x="280" y="40" width="170" height="40" rx="5"/>
+  <text x="365" y="65" text-anchor="middle">target  (folder)</text>
+  <line class="wire" x1="450" y1="60" x2="538" y2="60" marker-end="url(#arrow)"/>
+  <rect class="zone-user" x="540" y="40" width="170" height="40" rx="5"/>
+  <text x="625" y="65" text-anchor="middle">keep.txt's data</text>
+  <text class="dim" x="10" y="104" font-size="13">Delete the target and the signpost points at nothing. Removing the link with rmdir leaves the target.</text>
+
+  <text class="bold" x="10" y="146">Hard link: a second NAME for the same data</text>
+  <rect class="box" x="10" y="162" width="210" height="34" rx="5"/>
+  <text x="115" y="184" text-anchor="middle">name: target\keep.txt</text>
+  <rect class="box" x="10" y="204" width="210" height="34" rx="5"/>
+  <text x="115" y="226" text-anchor="middle">name: hard.txt</text>
+  <line class="wire" x1="220" y1="179" x2="378" y2="196" marker-end="url(#arrow)"/>
+  <line class="wire" x1="220" y1="221" x2="378" y2="204" marker-end="url(#arrow)"/>
+  <rect class="zone-user" x="380" y="180" width="170" height="40" rx="5"/>
+  <text x="465" y="205" text-anchor="middle">one file's data</text>
+  <text class="dim" x="566" y="196" font-size="13">edit through either</text>
+  <text class="dim" x="566" y="214" font-size="13">name: both change</text>
+</svg>

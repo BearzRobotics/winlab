@@ -1,6 +1,6 @@
 schema_version = 1
 lesson = "windows-admin.registry-and-filesystems"
-# Draft for owner review. Every answer comes from the lesson text.
+# Draft for owner review. Every answer comes from the lesson text. A bank of 30.
 draw = 10
 
 [[question]]
@@ -144,3 +144,130 @@ choices = ["No, they hide files without protecting them", "Yes, completely", "On
 answers = ["No, they hide files without protecting them"]
 explanation = "Use permissions to protect."
 review = "Paths, links and attributes"
+
+# ---- Added with the expanded lesson ----
+
+[[question]]
+id = "productname-trap"
+type = "choice"
+prompt = "A Windows 11 PC's ProductName registry value says 'Windows 10 Home'. What does that show?"
+choices = ["A value is only what was written there; check the build number instead", "The PC is really running Windows 10", "The registry is corrupt and must be restored", "ProductName is a policy value"]
+answers = ["A value is only what was written there; check the build number instead"]
+explanation = "The lesson's test PC reported exactly this with build 26300."
+review = "Reading without changing anything"
+
+[[question]]
+id = "expand-sz"
+type = "choice"
+prompt = "Two values both hold %TEMP%\\logs. Get-ItemProperty shows one filled in and one with percent signs. Why?"
+choices = ["The first is REG_EXPAND_SZ and the second REG_SZ", "The second is broken", "PowerShell expands only the first value it reads", "One of them is in HKLM"]
+answers = ["The first is REG_EXPAND_SZ and the second REG_SZ"]
+explanation = "Only the expandable type has its variables filled in on reading."
+review = "Reading without changing anything"
+
+[[question]]
+id = "dword-hex"
+type = "short"
+prompt = "reg query shows a REG_DWORD as 0x10. What is that in decimal? (number only)"
+answers = ["16"]
+explanation = "reg query prints DWORD values in hexadecimal."
+review = "Reading without changing anything"
+
+[[question]]
+id = "ps-lines"
+type = "choice"
+prompt = "Get-ItemProperty shows PSPath, PSChildName and PSDrive. What are they?"
+choices = ["Extra properties added by PowerShell, not registry values", "Hidden registry values", "Policy values", "Values in WOW6432Node"]
+answers = ["Extra properties added by PowerShell, not registry values"]
+explanation = "They appear on every result."
+review = "Reading without changing anything"
+
+[[question]]
+id = "type-change"
+type = "choice"
+prompt = "A DWord value is changed with Set-ItemProperty ... -Value 'five'. What happens?"
+choices = ["It silently becomes a String", "An error stops the change", "It stays a DWord with the value 0", "The key is deleted"]
+answers = ["It silently becomes a String"]
+explanation = "State the type with -Type when it matters, and check the kind afterwards."
+review = "Changing values, and three traps"
+
+[[question]]
+id = "newitem-force"
+type = "choice"
+prompt = "What did New-Item -Force do to a key that already had a value and a subkey?"
+choices = ["Left an empty key: the value and subkey were gone", "Left it unchanged", "Made a backup first", "Added a second key beside it"]
+answers = ["Left an empty key: the value and subkey were gone"]
+explanation = "Create the key only if Test-Path says it is missing."
+review = "Changing values, and three traps"
+
+[[question]]
+id = "import-merge"
+type = "choice"
+prompt = "After exporting a key you added a value, then imported the export. What happened to the added value?"
+choices = ["It stayed: import adds and overwrites but does not remove", "It was removed", "It was set to zero", "The import failed"]
+answers = ["It stayed: import adds and overwrites but does not remove"]
+explanation = "Delete what you added yourself."
+review = "Back up first: export and import"
+
+[[question]]
+id = "startup-misses"
+type = "choice"
+prompt = "Win32_StartupCommand lists nothing suspicious. What should you conclude?"
+choices = ["Little yet: it did not list scheduled tasks or services, so check those too", "Nothing starts automatically", "The program is malware", "The registry is empty"]
+answers = ["Little yet: it did not list scheduled tasks or services, so check those too"]
+explanation = "On the test PC it listed 3 entries while 41 tasks had a boot or sign-in trigger."
+review = "Startup locations"
+
+[[question]]
+id = "runonce"
+type = "choice"
+prompt = "By default, when is a RunOnce value deleted?"
+choices = ["Before its command runs", "After its command succeeds", "At the next restart", "Never"]
+answers = ["Before its command runs"]
+explanation = "So a command that fails is not tried again."
+review = "Startup locations"
+
+[[question]]
+id = "no-letter"
+type = "choice"
+prompt = "A disk has several partitions with no drive letter. What is the right action?"
+choices = ["Leave them: boot and recovery partitions normally have none", "Delete them to free space", "Format them as FAT32", "Give them all letters"]
+answers = ["Leave them: boot and recovery partitions normally have none"]
+explanation = "Deleting them can stop Windows booting or recovering."
+review = "Looking at disks and volumes"
+
+[[question]]
+id = "sum-sizes"
+type = "choice"
+prompt = "Per-folder sizes on C: add up to far more than the volume reports as used. Why can this happen?"
+choices = ["Summed file lengths are not space used: for example, hard links count the same data once per name", "The volume is always wrong", "Hidden files are counted twice by Windows", "FAT32 doubles file sizes"]
+answers = ["Summed file lengths are not space used: for example, hard links count the same data once per name"]
+explanation = "Trust the volume for used and free space; use folder totals to decide where to look."
+review = "Finding what fills a disk"
+
+[[question]]
+id = "silent-errors"
+type = "choice"
+prompt = "A size script uses -ErrorAction SilentlyContinue. What should it also do?"
+choices = ["Count the errors, so the reader knows what was not measured", "Nothing: the total is exact", "Delete the unreadable files", "Run faster"]
+answers = ["Count the errors, so the reader knows what was not measured"]
+explanation = "Even an administrator could not read everything in the test."
+review = "Finding what fills a disk"
+
+[[question]]
+id = "hardlink-edit"
+type = "choice"
+prompt = "A file has a second name made with mklink /H. You edit it through the new name. What does the old name show?"
+choices = ["The new contents: both names are the same file", "The old contents", "An error", "An empty file"]
+answers = ["The new contents: both names are the same file"]
+explanation = "A hard link is a second name for the same data."
+review = "Junctions, symbolic links and hard links"
+
+[[question]]
+id = "remove-link"
+type = "choice"
+prompt = "Which removes a junction while leaving the folder it points to, as tested in the lesson?"
+choices = ["rmdir on the link", "del /s on the link", "format", "attrib -h"]
+answers = ["rmdir on the link"]
+explanation = "Use rmdir without /S on the link itself."
+review = "Junctions, symbolic links and hard links"

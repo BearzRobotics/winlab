@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300" role="img" aria-label="A registry path: hive, keys, and a value with a name, a type and data" font-family="Segoe UI, sans-serif">
+  <title>The parts of a registry entry</title>
+  <style>
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.5 }
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    .wire { stroke: #57606a; stroke-width: 1.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .dim { fill: #57606a }
+    .mono { font-family: Consolas, monospace }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+
+  <rect class="zone-kernel" x="20" y="12" width="220" height="40" rx="5"/>
+  <text class="bold" x="130" y="37" text-anchor="middle">HKLM  (a hive)</text>
+  <line class="wire" x1="52" y1="52" x2="52" y2="84"/>
+  <line class="wire" x1="52" y1="84" x2="80" y2="84" marker-end="url(#arrow)"/>
+  <rect class="zone-user" x="80" y="66" width="220" height="36" rx="5"/>
+  <text x="190" y="89" text-anchor="middle">SOFTWARE  (a key)</text>
+  <line class="wire" x1="112" y1="102" x2="112" y2="134"/>
+  <line class="wire" x1="112" y1="134" x2="140" y2="134" marker-end="url(#arrow)"/>
+  <rect class="zone-user" x="140" y="116" width="220" height="36" rx="5"/>
+  <text x="250" y="139" text-anchor="middle">Contoso  (a subkey)</text>
+  <line class="wire" x1="172" y1="152" x2="172" y2="196"/>
+  <line class="wire" x1="172" y1="196" x2="200" y2="196" marker-end="url(#arrow)"/>
+
+  <text class="dim" x="276" y="176" font-size="13">name</text>
+  <text class="dim" x="456" y="176" font-size="13">type</text>
+  <text class="dim" x="610" y="176" font-size="13">data</text>
+  <rect class="box" x="200" y="182" width="510" height="30" rx="4"/>
+  <text class="mono" x="214" y="202" font-size="14">Greeting</text>
+  <text class="mono" x="420" y="202" font-size="14">REG_SZ</text>
+  <text class="mono" x="580" y="202" font-size="14">hello</text>
+  <rect class="box" x="200" y="216" width="510" height="30" rx="4"/>
+  <text class="mono" x="214" y="236" font-size="14">Retries</text>
+  <text class="mono" x="420" y="236" font-size="14">REG_DWORD</text>
+  <text class="mono" x="580" y="236" font-size="14">3</text>
+  <text class="bold" x="200" y="276">values: the settings themselves</text>
+  <text class="dim" x="480" y="276">keys are like folders, values like files</text>
+</svg>
