@@ -1,6 +1,6 @@
 *Draft for owner review.* Who can sign in and who can open what: the two questions behind most "access denied" tickets. This lesson covers local accounts, groups, the access token and NTFS permissions on a Windows machine, each from PowerShell and from Command Prompt as well as the graphical tools. (Domain accounts follow the same ideas; the Active Directory lessons come later.)
 
-Machine, user and group names below are samples; the layout is real output. Everything that *changes* an account or a permission needs an **elevated** (administrator) session, and you should try it only on a lab VM or a machine you own.
+**What was tested.** The sign-in failures, error messages, event codes and the `icacls` behaviour come from a **Windows Server 2022** lab VM (Windows PowerShell 5.1, elevated), using `tests/verification/powershell/acct1.ps1`; domain accounts and client Windows were not tested. Other machine, user and group names below are invented samples of the layout. Everything that *changes* an account or a permission needs an **elevated** (administrator) session, and you should try it only on a lab VM or a machine you own.
 
 ## Account types
 
@@ -11,7 +11,7 @@ Machine, user and group names below are samples; the layout is real output. Ever
 | **Domain account** | Active Directory | managed centrally; see the AD lessons |
 | **Work or school account** | Microsoft Entra ID (cloud directory) | managed by the organisation |
 
-Windows also creates **built-in accounts**: `Administrator` (disabled on a standard install and best left that way), `Guest` (disabled), `DefaultAccount` and `WDAGUtilityAccount` (both system-managed). Details are in [Local accounts](https://learn.microsoft.com/windows/security/identity-protection/access-control/local-accounts) and the broader idea of an account, group or service as a *security principal* in [Security principals](https://learn.microsoft.com/windows/security/identity-protection/access-control/security-principals).
+Windows also creates **built-in accounts**: `Administrator` (disabled on a standard client install and best left that way; on **Windows Server** it is the account you set up with, and the lab server showed it enabled), `Guest` (disabled), `DefaultAccount` and `WDAGUtilityAccount` (both system-managed). Details are in [Local accounts](https://learn.microsoft.com/windows/security/identity-protection/access-control/local-accounts) and the broader idea of an account, group or service as a *security principal* in [Security principals](https://learn.microsoft.com/windows/security/identity-protection/access-control/security-principals).
 
 ## Local accounts from the command line
 
@@ -106,6 +106,41 @@ A short checklist, in the order to check it:
 5. **Logon hours or a workstation restriction** in a managed environment.
 6. **Wrong account or domain**: signing in as `jsmith` when the account is `DESKTOP-ABC123\jsmith` or the domain account.
 
+### What each failure looks like
+
+I made each of these happen with a test account, signing in over the network to a share on the same server (`net use \\127.0.0.1\wlshare /user:wluser1 ...`), and read the Security event **4625** that followed:
+
+| Cause | The message | 4625 `Status` / `SubStatus` |
+|---|---|---|
+| Wrong password | `System error 86`: The specified network password is not correct | `0xc000006d` / `0xc000006a` |
+| **No such user** | **the same message as a wrong password** | `0xc000006d` / **`0xc0000064`** |
+| Account disabled (right password) | `1331`: ... this account is currently disabled | `0xc000006e` / `0xc0000072` |
+| Account expired | `2239`: This user account has expired | `0xc0000193` / `0x0` |
+| Must change password at next sign-in | `1907`: The user's password must be changed before signing in | `0xc0000224` / `0x0` |
+| **Locked out** (right password) | `1909`: The referenced account is currently locked out | `0xc000006d` / `0xc000006a` |
+
+`net helpmsg <number>` gives the text of an error number. Other ways of signing in can report different numbers (another test on this server gave `1326` for a wrong password), so read the message, not only the number.
+
+Two results are easy to get wrong:
+
+- The screen deliberately **does not say** whether the user name exists. The **event** does (`0xc0000064`).
+- For the **locked** account, the 4625 codes were **the same as for a wrong password**. What showed the lockout was event **4740** ("A user account was locked out") and the account itself:
+
+```text
+net user wluser1        ->  Account active    Locked
+Get-LocalUser wluser1   ->  Enabled : True                 <- does NOT show the lockout
+```
+
+`Get-LocalUser` showing `Enabled : True` does **not** mean the account can sign in. To check and unlock a local account:
+
+```powershell
+$u = [ADSI]"WinNT://$env:COMPUTERNAME/wluser1,user"
+$u.InvokeGet('IsAccountLocked')                              # True
+$u.InvokeSet('IsAccountLocked', $false); $u.CommitChanges()   # after finding out why
+```
+
+After that the sign-in worked. **Find the source of the wrong passwords before unlocking**, or it will lock again: a saved old password on a phone, a mapped drive, a service or a scheduled task are usual causes, and repeated attempts from an unfamiliar address may be an attack. The lockout rules are shown by `net accounts`; the lab server's default was `Lockout threshold: Never`, and I set it to 3 for this test, then put it back.
+
 ## The access token
 
 At sign-in Windows builds an **access token**: the user's SID, the SIDs of every group they belong to, and their privileges. Every process they start carries a copy. You can read yours:
@@ -125,6 +160,13 @@ BUILTIN\Users                                       Alias            S-1-5-32-54
 ```
 
 A group change reaches the token only at the **next sign-in**, which explains "I added them to the group and nothing changed". Tell the user to sign out and in (or restart the service that holds the old token). See [`whoami`](https://learn.microsoft.com/windows-server/administration/windows-commands/whoami).
+
+![Diagram: sign-in builds an access token from the account and its groups; each process carries a copy, and opening a file compares the token with the file's permission list](diagrams/access-token.svg)
+
+```text
+ sign-in -> access token (SIDs, privileges) -> copied to each process -> compared with a file's ACL
+ a group added later is NOT in an existing token: sign out and in
+```
 
 ### Administrators and UAC
 
@@ -195,6 +237,20 @@ icacls C:\Data /save C:\Backup\data-acl.txt /t
 icacls C:\ /restore C:\Backup\data-acl.txt
 ```
 
+**Notice that the restore points at the parent**, `C:\`, not at `C:\Data`. The saved file lists names **relative to the parent** of what you saved (`data`, `data\sub`, ...), with the permissions in a compact text form (and the file is UTF-16). When I pointed `/restore` at the saved folder itself, it looked for `data\data`, reported `Successfully processed 0 files; Failed processing 1 files`, and restored **nothing**. Pointed at the parent, it processed all 3 items. **Read that summary line**, and check the result.
+
+### What `icacls` changes really do
+
+| What I ran | Result |
+|---|---|
+| `/grant user:(OI)(CI)R`, then `/grant user:(OI)(CI)M` | One entry, now `M` |
+| then `/grant:r user:(OI)(CI)R` | One entry, `R`: `:r` **replaces** what that user had |
+| `/grant user:M` **without** `(OI)(CI)` | Only the folder got it; the **file below had no entry** for the user |
+| `/inheritance:d` | The same entries, no longer marked `(I)`: copied, so access is unchanged for now |
+| `/inheritance:r` | **Every inherited entry was removed**; the new folder was left with **no entries at all** |
+
+After `/inheritance:r` my elevated session **could still list the folder**, which proves nothing about anyone else: an administrator's powers can hide the problem. **Check access as the affected user.** Prefer `/inheritance:d` and then remove what you do not want.
+
 `Set-Acl` writes an ACL object back ([`Set-Acl`](https://learn.microsoft.com/powershell/module/microsoft.powershell.security/set-acl)), which suits scripts that read, modify and write an ACL. For one-off changes `icacls` is shorter and safer.
 
 **Taking ownership** is for the case where no one, not even administrators, has permission (for example a folder from a deleted account). [`takeown`](https://learn.microsoft.com/windows-server/administration/windows-commands/takeown) changes the owner, after which you can grant yourself rights:
@@ -244,6 +300,10 @@ Do not "fix" access by giving *Everyone* Full control, and do not set permission
 - **Turning off UAC** to make a script work instead of starting it elevated.
 - **Putting a password on the command line** or in a script; use `Read-Host -AsSecureString` or a secret store.
 - **Leaving the built-in `Administrator` enabled** with a known name and a weak password.
+- **Trusting `Enabled : True`** when the account is locked out.
+- **Unlocking without finding what keeps sending the wrong password.**
+- **Restoring saved permissions to the folder instead of its parent.**
+- **Granting without `(OI)(CI)`** and expecting files below to get the right.
 
 ## Check yourself
 
@@ -254,8 +314,10 @@ Do not "fix" access by giving *Everyone* Full control, and do not set permission
 5. A user can open `\\server\Reports` from the server console but gets "access denied" from their PC. Where do you look?
 6. You must change permissions on a whole tree. What do you do first?
 7. From a non-elevated prompt, `whoami /groups` shows Administrators as "deny only". What does that tell you?
+8. A user cannot sign in, and `Get-LocalUser` shows `Enabled : True`. Name a cause it does not show, and how you would see it.
+9. You saved the permissions of `C:\Data`. Which path do you give `/restore`, and why?
 
-**Answers.** (1) At their next sign-in, because the access token is built at sign-in. (2) Whether inheritance is broken on that folder, and whether the team's group entry was removed or the team's group membership changed. (3) One change to the group updates everyone, and the permission list stays readable. (4) Modify, applied to files (OI) and to sub-folders (CI), so it is inherited downward. (5) The share permissions, not only the NTFS permissions: over the network the stricter of the two wins. (6) Save the current permissions with `icacls <path> /save` so you can restore them. (7) The prompt is not elevated: UAC has given the process its filtered token, and elevating gives the full one.
+**Answers.** (1) At their next sign-in, because the access token is built at sign-in. (2) Whether inheritance is broken on that folder, and whether the team's group entry was removed or the team's group membership changed. (3) One change to the group updates everyone, and the permission list stays readable. (4) Modify, applied to files (OI) and to sub-folders (CI), so it is inherited downward. (5) The share permissions, not only the NTFS permissions: over the network the stricter of the two wins. (6) Save the current permissions with `icacls <path> /save` so you can restore them. (7) The prompt is not elevated: UAC has given the process its filtered token, and elevating gives the full one. (8) A lockout: `net user <name>` shows `Account active  Locked`, and event 4740 records it. (9) `C:\`, the parent, because the saved names are relative to it.
 
 ## Practice
 

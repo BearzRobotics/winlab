@@ -416,3 +416,41 @@ choices = ["Correct the team's group entry on the folder", "Give Everyone Full c
 answers = ["Correct the team's group entry on the folder"]
 explanation = "Change the group's entry, not Everyone and not the individual user."
 review = "Fixing an access problem"
+
+# ---- Added when the lesson was deepened ----
+
+[[question]]
+id = "locked-enabled"
+type = "choice"
+prompt = "Get-LocalUser shows Enabled : True, but the user cannot sign in. Which cause can this hide?"
+choices = ["The account is locked out", "The account is disabled", "The account does not exist", "The computer has no disk"]
+answers = ["The account is locked out"]
+explanation = "net user shows 'Account active Locked', and event 4740 records the lockout."
+review = "What each failure looks like"
+
+[[question]]
+id = "nouser-substatus"
+type = "choice"
+prompt = "A failed sign-in has 4625 SubStatus 0xc0000064. What does it mean?"
+choices = ["The user name does not exist", "The password is wrong", "The account is disabled", "The password must be changed"]
+answers = ["The user name does not exist"]
+explanation = "The on-screen message is the same as for a wrong password."
+review = "What each failure looks like"
+
+[[question]]
+id = "restore-parent"
+type = "choice"
+prompt = "Permissions were saved with icacls C:\\Data /save acl.txt /t. Which restore command is right?"
+choices = ["icacls C:\\ /restore acl.txt", "icacls C:\\Data /restore acl.txt", "icacls acl.txt /restore C:\\Data", "icacls C:\\Data\\sub /restore acl.txt"]
+answers = ["icacls C:\\ /restore acl.txt"]
+explanation = "The saved names are relative to the parent."
+review = "What `icacls` changes really do"
+
+[[question]]
+id = "grant-no-inherit"
+type = "choice"
+prompt = "You run icacls folder /grant user:M without (OI)(CI). What do files inside get?"
+choices = ["Nothing from that entry", "Modify", "Read only", "Full control"]
+answers = ["Nothing from that entry"]
+explanation = "(OI) and (CI) make files and subfolders inherit it."
+review = "What `icacls` changes really do"

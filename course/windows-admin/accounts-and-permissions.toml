@@ -3,7 +3,7 @@ id = "windows-admin.accounts-and-permissions"
 title = "Windows accounts, groups and NTFS permissions"
 summary = "Manage local users and groups from PowerShell and the command line, understand the access token and UAC, read and repair NTFS permissions with icacls, and see how share and NTFS permissions combine."
 content = "accounts-and-permissions.md"
-estimated_minutes = 75
+estimated_minutes = 100
 level = 2
 objectives = [
   "Create, disable, enable, rename and remove local accounts with PowerShell and net user",
@@ -35,16 +35,8 @@ title = "Security principals (Microsoft Learn)"
 url = "https://learn.microsoft.com/windows/security/identity-protection/access-control/security-principals"
 
 [[references]]
-title = "Access control overview (Microsoft Learn)"
-url = "https://learn.microsoft.com/windows/security/identity-protection/access-control/access-control"
-
-[[references]]
-title = "User Account Control (Microsoft Learn)"
-url = "https://learn.microsoft.com/windows/security/application-security/application-control/user-account-control/"
-
-[[references]]
-title = "net user (Microsoft Learn)"
-url = "https://learn.microsoft.com/windows-server/administration/windows-commands/net-user"
+title = "Get-LocalGroupMember (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.localaccounts/get-localgroupmember"
 
 [[references]]
 title = "New-LocalUser (Microsoft Learn)"
@@ -55,32 +47,40 @@ title = "Set-LocalUser (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.localaccounts/set-localuser"
 
 [[references]]
-title = "Add-LocalGroupMember (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.localaccounts/add-localgroupmember"
-
-[[references]]
-title = "Get-LocalGroupMember (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.localaccounts/get-localgroupmember"
+title = "net user (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/net-user"
 
 [[references]]
 title = "whoami (Microsoft Learn)"
 url = "https://learn.microsoft.com/windows-server/administration/windows-commands/whoami"
 
 [[references]]
-title = "icacls (Microsoft Learn)"
-url = "https://learn.microsoft.com/windows-server/administration/windows-commands/icacls"
+title = "User Account Control (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/security/application-security/application-control/user-account-control/"
 
 [[references]]
-title = "takeown (Microsoft Learn)"
-url = "https://learn.microsoft.com/windows-server/administration/windows-commands/takeown"
+title = "Access control overview (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/security/identity-protection/access-control/access-control"
 
 [[references]]
 title = "Get-Acl (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.security/get-acl"
 
 [[references]]
+title = "icacls (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/icacls"
+
+[[references]]
 title = "Set-Acl (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.security/set-acl"
+
+[[references]]
+title = "takeown (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/takeown"
+
+[[references]]
+title = "Order of ACEs in a DACL (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/win32/secauthz/order-of-aces-in-a-dacl"
 
 [[references]]
 title = "New-SmbShare (Microsoft Learn)"
@@ -91,5 +91,6 @@ title = "Get-SmbShareAccess (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/module/smbshare/get-smbshareaccess"
 
 [[references]]
-title = "Order of ACEs in a DACL (Microsoft Learn)"
-url = "https://learn.microsoft.com/windows/win32/secauthz/order-of-aces-in-a-dacl"
+title = "Add-LocalGroupMember (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.localaccounts/add-localgroupmember"
+

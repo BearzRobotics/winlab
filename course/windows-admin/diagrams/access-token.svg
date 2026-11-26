@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 240" role="img" aria-label="At sign-in Windows builds an access token from the user and groups; each process carries a copy; opening a file compares the token with the file's permission list. A group change reaches the token only at the next sign-in" font-family="Segoe UI, sans-serif">
+  <title>Sign-in builds a token; permissions are checked against it</title>
+  <style>
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.5 }
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    .wire { stroke: #57606a; stroke-width: 1.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .dim { fill: #57606a }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+
+  <rect class="box" x="10" y="40" width="160" height="74" rx="6"/>
+  <text class="bold" x="90" y="68" text-anchor="middle">sign-in</text>
+  <text x="90" y="92" text-anchor="middle" font-size="13">account and groups</text>
+  <line class="wire" x1="170" y1="77" x2="224" y2="77" marker-end="url(#arrow)"/>
+  <rect class="zone-user" x="226" y="40" width="180" height="74" rx="6"/>
+  <text class="bold" x="316" y="68" text-anchor="middle">access token</text>
+  <text x="316" y="92" text-anchor="middle" font-size="13">SIDs and privileges</text>
+  <line class="wire" x1="406" y1="77" x2="460" y2="77" marker-end="url(#arrow)"/>
+  <rect class="zone-user" x="462" y="40" width="130" height="74" rx="6"/>
+  <text class="bold" x="527" y="68" text-anchor="middle">each process</text>
+  <text x="527" y="92" text-anchor="middle" font-size="13">carries a copy</text>
+  <line class="wire" x1="592" y1="77" x2="640" y2="77"/>
+  <line class="wire" x1="640" y1="77" x2="640" y2="148" marker-end="url(#arrow)"/>
+
+  <rect class="zone-kernel" x="462" y="150" width="248" height="62" rx="6"/>
+  <text class="bold" x="586" y="176" text-anchor="middle">open a file</text>
+  <text x="586" y="198" text-anchor="middle" font-size="13">token compared with the ACL</text>
+
+  <text class="bold" x="10" y="164">A new group membership is not in an existing token.</text>
+  <text class="dim" x="10" y="190" font-size="13">Sign out and in (or restart the service) to build a new one.</text>
+  <text class="dim" x="10" y="230" font-size="13">An elevated and a non-elevated process of the same administrator carry different tokens.</text>
+</svg>
