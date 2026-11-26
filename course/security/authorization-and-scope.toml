@@ -20,10 +20,6 @@ evaluation_criteria = [
 ]
 
 [[references]]
-title = "NIST SP 800-115, Technical Guide to Information Security Testing and Assessment (Appendix B: Rules of Engagement template)"
-url = "https://csrc.nist.gov/pubs/sp/800/115/final"
-
-[[references]]
 title = "Nmap Network Scanning: Legal Issues"
 url = "https://nmap.org/book/legal-issues.html"
 
@@ -34,3 +30,8 @@ url = "https://www.law.cornell.edu/uscode/text/18/1030"
 [[references]]
 title = "Computer Misuse Act 1990, section 1 (legislation.gov.uk)"
 url = "https://www.legislation.gov.uk/ukpga/1990/18/section/1"
+
+[[references]]
+title = "NIST SP 800-115, Technical Guide to Information Security Testing and Assessment (Appendix B: Rules of Engagement template)"
+url = "https://csrc.nist.gov/pubs/sp/800/115/final"
+

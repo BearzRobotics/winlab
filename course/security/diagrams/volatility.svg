@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 260" role="img" aria-label="RFC 3227's example order of collection from most to least volatile: registers and cache; routing table, ARP cache, processes, kernel statistics and memory; temporary file systems; disk; remote logs; physical configuration and archives" font-family="Segoe UI, sans-serif">
+  <title>Collect the most volatile evidence first (RFC 3227's example)</title>
+  <style>
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.5 }
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    .wire { stroke: #57606a; stroke-width: 1.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .dim { fill: #57606a }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+
+  <rect class="zone-kernel" x="80" y="14" width="620" height="32" rx="4"/>
+  <text x="390" y="35" text-anchor="middle">1. registers and cache</text>
+  <rect class="zone-kernel" x="80" y="52" width="620" height="32" rx="4"/>
+  <text x="390" y="73" text-anchor="middle">2. routes, ARP cache, processes, kernel statistics, memory</text>
+  <rect class="zone-user" x="80" y="90" width="620" height="32" rx="4"/>
+  <text x="390" y="111" text-anchor="middle">3. temporary file systems</text>
+  <rect class="zone-user" x="80" y="128" width="620" height="32" rx="4"/>
+  <text x="390" y="149" text-anchor="middle">4. disk</text>
+  <rect class="box" x="80" y="166" width="620" height="32" rx="4"/>
+  <text x="390" y="187" text-anchor="middle">5. logs held elsewhere</text>
+  <rect class="box" x="80" y="204" width="620" height="32" rx="4"/>
+  <text x="390" y="225" text-anchor="middle">6. physical configuration, archives</text>
+
+  <line class="wire" x1="40" y1="20" x2="40" y2="230" marker-end="url(#arrow)"/>
+  <text x="14" y="20" font-size="13">first</text>
+  <text x="22" y="252" font-size="13">last</text>
+  <text class="dim" x="80" y="252" font-size="13">Shutting down loses the top rows.</text>
+</svg>

@@ -124,6 +124,15 @@ REFUSED  10.0.2.256         not an IPv4 address (names are not accepted)
 exit status 2
 ```
 
+![Diagram: a target must be an IPv4 address, not in a deny range, and in an allow range; otherwise the whole command fails](diagrams/scope-guard.svg)
+
+```text
+ IPv4 address? no -> REFUSED (2)
+ in a deny range? yes -> DENIED (1)
+ in an allow range? no -> OUT (1)
+ otherwise -> in scope          one bad target fails the whole command
+```
+
 Three design choices are the point of the exercise:
 
 - **Deny wins.** `192.168.50.1` is inside the allowed `/24` and still refused, because the exclusion is more specific than the permission. Exclusions are how you say "not the router".

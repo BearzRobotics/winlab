@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 270" role="img" aria-label="The scope guard: a target must be an IPv4 address, must not be in a deny range, and must be in an allow range; any failure stops the whole batch" font-family="Segoe UI, sans-serif">
+  <title>How the scope guard decides about each target</title>
+  <style>
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.5 }
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    .wire { stroke: #57606a; stroke-width: 1.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .dim { fill: #57606a }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+
+  <rect class="box" x="30" y="20" width="320" height="42" rx="6"/>
+  <text x="190" y="46" text-anchor="middle">is it an IPv4 address (not a name)?</text>
+  <line class="wire" x1="350" y1="41" x2="468" y2="41" marker-end="url(#arrow)"/>
+  <text x="408" y="32" text-anchor="middle" font-size="13">no</text>
+  <rect class="zone-kernel" x="470" y="20" width="240" height="42" rx="6"/>
+  <text class="bold" x="590" y="46" text-anchor="middle">REFUSED (exit 2)</text>
+  <line class="wire" x1="190" y1="62" x2="190" y2="88" marker-end="url(#arrow)"/>
+  <text x="202" y="80" font-size="13">yes</text>
+
+  <rect class="box" x="30" y="90" width="320" height="42" rx="6"/>
+  <text x="190" y="116" text-anchor="middle">is it in a deny range?</text>
+  <line class="wire" x1="350" y1="111" x2="468" y2="111" marker-end="url(#arrow)"/>
+  <text x="408" y="102" text-anchor="middle" font-size="13">yes</text>
+  <rect class="zone-kernel" x="470" y="90" width="240" height="42" rx="6"/>
+  <text class="bold" x="590" y="116" text-anchor="middle">DENIED (exit 1)</text>
+  <line class="wire" x1="190" y1="132" x2="190" y2="158" marker-end="url(#arrow)"/>
+  <text x="202" y="150" font-size="13">no</text>
+
+  <rect class="box" x="30" y="160" width="320" height="42" rx="6"/>
+  <text x="190" y="186" text-anchor="middle">is it in an allow range?</text>
+  <line class="wire" x1="350" y1="181" x2="468" y2="181" marker-end="url(#arrow)"/>
+  <text x="408" y="172" text-anchor="middle" font-size="13">no</text>
+  <rect class="zone-kernel" x="470" y="160" width="240" height="42" rx="6"/>
+  <text class="bold" x="590" y="186" text-anchor="middle">OUT (exit 1)</text>
+  <line class="wire" x1="190" y1="202" x2="190" y2="222" marker-end="url(#arrow)"/>
+  <rect class="zone-user" x="30" y="224" width="320" height="38" rx="6"/>
+  <text class="bold" x="190" y="248" text-anchor="middle">in scope</text>
+  <text class="dim" x="372" y="240" font-size="13">One bad target fails the whole command,</text>
+  <text class="dim" x="372" y="260" font-size="13">so nothing is scanned.</text>
+</svg>
