@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 250" role="img" aria-label="Code, even if encoded, is decoded before the engine compiles it; script block logging records the compiled text; the language mode limits what it may do when it runs" font-family="Segoe UI, sans-serif">
+  <title>Where logging and constrained language mode act</title>
+  <style>
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.5 }
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    .wire { stroke: #57606a; stroke-width: 1.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .dim { fill: #57606a }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+
+  <rect class="box" x="10" y="40" width="150" height="64" rx="6"/>
+  <text class="bold" x="85" y="68" text-anchor="middle">your code</text>
+  <text x="85" y="90" text-anchor="middle" font-size="13">maybe encoded</text>
+  <line class="wire" x1="160" y1="72" x2="196" y2="72" marker-end="url(#arrow)"/>
+  <rect class="box" x="198" y="40" width="150" height="64" rx="6"/>
+  <text class="bold" x="273" y="68" text-anchor="middle">decoded</text>
+  <text x="273" y="90" text-anchor="middle" font-size="13">plain text again</text>
+  <line class="wire" x1="348" y1="72" x2="384" y2="72" marker-end="url(#arrow)"/>
+  <rect class="zone-user" x="386" y="40" width="150" height="64" rx="6"/>
+  <text class="bold" x="461" y="68" text-anchor="middle">engine compiles</text>
+  <text x="461" y="90" text-anchor="middle" font-size="13">each script block</text>
+  <line class="wire" x1="536" y1="72" x2="572" y2="72" marker-end="url(#arrow)"/>
+  <rect class="zone-kernel" x="574" y="40" width="136" height="64" rx="6"/>
+  <text class="bold" x="642" y="68" text-anchor="middle">runs</text>
+  <text x="642" y="90" text-anchor="middle" font-size="13">language mode</text>
+
+  <line class="wire" x1="461" y1="104" x2="461" y2="150" marker-end="url(#arrow)"/>
+  <rect class="zone-kernel" x="336" y="152" width="250" height="56" rx="6"/>
+  <text class="bold" x="461" y="176" text-anchor="middle">event 4104 (if enabled)</text>
+  <text x="461" y="198" text-anchor="middle" font-size="13">the text, secrets included</text>
+
+  <text class="dim" x="10" y="176" font-size="13">Logging RECORDS the code.</text>
+  <text class="dim" x="10" y="198" font-size="13">Constrained mode LIMITS it.</text>
+  <text class="dim" x="10" y="238" font-size="13">Encoding hides code from a quick look at a command line, not from this log.</text>
+</svg>

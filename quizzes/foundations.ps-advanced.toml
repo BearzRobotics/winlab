@@ -453,3 +453,23 @@ choices = ["In the script block logging events (4104)", "In Task Manager", "In t
 answers = ["In the script block logging events (4104)"]
 explanation = "Run it only in a throwaway VM and read the log."
 review = "Reading unknown PowerShell: the advanced checklist"
+
+# ---- Added when the lesson was deepened ----
+
+[[question]]
+id = "totalms"
+type = "choice"
+prompt = "Which property of a Measure-Command result gives the whole time in milliseconds?"
+choices = ["TotalMilliseconds", "Milliseconds", "Ticks only", "Duration"]
+answers = ["TotalMilliseconds"]
+explanation = "Milliseconds is only the part below one second."
+review = "Measuring, and reading the result"
+
+[[question]]
+id = "measure-scope"
+type = "choice"
+prompt = "$n = 1; Measure-Command { $n = 99 }. What is $n afterwards?"
+choices = ["99", "1", "empty", "a TimeSpan"]
+answers = ["99"]
+explanation = "The block runs in the current scope, so its changes remain."
+review = "Measuring, and reading the result"

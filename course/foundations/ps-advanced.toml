@@ -3,7 +3,7 @@ id = "foundations.ps-advanced"
 title = "Advanced PowerShell: classes, .NET, performance, logging and constrained language"
 summary = "Classes and enums and their traps, calling .NET directly and compiling C# with Add-Type, measured performance habits (array +=, foreach versus pipeline, Where, -Parallel), script block logging and constrained language mode, and a map of Windows PowerShell 5.1 versus PowerShell 7, with a checklist for reading obfuscated or risky scripts."
 content = "ps-advanced.md"
-estimated_minutes = 120
+estimated_minutes = 150
 level = 5
 objectives = [
   "Write a class and an enum, and explain typed properties, hidden, static members, return rules and why a live session cannot redefine a class",
@@ -53,12 +53,16 @@ title = "PowerShell scripting performance considerations (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/scripting/dev-cross-plat/performance/script-authoring-considerations"
 
 [[references]]
-title = "ForEach-Object (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/foreach-object"
+title = "Measure-Command (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/measure-command"
 
 [[references]]
 title = "StringBuilder class (Microsoft Learn)"
 url = "https://learn.microsoft.com/dotnet/api/system.text.stringbuilder"
+
+[[references]]
+title = "ForEach-Object (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/foreach-object"
 
 [[references]]
 title = "about_Logging_Windows (Microsoft Learn)"
@@ -75,3 +79,4 @@ url = "https://learn.microsoft.com/windows/security/application-security/applica
 [[references]]
 title = "Differences between Windows PowerShell 5.1 and PowerShell 7.x (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/scripting/whats-new/differences-from-windows-powershell"
+

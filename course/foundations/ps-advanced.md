@@ -94,6 +94,30 @@ ${u}?.Length     # printed nothing, as intended
 
 The rule: **measure, do not guess** (`Measure-Command`, or `[System.Diagnostics.Stopwatch]`). Microsoft's [script authoring considerations](https://learn.microsoft.com/powershell/scripting/dev-cross-plat/performance/script-authoring-considerations) list the same habits I measured:
 
+### Measuring, and reading the result
+
+```powershell
+Measure-Command { Start-Sleep -Milliseconds 250 } | Format-List Seconds, Milliseconds, TotalSeconds, TotalMilliseconds
+```
+
+```text
+Seconds           : 0
+Milliseconds      : 264
+TotalSeconds      : 0.2642436
+TotalMilliseconds : 264.2436
+```
+
+[`Measure-Command`](https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/measure-command) returns a `TimeSpan`. **Read the `Total...` properties.** `Seconds` and `Milliseconds` are only the *parts* of the time: for 2,350 ms, `Milliseconds` is **350** and `TotalMilliseconds` is 2350.
+
+Three more behaviours, all checked in 5.1 and 7.6 (`tests/verification/powershell/adv3.ps1`):
+
+- **The block's output is swallowed.** You get only the time. To see output too, send it to `Out-Default` inside the block, and remember that printing is then part of what you time.
+- **The block runs in your current scope.** `$n = 1; Measure-Command { $n = 99 }` left `$n` at **99**. Do not time code that changes or deletes things without meaning it to happen.
+- **One run proves little.** Five runs of one loop took 221, 186, 138, 183 and 208 ms in 5.1: the slowest was about 60 % longer than the fastest. In 7.6 they were 253, 214, 201, 219 and 206 ms.
+
+So run it several times, compare the typical value, use input of **realistic size**, and **check that both versions give the same result** before preferring the faster one. A difference of 20 % is noise here; a difference of ten times is worth acting on.
+
+
 | Task (20,000 or 100,000 items) | 5.1 (Windows) | 7 (Windows) | 7 (Linux) |
 |---|---|---|---|
 | `$a += $i` on an array, 20,000 times | **11,365 ms** | 1,210 ms | 785 ms |
@@ -130,6 +154,14 @@ It is the same rule as for jobs: **the block cannot see your variables; use `$us
 ## Seeing and restricting PowerShell: security features
 
 PowerShell is a normal administration tool *and* a favourite of attackers, so Windows has features that record what it runs and limit what it can do. You need to know them as an administrator, as a script author (your script may run under them) and as someone reading unknown code.
+
+![Diagram: code, even if encoded, is decoded before the engine compiles it; if script block logging is enabled the compiled text is written to event 4104; the language mode limits what the code may do when it runs](diagrams/ps-engine-watch.svg)
+
+```text
+ your code (maybe encoded) --> decoded --> engine compiles each block --> runs (limited by the language mode)
+                                                     |
+                                                     +--> event 4104, if enabled: the text, secrets included
+```
 
 ### Script block logging
 
@@ -259,5 +291,6 @@ The full list of differences is in [Differences between Windows PowerShell 5.1 a
 6. What does script block logging record, and why is a Base64-encoded command not hidden from it?
 7. What does constrained language mode block, and how does it differ from execution policy?
 8. Name four differences between Windows PowerShell 5.1 and PowerShell 7.
+9. A timing shows `Milliseconds : 350`. Why may the code have taken over two seconds?
 
-**Expected answers:** (1) a method with a return type must return on every path; it is a parse-time error (`Not all code path returns value within method`), whereas a function would just output `5`; (2) it hides the member from `Get-Member` and completion; it is not access control or security; (3) it copies the whole array on each add; use `$r = foreach (...) { ... }` or a `List[T]`; (4) for large or streaming data and when you want early stop (`Select-Object -First`) or lower memory use; (5) `?` is valid in a variable name, so it read `$u?` (empty) and `.Length` of null is 0; write `${u}?.Length`; (6) the text of each script block as compiled (event 4104), including secrets typed into it and decoded encoded commands; (7) .NET method calls on non-core types, `Add-Type`, COM and your own classes; execution policy only affects running script *files* and is not a security boundary, while CLM limits the language itself and is enforced by application control; (8) any four of: `powershell.exe` vs `pwsh.exe`, Desktop vs Core, Windows-only vs cross-platform, 7 has `??`/ternary/`&&`/`?.`/`-Parallel`, `>` encoding, installed side by side.
+**Expected answers:** (1) a method with a return type must return on every path; it is a parse-time error (`Not all code path returns value within method`), whereas a function would just output `5`; (2) it hides the member from `Get-Member` and completion; it is not access control or security; (3) it copies the whole array on each add; use `$r = foreach (...) { ... }` or a `List[T]`; (4) for large or streaming data and when you want early stop (`Select-Object -First`) or lower memory use; (5) `?` is valid in a variable name, so it read `$u?` (empty) and `.Length` of null is 0; write `${u}?.Length`; (6) the text of each script block as compiled (event 4104), including secrets typed into it and decoded encoded commands; (7) .NET method calls on non-core types, `Add-Type`, COM and your own classes; execution policy only affects running script *files* and is not a security boundary, while CLM limits the language itself and is enforced by application control; (8) any four of: `powershell.exe` vs `pwsh.exe`, Desktop vs Core, Windows-only vs cross-platform, 7 has `??`/ternary/`&&`/`?.`/`-Parallel`, `>` encoding, installed side by side; (9) `Milliseconds` is only the part below a second; read `TotalMilliseconds`.
