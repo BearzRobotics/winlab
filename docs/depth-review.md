@@ -115,3 +115,4 @@ By path, in the order the owner works through them.
 | `foundations.posix-sh-basics` | reviewed 2026-11-26: already explains each result; added 1 diagram (what a passing run proves). Tests are from the earlier run |
 | `foundations.posix-sh-scripting` | reviewed 2026-11-26: already explains each result; added 1 diagram (the pipeline subshell). Tests are from the earlier run |
 | `foundations.bash-robust-scripts` | reviewed 2026-11-26: already explains each result; added 1 diagram (atomic write). Tests are from the earlier run |
+| `foundations.bash-advanced` | reviewed 2026-11-26: already explains each result; added 1 diagram (cost of three ways to process lines). Tests are from the earlier run |

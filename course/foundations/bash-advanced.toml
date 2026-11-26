@@ -31,6 +31,10 @@ evaluation_criteria = [
 ]
 
 [[references]]
+title = "NEWS"
+url = "https://tiswww.case.edu/php/chet/bash/NEWS"
+
+[[references]]
 title = "Bash Reference Manual"
 url = "https://tiswww.case.edu/php/chet/bash/bashref.html"
 
@@ -55,5 +59,10 @@ title = "Bash Reference Manual: Programmable Completion"
 url = "https://tiswww.case.edu/php/chet/bash/bashref.html#Programmable-Completion"
 
 [[references]]
+title = "why-does-macos-catalina-use-zsh-instead-of-bash-licensing"
+url = "https://thenextweb.com/news/why-does-macos-catalina-use-zsh-instead-of-bash-licensing"
+
+[[references]]
 title = "BashFAQ/024: variables set in a pipeline are lost (Greg's Wiki)"
 url = "https://mywiki.wooledge.org/BashFAQ/024"
+

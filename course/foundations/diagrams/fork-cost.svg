@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 240" role="img" aria-label="For many lines, one program that reads all the input, such as awk, was fastest: 0.012 seconds for 50000 numbers, against 0.241 seconds for a bash loop. Starting one external program per item is worst, about 4 milliseconds each on the test machine" font-family="Segoe UI, sans-serif">
+  <title>Three ways to process many lines</title>
+  <style>
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.5 }
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .dim { fill: #57606a }
+  </style>
+
+  <rect class="zone-user" x="10" y="16" width="360" height="50" rx="6"/>
+  <text class="bold" x="190" y="37" text-anchor="middle">best: ONE program reads it all</text>
+  <text x="190" y="57" text-anchor="middle" font-size="13">awk, sed, grep, sort</text>
+  <text x="390" y="46">awk summed 50,000 numbers: 0.012 s</text>
+
+  <rect class="box" x="10" y="82" width="360" height="50" rx="6"/>
+  <text class="bold" x="190" y="103" text-anchor="middle">next: a bash loop with builtins</text>
+  <text x="190" y="123" text-anchor="middle" font-size="13">no new process per line</text>
+  <text x="390" y="112">the same sum: 0.241 s</text>
+
+  <rect class="zone-kernel" x="10" y="148" width="360" height="50" rx="6"/>
+  <text class="bold" x="190" y="169" text-anchor="middle">worst: a program PER item</text>
+  <text x="190" y="189" text-anchor="middle" font-size="13">$(basename ...) inside a loop</text>
+  <text x="390" y="178">about 4 ms for every start</text>
+
+  <text class="dim" x="10" y="226" font-size="13">One test machine (WSL2). On yours the numbers will differ; measure with time.</text>
+</svg>

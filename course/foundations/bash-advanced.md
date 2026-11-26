@@ -240,6 +240,14 @@ bash loop (while read -r l; do n=$((n+l)); done < big.txt)    -> 0.241 s
 awk '{s+=$1} END{print s}' big.txt                            -> 0.012 s
 ```
 
+![Diagram: best is one program that reads all the input, then a bash loop using builtins, and worst is starting an external program for every item](diagrams/fork-cost.svg)
+
+```text
+ best   one program reads it all     awk summed 50,000 numbers in 0.012 s
+ next   bash loop, builtins only     the same sum took 0.241 s
+ worst  one program PER item         about 4 ms for every start (this machine)
+```
+
 **One process that handles all the data beats a bash loop over it**, which beats **one process per item**. The order of preference for text work:
 
 1. A single `awk`, `sed`, `grep` or `sort` over the whole input (`foundations.bash-text-processing`).
