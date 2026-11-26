@@ -126,6 +126,36 @@ fn renderPage(arena: std.mem.Allocator, title: []const u8, markdown: []const u8)
     return .{ .title = try arena.dupe(u8, title), .root = doc.root, .doc = doc };
 }
 
+/// Reads the diagrams a lesson names, from its own folder. One that is missing or not allowed is left out,
+/// so the window shows the text version below it; with `problems`, each is also reported and counted.
+fn loadDrawings(arena: std.mem.Allocator, io: std.Io, root: std.Io.Dir, lesson_dir: []const u8, doc: *winlab.md.Node, problems: ?*usize) ![]const gui.Drawing {
+    var found: std.ArrayList(gui.Drawing) = .empty;
+    var next = doc.first_child;
+    while (next) |node| : (next = node.next) {
+        if (node.kind != .paragraph) continue;
+        const path = winlab.diagram.imageOnly(node) orelse continue;
+        const rel = if (lesson_dir.len == 0) try arena.dupe(u8, path) else try std.fmt.allocPrint(arena, "{s}/{s}", .{ lesson_dir, path });
+        var failure: winlab.diagram.Failure = .{};
+        const why: []const u8 = blk: {
+            const source = root.readFileAlloc(io, rel, arena, .limited(winlab.diagram.max_bytes + 1)) catch |e| break :blk @errorName(e);
+            const parsed = winlab.diagram.parse(arena, source, &failure) catch |e| switch (e) {
+                error.InvalidDiagram => break :blk try std.fmt.allocPrint(arena, "line {d}: {s}", .{ failure.line, failure.message }),
+                error.OutOfMemory => return error.OutOfMemory,
+            };
+            const drawing = try arena.create(winlab.diagram.Diagram);
+            drawing.* = parsed;
+            try found.append(arena, .{ .path = try arena.dupe(u8, path), .drawing = drawing });
+            if (winlab.diagram.textFallback(node) == null) break :blk "needs a ```text block right after it (shown in plain text and when copying)";
+            continue;
+        };
+        if (problems) |count| {
+            std.debug.print("{s}: {s}\n", .{ rel, why });
+            count.* += 1;
+        }
+    }
+    return found.items;
+}
+
 /// `%SystemRoot%\Fonts`, where Segoe UI and Consolas live.
 fn fontsDir(init: std.process.Init) []const u8 {
     if (!winlab.platform.is_windows) return ""; // DVUI's bundled font is used
@@ -527,6 +557,7 @@ fn browse(init: std.process.Init, dir_arg: ?[]const u8) !void {
             try std.fmt.allocPrint(arena, "*Lesson content could not be read: {t}*\n", .{err});
         const markdown = try winlab.lesson_view.buildWith(arena, cat, if (certs_cat) |*c| c else null, entry, body);
         page.* = try renderPage(arena, entry.lesson.title, markdown);
+        page.drawings = try loadDrawings(arena, io, course.root, entry.dir, page.root, null);
         page.id = try arena.dupe(u8, entry.lesson.id);
         page.summary = entry.lesson.summary;
         page.body = body;
@@ -2578,7 +2609,20 @@ fn check(gpa: std.mem.Allocator, io: std.Io, dir: []const u8) !void {
     const lab_problems = try checkLabs(gpa, io, dir, cat, if (certs_cat) |*c| c else null);
     const quiz_problems = try checkQuizzes(gpa, io, dir, course.root, cat, if (certs_cat) |*c| c else null);
     const path_problems = try checkPaths(gpa, io, dir, cat, if (certs_cat) |*c| c else null);
-    if (cat.problems.len != 0 or lab_problems != 0 or cert_problems != 0 or quiz_problems != 0 or path_problems != 0) std.process.exit(1);
+    // Every diagram a lesson names must load, be inside the supported subset and have its text version.
+    var diagram_problems: usize = 0;
+    var diagram_count: usize = 0;
+    for (cat.entries) |entry| {
+        var lesson_arena = std.heap.ArenaAllocator.init(gpa);
+        defer lesson_arena.deinit();
+        const a = lesson_arena.allocator();
+        const body = course.root.readFileAlloc(io, try cat.contentPath(a, entry), a, .limited(max_lesson_bytes)) catch continue; // already reported
+        const doc = try winlab.md.Document.parse(a, body, .{ .extensions = winlab.md.Extensions.gfm });
+        const drawings = try loadDrawings(a, io, course.root, entry.dir, doc.root, &diagram_problems);
+        diagram_count += drawings.len;
+    }
+    std.debug.print("{d} diagram(s), {d} problem(s)\n", .{ diagram_count, diagram_problems });
+    if (cat.problems.len != 0 or lab_problems != 0 or cert_problems != 0 or quiz_problems != 0 or path_problems != 0 or diagram_problems != 0) std.process.exit(1);
 }
 
 /// certs/catalog.toml next to the course folder, or null if absent or unreadable.

@@ -7,6 +7,14 @@ const std = @import("std");
 const dvui = @import("dvui");
 const md = @import("winlab").md;
 const highlight = @import("highlight.zig");
+const diagram = @import("winlab").diagram;
+const diagram_view = @import("diagram_view.zig");
+
+/// A drawing a page may show, by the path its Markdown names.
+pub const Drawing = struct {
+    path: []const u8,
+    drawing: *const diagram.Diagram,
+};
 
 /// Per-frame drawing state. `clicked` is set when a link was activated during `render`.
 pub const View = struct {
@@ -14,6 +22,16 @@ pub const View = struct {
     counter: usize = 0,
     /// Which page is drawn, so "answers shown" is remembered per page and never carries to another lesson.
     page: usize = 0,
+    /// The drawings of that page.
+    drawings: []const Drawing = &.{},
+
+    /// The drawing for a paragraph that holds only an image of one; null for anything else.
+    fn drawingFor(self: *const View, n: *md.Node) ?*const diagram.Diagram {
+        if (n.kind != .paragraph) return null;
+        const path = diagram.imageOnly(n) orelse return null;
+        for (self.drawings) |d| if (std.mem.eql(u8, d.path, path)) return d.drawing;
+        return null;
+    }
 
     fn nextId(self: *View) usize {
         self.counter += 1;
@@ -37,7 +55,20 @@ pub fn render(root: *md.Node, v: *View) void {
     // across them. Anything that needs its own box (tables, code, quotes, answers) ends the run.
     var run: ?*dvui.TextLayoutWidget = null;
     var c = root.first_child;
-    while (c) |n| : (c = n.next) {
+    while (c) |n| : (c = c.?.next) {
+        if (v.drawingFor(n)) |drawing| {
+            if (run) |r| r.deinit();
+            run = null;
+            diagram_view.draw(drawing, v.nextId());
+            // The text block after it is the same picture for places that cannot draw (plain text, copying):
+            // offer it for copying instead of showing the picture twice.
+            if (diagram.textFallback(n)) |fallback| {
+                if (dvui.button(@src(), "Copy as text", .{}, .{ .gravity_x = 1.0, .id_extra = v.nextId(), .margin = .{ .h = 10 } }))
+                    dvui.clipboardTextSet(std.mem.trimEnd(u8, fallback.literal, "\n"));
+                c = fallback;
+            }
+            continue;
+        }
         if (flowable(n)) {
             if (run == null) {
                 run = dvui.textLayout(@src(), .{}, .{ .expand = .horizontal, .background = false, .id_extra = v.nextId(), .padding = .all(0), .margin = .{ .h = 4 } });

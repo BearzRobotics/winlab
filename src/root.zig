@@ -14,6 +14,7 @@ pub const vm_iso9660 = @import("vm/iso9660.zig");
 pub const vm_chimera = @import("vm/chimera.zig");
 pub const vm_cloud_init = @import("vm/cloud_init.zig");
 pub const vm_registry = @import("vm/registry.zig");
+pub const diagram = @import("content/diagram.zig");
 pub const lab = @import("labs/lab.zig");
 pub const script_lab = @import("labs/script_lab.zig");
 pub const terminal_screen = @import("terminal/screen.zig");

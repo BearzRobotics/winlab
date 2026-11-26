@@ -16,6 +16,8 @@ const Be = @import("backend");
 const is_win = winlab.platform.is_windows;
 const win32 = if (is_win) Be.win32 else struct {};
 const md_view = @import("md_view.zig");
+/// A diagram a page may show (see `Page.drawings`).
+pub const Drawing = md_view.Drawing;
 const terminal_host = @import("terminal_host.zig");
 
 // ---------------------------------------------------------------------------------------------
@@ -34,6 +36,8 @@ pub const Page = struct {
     root: *winlab.md.Node,
     /// The parsed document, for the plain-text view and "copy as text". Null when not kept.
     doc: ?*const winlab.md.Document = null,
+    /// Drawings the lesson's Markdown names; a path not listed shows its text version instead.
+    drawings: []const md_view.Drawing = &.{},
     /// Difficulty 1 to 5 (0 unknown) and estimated minutes, shown in the header and the list.
     level: u8 = 0,
     minutes: u32 = 0,
@@ -1499,6 +1503,7 @@ fn reader(a: *App) void {
 
     a.view.clicked = null;
     a.view.page = a.current;
+    a.view.drawings = a.pages[a.current].drawings;
     if (a.text_view and plainText(a) != null) {
         var tl = dvui.textLayout(@src(), .{}, .{ .expand = .horizontal, .background = false, .padding = .all(0), .font = dvui.Font.theme(.mono) });
         md_view.selectable(tl);

@@ -11,6 +11,8 @@ The processor can run code with **more or less power**, and Windows uses two lev
 
 You will also hear **user space** and **kernel space**. People often use them for the same split. Strictly, the *mode* is how much power the processor has while code runs, and the *space* is the area of memory that code lives in.
 
+![Diagram: applications and services run in user mode; a system call is the way down to kernel mode, where the Windows kernel and drivers reach the hardware](diagrams/user-kernel.svg)
+
 ```text
  +--------------------------------------------------------------------+
  |  USER MODE          (each process walled off from the others)      |
@@ -50,6 +52,8 @@ Think about what would happen **without** the wall: any program with a bug could
 
 Each user-mode process gets its own **virtual address space**: its own numbering of memory, which the system maps to real memory. The same address in two processes usually means two different places. Kernel-mode code shares **one** address space ([Virtual address spaces](https://learn.microsoft.com/windows-hardware/drivers/gettingstarted/virtual-address-spaces)).
 
+![Diagram: process A and process B each have a private address space, while the kernel and every kernel-mode driver share one](diagrams/address-spaces.svg)
+
 ```text
    process A              process B                  kernel mode
  +-------------+        +-------------+        +-------------------------+
@@ -67,6 +71,8 @@ That right-hand box is why **one faulty driver can crash the whole machine**: no
 ### A request, step by step
 
 A program asks the kernel to do privileged work (open a file, create a thread, send network data) through **system calls**. Applications rarely make those calls themselves. They call the **Win32 API** (and other documented APIs), and the operating system's libraries make the system call. Opening a file looks roughly like this:
+
+![Diagram: opening a file goes from your program through the libraries into kernel mode, where permission is checked, and back](diagrams/file-request.svg)
 
 ```text
  1. your program      "open C:\Logs\app.log"
@@ -234,6 +240,8 @@ Neither is promised to hold everything forever: logs are limited in size, and no
 - A **process** is a running instance of a program. It has its own memory, a security identity (the user it runs as) and at least one thread.
 - A **thread** is a unit of execution inside a process. Windows schedules threads onto processor cores.
 
+![Diagram: one file, cmd.exe, started twice makes two processes with their own process IDs, memory, threads and handles](diagrams/two-processes.svg)
+
 ```text
   ON DISK                      IN MEMORY (running)
 
@@ -311,6 +319,8 @@ The **command line** often says more than the name. Two `powershell.exe` process
 
 Processes form a **tree**: each one records the process that started it ([child processes](https://learn.microsoft.com/windows/win32/procthread/child-processes)). By following `ParentProcessId` upwards from a PowerShell window I got this (the top three links):
 
+![Diagram: the parent chain explorer.exe, WindowsTerminal.exe, powershell.exe; the parent of explorer has exited](diagrams/process-tree.svg)
+
 ```text
  (pid 8920, already exited)
         |
@@ -363,6 +373,8 @@ sc query type= service state= all        # Command Prompt equivalent (note the s
 ### Which process is a service?
 
 A service is not always a process of its own. Some have their own program; many run inside a **service host**, `svchost.exe`:
+
+![Diagram: services.exe watches services; Spooler has its own program and the others run inside svchost.exe processes](diagrams/service-hosts.svg)
 
 ```text
  services.exe (starts and watches services)
@@ -418,6 +430,8 @@ The **account** decides what a service may do:
 - Every user has a **profile**: a folder under `C:\Users` holding documents, desktop items, application settings and that user's registry hive (`NTUSER.DAT`).
 - Windows identifies accounts by a **security identifier (SID)**, not by name. Names are for people; SIDs are what permissions are actually stored against ([security identifiers](https://learn.microsoft.com/windows/win32/secauthz/security-identifiers)).
 
+![Diagram: services run in session 0, which has no desktop; the person at the screen is in session 1](diagrams/sessions.svg)
+
 ```text
   SESSION 0  (services; no desktop)          SESSION 1  (the person at the screen)
  +------------------------------------+     +------------------------------------+
@@ -453,6 +467,8 @@ User Name              SID
 desktop-abc123\student S-1-5-21-1111111111-2222222222-3333333333-1001
 ```
 
+![Diagram: a SID is a prefix, then the machine or domain identifier, then the RID that names the account](diagrams/sid-parts.svg)
+
 ```text
  S-1-5-21-1111111111-2222222222-3333333333-1001
  |-------| |------------------------------| |--|
@@ -466,6 +482,8 @@ Two accounts with the same display name but different SIDs are different account
 **When you will meet raw SIDs:** a permissions window sometimes shows a long `S-1-5-21-...` number instead of a name. That usually means Windows cannot turn it into a name here: for example the account was deleted, or it belongs to another machine or a domain you cannot reach.
 
 ## What lives where
+
+![Diagram: the folder tree under the system drive, with Windows, Program Files, ProgramData and Users](diagrams/windows-folders.svg)
 
 ```text
  C:\                              (%SystemDrive%)

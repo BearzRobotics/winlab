@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 290" role="img" aria-label="services.exe watches services; some have their own program and others run in svchost.exe" font-family="Segoe UI, sans-serif">
+  <title>services.exe watches services; some have their own program and others run in svchost.exe</title>
+  <style>
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.5 }
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    .hardware { fill: #eceff1; stroke: #57606a }
+    .wire { stroke: #57606a; stroke-width: 1.5 }
+    .accent { stroke: #3b7dd8; stroke-width: 2.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .dim { fill: #57606a }
+    .mono { font-family: Consolas, monospace }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+  <rect class="zone-kernel" x="20" y="12" width="330" height="40" rx="5"/>
+  <text class="bold" x="185" y="37" text-anchor="middle">services.exe: starts and watches services</text>
+  <line class="wire" x1="50" y1="52" x2="50" y2="258"/>
+  <line class="wire" x1="50" y1="90" x2="86" y2="90" marker-end="url(#arrow)"/>
+  <line class="wire" x1="50" y1="146" x2="86" y2="146" marker-end="url(#arrow)"/>
+  <line class="wire" x1="50" y1="202" x2="86" y2="202" marker-end="url(#arrow)"/>
+  <line class="wire" x1="50" y1="258" x2="86" y2="258" marker-end="url(#arrow)"/>
+
+  <text class="dim" x="636" y="62" text-anchor="middle" font-size="13">service inside</text>
+  <rect class="zone-user" x="86" y="72" width="430" height="36" rx="5"/>
+  <text x="102" y="95">spoolsv.exe (its own program)</text>
+  <rect class="box" x="566" y="72" width="140" height="36" rx="5"/>
+  <text class="bold" x="636" y="95" text-anchor="middle">Spooler</text>
+  <rect class="zone-user" x="86" y="128" width="430" height="36" rx="5"/>
+  <text x="102" y="151">svchost.exe -k NetworkService</text>
+  <rect class="box" x="566" y="128" width="140" height="36" rx="5"/>
+  <text class="bold" x="636" y="151" text-anchor="middle">Dnscache</text>
+  <rect class="zone-user" x="86" y="184" width="430" height="36" rx="5"/>
+  <text x="102" y="207">svchost.exe -k LocalServiceNetworkRestricted</text>
+  <rect class="box" x="566" y="184" width="140" height="36" rx="5"/>
+  <text class="bold" x="636" y="207" text-anchor="middle">Dhcp</text>
+  <rect class="zone-user" x="86" y="240" width="430" height="36" rx="5"/>
+  <text x="102" y="263">svchost.exe -k LocalServiceNetworkRestricted</text>
+  <rect class="box" x="566" y="240" width="140" height="36" rx="5"/>
+  <text class="bold" x="636" y="263" text-anchor="middle">EventLog</text>
+
+  <line class="wire" x1="516" y1="90" x2="566" y2="90" marker-end="url(#arrow)"/>
+  <line class="wire" x1="516" y1="146" x2="566" y2="146" marker-end="url(#arrow)"/>
+  <line class="wire" x1="516" y1="202" x2="566" y2="202" marker-end="url(#arrow)"/>
+  <line class="wire" x1="516" y1="258" x2="566" y2="258" marker-end="url(#arrow)"/>
+</svg>

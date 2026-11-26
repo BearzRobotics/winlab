@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 170" role="img" aria-label="The parts of a security identifier: prefix, machine or domain identifier, and RID" font-family="Segoe UI, sans-serif">
+  <title>The parts of a security identifier: prefix, machine or domain identifier, and RID</title>
+  <style>
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.5 }
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    .hardware { fill: #eceff1; stroke: #57606a }
+    .wire { stroke: #57606a; stroke-width: 1.5 }
+    .accent { stroke: #3b7dd8; stroke-width: 2.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .dim { fill: #57606a }
+    .mono { font-family: Consolas, monospace }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+  <rect class="box" x="30" y="20" width="110" height="44" rx="5"/>
+  <text class="mono" x="85" y="48" text-anchor="middle" font-size="16">S-1-5-21</text>
+  <rect class="zone-user" x="160" y="20" width="400" height="44" rx="5"/>
+  <text class="mono" x="360" y="48" text-anchor="middle" font-size="16">1111111111-2222222222-3333333333</text>
+  <rect class="zone-kernel" x="580" y="20" width="110" height="44" rx="5"/>
+  <text class="mono" x="635" y="48" text-anchor="middle" font-size="16">1001</text>
+  <line class="wire" x1="85" y1="64" x2="85" y2="96"/>
+  <line class="wire" x1="360" y1="64" x2="360" y2="96"/>
+  <line class="wire" x1="635" y1="64" x2="635" y2="96"/>
+  <text class="bold" x="85" y="118" text-anchor="middle">prefix</text>
+  <text class="bold" x="360" y="118" text-anchor="middle">which machine (or domain)</text>
+  <text class="bold" x="635" y="118" text-anchor="middle">RID</text>
+  <text x="635" y="140" text-anchor="middle">which account there</text>
+</svg>
