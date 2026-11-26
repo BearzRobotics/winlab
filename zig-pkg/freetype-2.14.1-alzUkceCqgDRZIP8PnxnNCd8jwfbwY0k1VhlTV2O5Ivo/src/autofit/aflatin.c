@@ -3702,6 +3702,12 @@
         min_y = hints->contour_y_minima[contour];
         max_y = hints->contour_y_maxima[contour];
 
+        /* WinLab patch (docs/vendored-patches.md): a contour that was too  */
+        /* small to measure still holds FT_LONG_MAX / FT_LONG_MIN, and the  */
+        /* subtraction below would overflow.                                */
+        if ( max_y < min_y )
+          continue;
+
         /* We also check that the y minimum of the 'other' contour */
         /* is below the high contour to avoid potential false hits */
         /* with contours enclosed in the high one.                 */
@@ -3862,6 +3868,12 @@
 
         min_y = hints->contour_y_minima[contour];
         max_y = hints->contour_y_maxima[contour];
+
+        /* WinLab patch (docs/vendored-patches.md): a contour that was too  */
+        /* small to measure still holds FT_LONG_MAX / FT_LONG_MIN, and the  */
+        /* subtraction below would overflow.                                */
+        if ( max_y < min_y )
+          continue;
 
         distance = min_y - low_max_y;
         if ( distance < 64           &&
