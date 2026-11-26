@@ -21,6 +21,13 @@ Write down, on one page:
 - **Trust boundaries**: lines where the level of trust changes: the internet versus the home LAN; the LAN versus a guest Wi-Fi; a VM versus its host; a normal user versus root. **Most threats happen when data or a command crosses a boundary.**
 - **Who the attackers are, and what they want** (be modest: a bot scanning the internet for SSH passwords is a real attacker; a targeted nation-state is probably not your threat).
 
+![Diagram: trust boundaries between the internet or guest Wi-Fi and the home LAN, between a VM and its host, and between a normal user and root](diagrams/trust-boundaries.svg)
+
+```text
+ internet, guest Wi-Fi  ||  home LAN: [ host [ VM ] ]   [ server: user | root ]
+ || and the inner edges are trust boundaries
+```
+
 ### 2. What can go wrong? STRIDE
 
 Microsoft's [threat modelling tool documentation](https://learn.microsoft.com/en-us/azure/security/develop/threat-modeling-tool-threats) describes the **STRIDE** model, which "categorizes different types of threats". Six letters, one per kind of threat; ask all six of each component:
