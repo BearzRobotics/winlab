@@ -68,3 +68,4 @@ By path, in the order the owner works through them.
 | `foundations.ps-errors-and-debugging` | deepened 2026-11-26: reading error messages, errors that let a script continue and exit 0, 1 diagram (`err3.ps1`) |
 | `foundations.ps-working-with-data` | deepened 2026-11-26: rewriting a file onto itself, what Compare-Object ignores, silent CSV problems, 1 diagram (`data3.ps1`) |
 | `foundations.ps-modules-and-remoting` | deepened 2026-11-26: fixed a broken heading, reading Get-Job and module lists, 1 diagram (`jobs3.ps1`); the VM remoting results are from 2026-11-21 |
+| `foundations.ps-system-admin-scripting` | deepened 2026-11-26: reading log properties and task result codes, safe-change diagram; VM results are from the earlier run |

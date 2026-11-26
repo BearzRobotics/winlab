@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 210" role="img" aria-label="A safe change: check the current state, do nothing if it is already right, otherwise change it with WhatIf support, then verify" font-family="Segoe UI, sans-serif">
+  <title>The shape of a safe change</title>
+  <style>
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.5 }
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    .wire { stroke: #57606a; stroke-width: 1.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .dim { fill: #57606a }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+
+  <rect class="zone-user" x="10" y="40" width="150" height="60" rx="6"/>
+  <text class="bold" x="85" y="66" text-anchor="middle">1. check</text>
+  <text x="85" y="88" text-anchor="middle" font-size="13">what is it now?</text>
+  <line class="wire" x1="160" y1="70" x2="196" y2="70" marker-end="url(#arrow)"/>
+  <rect class="box" x="198" y="40" width="150" height="60" rx="22"/>
+  <text class="bold" x="273" y="76" text-anchor="middle">already right?</text>
+  <line class="wire" x1="348" y1="70" x2="394" y2="70" marker-end="url(#arrow)"/>
+  <text x="371" y="60" text-anchor="middle" font-size="13">no</text>
+  <rect class="zone-kernel" x="396" y="40" width="150" height="60" rx="6"/>
+  <text class="bold" x="471" y="66" text-anchor="middle">2. change</text>
+  <text x="471" y="88" text-anchor="middle" font-size="13">-WhatIf first</text>
+  <line class="wire" x1="546" y1="70" x2="582" y2="70" marker-end="url(#arrow)"/>
+  <rect class="zone-user" x="584" y="40" width="126" height="60" rx="6"/>
+  <text class="bold" x="647" y="66" text-anchor="middle">3. verify</text>
+  <text x="647" y="88" text-anchor="middle" font-size="13">read it back</text>
+
+  <line class="wire" x1="273" y1="100" x2="273" y2="150" marker-end="url(#arrow)"/>
+  <text x="290" y="128" font-size="13">yes</text>
+  <rect class="box" x="168" y="152" width="210" height="40" rx="6"/>
+  <text x="273" y="177" text-anchor="middle">do nothing, say so</text>
+  <text class="dim" x="420" y="177" font-size="13">Run it twice: the second run must change nothing.</text>
+</svg>

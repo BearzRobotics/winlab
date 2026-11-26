@@ -152,6 +152,14 @@ System            23333           20971520 Circular
 Application       7613            20971520 Circular
 ```
 
+| Column | What it tells you | What to do with it |
+|---|---|---|
+| `RecordCount` | How many events the log holds now | A sudden jump means something is writing constantly |
+| `MaximumSizeInBytes` | The size limit: `20971520` is 20 MB | Raise it if the history you need is gone too soon |
+| `LogMode` | `Circular`: when full, **the oldest events are overwritten** | Old evidence disappears; export it if you need to keep it |
+
+In the second command's output, read `TimeCreated` (when), `Id` **together with** `ProviderName` (an ID number only has a meaning for its provider) and `LevelDisplayName` (how serious). Start from the time the problem was noticed and read **backwards**: the first error is often the cause and the later ones its effects.
+
 ### Filter in the query, not afterwards
 
 `-FilterHashtable` sends the filter to the event log service ([guide](https://learn.microsoft.com/powershell/scripting/samples/creating-get-winevent-queries-with-filterhashtable)):
@@ -232,11 +240,25 @@ Get-ScheduledTaskInfo -TaskName WinLabDemo | Select-Object LastTaskResult, LastR
 
 - **Registering a name that exists is an error** (`Cannot create a file when that file already exists.`). For repeatable scripts, check first (`Get-ScheduledTask -TaskName X -ErrorAction SilentlyContinue`) or pass `-Force` to replace.
 - `LastTaskResult` is `0` for success; other values are error codes of the action. A task that *started* is not a task that *worked*: check this value.
+- Some non-zero values come from the **Task Scheduler itself** and are not failures ([the list of constants](https://learn.microsoft.com/windows/win32/taskschd/task-scheduler-error-and-success-constants)). PowerShell prints them in decimal, and the documentation lists hexadecimal; convert with `'0x{0:X}' -f 267011`. See the table below.
 - `New-ScheduledTaskTrigger -Once -At ... -RepetitionInterval (New-TimeSpan -Minutes 15)` gave `Repetition.Interval : PT15M` (an ISO 8601 duration).
 - `-RunLevel Highest` and `SYSTEM` mean the task runs with maximum rights: **a task you can edit that runs as SYSTEM is a way to become SYSTEM**. Audit who can modify a task's script file and the task itself. Keep tasks least-privilege.
 - Remove what you made: `Disable-ScheduledTask`, `Unregister-ScheduledTask -Confirm:$false`.
 - `schtasks.exe /Query /TN '\Microsoft\Windows\Defrag\ScheduledDefrag' /FO LIST` is the older tool for the same data ([schtasks](https://learn.microsoft.com/windows-server/administration/windows-commands/schtasks)); learn to read both, because many knowledge-base articles still use it.
 - Cmdlets: [Register-ScheduledTask](https://learn.microsoft.com/powershell/module/scheduledtasks/register-scheduledtask), [New-ScheduledTaskAction](https://learn.microsoft.com/powershell/module/scheduledtasks/new-scheduledtaskaction), [New-ScheduledTaskTrigger](https://learn.microsoft.com/powershell/module/scheduledtasks/new-scheduledtasktrigger), [New-ScheduledTaskPrincipal](https://learn.microsoft.com/powershell/module/scheduledtasks/new-scheduledtaskprincipal), [Get-ScheduledTaskInfo](https://learn.microsoft.com/powershell/module/scheduledtasks/get-scheduledtaskinfo).
+
+### Reading `LastTaskResult`
+
+| Decimal | Hex | Meaning |
+|---|---|---|
+| 0 | `0x0` | The last run reported success |
+| 267008 | `0x41300` | Ready to run at its next scheduled time |
+| 267009 | `0x41301` | **Running now** |
+| 267011 | `0x41303` | **Has not yet run** |
+| 267014 | `0x41306` | The last run was ended by the user |
+| anything else | | Look it up. It may be your program's exit code or a Windows error code |
+
+On the Windows 11 host, listing every task's result gave `0` most often and **267011 next**, simply tasks that had never run. A report that flags "everything that is not 0" would be mostly false alarms. And `0` only means the **action** reported success: if your script swallows its errors and exits 0 (see the errors lesson), the task looks healthy. Have the script exit non-zero on failure, and check that the **result you wanted** exists, such as a fresh file.
 
 **The GUI route.** `taskschd.msc` (Task Scheduler): **Create Task** (not "Create Basic Task", which hides the principal and settings), tabs General (account, "Run with highest privileges"), Triggers, Actions, Conditions, Settings, and History (enable it first).
 
@@ -287,6 +309,16 @@ Set-WlServiceState -Name Spooler -State Running            -> changed
 ```
 
 Note that the `-WhatIf` call printed the message and returned **nothing** (no output object), which is why a caller should not depend on a return value under `-WhatIf`. That is the whole pattern: **inspect, compare with the wanted state, change only the difference, report what you did.** A script built this way is safe to run from a scheduled task every hour, and a re-run after a crash finishes the job instead of damaging it.
+
+![Diagram: check the current state; if it is already right do nothing and say so; otherwise change it with WhatIf support and then verify by reading it back](diagrams/ps-idempotent.svg)
+
+```text
+ 1. check --> already right? --no--> 2. change (-WhatIf first) --> 3. verify (read it back)
+                    |
+                   yes --> do nothing, say so          (a second run must change nothing)
+```
+
+The function above shows steps 1 and 2. For step 3, read the state again (`(Get-Service $Name).Status`) rather than assuming that a command which printed no error did what you meant.
 
 (The Spooler is a printing service. In the lab it ran as an ordinary service; I did not diagnose a start failure I saw once on it during testing, so I used `BITS` for the start and stop demonstrations. Do not stop the Spooler on a machine where someone is printing.)
 

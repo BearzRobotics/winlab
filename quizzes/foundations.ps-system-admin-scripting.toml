@@ -503,3 +503,32 @@ choices = ["Ask who requested it and whether the script says why; installers do 
 answers = ["Ask who requested it and whether the script says why; installers do this legitimately"]
 explanation = "None of the patterns is evil by itself; the context decides."
 review = "Reading an unknown administration script"
+
+# ---- Added when the lesson was deepened ----
+
+[[question]]
+id = "result-267011"
+type = "choice"
+prompt = "A task shows LastTaskResult 267011 (0x41303). What does it mean?"
+choices = ["The task has not yet run", "The task crashed", "Access was denied", "The disk is full"]
+answers = ["The task has not yet run"]
+explanation = "It is a Task Scheduler status, not a failure of your script."
+review = "Reading `LastTaskResult`"
+
+[[question]]
+id = "result-zero"
+type = "choice"
+prompt = "Why is LastTaskResult 0 not proof that the work was done?"
+choices = ["A script can swallow its errors and still exit 0", "0 means the task is disabled", "The value is random", "Only SYSTEM tasks set it"]
+answers = ["A script can swallow its errors and still exit 0"]
+explanation = "Check that the result you wanted exists, and make scripts exit non-zero on failure."
+review = "Reading `LastTaskResult`"
+
+[[question]]
+id = "circular-log"
+type = "choice"
+prompt = "A log's LogMode is Circular. What happens when it reaches its size limit?"
+choices = ["The oldest events are overwritten", "Logging stops", "A new file is always created and kept", "Windows restarts"]
+answers = ["The oldest events are overwritten"]
+explanation = "Export events you need to keep, or raise the limit."
+review = "Event logs"

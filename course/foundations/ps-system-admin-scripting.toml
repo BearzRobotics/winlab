@@ -3,7 +3,7 @@ id = "foundations.ps-system-admin-scripting"
 title = "PowerShell for system administration: CIM, registry, services, event logs and tasks"
 summary = "Query Windows with CIM and WQL, read and change the registry with the right types, control services, filter and write event logs, build scheduled tasks, and make every change previewable (-WhatIf) and repeatable (idempotent), with a checklist for reading an unknown administration script."
 content = "ps-system-admin-scripting.md"
-estimated_minutes = 120
+estimated_minutes = 140
 level = 4
 objectives = [
   "Query system information with Get-CimInstance, filter at the source with WQL, and discover classes and methods",
@@ -32,10 +32,6 @@ title = "Get-CimInstance (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/module/cimcmdlets/get-ciminstance"
 
 [[references]]
-title = "Invoke-CimMethod (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/module/cimcmdlets/invoke-cimmethod"
-
-[[references]]
 title = "WMI in PowerShell 101 (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/scripting/learn/ps101/07-working-with-wmi"
 
@@ -48,36 +44,24 @@ title = "Win32_Service class (Microsoft Learn)"
 url = "https://learn.microsoft.com/windows/win32/cimwin32prov/win32-service"
 
 [[references]]
-title = "about_Registry_Provider (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_registry_provider"
-
-[[references]]
-title = "New-ItemProperty (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.management/new-itemproperty"
-
-[[references]]
-title = "Set-ItemProperty (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.management/set-itemproperty"
-
-[[references]]
-title = "Registry value types (Microsoft Learn)"
-url = "https://learn.microsoft.com/windows/win32/sysinfo/registry-value-types"
+title = "Invoke-CimMethod (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/cimcmdlets/invoke-cimmethod"
 
 [[references]]
 title = "Registry hives (Microsoft Learn)"
 url = "https://learn.microsoft.com/windows/win32/sysinfo/registry-hives"
 
 [[references]]
+title = "Registry value types (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/win32/sysinfo/registry-value-types"
+
+[[references]]
+title = "about_Registry_Provider (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_registry_provider"
+
+[[references]]
 title = "reg command (Microsoft Learn)"
 url = "https://learn.microsoft.com/windows-server/administration/windows-commands/reg"
-
-[[references]]
-title = "Set-Service (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.management/set-service"
-
-[[references]]
-title = "Stop-Service (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.management/stop-service"
 
 [[references]]
 title = "Get-WinEvent (Microsoft Learn)"
@@ -92,21 +76,58 @@ title = "Write-EventLog (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.management/write-eventlog"
 
 [[references]]
-title = "Register-ScheduledTask (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/module/scheduledtasks/register-scheduledtask"
+title = "new-eventlog"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.management/new-eventlog"
 
 [[references]]
-title = "New-ScheduledTaskTrigger (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/module/scheduledtasks/new-scheduledtasktrigger"
+title = "Task Scheduler error and success constants (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/win32/taskschd/task-scheduler-error-and-success-constants"
 
 [[references]]
 title = "schtasks command (Microsoft Learn)"
 url = "https://learn.microsoft.com/windows-server/administration/windows-commands/schtasks"
 
 [[references]]
-title = "Everything you wanted to know about ShouldProcess (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/scripting/learn/deep-dives/everything-about-shouldprocess"
+title = "Register-ScheduledTask (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/scheduledtasks/register-scheduledtask"
+
+[[references]]
+title = "new-scheduledtaskaction"
+url = "https://learn.microsoft.com/powershell/module/scheduledtasks/new-scheduledtaskaction"
+
+[[references]]
+title = "New-ScheduledTaskTrigger (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/scheduledtasks/new-scheduledtasktrigger"
+
+[[references]]
+title = "new-scheduledtaskprincipal"
+url = "https://learn.microsoft.com/powershell/module/scheduledtasks/new-scheduledtaskprincipal"
+
+[[references]]
+title = "get-scheduledtaskinfo"
+url = "https://learn.microsoft.com/powershell/module/scheduledtasks/get-scheduledtaskinfo"
 
 [[references]]
 title = "about_CommonParameters (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_commonparameters"
+
+[[references]]
+title = "Everything you wanted to know about ShouldProcess (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/scripting/learn/deep-dives/everything-about-shouldprocess"
+
+[[references]]
+title = "New-ItemProperty (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.management/new-itemproperty"
+
+[[references]]
+title = "Set-ItemProperty (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.management/set-itemproperty"
+
+[[references]]
+title = "Set-Service (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.management/set-service"
+
+[[references]]
+title = "Stop-Service (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.management/stop-service"
+
