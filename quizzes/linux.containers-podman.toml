@@ -145,3 +145,68 @@ choices = ["FROM", "CMD", "RUN", "COPY"]
 answers = ["FROM"]
 explanation = "CMD is the command to start; podman build -t name . runs the file."
 review = "Building images, briefly"
+
+# ---- Added when the lesson was deepened ----
+
+[[question]]
+id = "created-state"
+type = "choice"
+prompt = "podman ps -a shows a container as Created. What does that mean?"
+choices = ["It never started", "It is running", "It finished successfully", "It was paused by the user"]
+answers = ["It never started"]
+explanation = "podman inspect shows the stored error."
+review = "Why did my container stop?"
+
+[[question]]
+id = "published-side"
+type = "choice"
+prompt = "With -p 8080:8000, which address answers on the host?"
+choices = ["Port 8080", "Port 8000", "Both", "Neither without root"]
+answers = ["Port 8080"]
+explanation = "Port 8000 exists only inside the container; in the lesson it refused the connection on the host."
+review = "Publishing a port"
+
+[[question]]
+id = "z-changes-host"
+type = "choice"
+prompt = "Why should you not use :Z on a home directory or system folder?"
+choices = ["It relabels the files on the host, so other programs can lose access", "It deletes the files", "It makes them public on the network", "It only works on empty folders"]
+answers = ["It relabels the files on the host, so other programs can lose access"]
+explanation = "Give containers their own folder."
+review = "SELinux and `:Z`"
+
+[[question]]
+id = "rootless-list"
+type = "choice"
+prompt = "sudo podman ps -a does not show a container that you started as an ordinary user. Why?"
+choices = ["Root and each user have separate containers and images", "The container has stopped", "sudo hides rootless containers only when SELinux is on", "The container was deleted"]
+answers = ["Root and each user have separate containers and images"]
+explanation = "List as the user who started it."
+review = "Rootless and rootful"
+
+[[question]]
+id = "quadlet-enable"
+type = "choice"
+prompt = "How is a Quadlet container made to start at boot?"
+choices = ["With an [Install] section in the .container file", "With systemctl enable on the generated service", "By editing the file in /run/systemd/generator", "With podman start in a cron job"]
+answers = ["With an [Install] section in the .container file"]
+explanation = "systemctl enable fails because the unit is generated."
+review = "Containers as services"
+
+[[question]]
+id = "quadlet-notfound"
+type = "choice"
+prompt = "After daemon-reload, a new Quadlet's service is 'not found'. Which command can say why?"
+choices = ["/usr/libexec/podman/quadlet -dryrun", "podman logs", "podman images", "ss -ltnp"]
+answers = ["/usr/libexec/podman/quadlet -dryrun"]
+explanation = "In the lesson it reported an unsupported, misspelled key."
+review = "When it will not start"
+
+[[question]]
+id = "build-cache"
+type = "choice"
+prompt = "A second build prints 'Using cache' for a RUN step. What happened?"
+choices = ["The command was not run again", "It ran faster than before", "It ran twice", "The step failed"]
+answers = ["The command was not run again"]
+explanation = "Use --no-cache when a step must run again."
+review = "Building images, briefly"
