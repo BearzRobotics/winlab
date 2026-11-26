@@ -369,3 +369,49 @@ choices = ["$null = $list.Add($n * 2)", "Remove return", "Use Write-Host for the
 answers = ["$null = $list.Add($n * 2)"]
 explanation = "Also keep Write-Host out of data-returning functions."
 review = "Read this function"
+
+# ---- Added when the lesson was deepened ----
+
+[[question]]
+id = "typo-param-simple"
+type = "choice"
+prompt = "A function without [CmdletBinding()] is called with a misspelled parameter name. What happens?"
+choices = ["No error: the words go into $args", "A clear error naming the parameter", "PowerShell guesses the right parameter", "The function does not run"]
+answers = ["No error: the words go into $args"]
+explanation = "Always use [CmdletBinding()]."
+review = "Surprises when arguments are bound"
+
+[[question]]
+id = "string-array"
+type = "short"
+prompt = "A [string] parameter is given @('a','b','c'). What string does it hold? (type it exactly, without quotes)"
+answers = ["a b c"]
+explanation = "The array is joined with spaces."
+review = "Surprises when arguments are bound"
+
+[[question]]
+id = "default-not-validated"
+type = "choice"
+prompt = "[ValidateRange(1,10)][int]$Count = 0 and the caller passes nothing. What is $Count?"
+choices = ["0, with no error", "1", "An error is raised", "10"]
+answers = ["0, with no error"]
+explanation = "Validation applies to values passed or assigned, not to the default."
+review = "Surprises when arguments are bound"
+
+[[question]]
+id = "by-property"
+type = "choice"
+prompt = "How does ValueFromPipelineByPropertyName choose a value?"
+choices = ["It takes the object's property with the same name as the parameter or an alias of it", "It takes the first property", "It takes the whole object", "It takes the longest property"]
+answers = ["It takes the object's property with the same name as the parameter or an alias of it"]
+explanation = "Compare names with Get-Member when binding fails."
+review = "By value and by property name"
+
+[[question]]
+id = "define-first"
+type = "choice"
+prompt = "A script calls a function above the line that defines it. What happens?"
+choices = ["That call fails as an unknown command, and the script may carry on", "PowerShell defines it first automatically", "The whole script refuses to start", "The function runs twice"]
+answers = ["That call fails as an unknown command, and the script may carry on"]
+explanation = "Define functions above the code that calls them."
+review = "Surprises when arguments are bound"

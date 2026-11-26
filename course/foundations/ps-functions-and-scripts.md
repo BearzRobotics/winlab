@@ -1,4 +1,4 @@
-*Draft for owner review.* A function packages a piece of logic under a name; a script is a function that lives in a file. The step from "a few commands" to "a tool others can rely on" is writing functions and scripts that take **parameters**, **validate them**, work in a **pipeline**, support **`-WhatIf`**, and carry their own **help**. That step is also where most hidden bugs appear: output that sneaks into the result, aliases that shadow your function, a comma that turns two arguments into one array. This lesson covers all of it with real output from **Windows PowerShell 5.1** and **PowerShell 7**.
+*Draft for owner review.* A function packages a piece of logic under a name; a script is a function that lives in a file. The step from "a few commands" to "a tool others can rely on" is writing functions and scripts that take **parameters**, **validate them**, work in a **pipeline**, support **`-WhatIf`**, and carry their own **help**. That step is also where most hidden bugs appear: output that sneaks into the result, aliases that shadow your function, a comma that turns two arguments into one array. This lesson covers all of it with real output from **Windows PowerShell 5.1** and **PowerShell 7**. The results on how arguments are bound come from `tests/verification/powershell/fn4.ps1`; they were the same in 5.1.26100 and 7.6.10.
 
 ## A first function
 
@@ -125,6 +125,13 @@ That is the point of validation: the function body can assume good input. See [a
 
 A function that accepts pipeline input runs `begin` once, `process` **once per input object**, and `end` once:
 
+![Diagram: for three pipeline objects, begin runs once, process runs three times, then end runs once; without a process block the body runs once after all input has arrived](diagrams/ps-begin-process-end.svg)
+
+```text
+ 1..3 | Count-Items :  begin -> process(1) -> process(2) -> process(3) -> end
+ without a process block: the body runs ONCE, after all input; the parameter holds only the LAST object
+```
+
 ```powershell
 function Count-Items { [CmdletBinding()] param([Parameter(ValueFromPipeline)]$Item) begin { $n = 0 } process { $n++ } end { "saw $n" } }
 1..5 | Count-Items
@@ -140,6 +147,31 @@ function Double-It { process { $_ * 2 } }
 4
 6
 ```
+
+### By value and by property name
+
+A parameter can take a pipeline object in two ways: **by value** (`ValueFromPipeline`: the whole object becomes the parameter) or **by property name** (`ValueFromPipelineByPropertyName`: a property **with the same name** is taken). This is how cmdlets connect without any code from you.
+
+```powershell
+function Show-Target {
+    [CmdletBinding()]
+    param(
+        [Parameter(ValueFromPipelineByPropertyName)][string]$Name,
+        [Parameter(ValueFromPipelineByPropertyName)][Alias('Id')][int]$Number
+    )
+    process { "Name=$Name Number=$Number" }
+}
+[pscustomobject]@{ Name='web01'; Id=7 }, [pscustomobject]@{ Name='db01'; Number=9 } | Show-Target
+```
+
+```text
+Name=web01 Number=7
+Name=db01 Number=9
+```
+
+`[Alias('Id')]` let a property called `Id` fill `-Number`. An object with **neither** name, `@{ComputerName='x'; Port=1}`, was rejected: `The input object cannot be bound to any parameters for the command...`. When you see that message, compare the **property names** of the objects (`Get-Member`) with the parameter names and aliases; renaming with `Select-Object @{n='Name';e={$_.ComputerName}}` is the usual fix.
+
+A trap: a parameter that accepts **both** ways. Given `[pscustomobject]@{ Other = 'x' }`, with no `Name` property, it was bound **by value** and printed `[@{Other=no Name property}]`: the whole object turned into text. No error, and a script would carry on with that nonsense. Give a parameter both only when a plain value is really meaningful.
 
 ### Parameter sets
 
@@ -177,6 +209,22 @@ function Show { [CmdletBinding()] param($X = 'dflt', $Y) "bound: " + (($PSBoundP
 Show -Y 1
 bound: Y; X=dflt
 ```
+
+### Surprises when arguments are bound
+
+| What I ran | What happened |
+|---|---|
+| a **simple** function (no `[CmdletBinding()]`) with a misspelled `-Nmae bob` | **No error.** `$Name` stayed empty; `-Nmae` and `bob` went into `$args` |
+| the same on an **advanced** function | `A parameter cannot be found that matches parameter name 'Nmae'.` |
+| extra unnamed arguments `a b c` on a simple one-parameter function | `b`, `c` silently in `$args`; the advanced one refused them |
+| `[string]$Value` given `@('a','b','c')` | **`a b c`**: the array was joined into one string |
+| `[int]$N` given `2.5`, `3.5` | `2`, `4` (rounds to even) |
+| `[bool]$Enabled` given the **text** `'False'` | Rejected. For on/off, use a `[switch]`; `-Force:$false` turns one off |
+| `[ValidateRange(1,10)][int]$Count = 0`, not passed | **`Count=0`**: **validation is not applied to a default value** |
+| the same parameter assigned `99` later inside the function | failed: validation does apply to later assignments |
+| a script that **calls a function before it is defined** | `The term 'Say-It' is not recognized...`, then the script **carried on** to the later, working call |
+
+The first two rows are the best argument for **always using `[CmdletBinding()]`**: it turns silent mistakes into clear errors. Define functions **above** the code that calls them.
 
 ## What a function returns
 
@@ -314,6 +362,9 @@ A dot-sourced file should only define functions and constants, not do work. For 
 - **Assuming the current directory** instead of `$PSScriptRoot`.
 - **Forgetting `exit` codes** in scripts used by schedulers.
 - **No validation,** so errors surface deep in the body.
+- **Leaving out `[CmdletBinding()]`**, so a misspelled parameter is silently ignored.
+- **Trusting validation to check your own default values.**
+- **Calling a function above its definition** in a script.
 
 ## Read this function
 
@@ -356,5 +407,8 @@ The labs for this lesson ask for a script that takes parameters with defaults an
 6. What does `-WhatIf` need from your function?
 7. What is the difference between `&` and `.` for running a script?
 8. Why use `$PSScriptRoot`?
+9. A call has a misspelled parameter name and nothing complains. What is missing from the function?
+10. What does `ValueFromPipelineByPropertyName` match on?
+11. Does `ValidateRange` check a parameter's default value?
 
-**Expected answers:** (1) `1, 2` is a single array argument, so it goes to `-A` and cannot convert to an integer; separate arguments with spaces; (2) the alias; (3) everything the function outputs: any uncaptured expression; (4) setup once, once per pipeline object, and cleanup once; (5) it limits a parameter to listed values, offers tab completion, and rejects bad values before the function body runs; (6) `SupportsShouldProcess` in `[CmdletBinding()]` and a call to `$PSCmdlet.ShouldProcess(...)` around each change; (7) `&` runs the script in a child scope (its functions vanish); `.` runs it in the current scope so its functions stay defined; (8) it is the script's own folder, so file paths do not depend on the current directory.
+**Expected answers:** (1) `1, 2` is a single array argument, so it goes to `-A` and cannot convert to an integer; separate arguments with spaces; (2) the alias; (3) everything the function outputs: any uncaptured expression; (4) setup once, once per pipeline object, and cleanup once; (5) it limits a parameter to listed values, offers tab completion, and rejects bad values before the function body runs; (6) `SupportsShouldProcess` in `[CmdletBinding()]` and a call to `$PSCmdlet.ShouldProcess(...)` around each change; (7) `&` runs the script in a child scope (its functions vanish); `.` runs it in the current scope so its functions stay defined; (8) it is the script's own folder, so file paths do not depend on the current directory; (9) `[CmdletBinding()]`, which makes unknown parameters an error; (10) a property of the incoming object whose name equals the parameter's name or one of its aliases; (11) no, only values that are passed or assigned.

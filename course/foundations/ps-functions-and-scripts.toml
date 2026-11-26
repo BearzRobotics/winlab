@@ -3,7 +3,7 @@ id = "foundations.ps-functions-and-scripts"
 title = "PowerShell functions and scripts"
 summary = "Writing functions and scripts that other people can rely on: parameters, validation, pipeline input, parameter sets, splatting, what a function returns and how output pollution happens, -WhatIf support, help, script parameters and exit codes, dot-sourcing, and command precedence."
 content = "ps-functions-and-scripts.md"
-estimated_minutes = 110
+estimated_minutes = 130
 level = 3
 objectives = [
   "Call functions with the correct syntax and explain the comma and parentheses trap",
@@ -28,8 +28,12 @@ evaluation_criteria = [
 ]
 
 [[references]]
-title = "about_Functions (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_functions"
+title = "about_Command_Precedence (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_command_precedence"
+
+[[references]]
+title = "about_Functions_CmdletBindingAttribute (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_functions_cmdletbindingattribute"
 
 [[references]]
 title = "about_Functions_Advanced (Microsoft Learn)"
@@ -40,8 +44,20 @@ title = "about_Functions_Advanced_Parameters (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_functions_advanced_parameters"
 
 [[references]]
-title = "about_Functions_CmdletBindingAttribute (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_functions_cmdletbindingattribute"
+title = "about_Splatting (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_splatting"
+
+[[references]]
+title = "about_Comment_Based_Help (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_comment_based_help"
+
+[[references]]
+title = "about_Requires (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_requires"
+
+[[references]]
+title = "about_Functions (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_functions"
 
 [[references]]
 title = "about_Functions_OutputTypeAttribute (Microsoft Learn)"
@@ -56,24 +72,8 @@ title = "about_Parameter_Sets (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_parameter_sets"
 
 [[references]]
-title = "about_Splatting (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_splatting"
-
-[[references]]
-title = "about_Command_Precedence (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_command_precedence"
-
-[[references]]
 title = "about_Return (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_return"
-
-[[references]]
-title = "about_Comment_Based_Help (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_comment_based_help"
-
-[[references]]
-title = "about_Requires (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_requires"
 
 [[references]]
 title = "about_Script_Blocks (Microsoft Learn)"
@@ -90,3 +90,4 @@ url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.utilit
 [[references]]
 title = "Write-Verbose (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/write-verbose"
+

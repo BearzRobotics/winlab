@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 190" role="img" aria-label="begin runs once, process runs once for each object from the pipeline, end runs once" font-family="Segoe UI, sans-serif">
+  <title>begin, process and end</title>
+  <style>
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.5 }
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    .wire { stroke: #57606a; stroke-width: 1.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .dim { fill: #57606a }
+    .mono { font-family: Consolas, monospace }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+
+  <text class="mono" x="360" y="24" text-anchor="middle" font-size="15">1..3 | Count-Items</text>
+  <rect class="zone-kernel" x="10" y="48" width="130" height="56" rx="6"/>
+  <text class="bold" x="75" y="72" text-anchor="middle">begin</text>
+  <text x="75" y="94" text-anchor="middle" font-size="13">once, first</text>
+  <line class="wire" x1="140" y1="76" x2="166" y2="76" marker-end="url(#arrow)"/>
+  <rect class="zone-user" x="168" y="48" width="118" height="56" rx="6"/>
+  <text class="bold" x="227" y="72" text-anchor="middle">process</text>
+  <text x="227" y="94" text-anchor="middle" font-size="13">object 1</text>
+  <line class="wire" x1="286" y1="76" x2="304" y2="76" marker-end="url(#arrow)"/>
+  <rect class="zone-user" x="306" y="48" width="118" height="56" rx="6"/>
+  <text class="bold" x="365" y="72" text-anchor="middle">process</text>
+  <text x="365" y="94" text-anchor="middle" font-size="13">object 2</text>
+  <line class="wire" x1="424" y1="76" x2="442" y2="76" marker-end="url(#arrow)"/>
+  <rect class="zone-user" x="444" y="48" width="118" height="56" rx="6"/>
+  <text class="bold" x="503" y="72" text-anchor="middle">process</text>
+  <text x="503" y="94" text-anchor="middle" font-size="13">object 3</text>
+  <line class="wire" x1="562" y1="76" x2="578" y2="76" marker-end="url(#arrow)"/>
+  <rect class="zone-kernel" x="580" y="48" width="130" height="56" rx="6"/>
+  <text class="bold" x="645" y="72" text-anchor="middle">end</text>
+  <text x="645" y="94" text-anchor="middle" font-size="13">once, last</text>
+
+  <text class="bold" x="10" y="144">Without a process block the body runs ONCE, after all the input has arrived:</text>
+  <text class="dim" x="10" y="170" font-size="13">a pipeline parameter then holds only the last object.</text>
+</svg>
