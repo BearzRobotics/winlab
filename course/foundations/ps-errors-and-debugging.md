@@ -1,12 +1,46 @@
-*Draft for owner review.* A script that works on your machine, today, with good input, is a demo. A script you can trust *reports* what went wrong, *stops* when it should, *keeps going* when it should, and leaves enough evidence to find the cause. PowerShell's error system is richer than cmd's exit codes and more confusing than most languages', because it has two kinds of error, several output streams and a pile of preference variables. This lesson explains how it actually works, with real output from **Windows PowerShell 5.1** and **PowerShell 7**, and then covers debugging, logging, static analysis and testing, so that you can both write careful code and diagnose someone else's.
+*Draft for owner review.* A script that works on your machine, today, with good input, is a demo. A script you can trust *reports* what went wrong, *stops* when it should, *keeps going* when it should, and leaves enough evidence to find the cause. PowerShell's error system is richer than cmd's exit codes and more confusing than most languages', because it has two kinds of error, several output streams and a pile of preference variables. This lesson explains how it actually works, with real output from **Windows PowerShell 5.1** and **PowerShell 7** (the section on reading errors and on which errors let a script continue comes from `tests/verification/powershell/err3.ps1`, run in 5.1.26100 and 7.6.10), and then covers debugging, logging, static analysis and testing, so that you can both write careful code and diagnose someone else's.
+
+## Reading an error message
+
+Do not skim the red text: it says **what** failed, **where**, and **what kind** of failure it was. The same two-line script (`$name = 'C:\nope'` then `Get-Item $name`) prints in **Windows PowerShell 5.1**:
+
+```text
+Get-Item : Cannot find path 'C:\nope' because it does not exist.
+At C:\...\show.ps1:2 char:1
++ Get-Item $name
++ ~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (C:\nope:String) [Get-Item], ItemNotFoundException
+    + FullyQualifiedErrorId : PathNotFound,Microsoft.PowerShell.Commands.GetItemCommand
+```
+
+and in **PowerShell 7**:
+
+```text
+Get-Item: C:\...\show.ps1:2
+Line |
+   2 |  Get-Item $name
+     |  ~~~~~~~~~~~~~~
+     | Cannot find path 'C:\nope' because it does not exist.
+```
+
+| Part | How to use it |
+|---|---|
+| `Get-Item` at the start | **Which command** reported the error (in 7, an error from your own code may start with an exception type such as `RuntimeException`) |
+| the sentence | **What** went wrong. Note the actual value: `C:\nope`, not `$name`. If it is empty or odd, your variable is the problem |
+| `show.ps1:2 char:1` / `2 |` | **File and line.** Start reading there |
+| the `~~~~` underline | The part of the line that failed |
+| `CategoryInfo` (5.1) | A class of failure (`ObjectNotFound`) and the .NET exception, `ItemNotFoundException`: the name to put in a `catch` |
+| `FullyQualifiedErrorId` (5.1) | A stable identifier: search the web for this rather than the sentence, which differs by Windows language |
+
+PowerShell 7's short view hides the category and identifier. `$Error[0] | Format-List * -Force` (or `Get-Error` in 7) shows everything.
 
 ## Two kinds of error
 
-PowerShell separates errors by whether they **stop** execution:
+PowerShell's documentation separates **terminating** from **non-terminating** errors, and the first thing to know is which of them `try`/`catch` sees:
 
 | | Non-terminating | Terminating |
 |---|---|---|
-| what happens | the error is reported and the command **carries on** with the next item | the command (or script) **stops** |
+| what happens | the error is reported and the command **carries on** with the next item | the **statement** that failed is abandoned (see below: the script may still go on) |
 | typical source | a cmdlet that fails on one of several inputs | `throw`, a .NET exception, `-ErrorAction Stop`, a parse error |
 | `try`/`catch` | **does not catch it** | catches it |
 
@@ -36,6 +70,41 @@ To make an error catchable, turn it into a terminating one with `-ErrorAction St
 try { Get-Item 'C:\nope' -ErrorAction Stop } catch { 'caught B: ' + $_.Exception.GetType().Name }
 caught B: ItemNotFoundException
 ```
+
+### "Terminating" does not always stop the script
+
+This is where many scripts go wrong. I ran each line in a `.ps1`, followed by a line that prints `next line ran`:
+
+| The failing line | Did the next line run? | Exit code of the script |
+|---|---|---|
+| `Get-Item C:\nope` (non-terminating) | yes | 0 |
+| `[int]'abc'` (a failed conversion) | **yes** | **0** |
+| `1/0` | **yes** | **0** |
+| `[IO.File]::ReadAllText('C:\nope.txt')` (a .NET method) | **yes** | **0** |
+| `nosuchcommand` | **yes** | **0** |
+| `throw 'stop here'` | no | 1 |
+| `Get-Item C:\nope -ErrorAction Stop` | no | 1 |
+| `[int]'abc'` after `$ErrorActionPreference = 'Stop'` | no | 1 |
+
+Both editions behaved this way. The middle four are often called **statement-terminating**: `catch` sees them, but **without** `try` only that statement is abandoned and the script **goes on**.
+
+![Diagram: non-terminating errors are not caught and the script carries on; statement-terminating errors can be caught but without try the script still carries on; throw and ErrorAction Stop can be caught and otherwise stop the script with exit code 1](diagrams/ps-error-kinds.svg)
+
+```text
+ error kind              caught by try?   without try
+ non-terminating         NO               carries on
+ statement-terminating   yes              STILL carries on     ([int]'abc', 1/0, .NET, unknown command)
+ script-terminating      yes              stops, exit 1        (throw, -ErrorAction Stop)
+```
+
+What that means in practice:
+
+```powershell
+$total = [int]'abc'
+"total is [$total]"
+```
+
+printed the error, then `total is []`, and the script ended with **exit code 0**. A scheduler would record **success**, and anything that used `$total` would act on an empty value. **`$ErrorActionPreference = 'Stop'` at the top of a script** makes all of these stop it.
 
 ### `-ErrorAction` and `$ErrorActionPreference`
 
@@ -296,6 +365,7 @@ Run with `Invoke-Pester`. Be aware of the version: **Windows PowerShell 5.1 ship
 - **Treating stderr text from a program as a PowerShell error.**
 - **Using `Write-Host` for diagnostics** that should be on the verbose or log stream.
 - **Exiting from a function** and killing the host.
+- **Assuming a failed conversion or .NET call stops the script.** Without `Stop`, it carries on and may exit 0.
 
 ## Read this script
 
@@ -338,5 +408,7 @@ The lab for this lesson asks for a script that handles missing files without cra
 6. Which stream does `Write-Verbose` write to, and is it shown by default?
 7. What does `Set-StrictMode -Version Latest` change?
 8. Why is `PSScriptAnalyzer` useful when reading someone else's script?
+9. A script converts text with `[int]`, the conversion fails, and the scheduler reports success. Why?
+10. In a 5.1 error, which part would you search for on the web, and why not the sentence?
 
-**Expected answers:** (1) the error is non-terminating; add `-ErrorAction Stop` (or set `$ErrorActionPreference = 'Stop'`); (2) both hide the error, but `SilentlyContinue` still records it in `$Error` and `Ignore` does not; (3) `throw` is terminating and stops the function; `Write-Error` is non-terminating by default and execution continues; (4) no; check `$LASTEXITCODE` (and `$?`) immediately after the command; (5) always, after the `try` and any `catch`, even after a `return`; (6) the verbose stream (4), not shown unless `-Verbose` or `$VerbosePreference` says so; (7) uninitialised variables, nonexistent properties and similar mistakes become errors instead of silent `$null`s; (8) it flags risky and sloppy constructs statically, so you can review the script without running it.
+**Expected answers:** (1) the error is non-terminating; add `-ErrorAction Stop` (or set `$ErrorActionPreference = 'Stop'`); (2) both hide the error, but `SilentlyContinue` still records it in `$Error` and `Ignore` does not; (3) `throw` is terminating and stops the function; `Write-Error` is non-terminating by default and execution continues; (4) no; check `$LASTEXITCODE` (and `$?`) immediately after the command; (5) always, after the `try` and any `catch`, even after a `return`; (6) the verbose stream (4), not shown unless `-Verbose` or `$VerbosePreference` says so; (7) uninitialised variables, nonexistent properties and similar mistakes become errors instead of silent `$null`s; (8) it flags risky and sloppy constructs statically, so you can review the script without running it; (9) the failed statement is abandoned but the script goes on and exits 0; set `$ErrorActionPreference = 'Stop'` or use `try`; (10) the `FullyQualifiedErrorId`, because the sentence can differ by language.

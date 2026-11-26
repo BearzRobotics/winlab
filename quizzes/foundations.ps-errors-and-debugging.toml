@@ -433,3 +433,32 @@ choices = ["Add -ErrorAction Stop to Get-Content (or set $ErrorActionPreference 
 answers = ["Add -ErrorAction Stop to Get-Content (or set $ErrorActionPreference = 'Stop')"]
 explanation = "Then catch runs, and the script can exit 1."
 review = "Read this script"
+
+# ---- Added when the lesson was deepened ----
+
+[[question]]
+id = "stmt-terminating"
+type = "choice"
+prompt = "A script has [int]'abc' with no try and no error preference. What happens to the following lines?"
+choices = ["They run, and the script can exit 0", "They are skipped and the exit code is 1", "PowerShell asks what to do", "They run twice"]
+answers = ["They run, and the script can exit 0"]
+explanation = "Only that statement is abandoned. Set $ErrorActionPreference = 'Stop'."
+review = "\"Terminating\" does not always stop the script"
+
+[[question]]
+id = "which-stops"
+type = "multi"
+prompt = "Which stopped the script in the lesson's tests? Select all that apply."
+choices = ["throw 'x'", "Get-Item C:\\nope -ErrorAction Stop", "1/0", "nosuchcommand"]
+answers = ["throw 'x'", "Get-Item C:\\nope -ErrorAction Stop"]
+explanation = "The other two reported an error and carried on."
+review = "\"Terminating\" does not always stop the script"
+
+[[question]]
+id = "fqid"
+type = "choice"
+prompt = "Which part of a 5.1 error is the best thing to search the web for?"
+choices = ["FullyQualifiedErrorId", "The character position", "The prompt", "The line of tildes"]
+answers = ["FullyQualifiedErrorId"]
+explanation = "It stays the same across Windows languages."
+review = "Reading an error message"

@@ -3,7 +3,7 @@ id = "foundations.ps-errors-and-debugging"
 title = "PowerShell errors, debugging and testing"
 summary = "Terminating versus non-terminating errors and why catch misses some, ErrorAction and preference variables, try/catch/finally and the ErrorRecord, throw and Write-Error, native exit codes, output streams, exit codes, StrictMode, debugging, logging, static analysis and Pester testing."
 content = "ps-errors-and-debugging.md"
-estimated_minutes = 110
+estimated_minutes = 140
 level = 3
 objectives = [
   "Explain terminating and non-terminating errors, and why try/catch misses the second kind",
@@ -29,6 +29,10 @@ evaluation_criteria = [
 ]
 
 [[references]]
+title = "about_Preference_Variables (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_preference_variables"
+
+[[references]]
 title = "about_Try_Catch_Finally (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_try_catch_finally"
 
@@ -37,12 +41,8 @@ title = "about_Throw (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_throw"
 
 [[references]]
-title = "about_Trap (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_trap"
-
-[[references]]
-title = "about_Preference_Variables (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_preference_variables"
+title = "Everything you wanted to know about exceptions (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/scripting/learn/deep-dives/everything-about-exceptions"
 
 [[references]]
 title = "about_Output_Streams (Microsoft Learn)"
@@ -53,12 +53,24 @@ title = "about_Redirection (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_redirection"
 
 [[references]]
+title = "Set-PSBreakpoint (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/set-psbreakpoint"
+
+[[references]]
 title = "about_Debuggers (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_debuggers"
 
 [[references]]
-title = "Everything you wanted to know about exceptions (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/scripting/learn/deep-dives/everything-about-exceptions"
+title = "PSScriptAnalyzer overview (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/utility-modules/psscriptanalyzer/overview"
+
+[[references]]
+title = "Pester quick start (pester.dev)"
+url = "https://pester.dev/docs/quick-start"
+
+[[references]]
+title = "about_Trap (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_trap"
 
 [[references]]
 title = "Set-StrictMode (Microsoft Learn)"
@@ -67,10 +79,6 @@ url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/s
 [[references]]
 title = "Set-PSDebug (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/set-psdebug"
-
-[[references]]
-title = "Set-PSBreakpoint (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/set-psbreakpoint"
 
 [[references]]
 title = "Write-Error (Microsoft Learn)"
@@ -88,10 +96,3 @@ url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.utilit
 title = "Measure-Command (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/measure-command"
 
-[[references]]
-title = "PSScriptAnalyzer overview (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/utility-modules/psscriptanalyzer/overview"
-
-[[references]]
-title = "Pester quick start (pester.dev)"
-url = "https://pester.dev/docs/quick-start"

@@ -65,3 +65,4 @@ By path, in the order the owner works through them.
 | `foundations.ps-variables-types-operators` | deepened 2026-11-26: references and clones, unset variables, regex characters, -contains, stale $Matches, one-or-many results, 1 diagram (`vars3.ps1`) |
 | `foundations.powershell-control-flow` | deepened 2026-11-26: what break really does, switch over collections, streaming shown, loop traps, 1 diagram (`cflow2.ps1`) |
 | `foundations.ps-functions-and-scripts` | deepened 2026-11-26: pipeline binding by property name, silent binding surprises, 1 diagram (`fn4.ps1`) |
+| `foundations.ps-errors-and-debugging` | deepened 2026-11-26: reading error messages, errors that let a script continue and exit 0, 1 diagram (`err3.ps1`) |
