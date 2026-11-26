@@ -1,4 +1,4 @@
-*Draft for owner review.* Control flow is how a script decides and repeats: `if`, `switch`, and the loop statements. PowerShell has all of them, plus a pipeline-based way to loop (`ForEach-Object`) that behaves differently from the statement forms in ways that matter. This lesson covers each construct, the traps in each, which one to choose, and how to read someone else's control flow quickly. Functions are the next lesson and errors the one after, both because they deserve more room than they got here. Every example was run on **Windows PowerShell 5.1** and **PowerShell 7**, and where they differ the text says so.
+*Draft for owner review.* Control flow is how a script decides and repeats: `if`, `switch`, and the loop statements. PowerShell has all of them, plus a pipeline-based way to loop (`ForEach-Object`) that behaves differently from the statement forms in ways that matter. This lesson covers each construct, the traps in each, which one to choose, and how to read someone else's control flow quickly. Functions are the next lesson and errors the one after, both because they deserve more room than they got here. Every example was run on **Windows PowerShell 5.1** and **PowerShell 7**, and where they differ the text says so. The results on `break`, the order of work, `switch -File` and the loop traps come from `tests/verification/powershell/cflow2.ps1`; they were the same in 5.1.26100 and 7.6.10.
 
 ## Decisions with `if`
 
@@ -69,6 +69,17 @@ two
 other 3
 ```
 
+**`break` in a `switch` over a collection ends the whole `switch`, not just that item.** This is the opposite of what many people expect:
+
+| `switch (1,2,3,4)` with a case for 2 that says | Output |
+|---|---|
+| `{ 'two: break'; break }` | `saw 1`, `two: break` (**3 and 4 were never tested**) |
+| `{ 'two: continue'; continue }` | `saw 1`, `two: continue`, `saw 3`, `saw 4` |
+
+When `switch` works through several values, **`continue`** means "done with this value, take the next", and **`break`** means "stop altogether". Use `break` there only if you really mean to stop.
+
+Two edge cases: `switch ($null)` **does** run its `default` case (once, for `$null`), but `switch (@())`, an empty array, runs **nothing at all**.
+
 ### Options
 
 | Option | Meaning |
@@ -90,6 +101,26 @@ found-text
 
 Two cases matched, so both ran. With `-Wildcard`, `'Report.LOG'` matched `'*.log'`; with `-CaseSensitive` it did not. Use `switch` when you have **one value and several outcomes**; use `if`/`elseif` when the conditions are unrelated.
 
+`-File` reads a file line by line, which makes `switch` a compact log classifier. For a file of `INFO start`, `ERROR disk full`, `WARN slow`, `ERROR timeout`:
+
+```powershell
+$errors = 0
+switch -Regex -File x.log {
+    '^ERROR (.+)' { $errors++; "error: $($Matches[1])" }
+    '^WARN'       { 'warning' }
+}
+"errors: $errors"
+```
+
+```text
+error: disk full
+warning
+error: timeout
+errors: 2
+```
+
+A line that matches no case, such as `INFO start`, produces nothing (there is no `default` here).
+
 ## Loops
 
 PowerShell has four loop statements (`foreach`, `for`, `while`, `do`) and one pipeline cmdlet (`ForEach-Object`). Know which you are using, because they differ.
@@ -110,7 +141,18 @@ It first **collects** everything on the right, then loops. That is fast, but it 
 Get-ChildItem C:\Labs -File | ForEach-Object { "$($_.Name): $($_.Length) bytes" }
 ```
 
-It **streams**: each object goes through the pipeline as it is produced, which uses little memory and starts output immediately. It has three blocks:
+It **streams**: each object goes through the pipeline as it is produced, which uses little memory and starts output immediately. You can watch the difference. `Get-Slowly` is a function that announces each item as it makes it:
+
+![Diagram: with the foreach statement all items are produced before any is handled; with ForEach-Object each item is handled as soon as it is produced](diagrams/ps-streaming.svg)
+
+```text
+ foreach ($x in Get-Slowly):   produce 1, produce 2, produce 3, handle 1, handle 2, handle 3
+ Get-Slowly | ForEach-Object:  produce 1, handle 1, produce 2, handle 2, produce 3, handle 3
+```
+
+And `Get-Slowly | Select-Object -First 1` produced **only item 1**: the producer was stopped. With a slow or enormous source, that difference is minutes.
+
+ It has three blocks:
 
 ```powershell
 1..3 | ForEach-Object -Begin { $sum = 0 } -Process { $sum += $_ } -End { "sum=$sum" }
@@ -124,9 +166,9 @@ sum=6
 | | `foreach` statement | `ForEach-Object` |
 |---|---|---|
 | memory | collects first | streams |
-| speed | faster (in a test of 50,000 iterations it beat the pipeline) | slower per item |
+| speed | faster: summing 200,000 numbers took about 0.3 s | about 1.2 s for the same work (3 to 4 times slower) |
 | current item | the variable you name | `$_` |
-| `break` | leaves the loop | **do not use**: it can end an enclosing loop or the whole script |
+| `break` | leaves the loop | **do not use**: it ends an enclosing loop, or the whole script (below) |
 | `return` | leaves the function | acts like `continue` for that item |
 
 ```powershell
@@ -137,6 +179,31 @@ sum=6
 ```
 
 Here `return` skipped only item 2. To stop a pipeline early use `Select-Object -First n`, which cleanly cuts the upstream, or switch to the `foreach` statement.
+
+#### What `break` really does here
+
+`ForEach-Object` is not a loop, so `break` looks **outward** for one. I ran two small scripts, each in its own PowerShell:
+
+```powershell
+"before"
+1..4 | ForEach-Object { if ($_ -eq 2) { break }; "item $_" }
+"AFTER the pipeline"
+```
+
+```text
+before
+item 1
+```
+
+**`AFTER the pipeline` never printed.** With no loop around it, `break` **ended the script**, silently. In the second, the pipeline was inside `foreach ($round in 1..3)`:
+
+```text
+round 1
+  item 1
+after the loop
+```
+
+It ended the **outer `foreach`**: rounds 2 and 3 never happened, and not even the line `end of round 1` ran. **No error is reported in either case.** A script that just "stops early" is worth searching for `break` inside `ForEach-Object` or `Where-Object` blocks.
 
 **Choose:** `foreach` for in-memory data and speed; `ForEach-Object` for streaming large or slow sources and for putting a loop in the middle of a pipeline.
 
@@ -220,6 +287,15 @@ The list throws. The array did not, but only because `+=` made a **new** array, 
 
 `-Parallel` runs the script block on several threads (here two at a time). Results arrive in **any order**, the block runs in its own scope (it cannot see your variables unless you pass them with `$using:name`), and it only pays off for slow work such as network calls, not for fast arithmetic. It does not exist in 5.1.
 
+### Two loop traps that raise no error
+
+| What I ran | What happened |
+|---|---|
+| `for ($i = 0; $i -le $arr.Count; $i++)` on three items | A **fourth** pass with `i=3` and an **empty** value. Past the end of an array is `$null`, not an error. The condition must be `-lt`, not `-le` |
+| `foreach ($x in $hashtable)` | **One** pass, with the whole hashtable as `$x`. Loop over `$hashtable.Keys` (or `$hashtable.GetEnumerator()`) |
+
+(`foreach ($c in 'abc')` also runs once, with the whole string: a string is not split into characters.)
+
 ## Reading a loop: patterns to recognise
 
 Many scripts are one of a handful of shapes:
@@ -246,6 +322,9 @@ Many scripts are one of a handful of shapes:
 - **`if ($x = 5)`** assigning instead of comparing.
 - **`switch` falling through** because there is no `break`.
 - **`break` inside `ForEach-Object`**, ending more than intended.
+- **`break` in a `switch` over many values**, skipping all the rest.
+- **`-le $arr.Count` in a `for` loop,** and expecting an error.
+- **`foreach` over a hashtable** instead of its keys.
 - **`return` inside `ForEach-Object`** thinking it exits the function.
 - **`foreach` over a huge command output** and running out of memory.
 - **A modified collection** inside `foreach`.
@@ -296,5 +375,8 @@ The labs for this lesson ask for scripts that read a CSV and JSON file, take par
 6. How do you leave an outer loop from an inner one?
 7. Why does modifying an array in a `foreach` not throw, while a `List` does?
 8. When is `ForEach-Object -Parallel` a good idea, and what must you remember about it?
+9. `switch (1,2,3)` has `break` in the case for 2. Is 3 tested?
+10. A script stops partway with no error. It has `break` inside `ForEach-Object`. What happened?
+11. Why does `for ($i=0; $i -le $a.Count; $i++)` not raise an error on the last pass?
 
-**Expected answers:** (1) a single `=` assigns, and the assigned value is true; (2) `a` and `b`: both cases match; (3) `break` inside the case block; (4) `foreach` collects everything first (fast, more memory) and `break` leaves the loop; `ForEach-Object` streams (low memory) and `break` should be avoided there; (5) it acts like `continue`, skipping only that item; (6) give the outer loop a label and `break label`; (7) `+=` builds a new array, so the loop is still walking the old one; a `List` is modified in place, which the enumerator forbids; (8) for slow work such as network calls on PowerShell 7; results come in any order and variables need `$using:`.
+**Expected answers:** (1) a single `=` assigns, and the assigned value is true; (2) `a` and `b`: both cases match; (3) `break` inside the case block; (4) `foreach` collects everything first (fast, more memory) and `break` leaves the loop; `ForEach-Object` streams (low memory) and `break` should be avoided there; (5) it acts like `continue`, skipping only that item; (6) give the outer loop a label and `break label`; (7) `+=` builds a new array, so the loop is still walking the old one; a `List` is modified in place, which the enumerator forbids; (8) for slow work such as network calls on PowerShell 7; results come in any order and variables need `$using:`; (9) no: `break` ends the whole `switch`; (10) `break` ended the surrounding loop, or the whole script, because `ForEach-Object` is not a loop; (11) reading past the end of an array gives `$null` without an error.

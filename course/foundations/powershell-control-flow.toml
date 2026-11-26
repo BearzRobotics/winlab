@@ -3,7 +3,7 @@ id = "foundations.powershell-control-flow"
 title = "PowerShell control flow: decisions and loops"
 summary = "if and its assignment trap, switch with its fall-through, regex and wildcard modes, the foreach statement versus ForEach-Object, for, while and do, break, continue and labels, modifying collections safely, parallel loops in PowerShell 7, and reading other people's control flow."
 content = "powershell-control-flow.md"
-estimated_minutes = 90
+estimated_minutes = 120
 level = 2
 objectives = [
   "Write if/elseif/else with short-circuit conditions, and spot the assignment-in-condition bug",
@@ -69,3 +69,4 @@ url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/f
 [[references]]
 title = "Start-Sleep (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/start-sleep"
+

@@ -63,3 +63,4 @@ By path, in the order the owner works through them.
 | `foundations.cmd-advanced` | deepened 2026-11-26: **fixed a command injection in the input check**; array order, tasklist trap, recursion limit, 1 diagram (`adv3.cmd`, `adv4.cmd`, `adv5.ps1`). The CMD series is done |
 | `foundations.powershell-basics` | deepened 2026-11-26: reading tables, Get-Member and SYNTAX, silent typo and comparison traps, the Format-Table trap shown, 2 diagrams (`basics2.ps1`) |
 | `foundations.ps-variables-types-operators` | deepened 2026-11-26: references and clones, unset variables, regex characters, -contains, stale $Matches, one-or-many results, 1 diagram (`vars3.ps1`) |
+| `foundations.powershell-control-flow` | deepened 2026-11-26: what break really does, switch over collections, streaming shown, loop traps, 1 diagram (`cflow2.ps1`) |

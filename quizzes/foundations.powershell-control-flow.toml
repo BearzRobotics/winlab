@@ -376,3 +376,59 @@ choices = ["log: report.LOG", "Nothing", "An error", "text: report.LOG"]
 answers = ["log: report.LOG"]
 explanation = "Wildcard matching is case-insensitive by default."
 review = "Read this script"
+
+# ---- Added when the lesson was deepened ----
+
+[[question]]
+id = "switch-break-array"
+type = "choice"
+prompt = "switch (1,2,3,4) has a case for 2 ending in break. What happens to 3 and 4?"
+choices = ["They are never tested", "They are tested as usual", "Only 4 is tested", "An error is raised"]
+answers = ["They are never tested"]
+explanation = "break ends the whole switch; continue moves to the next value."
+review = "Many cases with `switch`"
+
+[[question]]
+id = "switch-empty"
+type = "choice"
+prompt = "Which runs its default case: switch ($null) or switch (@())?"
+choices = ["switch ($null) only", "switch (@()) only", "Both", "Neither"]
+answers = ["switch ($null) only"]
+explanation = "An empty array gives switch nothing to test."
+review = "Many cases with `switch`"
+
+[[question]]
+id = "feo-break-script"
+type = "choice"
+prompt = "break runs inside ForEach-Object in a script with no surrounding loop. What happened in the lesson's test?"
+choices = ["The whole script ended silently", "Only the current item was skipped", "A clear error was shown", "The pipeline restarted"]
+answers = ["The whole script ended silently"]
+explanation = "ForEach-Object is not a loop, so break looks outward."
+review = "What `break` really does here"
+
+[[question]]
+id = "stream-order"
+type = "choice"
+prompt = "Which handles each item as soon as it is produced?"
+choices = ["ForEach-Object in a pipeline", "The foreach statement", "Both", "Neither"]
+answers = ["ForEach-Object in a pipeline"]
+explanation = "The statement collects everything first."
+review = "`ForEach-Object`"
+
+[[question]]
+id = "off-by-one"
+type = "choice"
+prompt = "A for loop uses -le $arr.Count. What happens on its last pass?"
+choices = ["It reads past the end and gets $null, with no error", "It raises an index error", "It stops before the last item", "It wraps to the first item"]
+answers = ["It reads past the end and gets $null, with no error"]
+explanation = "Use -lt."
+review = "Two loop traps that raise no error"
+
+[[question]]
+id = "foreach-hashtable"
+type = "choice"
+prompt = "How many times does foreach ($x in $hashtable) run for a hashtable with two keys?"
+choices = ["Once, with the whole hashtable", "Twice, once per key", "Twice, once per value", "Never"]
+answers = ["Once, with the whole hashtable"]
+explanation = "Loop over $hashtable.Keys."
+review = "Two loop traps that raise no error"
