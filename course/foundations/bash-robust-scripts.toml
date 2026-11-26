@@ -58,17 +58,18 @@ title = "ShellCheck"
 url = "https://www.shellcheck.net/"
 
 [[references]]
-title = "ShellCheck wiki: SC2086, double quote to prevent globbing and word splitting"
-url = "https://github.com/koalaman/shellcheck/wiki/SC2086"
-
-[[references]]
 title = "signal(7) manual page (man7.org)"
 url = "https://man7.org/linux/man-pages/man7/signal.7.html"
+
+[[references]]
+title = "timeout(1) manual page (man7.org)"
+url = "https://man7.org/linux/man-pages/man1/timeout.1.html"
 
 [[references]]
 title = "mktemp(1) manual page (man7.org)"
 url = "https://man7.org/linux/man-pages/man1/mktemp.1.html"
 
 [[references]]
-title = "timeout(1) manual page (man7.org)"
-url = "https://man7.org/linux/man-pages/man1/timeout.1.html"
+title = "ShellCheck wiki: SC2086, double quote to prevent globbing and word splitting"
+url = "https://github.com/koalaman/shellcheck/wiki/SC2086"
+

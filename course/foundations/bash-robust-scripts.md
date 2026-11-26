@@ -284,6 +284,13 @@ The idempotence run in `rb2.sh`: `mkdir -p out/sub; ln -sfn out/sub link; grep -
 
 If a script is killed while writing a config file, readers see half a file. Write a **temporary file in the same directory** and **rename** it over the target (a rename inside one file system is meant to be atomic; I did not test that by interrupting a rename):
 
+![Diagram: make a temporary file in the same folder, write everything into it, then rename it over the target; until the rename the target keeps its old content](diagrams/atomic-write.svg)
+
+```text
+ 1. mktemp (same folder)  ->  2. write it all  ->  3. mv -f over the target
+    target: OLD content ...........................  then NEW content
+```
+
 ```bash
 tmp=$(mktemp "$target.XXXXXX")        # same directory, random name, mode 0600
 trap 'rm -f -- "$tmp"' EXIT
