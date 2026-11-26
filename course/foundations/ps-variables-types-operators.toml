@@ -3,7 +3,7 @@ id = "foundations.ps-variables-types-operators"
 title = "PowerShell variables, types, strings and operators"
 summary = "Variables and scope, automatic and preference variables, .NET types and numeric traps, quoting and interpolation, here-strings and -f formatting, comparison and logical operators, truthiness and $null, arrays, hashtables and custom objects, dates, and what is PowerShell 7 only."
 content = "ps-variables-types-operators.md"
-estimated_minutes = 100
+estimated_minutes = 130
 level = 2
 objectives = [
   "Create typed, read-only and scoped variables, and name the important automatic and preference variables",
@@ -60,42 +60,6 @@ title = "about_Special_Characters (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_special_characters"
 
 [[references]]
-title = "about_Operators (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_operators"
-
-[[references]]
-title = "about_Comparison_Operators (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_comparison_operators"
-
-[[references]]
-title = "about_Logical_Operators (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_logical_operators"
-
-[[references]]
-title = "about_Split (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_split"
-
-[[references]]
-title = "about_Join (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_join"
-
-[[references]]
-title = "about_Regular_Expressions (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_regular_expressions"
-
-[[references]]
-title = "about_Arrays (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_arrays"
-
-[[references]]
-title = "about_Hash_Tables (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_hash_tables"
-
-[[references]]
-title = "about_Pipeline_Chain_Operators (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_pipeline_chain_operators"
-
-[[references]]
 title = "Composite formatting (.NET, Microsoft Learn)"
 url = "https://learn.microsoft.com/dotnet/standard/base-types/composite-formatting"
 
@@ -108,9 +72,46 @@ title = "Custom date and time format strings (.NET, Microsoft Learn)"
 url = "https://learn.microsoft.com/dotnet/standard/base-types/custom-date-and-time-format-strings"
 
 [[references]]
+title = "about_Regular_Expressions (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_regular_expressions"
+
+[[references]]
+title = "about_Split (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_split"
+
+[[references]]
+title = "about_Join (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_join"
+
+[[references]]
+title = "about_Comparison_Operators (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_comparison_operators"
+
+[[references]]
+title = "about_Logical_Operators (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_logical_operators"
+
+[[references]]
+title = "about_Operators (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_operators"
+
+[[references]]
+title = "about_Pipeline_Chain_Operators (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_pipeline_chain_operators"
+
+[[references]]
+title = "about_Arrays (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_arrays"
+
+[[references]]
+title = "about_Hash_Tables (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_hash_tables"
+
+[[references]]
 title = "Get-Date (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/get-date"
 
 [[references]]
 title = "New-TimeSpan (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/new-timespan"
+

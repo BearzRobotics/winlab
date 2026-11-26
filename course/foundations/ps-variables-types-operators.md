@@ -1,4 +1,4 @@
-*Draft for owner review.* This lesson is the grammar of PowerShell: variables, types, strings, arrays, hashtables and the operators that combine them. It is where PowerShell stops looking like cmd with nicer commands and starts being a programming language. It is also where the sharpest traps live (a string that does not interpolate, a comparison that quietly filters an array, an `&&` that does not mean what you think). Every example below was run on **Windows PowerShell 5.1** and **PowerShell 7**; the output shown is real, and 7-only features are marked.
+*Draft for owner review.* This lesson is the grammar of PowerShell: variables, types, strings, arrays, hashtables and the operators that combine them. It is where PowerShell stops looking like cmd with nicer commands and starts being a programming language. It is also where the sharpest traps live (a string that does not interpolate, a comparison that quietly filters an array, an `&&` that does not mean what you think). Every example below was run on **Windows PowerShell 5.1** and **PowerShell 7**; the output shown is real, and 7-only features are marked. The traps added on references, unset variables, regular-expression characters and `$Matches` come from `tests/verification/powershell/vars3.ps1`; they behaved the same in 5.1.26100 and 7.6.10.
 
 ## Variables
 
@@ -66,6 +66,24 @@ outer 1
 ```
 
 To change the outer one deliberately, qualify it: `$script:x = 3`, `$global:x = 3`. Modules, scripts and functions each get their own scope; the functions lesson returns to this. See [about_Scopes](https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_scopes).
+
+### A variable that was never set
+
+A misspelled variable is **not an error**. It is `$null`:
+
+```powershell
+$total = 10
+"typo gives: [$totla]"      # typo gives: []
+"typo + 1 = $($totla + 1)"  # typo + 1 = 1
+$null -gt 0                 # False
+$null -lt 1                 # True
+```
+
+So a typo can quietly turn a size check, a count or a path into nothing. **`Set-StrictMode -Version Latest`** at the top of a script turns this into an error:
+
+```text
+The variable '$totla' cannot be retrieved because it has not been set.
+```
 
 ## Types
 
@@ -161,6 +179,47 @@ The `-f` operator formats values into a template (the .NET [composite format](ht
 ```
 
 `-split`, `-replace` and `-match` use **regular expressions** ([about_Regular_Expressions](https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_regular_expressions)); `-like` uses wildcards (`*` and `?`). Reference: [about_Split](https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_split) and [about_Join](https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_join). A string also has methods: `.Trim()`, `.Replace('a','b')` (literal, not regex), `.Substring(2,3)`, `.ToUpper()`, `.Contains('x')`, `.StartsWith('x')`, `.IndexOf('x')`, `.PadLeft(8)`, `.Split(',')`.
+
+### When one result is not an array
+
+A command that can return several things returns **one object, not an array, when there is only one**:
+
+```powershell
+function Get-Some($n) { 1..$n }
+(Get-Some 1).GetType().Name    # Int32
+(Get-Some 2).GetType().Name    # Object[]
+$files = 'report.txt'          # what a search that found one file gives you
+$files[0]                      # r        <- the first CHARACTER
+```
+
+Indexing a string gives a **character**, so a script that works when a search finds two files can silently process the letter `r` when it finds one. Wrap results in `@( )`: with `$wrapped = @($files)`, `$wrapped[0]` is `report.txt` and `$wrapped.Count` is 1.
+
+### Special characters in `-replace`, `-split` and `-match`
+
+These three use **regular expressions**, so some characters have meanings. **No error appears** when you forget:
+
+| What I ran | Result |
+|---|---|
+| `'1.2.3' -replace '.', '-'` | `-----`: `.` means **any character** |
+| `'1.2.3' -replace [regex]::Escape('.'), '-'` | `1-2-3` |
+| `'1.2.3'.Replace('.', '-')` | `1-2-3`: the **method** is plain text |
+| `'a.b.c' -split '.'` | **6** empty pieces |
+| `'a.b.c' -split '\.'` | `a`, `b`, `c` |
+| `'C:\temp\new' -match 'C:\temp'` | **`False`**: in a regular expression `\t` means a tab |
+| `'C:\temp\new' -match [regex]::Escape('C:\temp')` | `True` |
+
+When the text you search **for** comes from a variable or contains `\ . * + ? ( ) [ ] { } ^ $ |`, wrap it in `[regex]::Escape(...)`, or use the string methods.
+
+**`-contains` is not "contains text".** It asks whether a **collection** has an item. `'abc' -contains 'a'` is `False`. For text use `-like '*a*'` or `-match`, which **ignore case**, or the method `.Contains('a')`, which is **case-sensitive**: `'abc'.Contains('A')` is `False` while `'abc' -match 'A'` is `True`.
+
+**`$Matches` is left over.** It is set only when `-match` **succeeds** on a single value:
+
+```powershell
+'port=80' -match 'port=(\d+)'      # True ; $Matches[1] is 80
+'host=web01' -match 'port=(\d+)'   # False; $Matches[1] is STILL 80
+```
+
+So read `$Matches` **only inside the `if` whose `-match` succeeded**. With a **collection** on the left, `-match` returns the matching items and does not set `$Matches`.
 
 ## Operators
 
@@ -269,6 +328,31 @@ $l.Count        # 2
 
 See [about_Arrays](https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_arrays).
 
+### Two names for one array
+
+Assigning an array or a hashtable to another variable **does not copy it**. Both names refer to the same thing:
+
+![Diagram: after $delete = $keep both names point to one array, so a change through either is seen by both; $keep.Clone() makes a second array, one level deep](diagrams/ps-references.svg)
+
+```text
+ $keep   --\
+            >-- ONE array ['a.log','b.log']     a change by either name is seen by both
+ $delete --/
+
+ $copy  ---- a SECOND array (from $keep.Clone()), one level deep
+```
+
+| What I ran | Result |
+|---|---|
+| `$delete = $keep; $delete[0] = 'CHANGED'` | **`$keep` shows `CHANGED`** too |
+| then `$delete += 'c.log'; $delete[1] = 'x'` | `$keep` kept its two items: `+=` had given `$delete` a **new** array |
+| `$copy = $keep.Clone(); $copy[0] = '...'` | `$keep` unchanged |
+| `$other = $base; $other.Port = 8080` (a hashtable) | **`$base.Port` is 8080** |
+| `$c = $nested.Clone(); $c.Tags[0] = 'changed'` | **the original's `Tags` changed**: a clone is **shallow** |
+| `$m = $n; $m = 6` (a number) | `$n` unchanged |
+
+The dangerous case is a list that was meant to be filtered: `$toDelete = $allFiles` followed by changes changes `$allFiles` too. Use `.Clone()`, or build a new collection with a pipeline (`$toDelete = @($allFiles | Where-Object { ... })`), and remember that nested collections need their own copies. (An array's `+=` creating a new array is what made the second row behave differently: do not rely on that.)
+
 ## Hashtables and objects
 
 A **hashtable** maps keys to values; it is the everyday record and lookup table:
@@ -321,6 +405,10 @@ $d.ToString('dddd d MMMM yyyy HH:mm')         # Saturday 21 November 2026 14:30
 - **Treating the string `'False'` as false.**
 - **Using `??`, `?:` or `&&` in a script that must run on 5.1.**
 - **Forgetting that `@()` may be needed** to make a one-or-many result an array.
+- **Believing a second variable is a copy** of an array or hashtable.
+- **Using `.` or a Windows path as a pattern** without `[regex]::Escape`.
+- **Using `-contains` to search inside text.**
+- **Reading `$Matches` after a match that failed.**
 
 ## Practice
 
@@ -343,5 +431,8 @@ $d.ToString('dddd d MMMM yyyy HH:mm')         # Saturday 21 November 2026 14:30
 6. How do you compare two version numbers correctly?
 7. What does `a && b` test in PowerShell 7?
 8. When should you use a `List` rather than an array?
+9. After `$b = $a`, you change `$b[0]`. What happens to `$a`?
+10. Why does `'C:\temp\new' -match 'C:\temp'` return `False`?
+11. A search found one file and `$result[0]` is a single letter. Why?
 
-**Expected answers:** (1) single quotes are literal; double quotes expand variables and `$( )` and use backtick escapes; (2) only a plain variable name expands, so wrap the property in `$( )`: `"Name: $($p.Name)"`; (3) `2, 2`: the matching elements, not a boolean; (4) casting rounds to the nearest even integer, and 2.5 rounds to 2; (5) `11` (text) and `2` (number); the left operand decides; (6) cast both to `[version]` and compare; (7) whether command `a` **succeeded**, not whether its output is true; (8) when you add many items, because `+=` on an array copies the whole array each time.
+**Expected answers:** (1) single quotes are literal; double quotes expand variables and `$( )` and use backtick escapes; (2) only a plain variable name expands, so wrap the property in `$( )`: `"Name: $($p.Name)"`; (3) `2, 2`: the matching elements, not a boolean; (4) casting rounds to the nearest even integer, and 2.5 rounds to 2; (5) `11` (text) and `2` (number); the left operand decides; (6) cast both to `[version]` and compare; (7) whether command `a` **succeeded**, not whether its output is true; (8) when you add many items, because `+=` on an array copies the whole array each time; (9) it changes too, because both names are the same array; (10) the pattern is a regular expression, where `\t` is a tab; escape it with `[regex]::Escape`; (11) one result is not an array, so indexing a string gives a character; wrap with `@( )`.

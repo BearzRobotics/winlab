@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 230" role="img" aria-label="Assigning an array to a second variable gives two names for one array; Clone makes a second array; numbers are copied" font-family="Segoe UI, sans-serif">
+  <title>Two names, one array</title>
+  <style>
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.5 }
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    .wire { stroke: #57606a; stroke-width: 1.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .dim { fill: #57606a }
+    .mono { font-family: Consolas, monospace }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+
+  <text class="bold mono" x="10" y="24" font-size="15">$delete = $keep</text>
+  <rect class="box" x="10" y="38" width="100" height="32" rx="4"/>
+  <text class="mono" x="60" y="59" text-anchor="middle" font-size="15">$keep</text>
+  <rect class="box" x="10" y="80" width="100" height="32" rx="4"/>
+  <text class="mono" x="60" y="101" text-anchor="middle" font-size="15">$delete</text>
+  <line class="wire" x1="110" y1="54" x2="218" y2="72" marker-end="url(#arrow)"/>
+  <line class="wire" x1="110" y1="96" x2="218" y2="80" marker-end="url(#arrow)"/>
+  <rect class="zone-kernel" x="220" y="56" width="220" height="40" rx="5"/>
+  <text class="mono" x="330" y="82" text-anchor="middle" font-size="15">'a.log' 'b.log'</text>
+  <text class="bold" x="462" y="72">ONE array</text>
+  <text class="dim" x="462" y="94" font-size="13">change it by either name: both see it</text>
+
+  <text class="bold mono" x="10" y="150" font-size="15">$copy = $keep.Clone()</text>
+  <rect class="box" x="10" y="164" width="100" height="32" rx="4"/>
+  <text class="mono" x="60" y="185" text-anchor="middle" font-size="15">$copy</text>
+  <line class="wire" x1="110" y1="180" x2="218" y2="180" marker-end="url(#arrow)"/>
+  <rect class="zone-user" x="220" y="160" width="220" height="40" rx="5"/>
+  <text class="mono" x="330" y="186" text-anchor="middle" font-size="15">'a.log' 'b.log'</text>
+  <text class="bold" x="462" y="176">a SECOND array</text>
+  <text class="dim" x="462" y="198" font-size="13">but only one level deep</text>
+  <text class="dim" x="10" y="222" font-size="13">Numbers and strings behave as separate values: changing $m after $m = $n leaves $n alone.</text>
+</svg>

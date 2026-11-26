@@ -494,3 +494,67 @@ choices = ["$IsWindows, $IsLinux and $IsMacOS", "$OS only", "$Platform", "$env:O
 answers = ["$IsWindows, $IsLinux and $IsMacOS"]
 explanation = "They do not exist in Windows PowerShell 5.1."
 review = "Automatic and preference variables"
+
+# ---- Added when the lesson was deepened ----
+
+[[question]]
+id = "ref-array"
+type = "choice"
+prompt = "$delete = $keep, then $delete[0] = 'x'. What happens to $keep?"
+choices = ["Its first item is now x too", "It is unchanged", "It becomes empty", "An error is raised"]
+answers = ["Its first item is now x too"]
+explanation = "Both names refer to one array. Use .Clone() or build a new collection."
+review = "Two names for one array"
+
+[[question]]
+id = "clone-shallow"
+type = "choice"
+prompt = "A hashtable holding an array is cloned, and the array inside the clone is changed. What about the original?"
+choices = ["Its inner array changes too: Clone is shallow", "It is unchanged", "The clone fails", "The original is deleted"]
+answers = ["Its inner array changes too: Clone is shallow"]
+explanation = "Nested collections need their own copies."
+review = "Two names for one array"
+
+[[question]]
+id = "unset-var"
+type = "choice"
+prompt = "What turns the use of a misspelled variable into an error?"
+choices = ["Set-StrictMode -Version Latest", "$ErrorActionPreference = 'Continue'", "-Verbose", "Casting to [int]"]
+answers = ["Set-StrictMode -Version Latest"]
+explanation = "Without it the variable is simply $null."
+review = "A variable that was never set"
+
+[[question]]
+id = "dot-replace"
+type = "short"
+prompt = "What does '1.2.3' -replace '.', '-' return?"
+answers = ["-----"]
+explanation = "In a regular expression the dot matches any character."
+review = "Special characters in `-replace`, `-split` and `-match`"
+
+[[question]]
+id = "contains-text"
+type = "choice"
+prompt = "Which is False?"
+choices = ["'abc' -contains 'a'", "'abc' -like '*a*'", "'abc' -match 'A'", "'abc'.Contains('a')"]
+answers = ["'abc' -contains 'a'"]
+explanation = "-contains asks whether a collection has an item."
+review = "Special characters in `-replace`, `-split` and `-match`"
+
+[[question]]
+id = "matches-stale"
+type = "choice"
+prompt = "A -match fails. What does $Matches hold?"
+choices = ["Whatever the last successful match left there", "Nothing", "The failed input", "An error object"]
+answers = ["Whatever the last successful match left there"]
+explanation = "Read it only inside the if whose match succeeded."
+review = "Special characters in `-replace`, `-split` and `-match`"
+
+[[question]]
+id = "one-or-many"
+type = "choice"
+prompt = "A search returned one file name and $r[0] gives a single letter. How do you prevent this?"
+choices = ["Wrap the result in @( )", "Use $r[1]", "Cast to [int]", "Use -contains"]
+answers = ["Wrap the result in @( )"]
+explanation = "One result is not an array, so indexing a string gives a character."
+review = "When one result is not an array"
