@@ -175,7 +175,7 @@ When many things could be broken, test **near the middle** of the chain. The res
  cannot connect: look left (name, then address, firewall)     connects: look right (service log, data)
 ```
 
-Why start at the port? One command (`Test-NetConnection server -Port 443` on Windows) says whether you can reach it, and either answer narrows the search a great deal. A failure there still needs reading: **refused** and **timed out** point to different causes, and  does not say which it was (the addressing and names lesson shows how to find out). The same idea works elsewhere: for a script that fails, check the values **halfway** through; for "it stopped working last week", test a version or configuration from **halfway** back.
+Why start at the port? One command (`Test-NetConnection server -Port 443` on Windows) says whether you can reach it, and either answer narrows the search a great deal. A failure there still needs reading: **refused** and **timed out** point to different causes, and `Test-NetConnection` does not say which it was (the addressing and names lesson shows how to find out). The same idea works elsewhere: for a script that fails, check the values **halfway** through; for "it stopped working last week", test a version or configuration from **halfway** back.
 
 **Compare with something that works** whenever you can: another user, another machine, the same machine yesterday. Then reduce the differences one at a time.
 
