@@ -27,10 +27,6 @@ evaluation_criteria = [
 ]
 
 [[references]]
-title = "dinit project page (version and manual pages)"
-url = "https://davmac.org/projects/dinit/"
-
-[[references]]
 title = "dinit(8)"
 url = "https://davmac.org/projects/dinit/man-pages-html/dinit.8.html"
 
@@ -43,9 +39,14 @@ title = "dinitctl(8)"
 url = "https://davmac.org/projects/dinit/man-pages-html/dinitctl.8.html"
 
 [[references]]
+title = "dinit project page (version and manual pages)"
+url = "https://davmac.org/projects/dinit/"
+
+[[references]]
 title = "dinit-chimera: Chimera's service suite for dinit"
 url = "https://github.com/chimera-linux/dinit-chimera"
 
 [[references]]
 title = "Chimera Linux: Service management"
 url = "https://chimera-linux.org/docs/configuration/services"
+

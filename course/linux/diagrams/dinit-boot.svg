@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 270" role="img" aria-label="Chimera's boot service depends on system, which depends on login.target and network.target. boot also waits for the administrator's enabled services in /etc/dinit.d/boot.d, and system for the distribution's defaults in /usr/lib/dinit.d/boot.d" font-family="Segoe UI, sans-serif">
+  <title>What boot pulls in on Chimera</title>
+  <style>
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.5 }
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    .wire { stroke: #57606a; stroke-width: 1.5 }
+    .dashed { fill: none; stroke: #57606a; stroke-width: 1.5; stroke-dasharray: 6 4 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .dim { fill: #57606a }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+
+  <rect class="zone-user" x="40" y="20" width="160" height="42" rx="6"/>
+  <text class="bold" x="120" y="46" text-anchor="middle">boot</text>
+  <line class="wire" x1="120" y1="62" x2="120" y2="98" marker-end="url(#arrow)"/>
+  <rect class="zone-user" x="40" y="100" width="160" height="42" rx="6"/>
+  <text class="bold" x="120" y="126" text-anchor="middle">system</text>
+  <line class="wire" x1="90" y1="142" x2="90" y2="186" marker-end="url(#arrow)"/>
+  <line class="wire" x1="170" y1="142" x2="268" y2="186" marker-end="url(#arrow)"/>
+  <rect class="box" x="10" y="188" width="170" height="42" rx="6"/>
+  <text x="95" y="214" text-anchor="middle">login.target</text>
+  <rect class="box" x="200" y="188" width="170" height="42" rx="6"/>
+  <text x="285" y="214" text-anchor="middle">network.target</text>
+
+  <line class="wire" x1="200" y1="40" x2="408" y2="40" marker-end="url(#arrow)"/>
+  <text x="304" y="32" text-anchor="middle" font-size="13">waits for each</text>
+  <rect class="zone-kernel" x="410" y="18" width="300" height="46" rx="6"/>
+  <text x="560" y="38" text-anchor="middle" font-size="13">/etc/dinit.d/boot.d</text>
+  <text class="bold" x="560" y="56" text-anchor="middle" font-size="13">what YOU enabled</text>
+  <line class="wire" x1="200" y1="120" x2="408" y2="120" marker-end="url(#arrow)"/>
+  <text x="304" y="112" text-anchor="middle" font-size="13">waits for each</text>
+  <rect class="box" x="410" y="98" width="300" height="46" rx="6"/>
+  <text x="560" y="118" text-anchor="middle" font-size="13">/usr/lib/dinit.d/boot.d</text>
+  <text class="bold" x="560" y="136" text-anchor="middle" font-size="13">the distribution's defaults</text>
+
+  <text class="dim" x="10" y="258" font-size="13">The lines down are depends-on. dinitctl enable adds a link to the top-right folder by default.</text>
+</svg>

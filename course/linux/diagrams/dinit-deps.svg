@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 230" role="img" aria-label="Three dependency kinds: depends-on needs the other to start and stops with it; depends-ms needs it to start once but survives its stop; waits-for only waits for it to start or fail" font-family="Segoe UI, sans-serif">
+  <title>Three kinds of dependency</title>
+  <style>
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.5 }
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .dim { fill: #57606a }
+  </style>
+
+  <text class="bold" x="110" y="22" text-anchor="middle">setting</text>
+  <text class="bold" x="360" y="22" text-anchor="middle">the other one fails to start</text>
+  <text class="bold" x="595" y="22" text-anchor="middle">the other one stops later</text>
+
+  <rect class="box" x="10" y="36" width="200" height="46" rx="5"/>
+  <text class="bold" x="110" y="64" text-anchor="middle">depends-on:</text>
+  <rect class="zone-kernel" x="230" y="36" width="260" height="46" rx="5"/>
+  <text x="360" y="64" text-anchor="middle">this one fails too</text>
+  <rect class="zone-kernel" x="510" y="36" width="200" height="46" rx="5"/>
+  <text x="610" y="64" text-anchor="middle">this one stops</text>
+
+  <rect class="box" x="10" y="94" width="200" height="46" rx="5"/>
+  <text class="bold" x="110" y="122" text-anchor="middle">depends-ms:</text>
+  <rect class="zone-kernel" x="230" y="94" width="260" height="46" rx="5"/>
+  <text x="360" y="122" text-anchor="middle">this one fails too</text>
+  <rect class="zone-user" x="510" y="94" width="200" height="46" rx="5"/>
+  <text x="610" y="122" text-anchor="middle">this one stays</text>
+
+  <rect class="box" x="10" y="152" width="200" height="46" rx="5"/>
+  <text class="bold" x="110" y="180" text-anchor="middle">waits-for:</text>
+  <rect class="zone-user" x="230" y="152" width="260" height="46" rx="5"/>
+  <text x="360" y="180" text-anchor="middle">this one starts anyway</text>
+  <rect class="zone-user" x="510" y="152" width="200" height="46" rx="5"/>
+  <text x="610" y="180" text-anchor="middle">this one stays</text>
+
+  <text class="dim" x="10" y="222" font-size="13">All three also order the start. Stopping a depends-on target needs stop --force.</text>
+</svg>

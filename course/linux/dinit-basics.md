@@ -60,6 +60,13 @@ depends-on: network.target
 waits-for.d: /usr/lib/dinit.d/boot.d
 ```
 
+![Diagram: boot depends on system, which depends on login.target and network.target; boot waits for the administrator's enabled services and system for the distribution's defaults](diagrams/dinit-boot.svg)
+
+```text
+ boot -> system -> login.target, network.target          (depends-on)
+ boot waits for /etc/dinit.d/boot.d (yours); system waits for /usr/lib/dinit.d/boot.d
+```
+
 Two directories of **symbolic links**, each named for a service, decide what starts at boot:
 
 ```text

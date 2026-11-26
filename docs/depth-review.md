@@ -108,3 +108,4 @@ By path, in the order the owner works through them.
 | `linux.init-systems-compared` | reviewed 2026-11-26: already says what was tested for each row; added 1 diagram (stopping a dependency) |
 | `linux.systemd` | reviewed 2026-11-26: already explains each result; added 1 diagram (start and enable) |
 | `linux.systemd-advanced` | reviewed 2026-11-26: already explains each result; added 1 diagram (what starts a service) |
+| `linux.dinit-basics` | reviewed 2026-11-26: already explains each result; added 1 diagram (the boot chain). Tests are from the earlier run |
