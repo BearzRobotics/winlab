@@ -14,6 +14,8 @@ For each command or example: **why you would run it, how to read what it prints,
 
 These are close to outlines and need to be written, not polished.
 
+**All of Group 1 had been rewritten by the end of 2026-11-26** (and the windows-scripting path of Group 2 reviewed); the table below records how they started. See Status for what each one now covers and what was not tested.
+
 | Lesson | Words | Code blocks | Testing needs |
 |---|---|---|---|
 | `endpoints.protect-devices` | 339 | 2 | Windows; the Windows lab VM |
