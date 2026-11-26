@@ -1,6 +1,6 @@
 *Draft for owner review.* "The network" is not one thing. It is a stack of small jobs, each done by a different piece of software or hardware, and each able to fail on its own. Once you can say which job a symptom belongs to, you know which tool to reach for. This lesson gives you that map. Later lessons go deep on each part.
 
-Addresses in the examples are samples. Documentation ranges (`192.0.2.0/24`, `198.51.100.0/24`, `203.0.113.0/24`) and `192.168.1.0/24` stand in for real addresses. The command output formats are real.
+Addresses in the examples are samples. Documentation ranges (`192.0.2.0/24`, `198.51.100.0/24`, `203.0.113.0/24`) and `192.168.1.0/24` stand in for real addresses. The command output formats are real. The section *Watched: one request across a router* is a real capture from an **AlmaLinux 9.8** lab VM, where three network namespaces played client, router and server (`tests/verification/networking/layers1.sh`).
 
 ## Why layers
 
@@ -67,7 +67,7 @@ Before any data flows, TCP does a **three-way handshake**:
 2. Server answers **SYN-ACK** ("OK, mine is Y, I got X").
 3. Client sends **ACK** ("got Y").
 
-Closing uses **FIN** (or **RST** to abort at once). These flags matter when you troubleshoot: a **refused** connection means the server's side answered the SYN with a **RST** (nothing is listening, or a firewall rejected it); a **timed-out** connection means no answer came back at all (a firewall dropped it, or there is no route).
+Closing uses **FIN** (or **RST** to abort at once). These flags matter when you troubleshoot: a **refused** connection means the server's side answered the SYN with a **RST** (nothing is listening, or a firewall rejected it, which it can also do with an ICMP message that Linux may report as `No route to host`); a **timed-out** connection means no answer came back at all (for example a firewall dropped it, or a problem on the path). The ports and firewalls lesson measures these cases.
 
 **UDP** (User Datagram Protocol, [RFC 768](https://www.rfc-editor.org/rfc/rfc768)) is **connectionless**. It just sends a datagram and does not check that it arrived. That is faster and lighter, so it suits things where a late answer is worse than a lost one, or where the application handles loss itself: DNS queries, DHCP, NTP time, voice and video, and many games.
 
@@ -151,6 +151,79 @@ A **switch** learns which MAC address is on which of its ports by watching sourc
 
 If ARP fails you see the symptom "destination host unreachable" from your own address, or a gateway that cannot be reached even though the address looks right.
 
+## Watched: one request across a router
+
+This puts every layer of the lesson in one place. A client (`192.168.1.20`) asked a web server (`198.51.100.7`) on another network for a page, through a router. I captured on **both sides** of the router with `tcpdump -n -e -v` (`-e` shows the MAC addresses). The MAC addresses were set by hand so they are easy to follow.
+
+![Diagram: on each side of the router the frame has different MAC addresses, while the IP addresses and ports stay the same and the TTL drops from 64 to 63](diagrams/across-router.svg)
+
+```text
+ client ..0c  ----------- ..a0 router ..a1 ----------- ..05 server
+ frame:  MAC ..0c -> ..a0              frame:  MAC ..a1 -> ..05
+ packet: 192.168.1.20 -> 198.51.100.7  packet: the same addresses
+ TTL 64                                TTL 63
+```
+
+### 1. First, find the next hop (ARP)
+
+Before anything else, the client's neighbour table was **empty**. The first frame was a broadcast:
+
+```text
+02:00:00:00:00:0c > Broadcast, ARP: Request who-has 192.168.1.1 tell 192.168.1.20
+02:00:00:00:00:a0 > 02:00:00:00:00:0c, ARP: Reply 192.168.1.1 is-at 02:00:00:00:00:a0
+```
+
+**It asked for the gateway, not the server.** The server is on another network, so the client only needs the next hop. Afterwards `ip neigh` on the client listed **one** neighbour, `192.168.1.1`. The router then did its own ARP on the other side: `who-has 198.51.100.7 tell 198.51.100.1`.
+
+### 2. The same packet on both sides
+
+The client's first TCP packet, shortened:
+
+```text
+LEFT   02:00:00:00:00:0c > 02:00:00:00:00:a0, ... ttl 64, id 9651, proto TCP
+       192.168.1.20.47464 > 198.51.100.7.http: Flags [S]
+
+RIGHT  02:00:00:00:00:a1 > 02:00:00:00:00:05, ... ttl 63, id 9651, proto TCP
+       192.168.1.20.47464 > 198.51.100.7.http: Flags [S]
+```
+
+The same IP identification number, 9651, shows it is the same packet. **Both MAC addresses changed, the TTL fell by one, and the IP addresses and ports did not change.** (A router that also does **NAT** would rewrite addresses and often ports; this one did not.)
+
+### 3. The conversation
+
+On the client side, reading the `Flags`:
+
+| Direction | Flags | What it is |
+|---|---|---|
+| client to server | `[S]` | SYN |
+| server to client | `[S.]` | SYN-ACK (the dot means ACK) |
+| client to server | `[.]` | ACK: the **handshake is complete** |
+| client to server | `[P.]` | data: the HTTP request |
+| server to client | `[.]` | "got it" |
+| server to client | `[P.]` | data: the HTTP reply |
+
+| `tcpdump` shows | Means |
+|---|---|
+| `[S]` repeated, no answer | Nothing is coming back: think of a timeout |
+| `[S]` answered by `[R.]` | A reset: refused |
+| Handshake completes, then silence | The network works; look at the application |
+
+`cksum ... incorrect` appeared on many captured packets that still worked. Packets captured before the checksum has been filled in (**checksum offload**) look like that; it is not proof of damage.
+
+### 4. TTL and ICMP
+
+```text
+ping 198.51.100.7           ->  ... ttl=63          (one router on the way back)
+ping 192.168.1.1            ->  ... ttl=64          (no router between)
+ping -t 1 198.51.100.7      ->  From 192.168.1.1: Time to live exceeded
+```
+
+The router discarded the packet whose TTL ran out, **and said so** with an ICMP message from its own address. `traceroute` is built on exactly this.
+
+### The same with UDP
+
+A UDP request and its reply were **two packets**, `length 4` each, with no handshake before and no acknowledgement after. If either had been lost, nothing at this layer would have resent it.
+
 ## Reading what is open on a machine
 
 The transport layer is where a service becomes visible. This lists what a machine is *listening* on, using only built-in tools ([`netstat`](https://learn.microsoft.com/windows-server/administration/windows-commands/netstat)):
@@ -206,6 +279,7 @@ Test from the bottom up, and stop at the first layer that fails. The next lesson
 - **Assuming a port number identifies the service.** Check what is listening and which process owns it.
 - **Forgetting the direction.** A firewall rule that allows a client to connect out does not allow connections in.
 - **Reading `127.0.0.1` as "the network."** It is the machine talking to itself and proves nothing about the network.
+- **Expecting to see a remote server's MAC address.** You only ever see the next hop's.
 
 ## Check yourself
 

@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 290" role="img" aria-label="A packet crossing a router: on each side the frame has different MAC addresses, while the IP addresses stay the same and the TTL drops from 64 to 63" font-family="Segoe UI, sans-serif">
+  <title>One packet, two frames</title>
+  <style>
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.5 }
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    .wire { stroke: #57606a; stroke-width: 1.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .dim { fill: #57606a }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+
+  <rect class="zone-user" x="10" y="20" width="160" height="58" rx="6"/>
+  <text class="bold" x="90" y="44" text-anchor="middle">client</text>
+  <text x="90" y="66" text-anchor="middle" font-size="13">192.168.1.20  ..0c</text>
+  <line class="wire" x1="170" y1="49" x2="278" y2="49" marker-end="url(#arrow)"/>
+  <rect class="zone-kernel" x="280" y="20" width="160" height="58" rx="6"/>
+  <text class="bold" x="360" y="44" text-anchor="middle">router</text>
+  <text x="360" y="66" text-anchor="middle" font-size="13">..a0        ..a1</text>
+  <line class="wire" x1="440" y1="49" x2="548" y2="49" marker-end="url(#arrow)"/>
+  <rect class="zone-user" x="550" y="20" width="160" height="58" rx="6"/>
+  <text class="bold" x="630" y="44" text-anchor="middle">server</text>
+  <text x="630" y="66" text-anchor="middle" font-size="13">198.51.100.7  ..05</text>
+
+  <text class="bold" x="170" y="112" text-anchor="middle">frame on the left wire</text>
+  <rect class="box" x="30" y="122" width="280" height="30"/>
+  <text x="170" y="142" text-anchor="middle" font-size="13">MAC: ..0c to ..a0</text>
+  <rect class="zone-user" x="30" y="152" width="280" height="52"/>
+  <text x="170" y="173" text-anchor="middle" font-size="13">IP: .20 to .7, TTL 64</text>
+  <text x="170" y="193" text-anchor="middle" font-size="13">TCP: port 47464 to 80, SYN</text>
+
+  <text class="bold" x="550" y="112" text-anchor="middle">frame on the right wire</text>
+  <rect class="box" x="410" y="122" width="280" height="30"/>
+  <text x="550" y="142" text-anchor="middle" font-size="13">MAC: ..a1 to ..05</text>
+  <rect class="zone-user" x="410" y="152" width="280" height="52"/>
+  <text x="550" y="173" text-anchor="middle" font-size="13">IP: .20 to .7, TTL 63</text>
+  <text x="550" y="193" text-anchor="middle" font-size="13">TCP: port 47464 to 80, SYN</text>
+
+  <text class="bold" x="10" y="242">Changed: both MAC addresses, TTL.</text>
+  <text class="bold" x="10" y="266">Unchanged: both IP addresses and both ports (this router does no NAT).</text>
+</svg>

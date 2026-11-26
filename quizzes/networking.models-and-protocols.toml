@@ -396,3 +396,32 @@ choices = ["Top down, starting with the application", "Bottom up, stopping at th
 answers = ["Bottom up, stopping at the first layer that fails"]
 explanation = "Each layer you prove working narrows the problem. The first layer that fails is where to look."
 review = "Putting the layers to work"
+
+# ---- Added when the lesson was deepened ----
+
+[[question]]
+id = "arp-for-whom"
+type = "choice"
+prompt = "A client sends a packet to a server on another network. For which address does it send an ARP request?"
+choices = ["The default gateway", "The remote server", "The DNS server on the internet", "The broadcast address of the server's network"]
+answers = ["The default gateway"]
+explanation = "It only needs the MAC address of the next hop."
+review = "1. First, find the next hop (ARP)"
+
+[[question]]
+id = "what-changes"
+type = "multi"
+prompt = "Which changed when the lesson's packet crossed the router (which did no NAT)? Select all that apply."
+choices = ["The source and destination MAC addresses", "The TTL", "The source and destination IP addresses", "The TCP ports"]
+answers = ["The source and destination MAC addresses", "The TTL"]
+explanation = "IP addresses and ports stayed the same."
+review = "2. The same packet on both sides"
+
+[[question]]
+id = "flags-sdot"
+type = "choice"
+prompt = "In tcpdump output, what is a packet with Flags [S.]?"
+choices = ["SYN-ACK", "A reset", "A data packet", "The end of a connection"]
+answers = ["SYN-ACK"]
+explanation = "S is SYN and the dot is ACK."
+review = "3. The conversation"

@@ -3,7 +3,7 @@ id = "networking.models-and-protocols"
 title = "How networks work: layers, protocols and ports"
 summary = "The OSI and TCP/IP models, how data is wrapped on its way out, TCP versus UDP, the ports and protocols you meet daily, and how MAC addresses, ARP and switches fit in."
 content = "models-and-protocols.md"
-estimated_minutes = 50
+estimated_minutes = 90
 level = 1
 objectives = [
   "Name the layers of the OSI and TCP/IP models and place a protocol or device at its layer",
@@ -23,29 +23,62 @@ evaluation_criteria = [
 ]
 
 [[references]]
-title = "Test-NetConnection (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/module/nettcpip/test-netconnection"
-
-[[references]]
-title = "IANA service name and transport protocol port number registry"
-url = "https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml"
-
-[[references]]
-title = "arp(8) and ip-neighbour(8) manual pages"
-url = "https://man7.org/linux/man-pages/man8/ip-neighbour.8.html"
+title = "rfc791"
+url = "https://www.rfc-editor.org/rfc/rfc791"
 
 [[references]]
 title = "RFC 9293: Transmission Control Protocol"
 url = "https://www.rfc-editor.org/rfc/rfc9293"
 
 [[references]]
+title = "rfc768"
+url = "https://www.rfc-editor.org/rfc/rfc768"
+
+[[references]]
+title = "IANA service name and transport protocol port number registry"
+url = "https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml"
+
+[[references]]
+title = "ping"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/ping"
+
+[[references]]
+title = "tracert"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/tracert"
+
+[[references]]
+title = "rfc792"
+url = "https://www.rfc-editor.org/rfc/rfc792"
+
+[[references]]
+title = "Test-NetConnection (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/nettcpip/test-netconnection"
+
+[[references]]
 title = "RFC 826: Address Resolution Protocol"
 url = "https://www.rfc-editor.org/rfc/rfc826"
+
+[[references]]
+title = "arp"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/arp"
+
+[[references]]
+title = "get-netneighbor"
+url = "https://learn.microsoft.com/powershell/module/nettcpip/get-netneighbor"
+
+[[references]]
+title = "arp(8) and ip-neighbour(8) manual pages"
+url = "https://man7.org/linux/man-pages/man8/ip-neighbour.8.html"
 
 [[references]]
 title = "netstat (Microsoft Learn)"
 url = "https://learn.microsoft.com/windows-server/administration/windows-commands/netstat"
 
 [[references]]
+title = "get-nettcpconnection"
+url = "https://learn.microsoft.com/powershell/module/nettcpip/get-nettcpconnection"
+
+[[references]]
 title = "ss(8) manual page"
 url = "https://man7.org/linux/man-pages/man8/ss.8.html"
+
