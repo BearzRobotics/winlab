@@ -36,6 +36,11 @@ start**. WinLab boots the lab VM, sets up the problem and saves a snapshot, so l
 few minutes and some of these labs need internet in the VM, so prepare the ones you want before going offline.
 Scripting labs need no preparation. Both kinds need a lab VM with a snapshot named `winlab-clean`.
 
+**Signing in to a lab VM:** the lab window shows the VM's user name and password, with a **Copy password** button.
+`winlab vm install` also turns on auto-login for Windows, Ubuntu and AlmaLinux VMs (not Chimera) before you take the
+clean snapshot. For a VM made earlier, run `winlab vm autologin <vm-id> winlab-clean`, and again for each prepared lab
+snapshot (`winlab vm list` shows them). It boots that snapshot and saves it again.
+
 ## Reporting a problem
 Use **Help > Copy diagnostics** and paste the result into your message, with what you did and what you expected. For
 lesson errors say the lesson title and the line. Things a beta tester can most usefully tell us: a command that did

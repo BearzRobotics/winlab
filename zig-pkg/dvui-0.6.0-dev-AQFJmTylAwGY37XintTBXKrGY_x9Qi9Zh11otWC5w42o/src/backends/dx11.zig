@@ -1065,20 +1065,22 @@ pub fn clipboardTextSet(self: Context, text: []const u8) !void {
     boolToErr(win32.OpenClipboard(hwndFromContext(self)), "OpenClipboard in clipboardTextSet") catch return;
     defer boolToErr(win32.CloseClipboard(), "CloseClipboard in clipboardTextSet") catch {};
 
-    const handle = win32.GlobalAlloc(win32.GMEM_MOVEABLE, text.len * @sizeOf(u16) + 1); // don't forget the nullbyte
-    if (handle == 0) return std.mem.Allocator.Error.OutOfMemory;
-
     const as_utf16 = std.unicode.utf8ToUtf16LeAlloc(state.arena, text) catch |err| switch (err) {
         error.OutOfMemory => |e| return e,
         else => return dvui.Backend.GenericError.BackendError,
     };
     defer state.arena.free(as_utf16);
 
-    const data: [*:0]u16 = @ptrCast(@alignCast(win32.GlobalLock(handle) orelse return));
-    defer boolToErr(win32.GlobalUnlock(handle), "GlobalUnlock in clipboardTextSet") catch {};
+    // WinLab patch (see docs/vendored-patches.md): CF_UNICODETEXT must end in a 16-bit zero. Upstream
+    // allocated one byte too few for it and never wrote it, so pasted text ended in leftover memory.
+    const handle = win32.GlobalAlloc(win32.GMEM_MOVEABLE, (as_utf16.len + 1) * @sizeOf(u16));
+    if (handle == 0) return std.mem.Allocator.Error.OutOfMemory;
 
-    for (as_utf16, 0..) |wide, i| {
-        data[i] = wide;
+    {
+        const data: [*]u16 = @ptrCast(@alignCast(win32.GlobalLock(handle) orelse return));
+        defer boolToErr(win32.GlobalUnlock(handle), "GlobalUnlock in clipboardTextSet") catch {};
+        @memcpy(data[0..as_utf16.len], as_utf16);
+        data[as_utf16.len] = 0;
     }
 
     try boolToErr(win32.EmptyClipboard(), "EmptyClipboard in clipboardTextSet");

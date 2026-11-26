@@ -141,6 +141,16 @@ pub const LabEngine = struct {
     ctx: *anyopaque,
     run: *const fn (ctx: *anyopaque, lab_index: usize, op: Op) Outcome,
     fixed: *const fn (ctx: *anyopaque, lab_index: usize) void,
+    /// UI thread: the login of the VM the lab runs on, if known. The strings must outlive the window.
+    login: *const fn (ctx: *anyopaque, lab_index: usize) ?LabLogin,
+};
+
+/// How to sign in at a lab VM's screen. Lab VMs are throwaway, so the password is shown as it is.
+pub const LabLogin = struct {
+    vm: []const u8,
+    user: []const u8,
+    password: []const u8,
+    linux: bool,
 };
 
 pub const Lab = struct {
@@ -215,6 +225,7 @@ const LabUi = struct {
     running: bool = false,
     /// Start found no prepared snapshot; the Start button becomes "Prepare and start".
     needs_prepare: bool = false,
+    login: ?LabLogin = null,
     busy: std.atomic.Value(bool) = .init(false),
     done: std.atomic.Value(bool) = .init(false),
     /// Worker -> UI: valid once `done` is set.
@@ -1490,6 +1501,7 @@ fn reader(a: *App) void {
     a.view.page = a.current;
     if (a.text_view and plainText(a) != null) {
         var tl = dvui.textLayout(@src(), .{}, .{ .expand = .horizontal, .background = false, .padding = .all(0), .font = dvui.Font.theme(.mono) });
+        md_view.selectable(tl);
         defer tl.deinit();
         tl.addText(plainText(a).?, .{});
     } else {
@@ -1716,6 +1728,7 @@ fn openLab(a: *App, index: usize) void {
     a.lab.index = index;
     a.lab.hints_shown = 0;
     a.lab.needs_prepare = false;
+    a.lab.login = a.o.lab_engine.?.login(a.o.lab_engine.?.ctx, index);
     a.lab.log.clearRetainingCapacity();
     setLabStatus(&a.lab, "Not started. Press Start to boot the lab VM.");
     labLog(a, if (lab.task) "Press Start. The VM window opens; write your script in it (Notepad is fine), save it where the task says, then press Check." else "Press Start. The VM window opens; fix the problem inside it, then press Check.");
@@ -1758,6 +1771,8 @@ fn pollLab(a: *App) void {
         .start, .prepare => {
             l.running = out.ok;
             l.needs_prepare = out.needs_prepare;
+            // Preparing can settle which VM the lab is on. The worker has finished, so asking again is safe.
+            if (out.ok) l.login = a.o.lab_engine.?.login(a.o.lab_engine.?.ctx, l.index);
             setLabStatus(l, if (out.needs_prepare and l.op == .start) "Not prepared yet. Press Prepare and start." else if (!out.ok) "Could not start." else if (lab.task) "Running. Write your script in the VM window, then press Check." else "Running. Fix the problem in the VM window, then press Check.");
         },
         .check => {
@@ -1800,6 +1815,7 @@ fn labWindow(a: *App) void {
         var sc = dvui.scrollArea(@src(), .{}, .{ .expand = .horizontal, .min_size_content = .{ .h = 90 }, .max_size_content = .{ .w = std.math.floatMax(f32), .h = 170 }, .background = true, .style = .window, .margin = .{ .y = 4, .h = 10 }, .border = .all(1) });
         defer sc.deinit();
         var tl = dvui.textLayout(@src(), .{}, .{ .expand = .horizontal, .background = false, .padding = .all(8) });
+        md_view.selectable(tl);
         tl.addText(lab.symptom, .{});
         tl.deinit();
     }
@@ -1829,10 +1845,13 @@ fn labWindow(a: *App) void {
         if (labButton(@src(), "Stop VM", !busy and l.running, null)) labBegin(a, .end);
     }
 
+    if (l.login) |login| labLoginPanel(login);
+
     dvui.labelNoFmt(@src(), "Progress and hints", .{}, .{ .font = dvui.Font.theme(.heading) });
     var sc = dvui.scrollArea(@src(), .{ .scroll_info = &l.scroll }, .{ .expand = .both, .background = true, .style = .window, .border = .all(1), .margin = .{ .y = 4 } });
     defer sc.deinit();
     var tl = dvui.textLayout(@src(), .{}, .{ .expand = .horizontal, .background = false, .padding = .all(8) });
+    md_view.selectable(tl);
     tl.addText(l.log.items, .{});
     tl.deinit();
     if (l.scroll_to_end) {
@@ -1852,6 +1871,29 @@ fn labWindow(a: *App) void {
             l.open = false;
         }
     }
+}
+
+/// The VM's user name and password, and how to get past its sign-in screen.
+fn labLoginPanel(login: LabLogin) void {
+    var panel = dvui.box(@src(), .{}, .{ .expand = .horizontal, .margin = .{ .h = 10 } });
+    defer panel.deinit();
+    {
+        var row = dvui.box(@src(), .{ .dir = .horizontal }, .{ .expand = .horizontal });
+        defer row.deinit();
+        dvui.labelNoFmt(@src(), "VM login", .{}, .{ .font = dvui.Font.theme(.heading), .gravity_y = 0.5, .margin = .{ .w = 12 } });
+        if (dvui.button(@src(), "Copy password", .{}, .{ .gravity_x = 1.0, .gravity_y = 0.5 })) dvui.clipboardTextSet(login.password);
+    }
+    var buf: [700]u8 = undefined;
+    const help = if (login.linux)
+        "If the VM shows a login prompt, type these at it."
+    else
+        "If the VM asks for Ctrl+Alt+Delete, don't press the keys: your own PC takes them. In the QEMU window choose " ++
+            "View > compatmonitor0, type: sendkey ctrl-alt-delete  then press Ctrl+Alt+1 to go back and type the password.";
+    const text = std.fmt.bufPrint(&buf, "User: {s}    Password: {s}    (VM {s})\n{s}", .{ login.user, login.password, login.vm, help }) catch return;
+    var tl = dvui.textLayout(@src(), .{}, .{ .expand = .horizontal, .background = false });
+    md_view.selectable(tl);
+    tl.addText(text, .{});
+    tl.deinit();
 }
 
 fn labButton(src: std.builtin.SourceLocation, label: []const u8, enabled: bool, style: ?dvui.Theme.Style.Name) bool {

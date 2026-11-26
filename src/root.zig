@@ -9,6 +9,7 @@ pub const vm_qemu = @import("vm/qemu.zig");
 pub const vm_images = @import("vm/images.zig");
 pub const vm_unattend = @import("vm/unattend.zig");
 pub const vm_guest = @import("vm/guest.zig");
+pub const vm_autologin = @import("vm/autologin.zig");
 pub const vm_iso9660 = @import("vm/iso9660.zig");
 pub const vm_chimera = @import("vm/chimera.zig");
 pub const vm_cloud_init = @import("vm/cloud_init.zig");

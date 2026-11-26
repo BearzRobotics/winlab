@@ -23,6 +23,7 @@ const usage =
     \\       winlab vm list            registered VMs, their state, clean snapshot and built scenarios
     \\       winlab vm remove <vm-id>  delete a training VM WinLab created (asks first)
     \\       winlab vm snapshot|restore|delete-snapshot <vm-id> <name>
+    \\       winlab vm autologin <vm-id> <snapshot>   make a saved snapshot log in by itself (boots it)
     \\       winlab lab build <lab.toml> <vm-id> [--rebuild]   bake a broken-machine scenario
     \\       winlab lab start|check|reset|end <lab.toml> <vm-id>   run a scenario as a learner would
     \\       winlab lab verify <lab.toml> <vm-id>   prove a scenario: broken, fixable, and reset restores it
@@ -55,6 +56,7 @@ pub fn main(init: std.process.Init) !void {
     if (args.len == 5 and std.mem.eql(u8, args[1], "vm") and (std.mem.eql(u8, args[2], "snapshot") or std.mem.eql(u8, args[2], "restore") or std.mem.eql(u8, args[2], "delete-snapshot")))
         return vmSnapshotOp(init, args[2], args[3], args[4]);
     if (args.len == 4 and std.mem.eql(u8, args[1], "vm") and std.mem.eql(u8, args[2], "resume")) return vmResume(init, args[3]);
+    if (args.len == 5 and std.mem.eql(u8, args[1], "vm") and std.mem.eql(u8, args[2], "autologin")) return vmAutologin(init, args[3], args[4]);
     if (args.len == 4 and std.mem.eql(u8, args[1], "vm") and std.mem.eql(u8, args[2], "remove")) return vmRemove(init, args[3]);
     if (args.len == 4 and std.mem.eql(u8, args[1], "vm") and std.mem.eql(u8, args[2], "reboot-test")) return vmRebootTest(init, args[3]);
     if (args.len == 3 and std.mem.eql(u8, args[1], "vm") and std.mem.eql(u8, args[2], "list")) return vmList(init);
@@ -163,6 +165,7 @@ const LabVm = struct {
     vm: winlab.vm_registry.Vm,
     linux: bool,
     distro: []const u8,
+    login: ?winlab.vm_autologin.Login,
 };
 
 fn noVmText(lab: winlab.lab.Lab) []const u8 {
@@ -209,6 +212,18 @@ const LabBackend = struct {
             matching.append(self.gpa, c.vm) catch return null;
         }
         return winlab.lab.pickVm(self.gpa, self.q.provider(), matching.items, lab);
+    }
+
+    /// The login of the VM this lab runs on, for the lab window. UI thread; the strings live as long as the app.
+    fn login(ctx: *anyopaque, idx: usize) ?gui.LabLogin {
+        const self: *LabBackend = @ptrCast(@alignCast(ctx));
+        const vm = self.pickVm(self.parsed[idx].lab) orelse return null;
+        for (self.cands) |c| {
+            if (!std.mem.eql(u8, c.vm.id, vm.id)) continue;
+            const l = c.login orelse return null;
+            return .{ .vm = c.vm.id, .user = l.user, .password = l.password, .linux = c.linux };
+        }
+        return null;
     }
 
     fn errorText(e: anyerror) []const u8 {
@@ -387,7 +402,7 @@ fn openLabs(init: std.process.Init, cfg: *const winlab.settings.Loaded, root: []
         if (cfg.settings.lab_vm.len > 0 and !std.mem.eql(u8, v.id, cfg.settings.lab_vm)) continue;
         const d = std.fs.path.dirname(v.disk) orelse ".";
         const access = winlab.vm_guest.load(arena, io, d) catch continue;
-        try cands.append(arena, .{ .vm = v, .linux = access.shell == .bash, .distro = access.distro });
+        try cands.append(arena, .{ .vm = v, .linux = access.shell == .bash, .distro = access.distro, .login = readLogin(arena, io, d) });
     }
     if (cands.items.len == 0) {
         note.* = "No lab VM is set up. Build one with: winlab vm install windows-server-2022-eval <vm-id> (or ubuntu-2404-cloud for Linux labs), then take a snapshot named winlab-clean and build the labs (winlab lab build).";
@@ -561,7 +576,7 @@ fn browse(init: std.process.Init, dir_arg: ?[]const u8) !void {
         .dark = dark,
         .tracking = store.tracking(),
         .labs = lab_entries,
-        .lab_engine = if (lab_backend_ready) .{ .ctx = &lab_backend, .run = LabBackend.run, .fixed = LabBackend.fixed } else null,
+        .lab_engine = if (lab_backend_ready) .{ .ctx = &lab_backend, .run = LabBackend.run, .fixed = LabBackend.fixed, .login = LabBackend.login } else null,
         .lab_note = lab_note,
         .badges = cfg.settings.badges,
         .setup = .{ .ctx = &setup_backend, .check = SetupBackend.check, .finish = SetupBackend.finish, .show_first = !cfg.settings.setup_done, .settings_path = settings_path },
@@ -1630,6 +1645,8 @@ fn superviseUntilReady(init: std.process.Init, tools: *const winlab.vm_qemu.Tool
             if (winlab.vm_guest.exec(gpa, io, ssh_exe, dir, access, "exit 0")) |r| {
                 gpa.free(r.output);
                 std.debug.print("[{d} min] guest is ready: SSH answers on 127.0.0.1:{d}. VM left running.\n", .{ waited_s / 60, access.port });
+                // Before the learner takes the clean snapshot, so every lab made from it logs in by itself.
+                applyAutologin(init, ssh_exe, dir, access) catch |e| std.debug.print("auto-login was not turned on ({t}); log in with the password in credentials.txt\n", .{e});
                 return;
             } else |_| {}
             if (!winlab.vm_qemu.diskInUse(gpa, vm.disk)) {
@@ -1642,6 +1659,92 @@ fn superviseUntilReady(init: std.process.Init, tools: *const winlab.vm_qemu.Tool
     }
     std.debug.print("gave up waiting for the guest after {d} minutes; it may still be installing (try: winlab vm resume {s})\n", .{ waited_s / 60, vm.id });
     std.process.exit(1);
+}
+
+/// The VM's own login from its `credentials.txt`, copied into `arena`; null if the file or a line is missing.
+fn readLogin(arena: std.mem.Allocator, io: std.Io, vm_dir: []const u8) ?winlab.vm_autologin.Login {
+    const path = std.fs.path.join(arena, &.{ vm_dir, "credentials.txt" }) catch return null;
+    const text = std.Io.Dir.cwd().readFileAlloc(io, path, arena, .limited(16 * 1024)) catch return null;
+    return winlab.vm_autologin.parseCredentials(text);
+}
+
+/// Turns on automatic logon in a running guest. It takes effect at the guest's next boot.
+fn applyAutologin(init: std.process.Init, ssh_exe: []const u8, vm_dir: []const u8, access: winlab.vm_guest.Access) !void {
+    const arena = init.arena.allocator();
+    const login = readLogin(arena, init.io, vm_dir) orelse return error.NoCredentials;
+    const text = try winlab.vm_autologin.script(arena, access.shell, access.distro, login);
+    const r = try winlab.vm_guest.exec(init.gpa, init.io, ssh_exe, vm_dir, access, text);
+    defer init.gpa.free(r.output);
+    if (r.exit_code != 0) {
+        std.debug.print("{s}\n", .{r.output});
+        return error.GuestFailed;
+    }
+    std.debug.print("auto-login is on for user {s} from the guest's next boot\n", .{login.user});
+}
+
+/// `winlab vm autologin <vm-id> <snapshot>`: turns on automatic logon inside one saved snapshot: restore it,
+/// boot, change the setting, shut down, and save it again under the same name. The VM's current disk state is
+/// discarded. If anything fails before saving, the snapshot is left as it was.
+fn vmAutologin(init: std.process.Init, vm_id: []const u8, snap: []const u8) !void {
+    const gpa = init.gpa;
+    const io = init.io;
+    const arena = init.arena.allocator();
+    var cfg = loadSettings(init);
+    defer cfg.deinit();
+    var reg = try winlab.vm_registry.load(gpa, io, try openAppData(init));
+    defer reg.deinit();
+    const vm = reg.find(vm_id) orelse {
+        std.debug.print("'{s}' is not a registered VM\n", .{vm_id});
+        std.process.exit(1);
+    };
+    if (!vm.training_target) {
+        std.debug.print("'{s}' is not marked as a training target; refusing to change it\n", .{vm_id});
+        std.process.exit(1);
+    }
+    if (!winlab.vm_provider.validSnapshotName(snap)) {
+        std.debug.print("that is not a valid snapshot name\n", .{});
+        std.process.exit(2);
+    }
+    var tools = (try winlab.vm_qemu.discover(gpa, io, init.environ_map.get("PATH") orelse "", cfg.settings.qemu_path)) orelse {
+        std.debug.print("{s}\n", .{winlab.vm_qemu.install_guidance});
+        std.process.exit(1);
+    };
+    defer tools.deinit();
+    const ssh_exe = try winlab.platform.tool(arena, io, init.environ_map, .ssh);
+    var q: winlab.vm_qemu.Qemu = .{ .gpa = gpa, .io = io, .tools = &tools, .ssh_exe = ssh_exe };
+    const prov = q.provider();
+    const t = vm.target();
+    const dir = std.fs.path.dirname(vm.disk) orelse ".";
+    const access = try winlab.vm_guest.load(arena, io, dir);
+
+    if ((try prov.state(t)) != .stopped) {
+        std.debug.print("the VM is running; stop it first\n", .{});
+        std.process.exit(1);
+    }
+    if (!try prov.hasSnapshot(t, snap)) {
+        std.debug.print("'{s}' has no snapshot named {s}\n", .{ vm_id, snap });
+        std.process.exit(1);
+    }
+    std.debug.print("restoring '{s}' and booting {s} ...\n", .{ snap, vm_id });
+    try prov.restoreSnapshot(t, snap);
+    {
+        errdefer {
+            prov.stop(t) catch {};
+            prov.restoreSnapshot(t, snap) catch {};
+        }
+        try prov.start(t);
+        try applyAutologin(init, ssh_exe, dir, access);
+        std.debug.print("shutting down ...\n", .{});
+        try prov.stop(t);
+    }
+    // The disk now holds the changed state, so a failure between these two steps loses no data: take it again
+    // with `winlab vm snapshot`.
+    try prov.deleteSnapshot(t, snap);
+    prov.createSnapshot(t, snap) catch |e| {
+        std.debug.print("could not save the snapshot again ({t}). Do not start the VM; run: winlab vm snapshot {s} {s}\n", .{ e, vm_id, snap });
+        std.process.exit(1);
+    };
+    std.debug.print("saved '{s}' with auto-login on\n", .{snap});
 }
 
 /// `winlab vm snapshot|restore|delete-snapshot <vm-id> <name>` on a registered training target.
@@ -1922,14 +2025,22 @@ fn scenarioCmd(init: std.process.Init, op: ScenarioOp, lab_path: []const u8, vm_
             const before = s.validate() catch |e| scenarioFail("validate (before)", e);
             defer gpa.free(before.output);
             std.debug.print("[2] validation before the fix: {s} ({s})\n", .{ if (before.passed) "PASSED (unexpected!)" else "failed, as it should", trimOut(before.output) });
+            // A solution that restarts Windows may drop the connection, or may return first and restart a while
+            // later (slower with a user signed in). So remember the boot time and wait for it to change.
+            const restarts = std.mem.indexOf(u8, lab.solution, "Restart-Computer") != null;
+            const boot_before: ?[]u8 = if (restarts) bootTime(gpa, ctx.q.provider(), ctx.vm.target()) else null;
+            defer if (boot_before) |b| gpa.free(b);
+            if (restarts and boot_before == null) {
+                std.debug.print("solution failed: could not read the guest's boot time\n", .{});
+                std.process.exit(1);
+            }
             if (ctx.q.provider().runInGuest(gpa, ctx.vm.target(), lab.solution)) |fixed| {
                 gpa.free(fixed.output);
             } else |e| switch (e) {
-                // A solution that restarts Windows drops the connection mid-command. That is expected:
-                // give the guest time to actually go down, then validation waits for it to come back.
-                error.ProviderFailed => std.Io.sleep(init.io, .fromSeconds(30), .real) catch {},
+                error.ProviderFailed => if (!restarts) std.Io.sleep(init.io, .fromSeconds(30), .real) catch {},
                 else => scenarioFail("solution", e),
             }
+            if (boot_before) |old| waitForNewBoot(init.io, gpa, ctx.q.provider(), ctx.vm.target(), old);
             const after = s.validate() catch |e| scenarioFail("validate (after)", e);
             defer gpa.free(after.output);
             std.debug.print("[3] validation after the solution: {s} ({s})\n", .{ if (after.passed) "PASSED" else "FAILED", trimOut(after.output) });
@@ -1945,6 +2056,29 @@ fn scenarioCmd(init: std.process.Init, op: ScenarioOp, lab_path: []const u8, vm_
             if (!ok) std.process.exit(1);
         },
     }
+}
+
+/// The Windows guest's last boot time as text, or null if it cannot be asked right now. Caller frees.
+fn bootTime(gpa: std.mem.Allocator, prov: winlab.vm_provider.Provider, t: winlab.vm_provider.Target) ?[]u8 {
+    const r = prov.runInGuest(gpa, t, "(Get-CimInstance Win32_OperatingSystem).LastBootUpTime.Ticks") catch return null;
+    defer gpa.free(r.output);
+    const text = trimOut(r.output);
+    if (r.exit_code != 0 or text.len == 0) return null;
+    for (text) |c| if (!std.ascii.isDigit(c)) return null;
+    return gpa.dupe(u8, text) catch null;
+}
+
+/// Waits up to five minutes for the guest to answer with a boot time other than `old`; exits if it never does.
+fn waitForNewBoot(io: std.Io, gpa: std.mem.Allocator, prov: winlab.vm_provider.Provider, t: winlab.vm_provider.Target, old: []const u8) void {
+    var tries: u32 = 0;
+    while (tries < 60) : (tries += 1) {
+        std.Io.sleep(io, .fromSeconds(5), .real) catch {};
+        const now = bootTime(gpa, prov, t) orelse continue;
+        defer gpa.free(now);
+        if (!std.mem.eql(u8, now, old)) return;
+    }
+    std.debug.print("solution failed: the guest did not restart within five minutes\n", .{});
+    std.process.exit(1);
 }
 
 /// `winlab lab selftest <lab.toml> <vm-id>`: runs a lab end to end on a registered training VM

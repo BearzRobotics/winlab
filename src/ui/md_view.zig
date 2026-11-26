@@ -41,7 +41,7 @@ pub fn render(root: *md.Node, v: *View) void {
         if (flowable(n)) {
             if (run == null) {
                 run = dvui.textLayout(@src(), .{}, .{ .expand = .horizontal, .background = false, .id_extra = v.nextId(), .padding = .all(0), .margin = .{ .h = 4 } });
-                quiet(run.?);
+                selectable(run.?);
             }
             flow(run.?, n, v, 0);
         } else {
@@ -78,7 +78,7 @@ fn block(n: *md.Node, v: *View) void {
             }
             var tl = dvui.textLayout(@src(), .{}, .{ .expand = .horizontal, .background = false, .id_extra = v.nextId(), .margin = .{ .h = if (insideItem(n)) 4 else gap }, .padding = .all(0) });
             defer tl.deinit();
-            quiet(tl);
+            selectable(tl);
             inlines(tl, n, .{}, v);
         },
         .heading => {
@@ -95,7 +95,7 @@ fn block(n: *md.Node, v: *View) void {
             }
             var tl = dvui.textLayout(@src(), .{}, .{ .expand = .horizontal, .background = false, .id_extra = v.nextId(), .margin = .{ .h = 6 }, .padding = .all(0) });
             defer tl.deinit();
-            quiet(tl);
+            selectable(tl);
             inlines(tl, n, .{ .bold = true, .size = base * scale, .heading = true }, v);
             if (n.level == 1) {
                 _ = dvui.separator(@src(), .{ .expand = .horizontal, .id_extra = v.nextId(), .margin = .{ .h = 6 } });
@@ -106,7 +106,7 @@ fn block(n: *md.Node, v: *View) void {
             defer cb.deinit();
             var tl = dvui.textLayout(@src(), .{}, .{ .expand = .horizontal, .background = false, .id_extra = v.nextId(), .padding = .all(0), .font = dvui.Font.theme(.mono) });
             defer tl.deinit();
-            quiet(tl);
+            selectable(tl);
             const text = std.mem.trimEnd(u8, n.literal, "\n");
             if (n.kind == .code_block) highlighted(tl, text, highlight.langFor(n.title, text)) else tl.addText(text, .{});
             if (n.kind == .code_block and dvui.button(@src(), "Copy", .{}, .{ .gravity_x = 1.0, .id_extra = v.nextId(), .margin = .{ .y = 4 } })) dvui.clipboardTextSet(text);
@@ -131,7 +131,7 @@ fn block(n: *md.Node, v: *View) void {
                     .deflist_term => {
                         var tl = dvui.textLayout(@src(), .{}, .{ .expand = .horizontal, .background = false, .id_extra = v.nextId(), .margin = .{ .h = 2 }, .padding = .all(0) });
                         defer tl.deinit();
-                        quiet(tl);
+                        selectable(tl);
                         inlines(tl, item, .{ .bold = true }, v);
                     },
                     else => {
@@ -215,7 +215,7 @@ fn table(n: *md.Node, v: *View) void {
                 .max_size_content = .{ .w = col_w - 16, .h = std.math.floatMax(f32) },
             });
             defer tl.deinit();
-            quiet(tl);
+            selectable(tl);
             inlines(tl, cell, .{ .bold = row_node.header }, v);
         }
         if (row_node.next != null) _ = dvui.separator(@src(), .{ .expand = .horizontal, .id_extra = v.nextId() });
@@ -333,6 +333,23 @@ fn flush(tl: *dvui.TextLayoutWidget, s: []const u8, kind: highlight.Kind, dark: 
     if (tokenColor(kind, dark)) |c| tl.addText(s, .{ .color_text = .{ .color = c } }) else tl.addText(s, .{});
 }
 
+/// What a block of selectable text does with the mouse: a right click offers Copy, and a selection is
+/// cleared when the user goes elsewhere. Call it right after creating the text layout, BEFORE adding text
+/// (that is when DVUI collects the text to copy).
+pub fn selectable(tl: *dvui.TextLayoutWidget) void {
+    const menu = dvui.context(@src(), .{ .rect = tl.data().borderRectScale().r }, .{});
+    defer menu.deinit();
+    // While the menu is open the focus is on it, so the selection must be left alone.
+    const at = menu.activePoint() orelse return quiet(tl);
+    var popup = dvui.floatingMenu(@src(), .{ .from = .fromPoint(at) }, .{});
+    defer popup.deinit();
+    const nothing = tl.selection.start == tl.selection.end;
+    if (dvui.menuItemLabel(@src(), if (nothing) "Copy (select some text first)" else "Copy", .{}, .{ .expand = .horizontal }) != null) {
+        if (!nothing) tl.copy();
+        popup.close();
+    }
+}
+
 /// A selection made by click and drag belongs to one text block. Without this, every block keeps its
 /// highlight after the user clicks somewhere else; only the focused block may hold a selection.
 fn quiet(tl: *dvui.TextLayoutWidget) void {
@@ -367,7 +384,7 @@ fn answersBlock(n: *md.Node, v: *View) void {
     if (shown.*) {
         var tl = dvui.textLayout(@src(), .{}, .{ .expand = .horizontal, .background = false, .padding = .all(0), .margin = .{ .h = 10 } });
         defer tl.deinit();
-        quiet(tl);
+        selectable(tl);
         inlines(tl, n, .{}, v);
     }
 }
