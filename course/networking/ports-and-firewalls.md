@@ -115,10 +115,56 @@ This is the most useful diagnosis in the lesson.
 
 So:
 
-- **Refused** is fast and says "I am here, but not on that port". Check the service: is it running, and is it listening on the right address and port?
-- **Timed out** is slow and says nothing came back. Check the path: routing, then firewalls on the way, including the host's own.
+- **Refused** usually says "I am here, but not on that port". Start with the service: is it running, and listening on the right address and port? Then check for a rule that **rejects**.
+- **Timed out** says nothing came back. Check the path: routing, then firewalls on the way, including the host's own.
 
-On Windows a refused local test looks like this (`TcpTestSucceeded : False` after a quick failure, with a warning), while a timeout takes several seconds before the same result. If a **ping succeeds but the port fails**, the host is up and the port is the problem.
+![Diagram: a connection attempt sends SYN; a listening server replies SYN-ACK; no listener replies with a reset; no reply at all leads to a timeout](diagrams/tcp-outcomes.svg)
+
+```text
+ SYN -> listening      <- SYN-ACK        connected
+ SYN -> nothing there  <- RST            refused
+ SYN -> ...nothing comes back            timed out
+```
+
+**On Windows, `Test-NetConnection` does not tell you which it was:** both end in `TcpTestSucceeded : False`. In a lab test even a refusal took about two seconds, so **do not judge by speed**; read the socket error, as shown in the addressing and names lesson. If a **ping succeeds but the port fails**, the host is up and something about the port is the problem.
+
+### What a firewall block looks like: measured
+
+"Blocked means timed out" is often wrong, because a firewall can **answer**. I split an AlmaLinux 9.8 VM into two network namespaces joined by a virtual cable (so one acted as a separate client), ran a web server, and changed only the firewall (`tests/verification/networking/ns1.sh`). The client used `curl -m 5`:
+
+| On the server | `curl` said | Exit | Time |
+|---|---|---|---|
+| Listening on `0.0.0.0`, no rule | HTTP 200 | 0 | 0.01 s |
+| Listening on `127.0.0.1` only | `Connection refused` | 7 | 0.01 s |
+| Nothing listening | `Connection refused` | 7 | 0.01 s |
+| nftables `drop` | `Connection timed out` | 28 | 5.01 s |
+| nftables `reject with tcp reset` | **`Connection refused`** | 7 | 0.01 s |
+| nftables `reject` (default: port unreachable) | **`Connection refused`** | 7 | 0.01 s |
+| nftables `reject with icmpx type admin-prohibited` | **`No route to host`** | 7 | 0.01 s |
+| **firewalld 1.3.4**, default zone `public`, port not opened | **`No route to host`** | 7 | 0.01 s |
+
+Three lessons from this table:
+
+1. **`No route to host` often is not a routing fault.** The route was fine (the same address connected as soon as the port was opened). It is what **firewalld's default** told the client. If you can **ping** a host, or reach another port on it, suspect its firewall.
+2. **A rejecting firewall can look exactly like "nothing listening".** So "refused" does not clear the firewall: check the server's rules as well as its listeners.
+3. **A listener on `127.0.0.1` is refused from outside** and answers on the server. From the server itself, a connection to its **network address** (`10.99.0.1`) was also refused: test `127.0.0.1` and the real address separately.
+
+With firewalld running, `--add-port=8081/tcp` made the client connect at once, and after `--reload` it said `No route to host` again, because the rule had been added to the **runtime** only.
+
+**Counters show whether packets arrive.** With `counter drop` on the rule, `nft list chain` showed `counter packets 3 bytes 180 drop` after one attempt. Packets reached the server and the rule dropped them. A counter that stays at zero points **earlier on the path**. (Three packets because the client retried.)
+
+**UDP is harder.** There is no handshake, so:
+
+| UDP case | What the client saw |
+|---|---|
+| Nothing listening, no rule | `ConnectionRefusedError` (an ICMP "port unreachable" came back) |
+| Dropped by a rule | timeout |
+| **Listening, but sending no reply** | **timeout** |
+
+For UDP, **silence proves nothing**. Check the server: is it listening (`ss -ulnp`), do the packets arrive (a counter or a packet capture), does its log show the request?
+
+These results are for this Linux setup. Other firewalls, and devices between networks, are configured to drop or reject as their administrators chose. **Windows Defender Firewall was not tested from a second machine.**
+
 
 ## Firewalls
 
@@ -225,6 +271,8 @@ Combine this lesson with the previous ones. For a service that "does not work":
 - **Disabling the firewall** instead of adding a narrow rule.
 - **Opening a port on the wrong profile**, so it works at the desk and not on the Public network.
 - **A service bound to `127.0.0.1`,** blamed on the firewall.
+- **Reading `No route to host` as a routing fault** without checking the destination's firewall.
+- **Deciding a firewall is not involved because the connection was refused.**
 - **A firewalld rule that is runtime-only,** lost at reboot.
 - **Enabling ufw over SSH without allowing SSH first.**
 - **Forgetting UDP:** a rule for 53/tcp does not allow 53/udp.
@@ -232,13 +280,13 @@ Combine this lesson with the previous ones. For a service that "does not work":
 ## Check yourself
 
 1. What four values identify a TCP connection?
-2. `Test-NetConnection` shows `PingSucceeded : True` and `TcpTestSucceeded : False`, quickly. What is the likeliest cause?
-3. The same test takes ten seconds and then fails. What does that suggest instead?
+2. `Test-NetConnection` shows `PingSucceeded : True` and `TcpTestSucceeded : False`. What does that tell you, and what does it not tell you?
+3. `curl` says `No route to host` for a server that answers ping. What do you suspect?
 4. `ss -tlnp` shows `127.0.0.1:8080`. A colleague cannot reach it. Is the firewall the problem?
 5. Why must you allow SSH before `ufw enable` on a remote server?
 6. You ran `firewall-cmd --add-service=http`, it worked, and after a reboot it stopped. Why?
 
-**Answers.** (1) Source address, source port, destination address, destination port. (2) The host is up, but nothing listens on that port (or a rule rejects it): a refusal. (3) Packets are being dropped: a firewall set to drop, a routing problem, or a wrong address. (4) No. The service listens only on loopback; its configuration must change. (5) Enabling the firewall applies the default "deny inbound" at once and would block your own SSH session. (6) The rule was runtime only; it needs `--permanent` (then `--reload`).
+**Answers.** (1) Source address, source port, destination address, destination port. (2) The host is up and the TCP connection failed; it does not say whether it was refused or timed out. (3) A firewall on that host (or on the way) rejecting the connection: firewalld's default answers this way. (4) No. The service listens only on loopback; its configuration must change. (5) Enabling the firewall applies the default "deny inbound" at once and would block your own SSH session. (6) The rule was runtime only; it needs `--permanent` (then `--reload`).
 
 ## Practice
 

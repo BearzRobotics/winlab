@@ -435,3 +435,41 @@ choices = ["If it fails locally the service itself is the problem, not the netwo
 answers = ["If it fails locally the service itself is the problem, not the network"]
 explanation = "It separates service faults from path faults."
 review = "A bottom-up port check"
+
+# ---- Added when the lesson was deepened ----
+
+[[question]]
+id = "no-route-firewall"
+type = "choice"
+prompt = "You can ping a Linux server, but a port gives 'No route to host'. What did the lesson's tests show can cause this?"
+choices = ["The server's firewall rejecting the connection, as firewalld does by default", "A missing default gateway on your machine", "A DNS failure", "A broken network cable"]
+answers = ["The server's firewall rejecting the connection, as firewalld does by default"]
+explanation = "Opening the port made the same address connect at once."
+review = "What a firewall block looks like: measured"
+
+[[question]]
+id = "reject-looks-refused"
+type = "choice"
+prompt = "A connection is refused. Does that prove no firewall is involved?"
+choices = ["No: a rule that rejects can look the same as nothing listening", "Yes: firewalls only ever drop", "Yes, if ping works", "Only on UDP"]
+answers = ["No: a rule that rejects can look the same as nothing listening"]
+explanation = "Check both the listeners and the rules."
+review = "What a firewall block looks like: measured"
+
+[[question]]
+id = "udp-silence"
+type = "choice"
+prompt = "A UDP request gets no answer. What can you conclude from that alone?"
+choices = ["Nothing certain: it may be dropped, or received and not answered", "The port is closed", "The firewall is off", "The host is down"]
+answers = ["Nothing certain: it may be dropped, or received and not answered"]
+explanation = "Look at the server: listeners, counters or a capture, and logs."
+review = "What a firewall block looks like: measured"
+
+[[question]]
+id = "nft-counter"
+type = "choice"
+prompt = "A drop rule has a counter that stays at zero while clients fail. What does that suggest?"
+choices = ["The packets are not reaching this rule: look earlier on the path or at the rule's match", "The rule is dropping them", "The service has crashed", "DNS is failing on the server"]
+answers = ["The packets are not reaching this rule: look earlier on the path or at the rule's match"]
+explanation = "A rising counter shows that packets arrive and match."
+review = "What a firewall block looks like: measured"

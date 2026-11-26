@@ -1,11 +1,11 @@
 schema_version = 1
 id = "labs.rdp-firewall"
-title = "Remote Desktop connections are refused"
+title = "Remote Desktop connections fail"
 summary = "A service is configured correctly but the firewall blocks it."
 lesson = "security.security-fundamentals"
-symptom = "Remote Desktop to this server stopped working. Connections are refused outright, but the server itself is up and Remote Desktop is turned on in settings."
+symptom = "Remote Desktop to this server stopped working. Clients cannot connect, but the server itself is up and Remote Desktop is turned on in settings."
 hints = [
-  "Separate 'the service is off' from 'something is blocking the connection'. Which one fits 'refused'?",
+  "Separate 'the service is off' from 'something is blocking the connection'. First check on the server whether anything is listening on TCP port 3389.",
   "Windows Defender Firewall has rules grouped by feature. Look for the Remote Desktop group.",
   "Check whether the inbound rules in that group are enabled.",
 ]

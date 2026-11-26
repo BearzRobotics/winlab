@@ -3,7 +3,7 @@ id = "networking.ports-and-firewalls"
 title = "Ports, services and host firewalls"
 summary = "TCP and UDP ports, listening versus connecting, how to see what is listening and who owns it, how to tell refused from filtered, and how to read and change the Windows Defender Firewall and the Linux firewalld and ufw."
 content = "ports-and-firewalls.md"
-estimated_minutes = 60
+estimated_minutes = 100
 level = 3
 objectives = [
   "Explain what a port is and the difference between TCP and UDP",
@@ -36,10 +36,6 @@ title = "IANA service name and transport protocol port number registry"
 url = "https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml"
 
 [[references]]
-title = "Test-NetConnection (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/module/nettcpip/test-netconnection"
-
-[[references]]
 title = "Get-NetTCPConnection (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/module/nettcpip/get-nettcpconnection"
 
@@ -48,12 +44,24 @@ title = "netstat (Microsoft Learn)"
 url = "https://learn.microsoft.com/windows-server/administration/windows-commands/netstat"
 
 [[references]]
-title = "Windows Firewall overview (Microsoft Learn)"
-url = "https://learn.microsoft.com/windows/security/operating-system-security/network-security/windows-firewall/"
+title = "ss(8) manual page"
+url = "https://man7.org/linux/man-pages/man8/ss.8.html"
+
+[[references]]
+title = "Test-NetConnection (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/nettcpip/test-netconnection"
 
 [[references]]
 title = "Get-NetFirewallProfile (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/module/netsecurity/get-netfirewallprofile"
+
+[[references]]
+title = "netsh advfirewall (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/netsh-advfirewall"
+
+[[references]]
+title = "Windows Firewall overview (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/security/operating-system-security/network-security/windows-firewall/"
 
 [[references]]
 title = "Get-NetFirewallRule (Microsoft Learn)"
@@ -62,14 +70,6 @@ url = "https://learn.microsoft.com/powershell/module/netsecurity/get-netfirewall
 [[references]]
 title = "New-NetFirewallRule (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/module/netsecurity/new-netfirewallrule"
-
-[[references]]
-title = "netsh advfirewall (Microsoft Learn)"
-url = "https://learn.microsoft.com/windows-server/administration/windows-commands/netsh-advfirewall"
-
-[[references]]
-title = "ss(8) manual page"
-url = "https://man7.org/linux/man-pages/man8/ss.8.html"
 
 [[references]]
 title = "firewalld documentation"
@@ -82,3 +82,4 @@ url = "https://firewalld.org/documentation/man-pages/firewall-cmd.html"
 [[references]]
 title = "ufw(8) manual page (Ubuntu)"
 url = "https://manpages.ubuntu.com/manpages/noble/en/man8/ufw.8.html"
+
