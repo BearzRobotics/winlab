@@ -1,6 +1,6 @@
 *Draft for owner review.* Every machine, even a laptop, makes a routing decision for every packet it sends: deliver it directly, or hand it to a router. Most "I can reach the printer but not the internet" faults are a wrong answer to that one question. This lesson teaches you to read the table that holds the answer, predict where a packet will go, and change the table safely.
 
-Addresses in the examples are samples; the layout is real output.
+**What was tested.** The sections marked *measured* come from the **Windows Server 2022** and **AlmaLinux 9.8** lab VMs (`tests/verification/powershell/route1.ps1`, `tests/verification/bash/route1.sh`), on their virtual network. Other addresses and outputs are samples that show the layout. `tracert` was not tested.
 
 ## What a router does
 
@@ -47,7 +47,7 @@ Reading the rows:
 The PowerShell view of the same information:
 
 ```
-Get-NetRoute -AddressFamily IPv4 | Sort-Object RouteMetric | Format-Table DestinationPrefix,NextHop,RouteMetric,InterfaceAlias
+Get-NetRoute -AddressFamily IPv4 | Format-Table DestinationPrefix,NextHop,RouteMetric,InterfaceAlias
 
 DestinationPrefix NextHop     RouteMetric InterfaceAlias
 ----------------- -------     ----------- --------------
@@ -56,6 +56,25 @@ DestinationPrefix NextHop     RouteMetric InterfaceAlias
 ```
 
 PowerShell writes the route as a **prefix** (`0.0.0.0/0`, `192.168.1.0/24`) and uses `0.0.0.0` as the next hop for an on-link route. Same data, different notation.
+
+**The two metrics are not the same number (measured).** On Windows each interface has a metric too. `route print` shows the **sum**; `Get-NetRoute`'s `RouteMetric` is only **one part**:
+
+```text
+route print:   0.0.0.0   0.0.0.0   10.0.2.2   10.0.2.15   25
+
+DestinationPrefix NextHop  RouteMetric IfMetric
+10.0.2.0/24       0.0.0.0          256       25
+0.0.0.0/0         10.0.2.2           0       25        <- 0 + 25 = the 25 above
+```
+
+So **sorting `Get-NetRoute` by `RouteMetric` alone can put the wrong route first** when there are several adapters. To compare, add the interface's metric:
+
+```powershell
+Get-NetRoute -DestinationPrefix 0.0.0.0/0 |
+    Select-Object NextHop, InterfaceAlias, RouteMetric,
+        @{ n = 'Total'; e = { $_.RouteMetric + (Get-NetIPInterface -InterfaceIndex $_.ifIndex -AddressFamily IPv4).InterfaceMetric } } |
+    Sort-Object Total
+```
 
 ### Linux
 
@@ -92,9 +111,56 @@ default via 192.168.1.1
 
 A **metric** is a cost. Windows computes automatic metrics from link speed, so a faster adapter gets a lower number and wins; that is why plugging in Ethernet while on Wi-Fi quietly moves your traffic. You can set a metric by hand when you want to force a preference.
 
+![Diagram: of the routes that contain the destination, the longest prefix wins, and only between equal prefixes does the lowest metric decide](diagrams/route-choice.svg)
+
+```text
+ routes containing the address -> LONGEST PREFIX -> (tie only) lowest total metric
+ /32 metric 500  beats  /24 metric 1
+```
+
+### Ask the system which route it would use (measured)
+
+Do not work it out by eye when the machine will tell you. Linux: `ip route get <address>`. Windows: [`Find-NetRoute`](https://learn.microsoft.com/powershell/module/nettcpip/find-netroute):
+
+```powershell
+Find-NetRoute -RemoteIPAddress 1.1.1.1 | Select-Object IPAddress, DestinationPrefix, NextHop, InterfaceAlias
+```
+
+It returns **two** objects: the **source address** that would be used, and the **route**:
+
+```text
+IPAddress DestinationPrefix NextHop  InterfaceAlias
+10.0.2.15                            Ethernet
+          0.0.0.0/0         10.0.2.2 Ethernet
+```
+
+For `10.0.2.3` the route was `10.0.2.0/24` with next hop `0.0.0.0` (on-link); on Linux, `ip route get 10.0.2.3` showed no `via`, and `ip route get 1.1.1.1` showed `via 10.0.2.2`.
+
+I added two routes to test the order, a `/24` with metric 1 and a `/32` **inside it** with metric 500. Both systems chose the **`/32`** for its address and the `/24` for the address next to it.
+
 ## The default gateway must be on your subnet
 
 The gateway is reached by direct delivery, so it **must be inside the local network**. With `192.168.1.20/24` a gateway of `192.168.2.1` cannot work: the machine would have to route to the gateway to reach the gateway. This is the classic result of a typo in a static configuration, and of a wrong mask. The symptom is distinctive: the machine reaches everything on its own subnet and nothing beyond it.
+
+### What each system does with a bad gateway (measured)
+
+**A gateway outside your subnet.**
+
+| System | What happened |
+|---|---|
+| Linux (`ip route add ... via 192.168.1.3` on `10.0.2.15/24`) | Refused: `Error: Nexthop has invalid gateway.` |
+| Windows Server 2022 (`route add ... 192.168.1.3`) | **Accepted**: printed `OK!`, exit code 0, and the route appeared in `Get-NetRoute` |
+
+So on Windows, **`OK!` does not mean the gateway makes sense**. Check it against your own subnet.
+
+**A gateway inside the subnet that does not exist.** I pointed a route for the single address `1.1.1.1` at `10.0.2.50`, where nothing was:
+
+- Linux: `ping` lost **every** packet, and the neighbour table showed why: `10.0.2.50 dev eth0 INCOMPLETE`, meaning no machine answered when asked for that address's hardware (MAC) address. Working neighbours showed `REACHABLE`.
+- Windows: the first ping **timed out**, and the **second received a reply**, although `Find-NetRoute` still showed the route via `10.0.2.50`. I did not find out why. The lesson to keep: **one successful ping does not prove a route is right.** Send several, and check which route is chosen.
+
+Addresses reached by other routes went on working. On Linux, `ip neigh` (Windows: `arp -a`) is the check for "is anything really there at the gateway's address?"
+
+A **blackhole** route (`ip route add blackhole 203.0.113.0/24`) throws traffic away on purpose. `ip route get` and `ping` to such an address answered `Invalid argument`, which does not sound like a routing message at all.
 
 ## TTL and traceroute
 
@@ -149,7 +215,18 @@ New-NetRoute -DestinationPrefix 10.20.0.0/16 -NextHop 192.168.1.3 -InterfaceAlia
 Remove-NetRoute -DestinationPrefix 10.20.0.0/16 -Confirm:$false
 ```
 
-Both need an elevated session. See [route](https://learn.microsoft.com/windows-server/administration/windows-commands/route_ws2008), [New-NetRoute](https://learn.microsoft.com/powershell/module/nettcpip/new-netroute) and [Remove-NetRoute](https://learn.microsoft.com/powershell/module/nettcpip/remove-netroute). **Persistence:** by default a route added with `route add` is lost when TCP/IP restarts; add `/p` to store it in the registry (the `route` documentation describes `/p`). `New-NetRoute` has a `-PolicyStore` parameter: `ActiveStore` is lost at reboot and `PersistentStore` is kept, so read the cmdlet documentation and check with `Get-NetRoute` before relying on it.
+Both need an elevated session. See [route](https://learn.microsoft.com/windows-server/administration/windows-commands/route_ws2008), [New-NetRoute](https://learn.microsoft.com/powershell/module/nettcpip/new-netroute) and [Remove-NetRoute](https://learn.microsoft.com/powershell/module/nettcpip/remove-netroute).
+
+**Will it survive a restart? The two tools have opposite defaults (measured).** I counted the route in the persistent store after each command:
+
+| Command | In the persistent store? |
+|---|---|
+| `New-NetRoute` (no `-PolicyStore`) | **Yes** (and active) |
+| `route add` | **No** |
+| `route -p add` | Yes (listed under `Persistent Routes` in `route print`) |
+| `New-NetRoute -PolicyStore ActiveStore` | (use this for a temporary route) |
+
+`Remove-NetRoute` removed it from both stores. So a "quick temporary test" with `New-NetRoute` **stays on the machine** unless you remove it. I did not restart the VM to watch them come back.
 
 ### Linux
 
@@ -188,6 +265,9 @@ Routes added with `ip route add` are **not saved**; they vanish at reboot or whe
 - **Assuming `route add` is permanent on Windows.** Without `/p` it is lost when TCP/IP restarts.
 - **Expecting `ip route add` to survive a reboot on Linux.** It does not.
 - **Reading `* * *` as "broken"** when later hops still answer.
+- **Comparing Windows routes by `RouteMetric` alone.**
+- **Taking `OK!` from `route add` as proof** that the route works.
+- **Leaving a "temporary" `New-NetRoute` behind.**
 
 ## Check yourself
 

@@ -419,3 +419,49 @@ choices = ["No, it points at DNS", "Yes, the default route is missing", "Yes, th
 answers = ["No, it points at DNS"]
 explanation = "If packets reach an address, routing works."
 review = "Troubleshooting by symptom"
+
+# ---- Added when the lesson was deepened ----
+
+[[question]]
+id = "win-total-metric"
+type = "choice"
+prompt = "On Windows, route print shows metric 25 and Get-NetRoute shows RouteMetric 0 for the same default route. Why?"
+choices = ["route print adds the interface metric to the route metric", "One of them is wrong", "RouteMetric counts hops", "route print rounds up"]
+answers = ["route print adds the interface metric to the route metric"]
+explanation = "Compare routes by the sum."
+review = "The routing table"
+
+[[question]]
+id = "find-netroute"
+type = "short"
+prompt = "Which PowerShell cmdlet shows the route Windows would use to reach an address? Cmdlet name."
+answers = ["Find-NetRoute"]
+explanation = "The Linux equivalent is ip route get."
+review = "Ask the system which route it would use (measured)"
+
+[[question]]
+id = "ok-offsubnet"
+type = "choice"
+prompt = "On the tested Windows Server, what happened when route add named a gateway outside the local subnet?"
+choices = ["It was accepted and printed OK!", "It failed with an invalid gateway error", "It changed the subnet mask", "It restarted the adapter"]
+answers = ["It was accepted and printed OK!"]
+explanation = "Linux refused the same thing. Check the gateway yourself."
+review = "What each system does with a bad gateway (measured)"
+
+[[question]]
+id = "incomplete-neigh"
+type = "choice"
+prompt = "ip neigh shows the gateway's address as INCOMPLETE. What does that mean?"
+choices = ["Nothing answered when asked for its hardware address", "The route has the wrong metric", "DNS is broken", "The gateway is working normally"]
+answers = ["Nothing answered when asked for its hardware address"]
+explanation = "Check the gateway address and the link."
+review = "What each system does with a bad gateway (measured)"
+
+[[question]]
+id = "newnetroute-persist"
+type = "choice"
+prompt = "Which of these adds a route that is also saved in the persistent store?"
+choices = ["New-NetRoute without -PolicyStore", "route add without /p", "ip route add", "New-NetRoute -PolicyStore ActiveStore"]
+answers = ["New-NetRoute without -PolicyStore"]
+explanation = "route add is not saved unless /p is given."
+review = "Changing routes"
