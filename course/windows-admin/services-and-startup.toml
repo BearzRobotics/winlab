@@ -3,7 +3,7 @@ id = "windows-admin.services-and-startup"
 title = "Windows services, startup types and scheduled tasks"
 summary = "Read and change services and their startup type with PowerShell and sc.exe, find the account and program behind a service, follow dependencies and recovery actions, diagnose a service that will not start, and create and troubleshoot scheduled tasks."
 content = "services-and-startup.md"
-estimated_minutes = 70
+estimated_minutes = 90
 level = 3
 objectives = [
   "Explain the difference between a service's status and its startup type, and check both",
@@ -34,8 +34,12 @@ title = "Get-Service (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.management/get-service"
 
 [[references]]
-title = "Set-Service (Microsoft Learn)"
-url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.management/set-service"
+title = "sc config (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/sc-config"
+
+[[references]]
+title = "sc query (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/sc-query"
 
 [[references]]
 title = "Start-Service (Microsoft Learn)"
@@ -46,33 +50,38 @@ title = "Restart-Service (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.management/restart-service"
 
 [[references]]
-title = "sc config (Microsoft Learn)"
-url = "https://learn.microsoft.com/windows-server/administration/windows-commands/sc-config"
-
-[[references]]
-title = "sc query (Microsoft Learn)"
-url = "https://learn.microsoft.com/windows-server/administration/windows-commands/sc-query"
+title = "Set-Service (Microsoft Learn)"
+url = "https://learn.microsoft.com/powershell/module/microsoft.powershell.management/set-service"
 
 [[references]]
 title = "Task Scheduler (Microsoft Learn)"
 url = "https://learn.microsoft.com/windows/win32/taskschd/task-scheduler-start-page"
 
 [[references]]
-title = "Task Scheduler error and success constants (Microsoft Learn)"
-url = "https://learn.microsoft.com/windows/win32/taskschd/task-scheduler-error-and-success-constants"
-
-[[references]]
 title = "ScheduledTasks module (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/module/scheduledtasks/get-scheduledtask"
+
+[[references]]
+title = "schtasks query (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/schtasks-query"
+
+[[references]]
+title = "Task Scheduler error and success constants (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/win32/taskschd/task-scheduler-error-and-success-constants"
 
 [[references]]
 title = "Register-ScheduledTask (Microsoft Learn)"
 url = "https://learn.microsoft.com/powershell/module/scheduledtasks/register-scheduledtask"
 
 [[references]]
+title = "new-scheduledtaskaction"
+url = "https://learn.microsoft.com/powershell/module/scheduledtasks/new-scheduledtaskaction"
+
+[[references]]
+title = "new-scheduledtasktrigger"
+url = "https://learn.microsoft.com/powershell/module/scheduledtasks/new-scheduledtasktrigger"
+
+[[references]]
 title = "schtasks create (Microsoft Learn)"
 url = "https://learn.microsoft.com/windows-server/administration/windows-commands/schtasks-create"
 
-[[references]]
-title = "schtasks query (Microsoft Learn)"
-url = "https://learn.microsoft.com/windows-server/administration/windows-commands/schtasks-query"

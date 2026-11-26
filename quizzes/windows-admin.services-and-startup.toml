@@ -399,3 +399,50 @@ prompt = "Which Command Prompt tool creates and queries scheduled tasks? (comman
 answers = ["schtasks"]
 explanation = "schtasks /create and schtasks /query."
 review = "Creating a task"
+
+# ---- Added when the lesson was deepened ----
+
+[[question]]
+id = "code-1077"
+type = "choice"
+prompt = "An automatic service is stopped with exit code 1077. What does that say?"
+choices = ["No attempt to start it has been made since the last boot", "It crashed", "Its password is wrong", "Its program is missing"]
+answers = ["No attempt to start it has been made since the last boot"]
+explanation = "Check whether it is delayed start before calling it a failure."
+review = "PowerShell"
+
+[[question]]
+id = "vague-start-error"
+type = "choice"
+prompt = "Start-Service says only that it cannot start the service. What gave the reason in the lesson's tests?"
+choices = ["sc.exe start and the Service Control Manager events", "Restarting Windows", "Get-HotFix", "The task history log"]
+answers = ["sc.exe start and the Service Control Manager events"]
+explanation = "sc.exe prints an error number; net helpmsg translates it."
+review = "The error you see first says very little"
+
+[[question]]
+id = "code-1069"
+type = "choice"
+prompt = "A service fails with 1069 and event 7038. What should you check?"
+choices = ["The service account and its password", "The program path", "The disk space", "The firewall"]
+answers = ["The service account and its password"]
+explanation = "7038 says the service could not log on."
+review = "The error you see first says very little"
+
+[[question]]
+id = "event-7031"
+type = "choice"
+prompt = "A service is Running now, and the System log has event 7031 from a minute ago. What happened?"
+choices = ["Its process died unexpectedly and a recovery action is restarting it", "Someone stopped it normally", "It was installed", "It was disabled"]
+answers = ["Its process died unexpectedly and a recovery action is restarting it"]
+explanation = "7034 is the same failure without a corrective action."
+review = "Recovery: what happens when a service crashes"
+
+[[question]]
+id = "task-cwd"
+type = "choice"
+prompt = "A task running as SYSTEM reports 0, but its script could not find a file beside it. Why?"
+choices = ["The task started in C:\\Windows\\system32, so the relative path pointed there", "SYSTEM cannot read files", "A result of 0 means the file was deleted", "Tasks cannot run scripts"]
+answers = ["The task started in C:\\Windows\\system32, so the relative path pointed there"]
+explanation = "Use full paths or $PSScriptRoot, and exit non-zero on failure."
+review = "Results I produced"
