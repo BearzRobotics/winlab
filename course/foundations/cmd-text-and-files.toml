@@ -3,7 +3,7 @@ id = "foundations.cmd-text-and-files"
 title = "CMD text and file tools"
 summary = "type, more, find, findstr and its regex dialect, sort, fc, copy, xcopy, robocopy with its exit-code bit mask, forfiles, attrib and mklink, for /f over command output, and the same jobs in PowerShell and bash."
 content = "cmd-text-and-files.md"
-estimated_minutes = 80
+estimated_minutes = 110
 level = 3
 objectives = [
   "Search text with find and findstr, and use findstr's switches and regular-expression subset",
@@ -24,6 +24,14 @@ evaluation_criteria = [
   "Learner mirrors a folder with robocopy, first as a /l dry run, and explains the exit code",
   "Learner extracts an IPv4 address from ipconfig output with for /f and findstr",
 ]
+
+[[references]]
+title = "type (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/type"
+
+[[references]]
+title = "more (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/more"
 
 [[references]]
 title = "find (Microsoft Learn)"
@@ -58,17 +66,10 @@ title = "forfiles (Microsoft Learn)"
 url = "https://learn.microsoft.com/windows-server/administration/windows-commands/forfiles"
 
 [[references]]
-title = "mklink (Microsoft Learn)"
-url = "https://learn.microsoft.com/windows-server/administration/windows-commands/mklink"
-
-[[references]]
 title = "attrib (Microsoft Learn)"
 url = "https://learn.microsoft.com/windows-server/administration/windows-commands/attrib"
 
 [[references]]
-title = "more (Microsoft Learn)"
-url = "https://learn.microsoft.com/windows-server/administration/windows-commands/more"
+title = "mklink (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/mklink"
 
-[[references]]
-title = "type (Microsoft Learn)"
-url = "https://learn.microsoft.com/windows-server/administration/windows-commands/type"

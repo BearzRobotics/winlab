@@ -1,4 +1,4 @@
-*Draft for owner review.* Variables are where most batch-file bugs live. cmd has no data types: a variable is a piece of text in the environment, and *when* that text is substituted into your command depends on a parsing rule that surprises everyone once. This lesson covers every way to set and read a variable, arithmetic, string slicing, the two kinds of expansion, scope, and the special variables Windows provides. Every example was run on Windows 11, and the outputs are real.
+*Draft for owner review.* Variables are where most batch-file bugs live. cmd has no data types: a variable is a piece of text in the environment, and *when* that text is substituted into your command depends on a parsing rule that surprises everyone once. This lesson covers every way to set and read a variable, arithmetic, string slicing, the two kinds of expansion, scope, and the special variables Windows provides. The examples were run on Windows 11 and the outputs are real; the newer ones (missing variables, watching expansion, arithmetic that fails silently) come from `tests/verification/cmd/vars2.cmd`. `setx`, the environment-variable dialog and typed answers to `set /p` were not exercised by that script, and Windows 10 was not tested.
 
 Run the examples from a `.cmd` file (save one in a scratch folder such as `%TEMP%\wl-cmd-demo`), not only from the prompt: some behaviour differs between the two, and the lesson says where.
 
@@ -9,6 +9,25 @@ Every process has an **environment**: a list of `NAME=value` text pairs. cmd cop
 - Values are **always text**. `5` is the characters "5"; arithmetic is something `set /a` does to text.
 - **Names are not case-sensitive** in cmd (`%PATH%` and `%Path%` are the same variable).
 - A change made in one process affects only that process and the programs it starts **afterwards**. It never reaches the parent. That is why a batch file you *run* cannot change your prompt's variables, while one you `call` from another batch file can (it runs in the same cmd).
+
+![Diagram: a new process receives a copy of the environment; what it changes never returns to the parent, but a script run with call shares the same cmd](diagrams/env-copy.svg)
+
+```text
+ your cmd (parent)                         a new process (child)
+ FROM=parent       ---- starts it: COPY --> set "FROM=child"   (changes its own copy)
+ stays "parent"    <----- never goes back -----
+
+ call child.cmd : same cmd, no copy, so the change stays (unless the script uses setlocal)
+```
+
+I tested exactly this. `child.cmd` sets `FROM=child`:
+
+| How it was run | Inside the child | The parent afterwards |
+|---|---|---|
+| `cmd /c child.cmd` (a new process) | `child` | still `parent` |
+| `call child.cmd` (the same cmd) | `child` | **`child`** |
+
+**Why you care:** a "setup" script that you run in its own window cannot set variables for the window you came from.
 
 Official reference: [`set`](https://learn.microsoft.com/windows-server/administration/windows-commands/set_1) and [`setlocal`](https://learn.microsoft.com/windows-server/administration/windows-commands/setlocal).
 
@@ -68,6 +87,33 @@ shows the prompt and stores what the user types. Pressing Enter without typing l
 
 `set` alone lists every variable, sorted. `set P` lists those whose names start with `P`. In PowerShell the same variables are the `Env:` drive (`Get-ChildItem Env:`); the PowerShell lessons compare the two.
 
+### When a variable does not exist
+
+cmd does **not** report a missing variable. What happens depends on where the line is:
+
+| What I ran, with `nosuch` not defined | Result |
+|---|---|
+| `echo [%nosuch%]` in a **batch file** | `[]`: replaced by nothing |
+| the same on a command line given to `cmd /c` | `[%nosuch%]`: **left as typed** |
+| `echo [%nosuch:~0,3%]` in a batch file | `[~0,3]`: junk |
+| `echo [%nosuch:a=b%]` in a batch file | `[a=b]`: junk |
+
+So **a misspelled variable name is silent**. In a batch file it vanishes, and if you were slicing or replacing it, pieces of your own syntax appear in the output. When output contains a stray `~0,3` or `old=new`, suspect that the variable is not defined.
+
+It can also stop a script. With `v` empty, this line
+
+```text
+if %v%==yes echo matched
+```
+
+turns into `if ==yes echo matched` before cmd reads it as a command. The script **ended** with `echo was unexpected at this time.` (exit code 255 from the `cmd` that ran it), and the lines after it never ran. Quoting both sides keeps something on each side:
+
+```text
+if "%v%"=="yes" echo matched
+```
+
+That version simply did not match, and the script carried on. **Quote both sides of every comparison.** Use `if not defined v` when the question is whether the variable exists.
+
 ## Arithmetic with `set /a`
 
 `set /a` evaluates integer expressions. Inside `/a`, a variable name is read **without** percent signs:
@@ -100,6 +146,26 @@ Rules that catch people:
 - **Bitwise and shift operators are special characters to cmd.** Quote the whole expression: `set /a "g=1<<4"` gives `16`, and `set /a "m=0xFF & 0x0F"` gives `15`.
 - `set /a` with no assignment prints the result, which is handy at the prompt: `set /a 6*7`.
 - `%RANDOM%` is a pseudo-random number from 0 to 32767. A random number from 1 to 6: `set /a r=%random% %% 6 + 1`.
+
+### Arithmetic that fails, and arithmetic that fails silently
+
+Two mistakes produced an error message and a large, unhelpful error code:
+
+| Command | Message | `ERRORLEVEL` |
+|---|---|---|
+| `set /a x=08` | `Invalid number.  Numeric constants are either decimal (17), hexadecimal (0x11), or octal (021).` | 1073750991 |
+| `set /a y=1/0` | `Divide by zero error.` | 1073750993 |
+
+Two others produced **no error at all**:
+
+| Command | Result | Why it matters |
+|---|---|---|
+| `set /a z=abc+1` (no variable `abc`) | `z=1` | A missing or misspelled name counts as **0** |
+| `set "t=12abc"` then `set /a w=t+1` | `w=13`, `ERRORLEVEL` 0 | Text that **begins** with digits is used as that number |
+
+So `set /a` **does not check your input**. If a value comes from a person or a file, test that it is a number before using it (the control-flow and text lessons show `findstr` for this).
+
+A value with a leading zero, such as a month `09`, is read as octal and fails. A common repair is to put a `1` in front and subtract 100: `set "m=09"` then `set /a mm=1%m%-100` printed `9`. It is only right for values of exactly **two** digits.
 
 ## String substitution and slicing
 
@@ -165,6 +231,40 @@ for %%i in (a b c) do (set /a z+=1 & echo %z%)
 ```
 
 With `%z%`, the value was fixed to what `z` was (3, left by the first loop) before the block ran, so it printed `3` three times. With `!z!` it was read each time the `echo` ran.
+
+![Diagram: cmd reads a whole block, fills in every percent variable, then runs it; exclamation-mark variables are read each time a command runs](diagrams/expansion-time.svg)
+
+```text
+ 1. READ the whole block --> 2. fill in every %n% --> 3. RUN, line by line
+
+ echo %n%  (n was 0 at step 2)          echo !n!  (delayed expansion on)
+ pass 1: add 1, then run  echo 0        pass 1: add 1, then read n: 1
+ pass 2: add 1, then run  echo 0        pass 2: add 1, then read n: 2
+```
+
+### Watch it happen: echo on
+
+You do not have to take this on trust. **Remove `@echo off`** (or run the script without it) and cmd prints each command **as it is about to run it, after `%` expansion**. I ran a loop of two passes that adds 1 to `n` and echoes `%name% %n%`, with `name=World` and `n=0` set first:
+
+```text
+>for %i in (a b) do (set /a n+=1   & echo World 0 )
+>(set /a n+=1   & echo World 0 )
+World 0
+>(set /a n+=1   & echo World 0 )
+World 0
+```
+
+(Each prompt also showed the current folder, shortened here to `>`.) Read the **first line**: before the loop has started, `%name%` and `%n%` are **already gone**, replaced by `World` and `0`. The loop is running fixed text. With `!n!` instead, the printed command still says `!n!`, and the results are `1` then `2`:
+
+```text
+>for %i in (a b) do (set /a n+=1   & echo !n! )
+>(set /a n+=1   & echo !n! )
+1
+>(set /a n+=1   & echo !n! )
+2
+```
+
+**This is the first tool to use when a batch file misbehaves:** look at what cmd is really running. (`@` in front of one command hides just that line.)
 
 ### Delayed expansion
 
@@ -288,6 +388,8 @@ Do not use `setx` to *append* to `PATH` by expanding `%PATH%` first: the value y
 ## Common mistakes
 
 - **`set x = 1`**: the hidden spaces. Use `set "x=1"`.
+- **`if %var%==text` without quotes:** an empty variable breaks the line and ends the script.
+- **Trusting a misspelled name to fail:** it expands to nothing, or leaves `~0,3`-style junk, and `set /a` counts it as 0.
 - **Reading a variable changed in the same block** with `%x%` instead of `!x!`.
 - **Leaving delayed expansion on** and losing the `!` in file names and messages.
 - **Octal surprises** with leading zeros in `set /a` (`08` and `09` are errors).
@@ -316,5 +418,8 @@ Do not use `setx` to *append* to `PATH` by expanding `%PATH%` first: the value y
 6. What is `%~dp0` for?
 7. A subroutine needs to return a value without leaking its variables. How?
 8. Why is `set /a x=08` an error?
+9. A batch file prints `[~0,3]` where a short piece of text should be. What is the likely cause?
+10. Why can `if %answer%==y goto yes` end a script with `was unexpected at this time`?
+11. How can you see what a line looks like after `%` expansion?
 
-**Expected answers:** (1) a variable named `x ` (trailing space) with value ` 1` (leading space); use `set "x=1"`; (2) `%var%` is expanded once when the block is read; turn on delayed expansion and use `!var!`; (3) `16`; `<<` is a special character that cmd would otherwise treat as a redirection; (4) `txt`; (5) with delayed expansion on, `!` is the delimiter, so a lone `!` is consumed; (6) the folder the script lives in, with a trailing backslash, so you can refer to files beside the script; (7) put `endlocal & set "result=%local%"` on one line, so the value is expanded before `endlocal` discards it; (8) a leading zero means octal and `8` is not an octal digit.
+**Expected answers:** (1) a variable named `x ` (trailing space) with value ` 1` (leading space); use `set "x=1"`; (2) `%var%` is expanded once when the block is read; turn on delayed expansion and use `!var!`; (3) `16`; `<<` is a special character that cmd would otherwise treat as a redirection; (4) `txt`; (5) with delayed expansion on, `!` is the delimiter, so a lone `!` is consumed; (6) the folder the script lives in, with a trailing backslash, so you can refer to files beside the script; (7) put `endlocal & set "result=%local%"` on one line, so the value is expanded before `endlocal` discards it; (8) a leading zero means octal and `8` is not an octal digit; (9) the variable being sliced is not defined (perhaps misspelled); (10) `answer` is empty, so the line becomes `if ==y goto yes`, which cmd cannot read; quote both sides; (11) run the script without `@echo off`, which prints each command after expansion.

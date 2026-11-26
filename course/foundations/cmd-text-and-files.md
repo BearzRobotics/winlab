@@ -1,6 +1,6 @@
 *Draft for owner review.* Most administration scripting is two jobs: finding things in text (logs, command output, configuration) and moving files around safely. cmd's tools for both are older and smaller than their Linux or PowerShell counterparts, but you will meet them in every legacy script, and knowing what they *cannot* do is as useful as knowing what they can. This lesson covers `type`, `more`, `find`, `findstr`, `sort`, `fc`, `copy`, `xcopy`, `robocopy`, `forfiles`, `attrib`, `mklink` and the `for /f` combinations that tie them together. It finishes with a comparison table showing the PowerShell and bash equivalents.
 
-All examples were run on Windows 11 against a small set of sample files (a log, two word lists), and the outputs are real. The sample files:
+The examples were run on Windows 11 and the outputs are real; the newer results (comparing files, line endings and encodings, mirroring, ages) come from `tests/verification/cmd/text2.cmd`. Windows 10 and non-English Windows were not tested. Most examples use a small set of sample files (a log, two word lists):
 
 ```
 logs\app.log                      data\names.txt     data\nums.txt
@@ -125,6 +125,33 @@ The first prints the names that begin with `a` or `b`; the second matches `adam`
 
 **Quirks to remember:** `findstr` treats a space in the pattern as "or" unless you use `/c:`; a very long line or a binary file can confuse it; and its matching of non-English text depends on the code page. Be careful with `findstr` in `for /f`: the pipe inside the command must be escaped, as the next section shows.
 
+### When `findstr` finds nothing, check the file
+
+A search that finds nothing may mean **the text is not there**, or that `findstr` **cannot read this file the way you think**. Two common cases:
+
+**1. Linux-style line endings.** Many logs end each line with LF only (anything from a Linux system, and some programs). A three-line LF file had two lines ending in `ERROR`:
+
+| Command | LF file | the same text with CR+LF |
+|---|---|---|
+| `findstr /n "ERROR" file` | found lines 1 and 3 | found |
+| `findstr /n /e "ERROR" file` (at line end) | **nothing**, exit 1 | found lines 1 and 3 |
+| `findstr /n "ERROR$" file` | **nothing**, exit 1 | |
+
+`/e` and `$` need the Windows line ending. **Search without the anchor**, or convert the file first, when it came from elsewhere. (`find /c /v ""` still counted 3 lines.)
+
+**2. UTF-16 files.** In **Windows PowerShell 5.1**, `'disk ERROR here' > u16.log` creates a UTF-16 file. On it:
+
+| Command | Result |
+|---|---|
+| `type u16.log` | showed the text correctly |
+| `findstr "ERROR" u16.log` | `FINDSTR: Warning - input file u16.log is in Unicode format.` and **no match**, exit 1 |
+| `find "ERROR" u16.log` | **found it**, exit 0 |
+| `type u16.log \| findstr "ERROR"` | **found it**, exit 0 |
+
+`type` converted the text on the way through the pipe. So for a log made by a PowerShell script, use `type file | findstr`, or have the script write UTF-8.
+
+**Exit code 1 is also what a missing file gives** (`FINDSTR: Cannot open nothere.txt`). A script that treats 1 as "no errors in the log" will report all is well when the log **does not exist**. Check `if exist` first.
+
 ## Combining tools: `for /f` over a command
 
 `for /f` can read a command's output. If the command contains a pipe or other special character, escape it with `^` **inside the for**:
@@ -157,6 +184,31 @@ FC: no differences encountered
 ```
 
 [`fc`](https://learn.microsoft.com/windows-server/administration/windows-commands/fc) compares text files and sets the exit code (`0` identical, `1` different), so it works as a test: `fc a b >nul && echo same`. [`comp`](https://learn.microsoft.com/windows-server/administration/windows-commands/comp) compares files byte by byte, which is what you want for binaries.
+
+### Reading the differences
+
+`a.txt` holds `alpha`, `beta`, `gamma`; `b.txt` holds `alpha`, `BETA changed`, `gamma`, `delta`:
+
+```text
+***** a.txt
+alpha
+beta
+gamma
+***** B.TXT
+alpha
+BETA changed
+gamma
+*****
+
+***** a.txt
+***** B.TXT
+delta
+*****
+```
+
+Each **block** between rows of stars is one difference, shown **twice**: first as it is in the first file, then as it is in the second. The matching lines around it are there to show **where** you are. In the first block, `beta` became `BETA changed`. In the second, the first file's part is **empty**: `delta` exists only in the second file. `fc /n` adds line numbers. `fc /b` compares bytes and prints `offset: byte byte`, for example `00000001: 62 63`.
+
+**Exit codes: 0 identical, 1 different, 2 a file could not be opened.** A script testing only for "not 0" would call a missing file a difference.
 
 ## Copying, moving, and keeping in sync
 
@@ -193,7 +245,39 @@ FC: no differences encountered
 robocopy data C:\dest /mir /l
 ```
 
-`/mir` deletes whatever is in the destination and not in the source. Pointing it at the wrong folder is a classic way to lose data; running it only after a dry run is the right habit. With a source folder holding three files, the first real run reported exit code **1** (files copied), an immediate second run **0** (nothing to do), and after adding an extra file to the destination a `/l` dry run reported **2** (extra file present). The destination copy that `/mir` would remove showed in the dry run's list.
+`/mir` deletes whatever is in the destination and not in the source. Pointing it at the wrong folder is a classic way to lose data; running it only after a dry run is the right habit. The picture and the real output below show it. With a source folder holding three files, the first real run reported exit code **1** (files copied), an immediate second run **0** (nothing to do), and after adding an extra file to the destination a `/l` dry run reported **2** (extra file present). The destination copy that `/mir` would remove showed in the dry run's list.
+
+![Diagram: robocopy /mir copies changed and new files from the source and deletes files that exist only in the destination; /l lists the same changes without making them](diagrams/robocopy-mirror.svg)
+
+```text
+ source                          destination before
+ keep.txt (newer)  --Changed-->  keep.txt (older)
+ sub\new.txt       --New File->
+                                 old-report.txt     *EXTRA: DELETED
+                                 stale\x.log        *EXTRA: DELETED
+```
+
+I ran exactly this. The destination held a file called `old-report.txt` whose only content was `do not lose me`. The **dry run** `robocopy src dst /mir /l /njh /njs /np /ndl` printed:
+
+```text
+	*EXTRA Dir        -1	...\dst\stale\
+	  *EXTRA File 		       3	...\dst\stale\x.log
+	  *EXTRA File 		      16	...\dst\old-report.txt
+	    Changed   		       6	...\src\keep.txt
+	    New File  		       5	...\src\sub\new.txt
+```
+
+and returned **3** (1: would copy, plus 2: extras), with the destination still unchanged. **Read every `*EXTRA` line: with `/mir`, those are the things that will be deleted.** The real run then removed `old-report.txt` and the `stale` folder. There is no Recycle Bin and no undo.
+
+Without `/njs` the job ends with a summary table:
+
+```text
+               Total    Copied   Skipped  Mismatch    FAILED    Extras
+    Dirs :         2         1         1         0         0         1
+   Files :         2         2         0         0         0         2
+```
+
+Check **FAILED** (should be 0) and **Extras** before trusting a mirror.
 
 ### `robocopy` exit codes
 
@@ -226,6 +310,8 @@ forfiles /p "D:\logs" /s /m *.log /d -30 /c "cmd /c echo del @path"
 ```
 
 When no file matches, `forfiles` prints an error (`ERROR: No files found with the specified search criteria.`) and sets exit code `1`, which a script must not mistake for a failure.
+
+To test the age filter, I made `stale.log` and set its date 40 days back. `forfiles /m *.log /d -30 /c "cmd /c echo older than 30 days: @file @fdate"` printed only `older than 30 days: "stale.log" 10/17/2026` (the date in this PC's format). `@file` arrived **with quotes**, which protects names with spaces. With a mask that matched nothing, the message was `ERROR: Files of type "*.none" not found.` and the exit code was 1: **the wording differs with the reason**, so do not test for the text.
 
 ## Attributes, links and listing
 
@@ -265,6 +351,9 @@ When no file matches, `forfiles` prints an error (`ERROR: No files found with th
 - **Using the default `robocopy` retry settings** in a script (`/r:1 /w:1` is saner).
 - **Testing `if errorlevel 1` after `robocopy`**; 1 and 2 are success.
 - **Treating `forfiles` exit code 1** (no files found) as a failure.
+- **Trusting "not found" from `findstr`** on an LF-only or UTF-16 file, or a file that does not exist.
+- **Using `$` or `/e` on logs from other systems.**
+- **Not reading the `*EXTRA` lines** of a `/mir` dry run.
 - **Piping inside `for /f` without escaping the pipe** (`^|`).
 - **Parsing localized tool output** and finding it breaks on another language of Windows.
 
@@ -287,5 +376,8 @@ When no file matches, `forfiles` prints an error (`ERROR: No files found with th
 6. Why must the pipe in `for /f ... in ('a ^| b')` be escaped?
 7. How do you list the names of files that contain a pattern, without the matching lines?
 8. Which cmd tool has no PowerShell-free way to sort numbers or remove duplicates, and what do you use instead?
+9. `findstr /e "ERROR"` finds nothing in a log copied from a Linux server, although lines clearly end in ERROR. Why?
+10. Your script checks a PowerShell-made log with `findstr` and never finds anything. What might be wrong, and what worked in the lesson's test?
+11. In a `/mir` dry run, what do the `*EXTRA` lines mean?
 
-**Expected answers:** (1) `find /c /v "" < file` or `type file | find /c /v ""`; (2) either word; the exact phrase; (3) `+`, `?`, `|` (alternation) and `{n,m}` counts; (4) 1 + 2: files were copied and extra files exist at the destination; it is not a failure (only 8 or more are); (5) it deletes anything in the destination that is not in the source; run it with `/l` first; (6) the parser would otherwise apply the pipe to the whole `for` command instead of to the command inside the parentheses; (7) `findstr /m pattern files`; (8) `sort`; use PowerShell's `Sort-Object { [int]$_ }` and `Sort-Object -Unique`.
+**Expected answers:** (1) `find /c /v "" < file` or `type file | find /c /v ""`; (2) either word; the exact phrase; (3) `+`, `?`, `|` (alternation) and `{n,m}` counts; (4) 1 + 2: files were copied and extra files exist at the destination; it is not a failure (only 8 or more are); (5) it deletes anything in the destination that is not in the source; run it with `/l` first; (6) the parser would otherwise apply the pipe to the whole `for` command instead of to the command inside the parentheses; (7) `findstr /m pattern files`; (8) `sort`; use PowerShell's `Sort-Object { [int]$_ }` and `Sort-Object -Unique`; (9) the file has LF line endings, and `/e` needs CR+LF; (10) the file is UTF-16; `type file | findstr` or `find` found the text; (11) files and folders only in the destination, which the real run will delete.

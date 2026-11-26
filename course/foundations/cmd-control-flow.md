@@ -1,4 +1,4 @@
-*Draft for owner review.* A batch file is a list of commands, but real scripts need to decide, repeat and recover. cmd has all of that with a syntax that is older and quirkier than a modern language, so this lesson spends its time on the rules and traps that cause most bugs: how `if` compares, every form of `for`, how to structure a script with labels and subroutines, and how to handle failure. Variables and expansion are the previous lesson; read it first, because `!var!` and `setlocal` appear throughout. Everything here is built into Windows, and every example was run on Windows 11.
+*Draft for owner review.* A batch file is a list of commands, but real scripts need to decide, repeat and recover. cmd has all of that with a syntax that is older and quirkier than a modern language, so this lesson spends its time on the rules and traps that cause most bugs: how `if` compares, every form of `for`, how to structure a script with labels and subroutines, and how to handle failure. Variables and expansion are the previous lesson; read it first, because `!var!` and `setlocal` appear throughout. Everything here is built into Windows. The examples were run on Windows 11; the newer loop, data and robocopy results come from `tests/verification/cmd/flow2.cmd`. Windows 10 was not tested. Paths are shortened.
 
 Save examples as `.cmd` files (for instance `%TEMP%\wl-cmd-demo\test.cmd`) and run them from a Command Prompt. In the lab exercises the VM creates the folders you need.
 
@@ -81,6 +81,29 @@ for %%f in (C:\Labs\data\*.txt) do echo %%f
 
 The plain form loops over a **set** in parentheses: words, wildcards, or both (`(a b "c d" *.log)`).
 
+Here is what two sets actually produced. The test folder `data` held `one.txt`, `two words.txt` and a sub-folder `old` with `three.log` and `four.txt`, plus an empty folder:
+
+```text
+for %%a in (alpha "b c" data\*.txt) do echo [%%a]
+
+[alpha]
+["b c"]
+[data\one.txt]
+[data\two words.txt]
+```
+
+**Read the second line:** the quotes are **still part of the value**. Use `%%~a` to strip them. The wildcard became one pass for each matching file, **in that folder only**.
+
+Three behaviours that matter in real scripts:
+
+| What I ran | What happened |
+|---|---|
+| `for %%f in (data\*.none) do ...` (a wildcard matching **nothing**) | The body **never ran**, no message, `ERRORLEVEL` 0 |
+| `for %%f in (data\nothere.txt) do ...` (no wildcard, file missing) | The body **ran**, with `data\nothere.txt`: a plain name is only a word |
+| `dir /b %%f` where the name had a space | **Failed**; `dir /b "%%f"` worked |
+
+So a loop that did nothing is **not an error** to cmd: if no files is a problem, count them and test the count. And **quote the loop variable** every time it is a file name.
+
 ### Counted loops: `for /l`
 
 ```
@@ -97,6 +120,23 @@ for /r C:\Labs %%f in (*.log) do echo %%f
 ```
 
 `for /d` matches **folders** only (one level); `for /r root` walks everything below `root`, matching files. Together they replace many `dir /s` pipelines.
+
+```text
+for /d %%d in (data\*) do echo %%d
+
+data\empty
+data\old
+```
+
+```text
+for /r data %%f in (*.txt) do echo %%~nxf  in  %%~dpf
+
+one.txt  in  C:\...\data\
+two words.txt  in  C:\...\data\
+four.txt  in  C:\...\data\old\
+```
+
+`for /r` gives **full paths** and went down into `old`. `%%~nxf` took the name and extension, `%%~dpf` the drive and folder.
 
 ### The lines of a file, and splitting them: `for /f`
 
@@ -118,6 +158,14 @@ The first line (`id,name,city`) was skipped, then every other line was cut at co
 | `eol=c` | lines starting with `c` are comments. **The default is `;`**, so lines that start with `;` vanish |
 | `usebackq` | quoting changes: `` `command` `` runs a command, `'text'` is a literal string, and `"file name"` is a file with spaces |
 
+![Diagram: for /f cuts a line at the delimiters into tokens; two delimiters together count as one, so an empty field disappears and later fields shift left; tokens=1,* keeps the rest of the line together](diagrams/for-f-tokens.svg)
+
+```text
+ tokens=1-3 delims=,    1,Ann,Leeds  ->  %%a=1   %%b=Ann    %%c=Leeds
+ an empty field         2,,York      ->  %%a=2   %%b=York   %%c=(empty)     <- shifted!
+ tokens=1,*             ERROR 42 disk is full  ->  %%a=ERROR  %%b=42 disk is full
+```
+
 Things `for /f` does that surprise people, all verified:
 
 ```
@@ -125,6 +173,45 @@ for /f "delims=" %%a in (lines.txt) do echo got:[%%a]
 ```
 
 with a file of `#comment`, an empty line, `real line` and `;semi` printed only the first and third: **blank lines are skipped**, and `;semi` was dropped by the default `eol=;`. Adding `eol=#` changes which comment character applies. With `tokens=*`, **leading spaces are stripped**. And a `for /f` over a command, written `for /f "delims=" %%a in ('echo hello world') do ...`, runs the command in a **separate cmd** and reads its output.
+
+### What `for /f` gets wrong with real data
+
+I ran `for /f "skip=1 tokens=1-3 delims=,"` over this file:
+
+```text
+id,name,city
+1,Ann,Leeds
+2,,York
+3,"Smith, Bo",Hull
+```
+
+```text
+id=1 name=Ann city=Leeds
+id=2 name=York city=
+id=3 name="Smith city= Bo"
+```
+
+Only the first row is right.
+
+- **Row 2:** the empty name vanished and `York` **moved into the name column**. Delimiters that stand together are treated as one.
+- **Row 3:** the comma **inside the quotes** split the field. `for /f` knows nothing about quoting.
+
+No error appeared. **`for /f` is not a CSV parser.** Use it for CSV only when you are sure there are no empty fields and no delimiters inside fields; otherwise use PowerShell's `Import-Csv` (the data lesson). Spaces behave the same way: `   a    b   c` gave `[a][b][c]`, which is what you want for column output.
+
+`tokens=1,*` is the safe way to take "the first word and everything else": from `ERROR 42 disk is full` it gave `first=[ERROR]` and `rest=[42 disk is full ]`. (The trailing space was in the file, written by the `echo` that made it.)
+
+### When `for /f` fails, you may not be told
+
+| Situation | What happened |
+|---|---|
+| `for /f ... in (nothere.txt)` (missing file) | Printed `The system cannot find the file nothere.txt.`, but `ERRORLEVEL` was **0** |
+| `for /f ... in ('cmd /c exit 7')` (the command fails) | The body never ran and `ERRORLEVEL` was **0** |
+| `for /f ... in ("My Files\list.txt")` without `usebackq` | **No error**: it processed the **text of the path**, printing `[My Files\list.txt]` |
+| the same with `usebackq` | Read the file: `[inside the file]` |
+
+The third is the nastiest: the script runs happily on the wrong thing. **For a file path in quotes, add `usebackq`.** Test with `if not exist` before the loop, and when a command's success matters, run it first (saving its output to a file and checking the code), then read the file.
+
+**A pipe inside the command must be escaped**, or cmd splits your line there: `in ('dir /b data ^| findstr txt')` worked.
 
 ### Nested loops and counting
 
@@ -169,6 +256,13 @@ echo this line is NOT reached
 
 Running `child.cmd` without `call` hands control to it, and when it ends the *calling* script ends too. With `call`, the caller continues and `%errorlevel%` holds the child's `exit /b` code (4 in this test). To run a script **in its own cmd**, with its own environment, use `cmd /c child.cmd`.
 
+![Diagram: with call, the child script runs and then the caller continues; without call, the child runs and everything ends, so the caller's remaining lines never run](diagrams/call-flow.svg)
+
+```text
+ with call:     call child.cmd -> child runs -> the caller continues
+ without call:  child.cmd      -> child runs -> the end (the caller's other lines never run)
+```
+
 ### Subroutines
 
 A **subroutine** is a label you reach with `call :label`, passing arguments:
@@ -185,7 +279,7 @@ echo %1 squared is %result%
 exit /b 0
 ```
 
-Inside the subroutine `%1` is the argument given to `call`. Always finish with `exit /b`, or execution **falls through** into the next label. To return a value without leaking variables, name the output variable as an argument and use the `endlocal & set` trick from the variables lesson:
+Inside the subroutine `%1` is the argument given to `call`. Always finish with `exit /b`, or execution **falls through** into the next label. I tested a script that does `call :hello` and then has the `:hello` label straight after it with no `exit /b` between: it printed `hello` **twice**, once for the call and once by running into the label. A `goto` to a label that does not exist printed `The system cannot find the batch label specified - nowhere`, ran nothing after it, and the `cmd` that ran the script returned 1. To return a value without leaking variables, name the output variable as an argument and use the `endlocal & set` trick from the variables lesson:
 
 ```
 call :max 7 12 big
@@ -210,6 +304,17 @@ Every program ends with a number: `0` means success, anything else means failure
 robocopy C:\Labs\data C:\Labs\backup *.txt
 if errorlevel 8 (echo robocopy failed & exit /b 1)
 ```
+
+Four runs on the test folder:
+
+| Run | `ERRORLEVEL` | Meaning here |
+|---|---|---|
+| first copy of two files | **1** | files were copied: **success** |
+| again, nothing new | **0** | nothing to do: success |
+| with an extra file in the destination | **2** | an extra file was noticed: success |
+| a source folder that does not exist | **16** | **failure** |
+
+A script that treated "not 0" as failure would report the **first successful copy** as an error. With `/njh /njs /ndl /np` (no header, summary, folder lines or progress) the first run printed one `New File` line for each file copied.
 
 Two operators run a second command depending on the first:
 
@@ -239,6 +344,8 @@ Finish your own scripts with `exit /b 0` or `exit /b 1` (or another code) so sch
 
 `choice /c YN /m "Continue"` waits for one key and sets `%errorlevel%` to the **position** of the key chosen (`1` for Y, `2` for N). Test with `if errorlevel 2` first, then `if errorlevel 1`. It is more reliable than `set /p` for yes/no.
 
+With the answer fed in through a pipe, `N` printed `Continue [Y,N]?N` and gave `ERRORLEVEL` 2, and `Y` gave 1. Feeding it like this is also a way to test such a script without typing.
+
 ## Handling errors well
 
 A pattern for a script that must not continue after a failure:
@@ -261,6 +368,8 @@ It checks its input, uses distinct exit codes for distinct problems, and treats 
 
 - Start with `@echo off` and `setlocal`. Test on a copy of real data.
 - Quote paths that may contain spaces, and quote the loop variable: `"%%f"`.
+- Do not parse real CSV with `for /f`: empty fields shift columns and quoted commas split.
+- Add `usebackq` to read a quoted file path, and check the file exists first.
 - `call` other scripts; `exit /b`, never `exit`.
 - Use one distinct exit code per kind of failure, and document them.
 - Keep batch files short. When you need arrays, error objects, JSON or real functions, switch to PowerShell; the next lessons cover its control flow.
@@ -284,5 +393,8 @@ The labs for this lesson ask for batch files that add numbers from arguments, to
 6. What happens if you run `child.cmd` from a script without `call`?
 7. A `for /f` over a file with a blank line and a line starting with `;` returned fewer lines than the file has. Why?
 8. Why is `a && b || c` not the same as if/else?
+9. `for /f` reads a CSV and one row's city appears in the name column. Why?
+10. A script reads `"C:\My Data\list.txt"` with `for /f` and prints the path itself. What is missing?
+11. `robocopy` returns 1 and your script reports a failure. What is wrong?
 
-**Expected answers:** (1) `%n%` is replaced before the block runs; add `setlocal enabledelayedexpansion` and write `!n!`; (2) the first compares text, the second compares numbers; (3) cmd reads the closing parenthesis and the `else` as one statement; anything between them breaks it; (4) non-zero (typically 1); `dir C:\nowhere >nul 2>&1 || echo missing`; (5) the last exit code is 2 **or greater**, so test the higher number first; (6) control passes to the child and does not come back, so the calling script ends when the child does; (7) `for /f` skips blank lines, and the default `eol=;` drops lines starting with `;`; (8) `c` also runs if `b` fails, because `||` reacts to the most recent command.
+**Expected answers:** (1) `%n%` is replaced before the block runs; add `setlocal enabledelayedexpansion` and write `!n!`; (2) the first compares text, the second compares numbers; (3) cmd reads the closing parenthesis and the `else` as one statement; anything between them breaks it; (4) non-zero (typically 1); `dir C:\nowhere >nul 2>&1 || echo missing`; (5) the last exit code is 2 **or greater**, so test the higher number first; (6) control passes to the child and does not come back, so the calling script ends when the child does; (7) `for /f` skips blank lines, and the default `eol=;` drops lines starting with `;`; (8) `c` also runs if `b` fails, because `||` reacts to the most recent command; (9) an empty field: two delimiters together count as one, so later fields shift left; (10) `usebackq`, which makes a quoted item a file name; (11) 1 means files were copied; only 8 or more is failure.

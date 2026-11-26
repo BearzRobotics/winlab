@@ -445,3 +445,66 @@ choices = ["System properties, Environment Variables (search Start for 'environm
 answers = ["System properties, Environment Variables (search Start for 'environment variables')"]
 explanation = "The upper list is per user, the lower for all users."
 review = "Making a change permanent"
+
+# ---- Added when the lesson was deepened ----
+
+[[question]]
+id = "undefined-batch"
+type = "choice"
+prompt = "In a batch file, what does echo [%nosuch%] print when nosuch is not defined?"
+choices = ["[]", "[%nosuch%]", "An error message", "[0]"]
+answers = ["[]"]
+explanation = "It is replaced by nothing. On a command line given to cmd /c it stayed as typed."
+review = "When a variable does not exist"
+
+[[question]]
+id = "undefined-slice"
+type = "choice"
+prompt = "A batch file prints [~0,3] where part of a value should be. What is the likely cause?"
+choices = ["The variable being sliced is not defined", "The slice is too long", "Delayed expansion is on", "The file is saved as .bat"]
+answers = ["The variable being sliced is not defined"]
+explanation = "Slicing a missing variable leaves pieces of the syntax behind."
+review = "When a variable does not exist"
+
+[[question]]
+id = "empty-if"
+type = "choice"
+prompt = "v is empty. What happens to the line: if %v%==yes echo matched"
+choices = ["cmd cannot read it and the script ends with 'was unexpected at this time'", "It does not match and the script continues", "It matches", "v is set to yes"]
+answers = ["cmd cannot read it and the script ends with 'was unexpected at this time'"]
+explanation = "Quote both sides: if \"%v%\"==\"yes\"."
+review = "When a variable does not exist"
+
+[[question]]
+id = "echo-on-debug"
+type = "choice"
+prompt = "How can you see what a batch line looks like after percent expansion?"
+choices = ["Run it without @echo off, so cmd prints each command before running it", "Add pause after it", "Use setx", "Rename it to .bat"]
+answers = ["Run it without @echo off, so cmd prints each command before running it"]
+explanation = "A block shows its percent variables already replaced before the loop starts."
+review = "Watch it happen: echo on"
+
+[[question]]
+id = "seta-text"
+type = "short"
+prompt = "t holds 12abc. In the lesson's test, what did set /a w=t+1 put in w? (number only)"
+answers = ["13"]
+explanation = "No error is raised, so check input yourself."
+review = "Arithmetic that fails, and arithmetic that fails silently"
+
+[[question]]
+id = "seta-missing"
+type = "short"
+prompt = "There is no variable abc. What does set /a z=abc+1 put in z? (number only)"
+answers = ["1"]
+explanation = "A missing name counts as 0."
+review = "Arithmetic that fails, and arithmetic that fails silently"
+
+[[question]]
+id = "child-env"
+type = "choice"
+prompt = "Which way of running child.cmd lets its variable changes remain in your cmd (with no setlocal in it)?"
+choices = ["call child.cmd", "cmd /c child.cmd", "Neither", "Both"]
+answers = ["call child.cmd"]
+explanation = "call runs it in the same cmd; a new cmd gets only a copy."
+review = "What a variable is"

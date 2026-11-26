@@ -417,3 +417,49 @@ prompt = "Which GNU sort switch sorts numerically? (include the dash)"
 answers = ["-n"]
 explanation = "sort -n f."
 review = "The same job in three shells"
+
+# ---- Added when the lesson was deepened ----
+
+[[question]]
+id = "lf-anchor"
+type = "choice"
+prompt = "findstr /e \"ERROR\" finds nothing in a log with LF-only line endings, although lines end in ERROR. Why?"
+choices = ["The end-of-line match needs Windows line endings", "findstr cannot read text files", "ERROR must be lowercase", "The file is too small"]
+answers = ["The end-of-line match needs Windows line endings"]
+explanation = "Search without the anchor, or convert the file."
+review = "When `findstr` finds nothing, check the file"
+
+[[question]]
+id = "utf16-findstr"
+type = "choice"
+prompt = "Which found text in a UTF-16 file in the lesson's test?"
+choices = ["type file | findstr text", "findstr text file", "sort file", "None of them"]
+answers = ["type file | findstr text"]
+explanation = "findstr warned that the file was in Unicode format and matched nothing; find also worked."
+review = "When `findstr` finds nothing, check the file"
+
+[[question]]
+id = "findstr-missing"
+type = "short"
+prompt = "Which exit code did findstr return for a file that does not exist? (number only)"
+answers = ["1"]
+explanation = "The same as 'not found', so check that the file exists."
+review = "When `findstr` finds nothing, check the file"
+
+[[question]]
+id = "fc-codes"
+type = "choice"
+prompt = "What did fc return when one of the files could not be opened?"
+choices = ["2", "0", "1", "16"]
+answers = ["2"]
+explanation = "0 identical, 1 different, 2 could not open."
+review = "Reading the differences"
+
+[[question]]
+id = "mirror-extra"
+type = "choice"
+prompt = "In a robocopy /mir /l dry run, what happens to an item marked *EXTRA when run for real?"
+choices = ["It is deleted from the destination", "It is copied to the source", "It is skipped and kept", "It is renamed"]
+answers = ["It is deleted from the destination"]
+explanation = "Read every EXTRA line before running without /l."
+review = "`robocopy`"

@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 400" role="img" aria-label="The order in which cmd handles a line" font-family="Segoe UI, sans-serif">
+  <title>How cmd runs a line</title>
+  <style>
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.5 }
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    .wire { stroke: #57606a; stroke-width: 1.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .dim { fill: #57606a }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+
+  <rect class="zone-user" x="130" y="10" width="460" height="40" rx="5"/>
+  <text x="360" y="35" text-anchor="middle">1. read the line (or a whole ( block ) in a batch file)</text>
+  <line class="wire" x1="360" y1="50" x2="360" y2="70" marker-end="url(#arrow)"/>
+  <rect class="zone-user" x="130" y="70" width="460" height="40" rx="5"/>
+  <text x="360" y="95" text-anchor="middle">2. handle special characters:  &amp;  |  &lt;  &gt;  ( )  ^  and quotes</text>
+  <line class="wire" x1="360" y1="110" x2="360" y2="130" marker-end="url(#arrow)"/>
+  <rect class="zone-user" x="130" y="130" width="460" height="40" rx="5"/>
+  <text x="360" y="155" text-anchor="middle">3. expand %variables%</text>
+  <line class="wire" x1="360" y1="170" x2="360" y2="196" marker-end="url(#arrow)"/>
+
+  <rect class="zone-kernel" x="220" y="196" width="280" height="40" rx="18"/>
+  <text class="bold" x="360" y="221" text-anchor="middle">4. a built-in command?</text>
+
+  <line class="wire" x1="220" y1="216" x2="150" y2="216"/>
+  <line class="wire" x1="150" y1="216" x2="150" y2="264" marker-end="url(#arrow)"/>
+  <text x="168" y="206" font-size="13">yes</text>
+  <rect class="box" x="30" y="264" width="240" height="62" rx="5"/>
+  <text x="150" y="290" text-anchor="middle">cmd runs it itself</text>
+  <text class="dim" x="150" y="312" text-anchor="middle" font-size="13">cd, dir, echo, set, copy, if, for</text>
+
+  <line class="wire" x1="500" y1="216" x2="570" y2="216"/>
+  <line class="wire" x1="570" y1="216" x2="570" y2="264" marker-end="url(#arrow)"/>
+  <text x="532" y="206" font-size="13">no</text>
+  <rect class="box" x="392" y="264" width="318" height="62" rx="5"/>
+  <text x="551" y="290" text-anchor="middle">current folder, then each PATH folder,</text>
+  <text x="551" y="312" text-anchor="middle">trying each PATHEXT ending</text>
+
+  <line class="wire" x1="150" y1="326" x2="150" y2="360"/>
+  <line class="wire" x1="570" y1="326" x2="570" y2="360"/>
+  <line class="wire" x1="150" y1="360" x2="570" y2="360"/>
+  <line class="wire" x1="360" y1="360" x2="360" y2="372" marker-end="url(#arrow)"/>
+  <text class="bold" x="360" y="392" text-anchor="middle">5. run it and record the exit code (ERRORLEVEL)</text>
+</svg>

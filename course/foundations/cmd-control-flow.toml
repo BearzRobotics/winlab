@@ -3,7 +3,7 @@ id = "foundations.cmd-control-flow"
 title = "CMD batch files: decisions, loops, subroutines and errors"
 summary = "if in every form and its comparison rules, all the for loops including for /f parsing options, labels, goto, call and subroutines that return values, exit codes, && and ||, and an error-handling pattern."
 content = "cmd-control-flow.md"
-estimated_minutes = 90
+estimated_minutes = 130
 level = 2
 objectives = [
   "Write if conditions with text, numbers, files, variables and exit codes, and explain why text and numeric comparison differ",
@@ -35,6 +35,10 @@ title = "for (Microsoft Learn)"
 url = "https://learn.microsoft.com/windows-server/administration/windows-commands/for"
 
 [[references]]
+title = "robocopy (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/robocopy"
+
+[[references]]
 title = "call (Microsoft Learn)"
 url = "https://learn.microsoft.com/windows-server/administration/windows-commands/call"
 
@@ -43,9 +47,6 @@ title = "choice (Microsoft Learn)"
 url = "https://learn.microsoft.com/windows-server/administration/windows-commands/choice"
 
 [[references]]
-title = "robocopy (Microsoft Learn)"
-url = "https://learn.microsoft.com/windows-server/administration/windows-commands/robocopy"
-
-[[references]]
 title = "cmd (Microsoft Learn)"
 url = "https://learn.microsoft.com/windows-server/administration/windows-commands/cmd"
+

@@ -464,3 +464,75 @@ prompt = "Write the command that starts Notepad without waiting for it, with an 
 answers = ["start \"\" notepad"]
 explanation = "Without the empty quotes a quoted first argument is taken as the title."
 review = "Housekeeping commands"
+
+# ---- Added when the lesson was deepened ----
+
+[[question]]
+id = "dir-count-dots"
+type = "choice"
+prompt = "dir ends with '4 Dir(s)' in a folder in which you made two subfolders. Why?"
+choices = ["The count includes . and ..", "Two folders are hidden", "Files are counted as folders", "dir counts subfolders of subfolders"]
+answers = ["The count includes . and .."]
+explanation = ". is this folder and .. the one above."
+review = "Reading `dir`"
+
+[[question]]
+id = "dir-hidden"
+type = "short"
+prompt = "Which dir switch also lists hidden and system items? (for example /x)"
+answers = ["/a", "dir /a"]
+explanation = "Plain dir and dir /b both left the hidden file out."
+review = "Reading `dir`"
+
+[[question]]
+id = "dot-not-hidden"
+type = "choice"
+prompt = "Is a file named .settings.txt hidden on Windows just because its name starts with a dot?"
+choices = ["No: dir lists it; hidden is an attribute", "Yes, as on Linux", "Only in Command Prompt", "Only for administrators"]
+answers = ["No: dir lists it; hidden is an attribute"]
+explanation = "In the lesson's test folder dir listed .hidden-by-name.txt."
+review = "Reading `dir`"
+
+[[question]]
+id = "copy-silent"
+type = "choice"
+prompt = "In the lesson's batch-file test, what did copy a.txt c.txt do when c.txt already existed?"
+choices = ["Replaced it without asking", "Asked first", "Failed with an error", "Made c (2).txt"]
+answers = ["Replaced it without asking"]
+explanation = "Check with if exist, or use /-y where someone can answer."
+review = "Overwriting: copy, move and ren"
+
+[[question]]
+id = "del-errorlevel"
+type = "choice"
+prompt = "del of a missing file prints 'Could Not Find'. What did ERRORLEVEL read afterwards?"
+choices = ["0, as if it had worked", "1", "9009", "145"]
+answers = ["0, as if it had worked"]
+explanation = "Check the outcome you care about, for example with if exist."
+review = "Which failures ERRORLEVEL shows"
+
+[[question]]
+id = "unknown-9009"
+type = "short"
+prompt = "Which ERRORLEVEL did a command name that cmd cannot find produce? (number only)"
+answers = ["9009"]
+explanation = "It also prints 'is not recognized as an internal or external command'."
+review = "Which failures ERRORLEVEL shows"
+
+[[question]]
+id = "cmd-vs-bat-set"
+type = "choice"
+prompt = "After a command exits with 5, a script runs set X=1. What is ERRORLEVEL in a .cmd file, in the lesson's test?"
+choices = ["0: the successful set replaced it", "5", "1", "9009"]
+answers = ["0: the successful set replaced it"]
+explanation = "In the .bat copy it stayed 5. Save the code on the very next line."
+review = "Which failures ERRORLEVEL shows"
+
+[[question]]
+id = "streams-split"
+type = "choice"
+prompt = "dir nothere > o.txt 2> e.txt: where does 'File Not Found' go?"
+choices = ["e.txt", "o.txt", "The screen", "Nowhere"]
+answers = ["e.txt"]
+explanation = "The heading goes to o.txt; the error message is on stream 2."
+review = "Redirection"

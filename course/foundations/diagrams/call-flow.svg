@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 230" role="img" aria-label="With call the caller continues after the child ends; without call the caller never resumes" font-family="Segoe UI, sans-serif">
+  <title>call and no call</title>
+  <style>
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.5 }
+    .zone-user { fill: #eaf2ff; stroke: #3b7dd8; stroke-width: 1.5 }
+    .zone-kernel { fill: #fff1e0; stroke: #c9731c; stroke-width: 1.5 }
+    .wire { stroke: #57606a; stroke-width: 1.5 }
+    text { fill: #1f2328; stroke: none }
+    .bold { font-weight: bold }
+    .dim { fill: #57606a }
+    .mono { font-family: Consolas, monospace }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+
+  <text class="bold" x="10" y="24">with call</text>
+  <rect class="zone-user" x="10" y="36" width="190" height="38" rx="5"/>
+  <text class="mono" x="105" y="60" text-anchor="middle" font-size="15">call child.cmd</text>
+  <line class="wire" x1="200" y1="55" x2="298" y2="55" marker-end="url(#arrow)"/>
+  <rect class="box" x="300" y="36" width="190" height="38" rx="5"/>
+  <text x="395" y="60" text-anchor="middle">child.cmd runs</text>
+  <line class="wire" x1="490" y1="55" x2="548" y2="55" marker-end="url(#arrow)"/>
+  <rect class="zone-user" x="550" y="36" width="160" height="38" rx="5"/>
+  <text class="bold" x="630" y="60" text-anchor="middle">caller continues</text>
+
+  <text class="bold" x="10" y="130">without call</text>
+  <rect class="zone-kernel" x="10" y="142" width="190" height="38" rx="5"/>
+  <text class="mono" x="105" y="166" text-anchor="middle" font-size="15">child.cmd</text>
+  <line class="wire" x1="200" y1="161" x2="298" y2="161" marker-end="url(#arrow)"/>
+  <rect class="box" x="300" y="142" width="190" height="38" rx="5"/>
+  <text x="395" y="166" text-anchor="middle">child.cmd runs</text>
+  <line class="wire" x1="490" y1="161" x2="548" y2="161" marker-end="url(#arrow)"/>
+  <rect class="box" x="550" y="142" width="160" height="38" rx="5"/>
+  <text x="630" y="166" text-anchor="middle">the end</text>
+  <text class="dim" x="10" y="212" font-size="13">The lines after the call in the first script never run, and nothing says so.</text>
+</svg>

@@ -3,7 +3,7 @@ id = "foundations.cmd-basics"
 title = "Command Prompt fundamentals"
 summary = "How cmd reads and runs a line, finding programs (PATH and PATHEXT), special characters and escaping, files and folders from the GUI and the shell, redirection and pipes, exit codes, and the limits that make batch files tricky."
 content = "cmd-basics.md"
-estimated_minutes = 75
+estimated_minutes = 110
 level = 1
 objectives = [
   "Open Command Prompt by several routes and navigate the file system with cd (including /d) and dir",
@@ -35,6 +35,10 @@ title = "cmd (Microsoft Learn)"
 url = "https://learn.microsoft.com/windows-server/administration/windows-commands/cmd"
 
 [[references]]
+title = "NeedCurrentDirectoryForExePathW (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows/win32/api/processenv/nf-processenv-needcurrentdirectoryforexepathw"
+
+[[references]]
 title = "where (Microsoft Learn)"
 url = "https://learn.microsoft.com/windows-server/administration/windows-commands/where"
 
@@ -63,6 +67,10 @@ title = "rmdir (Microsoft Learn)"
 url = "https://learn.microsoft.com/windows-server/administration/windows-commands/rmdir"
 
 [[references]]
+title = "mkdir"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/mkdir"
+
+[[references]]
 title = "attrib (Microsoft Learn)"
 url = "https://learn.microsoft.com/windows-server/administration/windows-commands/attrib"
 
@@ -71,12 +79,28 @@ title = "tree (Microsoft Learn)"
 url = "https://learn.microsoft.com/windows-server/administration/windows-commands/tree"
 
 [[references]]
-title = "set (Microsoft Learn)"
-url = "https://learn.microsoft.com/windows-server/administration/windows-commands/set_1"
+title = "type"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/type"
+
+[[references]]
+title = "more"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/more"
 
 [[references]]
 title = "robocopy (Microsoft Learn)"
 url = "https://learn.microsoft.com/windows-server/administration/windows-commands/robocopy"
+
+[[references]]
+title = "xcopy"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/xcopy"
+
+[[references]]
+title = "set (Microsoft Learn)"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/set_1"
+
+[[references]]
+title = "title"
+url = "https://learn.microsoft.com/windows-server/administration/windows-commands/title"
 
 [[references]]
 title = "doskey (Microsoft Learn)"
@@ -86,6 +110,3 @@ url = "https://learn.microsoft.com/windows-server/administration/windows-command
 title = "Command-line string limitation (Microsoft Learn)"
 url = "https://learn.microsoft.com/troubleshoot/windows-client/shell-experience/command-line-string-limitation"
 
-[[references]]
-title = "NeedCurrentDirectoryForExePathW (Microsoft Learn)"
-url = "https://learn.microsoft.com/windows/win32/api/processenv/nf-processenv-needcurrentdirectoryforexepathw"
