@@ -132,6 +132,14 @@ $ ls /etc/ssh/sshd_config.d/
 00-wl-weak.conf  50-cloud-init.conf  60-cloudimg-settings.conf
 ```
 
+![Diagram: sshd reads the drop-in files in name order and keeps the first value for each keyword, so 00-wl-weak.conf wins over 50-cloud-init.conf; sshd -T shows what is in force](diagrams/sshd-first-value.svg)
+
+```text
+ 00-wl-weak.conf: PasswordAuthentication yes  (first, so used)
+ 50-cloud-init.conf: PasswordAuthentication no (ignored)
+ ask the daemon: sshd -T
+```
+
 That is how a settings file nobody reviewed can quietly undo a hardening step, and why you ask `sshd -T` rather than reading one file. (`sshd -t` only checks syntax: it printed `sshd -t ok` for the weak configuration.) The sshd_config(5) page ([man.openbsd.org](https://man.openbsd.org/sshd_config)) documents `Include` and the first-value rule.
 
 **Fixing, and a cleanup surprise.** `rm` the three files and `rmdir` the directory, then `userdel`. Removing the UID-0 alias needs `-f`: plain `userdel -r wl-rootalias` printed `userdel: user wl-rootalias is currently used by process 1` and **did not remove it**, because the account has the same user id as root, which owns process 1. `userdel -f -r wl-rootalias` removed it (and still printed the warning). After all that the checker was back to `1 failed check(s)`, the `maxauthtries` policy line.
