@@ -31,6 +31,11 @@ Chimera). They need QEMU, the Windows OpenSSH client (a Windows optional feature
 connection the first time to download images (WinLab asks first). Hardware acceleration (Windows Hypervisor
 Platform) makes them much faster.
 
+Labs that hand you a broken machine are **prepared the first time you use them**: press **Start**, then **Prepare and
+start**. WinLab boots the lab VM, sets up the problem and saves a snapshot, so later starts skip that step. It takes a
+few minutes and some of these labs need internet in the VM, so prepare the ones you want before going offline.
+Scripting labs need no preparation. Both kinds need a lab VM with a snapshot named `winlab-clean`.
+
 ## Reporting a problem
 Use **Help > Copy diagnostics** and paste the result into your message, with what you did and what you expected. For
 lesson errors say the lesson title and the line. Things a beta tester can most usefully tell us: a command that did

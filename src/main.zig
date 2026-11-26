@@ -200,18 +200,23 @@ const LabBackend = struct {
         self.tools.deinit();
     }
 
-    fn pickVm(self: *const LabBackend, lab: winlab.lab.Lab) ?winlab.vm_registry.Vm {
+    fn pickVm(self: *LabBackend, lab: winlab.lab.Lab) ?winlab.vm_registry.Vm {
+        var matching: std.ArrayList(winlab.vm_registry.Vm) = .empty;
+        defer matching.deinit(self.gpa);
         for (self.cands) |c| {
             if (c.linux != (lab.target == .linux)) continue;
             if (lab.distro.len > 0 and !std.mem.eql(u8, lab.distro, c.distro)) continue;
-            return c.vm;
+            matching.append(self.gpa, c.vm) catch return null;
         }
-        return null;
+        return winlab.lab.pickVm(self.gpa, self.q.provider(), matching.items, lab);
     }
 
     fn errorText(e: anyerror) []const u8 {
         return switch (e) {
-            error.NoScenario => "This lab has not been prepared yet. (An author prepares it with: winlab lab build ...)",
+            error.NoScenario => "This lab has not been prepared yet. Press Start to prepare it.",
+            error.NoCleanSnapshot => "The lab VM has no snapshot named winlab-clean. Take one of the freshly installed, stopped VM first.",
+            error.NoSymptom => "This lab has no problem description, so it cannot be prepared.",
+            error.GuestFailed => "A setup script failed inside the VM.",
             error.VmNotStopped => "The lab VM is already running, perhaps for another lab. Stop it first.",
             error.NotTrainingTarget => "That VM is not marked as a training target.",
             error.MissingCapability => "This VM cannot be controlled (no guest access is set up for it).",
@@ -229,8 +234,21 @@ const LabBackend = struct {
         const vm = self.pickVm(lab) orelse return gui.Outcome.make(false, false, noVmText(lab));
         var s = winlab.lab.Scenario.init(self.gpa, self.q.provider(), vm, lab);
         switch (op) {
-            .start => {
-                s.begin() catch |e| return gui.Outcome.make(false, false, errorText(e));
+            .start, .prepare => {
+                if (op == .prepare) {
+                    // The command line may have built it since Start was pressed.
+                    s.build(false) catch |e| if (e != error.ScenarioExists) {
+                        var failed = prepareFailed(&s, e);
+                        failed.needs_prepare = true;
+                        return failed;
+                    };
+                }
+                s.begin() catch |e| {
+                    if (e != error.NoScenario) return gui.Outcome.make(false, false, errorText(e));
+                    var unbuilt = gui.Outcome.make(false, false, prepare_prompt);
+                    unbuilt.needs_prepare = true;
+                    return unbuilt;
+                };
                 if (self.parsed[idx].lab.kind == .script) {
                     var buf: [200]u8 = undefined;
                     const msg = std.fmt.bufPrint(&buf, "The lab VM is running. Write your script in the VM and save it as {s}, then press Check.", .{self.parsed[idx].lab.script_path}) catch "The lab VM is running.";
@@ -257,6 +275,19 @@ const LabBackend = struct {
                 return gui.Outcome.make(true, false, "The lab VM is stopped.");
             },
         }
+    }
+
+    const prepare_prompt = "This lab needs to be prepared once. Press \"Prepare and start\": WinLab boots the lab VM, " ++
+        "sets up the problem and saves a snapshot. It takes a few minutes, and some labs need internet in the VM. " ++
+        "As with Start, changes left in the lab VM from earlier are discarded.";
+
+    fn prepareFailed(s: *const winlab.lab.Scenario, e: anyerror) gui.Outcome {
+        var buf: [gui.Outcome.max_len]u8 = undefined;
+        const msg = if (e == error.GuestFailed)
+            std.fmt.bufPrint(&buf, "Preparing failed: a setup script exited with {d} in the VM. {s}", .{ s.guest_exit, s.failedOutput() })
+        else
+            std.fmt.bufPrint(&buf, "Preparing failed: {s}", .{errorText(e)});
+        return gui.Outcome.make(false, false, msg catch "Preparing failed.");
     }
 
     /// A lab was fixed: record it in the learner's progress (separately from lesson reading).

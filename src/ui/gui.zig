@@ -109,15 +109,20 @@ pub const ShellChoice = struct {
     command: []const u8,
 };
 
-pub const Op = enum { start, check, reset, end };
+/// `prepare` builds the lab's snapshot (once), then starts it.
+pub const Op = enum { start, prepare, check, reset, end };
 
 /// What one lab step reported. Fixed buffer: it crosses a thread boundary without allocation.
 pub const Outcome = struct {
     ok: bool,
     /// For `check`: the machine is in the expected state.
     passed: bool = false,
-    message: [240]u8 = undefined,
+    /// For `start` and `prepare`: the lab is not built yet, so offer to prepare it.
+    needs_prepare: bool = false,
+    message: [max_len]u8 = undefined,
     len: usize = 0,
+
+    pub const max_len = 640;
 
     pub fn make(ok: bool, passed: bool, msg: []const u8) Outcome {
         var o: Outcome = .{ .ok = ok, .passed = passed };
@@ -208,6 +213,8 @@ const LabUi = struct {
     index: usize = 0,
     hints_shown: usize = 0,
     running: bool = false,
+    /// Start found no prepared snapshot; the Start button becomes "Prepare and start".
+    needs_prepare: bool = false,
     busy: std.atomic.Value(bool) = .init(false),
     done: std.atomic.Value(bool) = .init(false),
     /// Worker -> UI: valid once `done` is set.
@@ -1708,6 +1715,7 @@ fn openLab(a: *App, index: usize) void {
     a.lab.open = true;
     a.lab.index = index;
     a.lab.hints_shown = 0;
+    a.lab.needs_prepare = false;
     a.lab.log.clearRetainingCapacity();
     setLabStatus(&a.lab, "Not started. Press Start to boot the lab VM.");
     labLog(a, if (lab.task) "Press Start. The VM window opens; write your script in it (Notepad is fine), save it where the task says, then press Check." else "Press Start. The VM window opens; fix the problem inside it, then press Check.");
@@ -1726,6 +1734,7 @@ fn labBegin(a: *App, op: Op) void {
     if (a.lab.busy.swap(true, .acquire)) return;
     setLabStatus(&a.lab, switch (op) {
         .start => "Starting... restoring the broken machine and booting it (this can take a minute or two).",
+        .prepare => "Preparing the lab, then starting it. This takes a few minutes; keep WinLab open.",
         .check => "Checking...",
         .reset => "Resetting to the starting problem...",
         .end => "Stopping the VM...",
@@ -1746,9 +1755,10 @@ fn pollLab(a: *App) void {
     const out = &l.outcome;
     const lab = a.o.labs[l.index];
     switch (l.op) {
-        .start => {
+        .start, .prepare => {
             l.running = out.ok;
-            setLabStatus(l, if (!out.ok) "Could not start." else if (lab.task) "Running. Write your script in the VM window, then press Check." else "Running. Fix the problem in the VM window, then press Check.");
+            l.needs_prepare = out.needs_prepare;
+            setLabStatus(l, if (out.needs_prepare and l.op == .start) "Not prepared yet. Press Prepare and start." else if (!out.ok) "Could not start." else if (lab.task) "Running. Write your script in the VM window, then press Check." else "Running. Fix the problem in the VM window, then press Check.");
         },
         .check => {
             if (out.ok and out.passed) {
@@ -1806,7 +1816,9 @@ fn labWindow(a: *App) void {
     {
         var row = dvui.box(@src(), .{ .dir = .horizontal }, .{ .expand = .horizontal, .margin = .{ .y = 10, .h = 10 } });
         defer row.deinit();
-        if (labButton(@src(), "Start", !busy and !l.running, .highlight)) labBegin(a, .start);
+        if (l.needs_prepare) {
+            if (labButton(@src(), "Prepare and start", !busy and !l.running, .highlight)) labBegin(a, .prepare);
+        } else if (labButton(@src(), "Start", !busy and !l.running, .highlight)) labBegin(a, .start);
         if (labButton(@src(), "Check", !busy and l.running, null)) labBegin(a, .check);
         if (labButton(@src(), "Hint", l.hints_shown < lab.hints.len, null)) {
             var buf: [400]u8 = undefined;

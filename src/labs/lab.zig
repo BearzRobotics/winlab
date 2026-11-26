@@ -393,6 +393,14 @@ pub const Scenario = struct {
     lab: Lab,
     name_buf: [96]u8 = undefined,
     name_len: usize = 0,
+    /// The last failed guest script: its exit code and the end of its output, for a window that has no console.
+    guest_exit: u32 = 0,
+    guest_tail: [400]u8 = undefined,
+    guest_tail_len: usize = 0,
+
+    pub fn failedOutput(self: *const Scenario) []const u8 {
+        return self.guest_tail[0..self.guest_tail_len];
+    }
 
     pub fn init(gpa: std.mem.Allocator, prov: provider.Provider, vm: registry.Vm, lab: Lab) Scenario {
         var s: Scenario = .{ .gpa = gpa, .provider = prov, .vm = vm, .lab = lab };
@@ -423,6 +431,12 @@ pub const Scenario = struct {
         defer self.gpa.free(r.output);
         if (r.exit_code != 0) {
             std.debug.print("guest script failed (exit {d}):\n{s}\n", .{ r.exit_code, r.output });
+            self.guest_exit = r.exit_code;
+            const out = std.mem.trim(u8, r.output, " \r\n\t");
+            var from = out.len -| self.guest_tail.len;
+            while (from < out.len and out[from] & 0xC0 == 0x80) from += 1; // never start inside a UTF-8 character
+            self.guest_tail_len = out.len - from;
+            @memcpy(self.guest_tail[0..self.guest_tail_len], out[from..]);
             return error.GuestFailed;
         }
     }
@@ -507,9 +521,72 @@ pub const Scenario = struct {
     }
 };
 
+/// Chooses among the VMs that suit a lab's OS and distribution (given in preference order): the first
+/// one where the lab's scenario is built. Otherwise (and always for a script lab, which has nothing to
+/// build) the first with a clean snapshot, where it can start or be built. Otherwise the first VM, so
+/// the caller can say what is missing. Null only for no VMs.
+pub fn pickVm(gpa: std.mem.Allocator, prov: provider.Provider, vms: []const registry.Vm, lab: Lab) ?registry.Vm {
+    // A VM whose snapshots cannot be listed (missing disk, say) must not hide a later good one.
+    if (lab.kind != .script) for (vms) |vm| {
+        var s = Scenario.init(gpa, prov, vm, lab);
+        if (s.isBuilt() catch false) return vm;
+    };
+    for (vms) |vm| {
+        if (prov.hasSnapshot(vm.target(), clean_snapshot) catch false) return vm;
+    }
+    return if (vms.len > 0) vms[0] else null;
+}
+
 // ---- tests -------------------------------------------------------------------
 
 const mock = @import("../vm/mock.zig");
+
+test "the lab VM is the one where the scenario is built, not just the first listed" {
+    const gpa = std.testing.allocator;
+    var parsed = try parse(gpa, scenario_toml, null);
+    defer parsed.deinit();
+    var spare = mock.Mock.init(gpa);
+    defer spare.deinit();
+    var built = mock.Mock.init(gpa);
+    defer built.deinit();
+    try built.provider().createSnapshot(testVm(true).target(), "winlab-scenario-labs.dns-broken");
+
+    // One provider serves every VM, as QEMU does: it answers by the target's disk.
+    const Router = struct {
+        var a: *mock.Mock = undefined;
+        var b: *mock.Mock = undefined;
+        fn has(_: *anyopaque, t: provider.Target, snap: []const u8) provider.Error!bool {
+            const m = if (std.mem.eql(u8, t.disk, "built.qcow2")) b else a;
+            return m.provider().vtable.hasSnapshot(m, t, snap);
+        }
+    };
+    Router.a = &spare;
+    Router.b = &built;
+    var vtable = spare.provider().vtable.*;
+    vtable.hasSnapshot = Router.has;
+    const prov: provider.Provider = .{ .ptr = &spare, .vtable = &vtable };
+
+    var first = testVm(true);
+    first.id = "spare";
+    var second = testVm(true);
+    second.id = "built";
+    second.disk = "built.qcow2";
+
+    try std.testing.expectEqualStrings("built", pickVm(gpa, prov, &.{ first, second }, parsed.lab).?.id);
+    // Built nowhere: the VM with a clean snapshot, where it can be built; failing that, the first.
+    try spare.provider().createSnapshot(first.target(), clean_snapshot);
+    var bare = first;
+    bare.id = "bare";
+    bare.disk = "built.qcow2"; // answered by `built`, which has no clean snapshot
+    var script = parsed.lab;
+    script.kind = .script;
+    try std.testing.expectEqualStrings("spare", pickVm(gpa, prov, &.{ bare, first }, script).?.id);
+    var unbuilt = parsed.lab;
+    unbuilt.id = "labs.not-built-anywhere";
+    try std.testing.expectEqualStrings("spare", pickVm(gpa, prov, &.{ bare, first }, unbuilt).?.id);
+    try std.testing.expectEqualStrings("bare", pickVm(gpa, prov, &.{bare}, unbuilt).?.id);
+    try std.testing.expect(pickVm(gpa, prov, &.{}, parsed.lab) == null);
+}
 
 const sample_toml =
     \\schema_version = 1
@@ -746,6 +823,7 @@ test "scenario builder refuses bad inputs and a failed build restores the clean 
     broken.fault = "bogus command"; // the mock answers 127 to unknown commands
     s = Scenario.init(gpa, m.provider(), testVm(true), broken);
     try std.testing.expectError(error.GuestFailed, s.build(false));
+    try std.testing.expectEqual(@as(u32, 127), s.guest_exit);
     try std.testing.expect(!m.running);
     try std.testing.expectEqualStrings("ok", m.get("dns").?); // clean state restored
     try std.testing.expect(!(try s.isBuilt()));
