@@ -39,6 +39,9 @@ pub const Lab = struct {
     privilege: manifest.Privilege,
     /// Rollback is by snapshot; a lab that changes anything must require one.
     requires_snapshot: bool,
+    /// `network = "isolated"`: the lab VM can reach neither this computer nor anything beyond it. Required for
+    /// labs that put hostile or deliberately vulnerable things in the guest. The default, "open", can reach both.
+    isolated: bool = false,
     /// Guest scripts, in the guest's own script language. Empty means the step is skipped.
     setup: []const u8,
     fault: []const u8,
@@ -155,6 +158,14 @@ pub fn parse(gpa: std.mem.Allocator, text: []const u8, failure: ?*Failure) Parse
         .scope = try str(a, t, "scope", failure, true),
         .privilege = priv,
         .requires_snapshot = t.getBool("requires_snapshot") orelse return bad(failure, "requires_snapshot", "must be stated (true or false)"),
+        .isolated = blk: {
+            if (t.get("network") == null) break :blk false;
+            // Anything unexpected is an error, never silently "open".
+            const n = t.getString("network") orelse return bad(failure, "network", "must be open or isolated");
+            if (std.mem.eql(u8, n, "isolated")) break :blk true;
+            if (std.mem.eql(u8, n, "open")) break :blk false;
+            return bad(failure, "network", "must be open or isolated");
+        },
         .setup = try str(a, t, "setup", failure, false),
         .fault = try str(a, t, "fault", failure, false),
         .solution = try str(a, t, "solution", failure, false),
@@ -231,6 +242,13 @@ fn applyScript(a: std.mem.Allocator, t: *const toml.Table, lab: *Lab, failure: ?
 
 // ---- lifecycle -------------------------------------------------------------
 
+/// The VM as this lab uses it.
+fn labTarget(vm: registry.Vm, lab: Lab) provider.Target {
+    var t = vm.target();
+    t.isolated = lab.isolated;
+    return t;
+}
+
 pub const Phase = enum { idle, prepared, set_up, fault_injected };
 
 pub const RunError = error{
@@ -273,6 +291,10 @@ pub const Runner = struct {
         return .{ .gpa = gpa, .provider = prov, .vm = vm, .lab = lab };
     }
 
+    fn target(self: *const Runner) provider.Target {
+        return labTarget(self.vm, self.lab);
+    }
+
     pub fn snapshotName(self: *const Runner) []const u8 {
         return self.snap_buf[0..self.snap_len];
     }
@@ -292,17 +314,17 @@ pub const Runner = struct {
     pub fn prepare(self: *Runner) RunError!void {
         if (self.phase != .idle) return error.OutOfOrder;
         try self.check();
-        if ((try self.provider.state(self.vm.target())) != .stopped) return error.VmNotStopped;
+        if ((try self.provider.state(self.target())) != .stopped) return error.VmNotStopped;
         const name = std.fmt.bufPrint(&self.snap_buf, "winlab-pre-{s}", .{self.lab.id}) catch return error.ProviderFailed;
         self.snap_len = name.len;
         if (!provider.validSnapshotName(name)) return error.ProviderFailed;
         if (self.lab.requires_snapshot) {
-            if (try self.provider.hasSnapshot(self.vm.target(), name)) return error.StaleSnapshot;
-            try self.provider.createSnapshot(self.vm.target(), name);
+            if (try self.provider.hasSnapshot(self.target(), name)) return error.StaleSnapshot;
+            try self.provider.createSnapshot(self.target(), name);
         }
-        self.provider.start(self.vm.target()) catch |e| {
+        self.provider.start(self.target()) catch |e| {
             // Do not leave a snapshot behind for a lab that never began.
-            if (self.lab.requires_snapshot) self.provider.deleteSnapshot(self.vm.target(), name) catch {};
+            if (self.lab.requires_snapshot) self.provider.deleteSnapshot(self.target(), name) catch {};
             return e;
         };
         self.phase = .prepared;
@@ -310,7 +332,7 @@ pub const Runner = struct {
 
     fn runScript(self: *Runner, script: []const u8) RunError!void {
         if (script.len == 0) return;
-        const r = try self.provider.runInGuest(self.gpa, self.vm.target(), script);
+        const r = try self.provider.runInGuest(self.gpa, self.target(), script);
         defer self.gpa.free(r.output);
         if (r.exit_code != 0) return error.GuestFailed;
     }
@@ -331,7 +353,7 @@ pub const Runner = struct {
     /// learner used. Caller frees `output` with the runner's allocator.
     pub fn validate(self: *Runner) RunError!Validated {
         if (self.phase != .fault_injected and self.phase != .set_up) return error.OutOfOrder;
-        const r = try self.provider.runInGuest(self.gpa, self.vm.target(), self.lab.validate.script);
+        const r = try self.provider.runInGuest(self.gpa, self.target(), self.lab.validate.script);
         const v = self.lab.validate;
         const exit_ok = r.exit_code == v.expect_exit;
         const out_ok = v.expect_output_contains.len == 0 or std.mem.indexOf(u8, r.output, v.expect_output_contains) != null;
@@ -341,7 +363,7 @@ pub const Runner = struct {
     /// Rolls the VM back. Never claims success it cannot prove: every failure is reported.
     pub fn reset(self: *Runner) ResetReport {
         var rep: ResetReport = .{};
-        const t = self.vm.target();
+        const t = self.target();
         if (!self.lab.requires_snapshot) {
             self.phase = .idle;
             self.provider.stop(t) catch {
@@ -409,6 +431,10 @@ pub const Scenario = struct {
         return s;
     }
 
+    fn target(self: *const Scenario) provider.Target {
+        return labTarget(self.vm, self.lab);
+    }
+
     pub fn snapshotName(self: *const Scenario) []const u8 {
         return self.name_buf[0..self.name_len];
     }
@@ -422,12 +448,12 @@ pub const Scenario = struct {
     }
 
     fn requireStopped(self: *const Scenario) ScenarioError!void {
-        if ((try self.provider.state(self.vm.target())) != .stopped) return error.VmNotStopped;
+        if ((try self.provider.state(self.target())) != .stopped) return error.VmNotStopped;
     }
 
     fn script(self: *Scenario, text: []const u8) ScenarioError!void {
         if (text.len == 0) return;
-        const r = try self.provider.runInGuest(self.gpa, self.vm.target(), text);
+        const r = try self.provider.runInGuest(self.gpa, self.target(), text);
         defer self.gpa.free(r.output);
         if (r.exit_code != 0) {
             std.debug.print("guest script failed (exit {d}):\n{s}\n", .{ r.exit_code, r.output });
@@ -444,7 +470,7 @@ pub const Scenario = struct {
     /// True if the baked snapshot exists.
     pub fn isBuilt(self: *const Scenario) ScenarioError!bool {
         if (self.lab.kind == .script) return true; // always available: the starter file is written when it begins
-        return self.provider.hasSnapshot(self.vm.target(), self.snapshotName());
+        return self.provider.hasSnapshot(self.target(), self.snapshotName());
     }
 
     /// Builds the broken machine: restore the clean snapshot, boot, run setup and fault, shut down,
@@ -455,7 +481,7 @@ pub const Scenario = struct {
         try self.check();
         try self.requireStopped();
         if (self.lab.kind == .script) return; // nothing to bake: see `begin`
-        const t = self.vm.target();
+        const t = self.target();
         if (!try self.provider.hasSnapshot(t, clean_snapshot)) return error.NoCleanSnapshot;
         if (try self.isBuilt()) {
             if (!rebuild) return error.ScenarioExists;
@@ -479,22 +505,22 @@ pub const Scenario = struct {
         try self.requireStopped();
         if (self.lab.kind == .script) {
             // A scripting lab has nothing to bake: restore the clean machine, boot it, and write the starter file.
-            if (!try self.provider.hasSnapshot(self.vm.target(), clean_snapshot)) return error.NoCleanSnapshot;
-            try self.provider.restoreSnapshot(self.vm.target(), clean_snapshot);
-            try self.provider.start(self.vm.target());
+            if (!try self.provider.hasSnapshot(self.target(), clean_snapshot)) return error.NoCleanSnapshot;
+            try self.provider.restoreSnapshot(self.target(), clean_snapshot);
+            try self.provider.start(self.target());
             try self.script(self.lab.setup);
             return;
         }
         if (!try self.isBuilt()) return error.NoScenario;
-        try self.provider.restoreSnapshot(self.vm.target(), self.snapshotName());
-        try self.provider.start(self.vm.target());
+        try self.provider.restoreSnapshot(self.target(), self.snapshotName());
+        try self.provider.start(self.target());
     }
 
     /// Runs the lab's validation against the machine as it is now (the final state, not the commands used).
     pub fn validate(self: *Scenario) ScenarioError!Validated {
         // The guest may be restarting (a learner can restart it); wait for it before reading its state.
-        _ = self.provider.waitReady(self.vm.target(), 180);
-        const r = try self.provider.runInGuest(self.gpa, self.vm.target(), self.lab.validate.script);
+        _ = self.provider.waitReady(self.target(), 180);
+        const r = try self.provider.runInGuest(self.gpa, self.target(), self.lab.validate.script);
         const v = self.lab.validate;
         const exit_ok = r.exit_code == v.expect_exit;
         const out_ok = v.expect_output_contains.len == 0 or std.mem.indexOf(u8, r.output, v.expect_output_contains) != null;
@@ -504,7 +530,7 @@ pub const Scenario = struct {
     /// Back to the starting problem: stop the VM, restore the scenario snapshot. Not started again.
     pub fn reset(self: *Scenario) ScenarioError!void {
         try self.check();
-        const t = self.vm.target();
+        const t = self.target();
         if (self.lab.kind == .script) {
             try self.provider.stop(t);
             try self.provider.restoreSnapshot(t, clean_snapshot);
@@ -517,7 +543,7 @@ pub const Scenario = struct {
 
     /// Ends the session: stop the VM, leaving whatever state the learner reached (the next `begin` restores).
     pub fn end(self: *Scenario) ScenarioError!void {
-        try self.provider.stop(self.vm.target());
+        try self.provider.stop(self.target());
     }
 };
 
@@ -827,4 +853,56 @@ test "scenario builder refuses bad inputs and a failed build restores the clean 
     try std.testing.expect(!m.running);
     try std.testing.expectEqualStrings("ok", m.get("dns").?); // clean state restored
     try std.testing.expect(!(try s.isBuilt()));
+}
+
+test "network defaults to open, accepts isolated, and rejects anything else" {
+    const gpa = std.testing.allocator;
+    var plain = try parse(gpa, sample_toml, null);
+    defer plain.deinit();
+    try std.testing.expect(!plain.lab.isolated);
+    for ([_]struct { line: []const u8, ok: bool, isolated: bool }{
+        .{ .line = "network = \"isolated\"\n", .ok = true, .isolated = true },
+        .{ .line = "network = \"open\"\n", .ok = true, .isolated = false },
+        .{ .line = "network = \"Isolated\"\n", .ok = false, .isolated = false },
+        .{ .line = "network = false\n", .ok = false, .isolated = false },
+    }) |case| {
+        const full = try std.mem.concat(gpa, u8, &.{ case.line, sample_toml });
+        defer gpa.free(full);
+        if (case.ok) {
+            var p = try parse(gpa, full, null);
+            defer p.deinit();
+            try std.testing.expectEqual(case.isolated, p.lab.isolated);
+        } else try std.testing.expectError(error.InvalidLab, parse(gpa, full, null));
+    }
+}
+
+test "an isolated lab starts its VM isolated, as a lab run and as a scenario" {
+    const gpa = std.testing.allocator;
+    var m = mock.Mock.init(gpa);
+    defer m.deinit();
+    const Spy = struct {
+        var starts: u32 = 0;
+        var isolated_starts: u32 = 0;
+        var inner: *const fn (*anyopaque, provider.Target) provider.Error!void = undefined;
+        fn start(ptr: *anyopaque, t: provider.Target) provider.Error!void {
+            starts += 1;
+            if (t.isolated) isolated_starts += 1;
+            return inner(ptr, t);
+        }
+    };
+    var vtable = m.provider().vtable.*;
+    Spy.inner = vtable.start;
+    vtable.start = Spy.start;
+    const prov: provider.Provider = .{ .ptr = &m, .vtable = &vtable };
+
+    const text = try std.mem.concat(gpa, u8, &.{ "network = \"isolated\"\n", sample_toml });
+    defer gpa.free(text);
+    var parsed = try parse(gpa, text, null);
+    defer parsed.deinit();
+
+    var runner = Runner.init(gpa, prov, testVm(true), parsed.lab);
+    try runner.prepare();
+    _ = runner.reset();
+    try std.testing.expectEqual(@as(u32, 1), Spy.starts);
+    try std.testing.expectEqual(@as(u32, 1), Spy.isolated_starts);
 }

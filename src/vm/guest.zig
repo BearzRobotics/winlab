@@ -82,8 +82,18 @@ pub fn sshArgv(arena: std.mem.Allocator, ssh_exe: []const u8, vm_dir: []const u8
     const key = try std.fs.path.join(arena, &.{ vm_dir, key_file });
     const hosts = try std.fmt.allocPrint(arena, "UserKnownHostsFile={s}", .{try std.fs.path.join(arena, &.{ vm_dir, known_hosts_file })});
     var v: std.ArrayList([]const u8) = .empty;
+    // The guest may be hostile (security labs), so the learner's own SSH settings must not apply to this
+    // connection: no config files, no agent, no forwarding of any kind back to this computer.
     try v.appendSlice(arena, &.{
         ssh_exe,
+        "-F",
+        "none",
+        "-a",
+        "-x",
+        "-o",
+        "IdentityAgent=none",
+        "-o",
+        "ClearAllForwardings=yes",
         "-i",
         key,
         "-p",
@@ -142,7 +152,24 @@ pub fn exec(gpa: std.mem.Allocator, io: std.Io, ssh_exe: []const u8, vm_dir: []c
     // ssh itself exits 255 when it cannot connect or authenticate; that is not a script result.
     if (code == 255) return error.ProviderFailed;
     const out = std.mem.concat(gpa, u8, &.{ r.stdout, r.stderr }) catch return error.OutOfMemory;
+    defuse(out);
     return .{ .exit_code = code, .output = out };
+}
+
+/// Guest output is shown in the host's terminal and window. Replaces control bytes (above all ESC, which starts
+/// terminal command sequences) with '?', keeping tab and line ends. Bytes of UTF-8 text are left alone.
+pub fn defuse(text: []u8) void {
+    for (text, 0..) |*c, i| {
+        if ((c.* < 0x20 and c.* != '\t' and c.* != '\n' and c.* != '\r') or c.* == 0x7f) c.* = '?';
+        // U+0080..U+009F (the 8-bit control codes) are the bytes C2 80..C2 9F in UTF-8.
+        if (c.* == 0xC2 and i + 1 < text.len and text[i + 1] >= 0x80 and text[i + 1] <= 0x9F) c.* = '?';
+    }
+}
+
+test "control bytes from a guest are defused, text is kept" {
+    var buf = "a\tb\r\n\x1b]0;title\x07 \xc2\x9b31m \xc3\xa9\x7f".*;
+    defuse(&buf);
+    try std.testing.expectEqualStrings("a\tb\r\n?]0;title? ?\x9b31m \xc3\xa9?", &buf);
 }
 
 test "command encoding is base64 of UTF-16LE" {
@@ -157,6 +184,8 @@ test "ssh arguments pin the key, known_hosts, loopback and batch mode" {
     defer arena.deinit();
     const argv = try sshArgv(arena.allocator(), "ssh.exe", "D:/vm/x", .{ .port = 2222, .user = "Administrator" }, "exit 0");
     const joined = try std.mem.join(arena.allocator(), " ", argv);
+    for ([_][]const u8{ " -F none ", " -a ", " -x ", "IdentityAgent=none", "ClearAllForwardings=yes" }) |needed|
+        try std.testing.expect(std.mem.indexOf(u8, joined, needed) != null);
     try std.testing.expect(std.mem.indexOf(u8, joined, "Administrator@127.0.0.1") != null);
     try std.testing.expect(std.mem.indexOf(u8, joined, "BatchMode=yes") != null);
     try std.testing.expect(std.mem.indexOf(u8, joined, "IdentitiesOnly=yes") != null);

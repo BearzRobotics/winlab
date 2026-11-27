@@ -1,0 +1,79 @@
+# Test-only lab for the containment probe: a bash scripting lab with an isolated network. Not course content.
+schema_version = 1
+kind = "script"
+network = "isolated"
+id = "labs.containment-probe"
+target = "linux"
+title = "Containment probe (test only)"
+summary = "Loop over files and count matching lines."
+lesson = "foundations.bash-basics"
+symptom = '''
+Write a bash script and save it as /home/labadmin/labs/count-errors.sh.
+
+The folder /home/labadmin/labdata contains log files (names ending in .log). In each file, some lines contain the word ERROR (in capitals).
+
+Your script must print one line per log file, sorted by file name, in exactly this form:
+
+    app.log: 3
+    db.log: 0
+
+That is the file name, a colon, a space, and the number of lines containing ERROR. Print nothing else.
+
+The folder's contents change every time your script is checked, so it must work on any set of log files.
+'''
+hints = [
+  "A for loop with a glob visits files: for f in /home/labadmin/labdata/*.log; do ... done",
+  "grep -c PATTERN FILE prints how many lines of FILE contain PATTERN.",
+  "basename \"$f\" gives just the file name without the folder. Put the command in $( ) to use its output.",
+  "Globs expand in sorted order, so you get the required sort for free. Quote \"$f\" so odd file names do not break.",
+]
+expected_changes = ["Creates /home/labadmin/labs with a starter script and a folder of generated log files"]
+hazards = ["None: the script only reads files"]
+scope = "single guest (the registered Linux training VM only)"
+privilege = "standard"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["comptia-linux-plus/scripting-containers-automation", "redhat-rhcsa/essential-tools"]
+language = "bash"
+script_path = '/home/labadmin/labs/count-errors.sh'
+starter = '''
+#!/bin/bash
+# count-errors.sh
+# For each .log file in /home/labadmin/labdata print "<file name>: <number of lines containing ERROR>"
+'''
+solution = '''
+#!/bin/bash
+for f in /home/labadmin/labdata/*.log; do
+    echo "$(basename "$f"): $(grep -c ERROR "$f")"
+done
+'''
+
+[[tests]]
+setup = '''
+d=/home/labadmin/labdata
+rm -rf "$d"; mkdir -p "$d"
+for n in $(printf '%s\n' app db web cache auth | shuf -n $((RANDOM % 3 + 2))); do
+  : > "$d/$n.log"
+  for i in $(seq 1 $((RANDOM % 15 + 5))); do
+    if [ $((RANDOM % 4)) -eq 0 ]; then echo "2026-01-02 10:$i:00 ERROR something $RANDOM" >> "$d/$n.log"; else echo "2026-01-02 10:$i:00 INFO message $RANDOM" >> "$d/$n.log"; fi
+  done
+done
+'''
+expect = '''
+for f in $(ls /home/labadmin/labdata/*.log | sort); do
+  echo "$(basename "$f"): $(grep -c 'ERROR' "$f")"
+done
+'''
+
+[[tests]]
+setup = '''
+d=/home/labadmin/labdata
+rm -rf "$d"; mkdir -p "$d"
+printf 'all good\nstill good\nerror in lowercase does not count\n' > "$d/quiet.log"
+printf 'ERROR one\nERROR two\nINFO three\nan ERROR in the middle\n' > "$d/noisy.log"
+printf 'ERROR in a file that is not a log\n' > "$d/notes.txt"
+'''
+expect = '''
+echo "noisy.log: 3"
+echo "quiet.log: 0"
+'''

@@ -14,6 +14,9 @@ pub const Target = struct {
     disk: []const u8,
     memory_mb: u32 = 4096,
     cpus: u32 = 2,
+    /// Boot with a network that can reach neither the host nor anything beyond it (the control channel into
+    /// the guest still works). A provider may isolate a VM even when this is false, never the reverse.
+    isolated: bool = false,
 };
 
 pub const State = enum { stopped, running };

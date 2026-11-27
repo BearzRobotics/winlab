@@ -9,6 +9,7 @@
 const std = @import("std");
 const p = @import("provider.zig");
 const guest = @import("guest.zig");
+const isolation = @import("isolation.zig");
 const platform = @import("../platform.zig");
 
 pub const Tools = struct {
@@ -316,7 +317,10 @@ fn start(ptr: *anyopaque, t: p.Target) p.Error!void {
     const arena = arena_state.allocator();
     if (q.ssh_exe.len == 0) return error.Unsupported;
     const access = guest.load(arena, q.io, vmDir(t)) catch return error.Unsupported;
+    // Written before the VM boots: if it cannot be recorded, do not boot.
+    if (t.isolated) isolation.markCurrent(q.gpa, q.io, vmDir(t)) catch return error.ProviderFailed;
     const argv = buildArgv(arena, q.tools, .{
+        .isolated = t.isolated or isolation.currentIsolated(q.gpa, q.io, vmDir(t)),
         .disk = t.disk,
         .memory_mb = t.memory_mb,
         .cpus = t.cpus,
@@ -403,7 +407,9 @@ fn createSnapshot(ptr: *anyopaque, t: p.Target, snap: []const u8) p.Error!void {
     try requireStopped(ptr, t);
     if (try hasSnapshot(ptr, t, snap)) return error.SnapshotExists;
     const q = me(ptr);
+    isolation.beforeCreate(q.gpa, q.io, vmDir(t), snap) catch return error.ProviderFailed;
     q.gpa.free(try q.img(&.{ "snapshot", "-f", "qcow2", "-c", snap, t.disk }));
+    isolation.afterCreate(q.gpa, q.io, vmDir(t), snap) catch return error.ProviderFailed;
 }
 fn restoreSnapshot(ptr: *anyopaque, t: p.Target, snap: []const u8) p.Error!void {
     if (!p.validSnapshotName(snap)) return error.ProviderFailed;
@@ -411,7 +417,9 @@ fn restoreSnapshot(ptr: *anyopaque, t: p.Target, snap: []const u8) p.Error!void 
     try requireStopped(ptr, t);
     if (!try hasSnapshot(ptr, t, snap)) return error.SnapshotNotFound;
     const q = me(ptr);
+    isolation.beforeRestore(q.gpa, q.io, vmDir(t), snap) catch return error.ProviderFailed;
     q.gpa.free(try q.img(&.{ "snapshot", "-f", "qcow2", "-a", snap, t.disk }));
+    isolation.afterRestore(q.gpa, q.io, vmDir(t), snap) catch return error.ProviderFailed;
 }
 fn deleteSnapshot(ptr: *anyopaque, t: p.Target, snap: []const u8) p.Error!void {
     if (!p.validSnapshotName(snap)) return error.ProviderFailed;
@@ -420,6 +428,7 @@ fn deleteSnapshot(ptr: *anyopaque, t: p.Target, snap: []const u8) p.Error!void {
     if (!try hasSnapshot(ptr, t, snap)) return error.SnapshotNotFound;
     const q = me(ptr);
     q.gpa.free(try q.img(&.{ "snapshot", "-f", "qcow2", "-d", snap, t.disk }));
+    isolation.afterDelete(q.gpa, q.io, vmDir(t), snap) catch return error.ProviderFailed;
 }
 fn waitReadyVt(ptr: *anyopaque, t: p.Target, timeout_s: u32) bool {
     return waitReady(me(ptr), t, timeout_s);
@@ -666,6 +675,9 @@ pub const RunConfig = struct {
     qmp_port: ?u16 = null,
     /// Forward 127.0.0.1:<port> on the host to the guest's SSH port (22). Local only.
     ssh_port: ?u16 = null,
+    /// QEMU `restrict=on`: the guest cannot contact the host or anything beyond it. The explicit SSH forward
+    /// still works. Checked in a real guest by tests/verification/containment/.
+    isolated: bool = false,
     /// Exit QEMU on a guest restart instead of resetting in place (an in-place reset hangs the BIOS under WHPX).
     no_reboot: bool = false,
     /// CPU model (see guest.Access.cpu).
@@ -708,10 +720,11 @@ pub fn buildArgv(arena: std.mem.Allocator, tools: *const Tools, c: RunConfig) ![
         try a.appendSlice(arena, &.{ "-drive", try std.fmt.allocPrint(arena, "file={s},media=cdrom,readonly=on,if=none,id=ans0", .{ans}) });
         try a.appendSlice(arena, &.{ "-device", "ide-cd,drive=ans0,bus=ahci.2" });
     }
+    const restrict = if (c.isolated) ",restrict=on" else "";
     const netdev = if (c.ssh_port) |port|
-        try std.fmt.allocPrint(arena, "user,id=net0,hostfwd=tcp:127.0.0.1:{d}-:22", .{port})
+        try std.fmt.allocPrint(arena, "user,id=net0{s},hostfwd=tcp:127.0.0.1:{d}-:22", .{ restrict, port })
     else
-        "user,id=net0";
+        try std.fmt.allocPrint(arena, "user,id=net0{s}", .{restrict});
     try a.appendSlice(arena, &.{ "-netdev", netdev, "-device", "e1000e,netdev=net0" });
     try a.appendSlice(arena, &.{ "-device", "qemu-xhci,id=xhci2", "-device", "usb-tablet,bus=xhci2.0" });
     try a.appendSlice(arena, &.{ "-vga", "std" });
@@ -740,6 +753,20 @@ test "direct kernel boot and the serial port are added, local-only" {
     const plain = try buildArgv(arena.allocator(), &tools, .{ .disk = "D:/vm/a.qcow2" });
     const pj = try std.mem.join(arena.allocator(), " ", plain);
     try std.testing.expect(std.mem.indexOf(u8, pj, "-kernel") == null and std.mem.indexOf(u8, pj, "-serial") == null);
+}
+
+test "an isolated VM gets restrict=on and keeps only the loopback SSH forward" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const tools: Tools = .{ .gpa = std.testing.allocator, .qemu_system = @constCast("C:/q/qemu-system-x86_64.exe"), .qemu_img = @constCast("x"), .version = @constCast("v"), .hw_accel = true };
+    const iso_argv = try buildArgv(arena.allocator(), &tools, .{ .disk = "D:/vm/a.qcow2", .ssh_port = 2222, .isolated = true });
+    const iso = try std.mem.join(arena.allocator(), " ", iso_argv);
+    try std.testing.expect(std.mem.indexOf(u8, iso, "-netdev user,id=net0,restrict=on,hostfwd=tcp:127.0.0.1:2222-:22 ") != null);
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, iso, "-netdev"));
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, iso, "fwd="));
+    const open_argv = try buildArgv(arena.allocator(), &tools, .{ .disk = "D:/vm/a.qcow2", .ssh_port = 2222 });
+    const open = try std.mem.join(arena.allocator(), " ", open_argv);
+    try std.testing.expect(std.mem.indexOf(u8, open, "restrict") == null);
 }
 
 test "command line is driver-free, local-only and carries the answer CD" {

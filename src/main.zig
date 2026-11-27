@@ -1664,6 +1664,8 @@ fn superviseUntilReady(init: std.process.Init, tools: *const winlab.vm_qemu.Tool
             .ssh_port = access.port,
             .cpu = access.cpu,
             .no_reboot = true,
+            // A disk left isolated by a lab stays isolated, whichever command boots it.
+            .isolated = winlab.vm_isolation.currentIsolated(gpa, io, dir),
         });
         _ = std.process.spawn(io, .{ .argv = argv, .stdin = .ignore, .stdout = .ignore, .stderr = .ignore }) catch |err| {
             std.debug.print("could not start QEMU: {t}\n", .{err});
@@ -1885,7 +1887,10 @@ fn labVerifySet(init: std.process.Init, vm_id: []const u8, lab_paths: []const [:
 
     std.debug.print("restore the clean snapshot and boot {s}...\n", .{vm_id});
     prov.restoreSnapshot(t, winlab.lab.clean_snapshot) catch |e| scenarioFail("restore", e);
-    prov.start(t) catch |e| scenarioFail("start", e);
+    // One boot serves every lab, so one lab asking for an isolated network isolates the whole batch.
+    var boot = t;
+    for (parsed.items) |p| boot.isolated = boot.isolated or p.lab.isolated;
+    prov.start(boot) catch |e| scenarioFail("start", e);
     var failed: usize = 0;
     for (parsed.items, lab_paths) |p, path| {
         const lab = p.lab;
