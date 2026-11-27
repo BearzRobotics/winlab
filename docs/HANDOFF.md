@@ -115,7 +115,7 @@ Quiz authoring rules (`docs/quizzes.md`): every question has an `explanation`; `
 
 ## 8b. Beta packaging (2026-11-22)
 
-`installer/build-installer.ps1` builds `dist/WinLab-<ver>-x64.exe` (per-user installer: IExpress wrapper + `Install-WinLab.ps1`, no admin), `dist/WinLab-<ver>-portable.zip` and a SHA-256 list, using stock Windows tools only. `dist/` is git-ignored. The version is `app_version` in `src/app/version.zig` (now `0.1.0-beta.1`). `installer/GETTING-STARTED.md` is the tester's guide and ships in the package.
+`installer/build-installer.ps1` builds `dist/WinLab-<ver>-x64.exe` (per-user installer: IExpress wrapper + `Install-WinLab.ps1`, no admin), `dist/WinLab-<ver>-portable.zip` and a SHA-256 list, using stock Windows tools only. `dist/` is git-ignored. The version is `app_version` in `src/app/version.zig` (now `0.1.0-beta.2`). `installer/GETTING-STARTED.md` is the tester's guide and ships in the package.
 
 What was tested: the installer script on a clean Windows Server 2022 VM (install, files, Start menu shortcut, Apps entry, the installed exe runs `status` and `check`, uninstall removes everything but keeps `%APPDATA%\WinLab`); the IExpress wrapper on this Windows 11 machine, both with `/Q` and without; the portable zip finding its own `course\` from a fresh profile. **Not tested:** the installer's message boxes and the GUI launched from the installed copy (no interactive session on the VM; the message boxes were not clicked), Windows 10, a machine with an existing install being upgraded, SmartScreen behaviour.
 

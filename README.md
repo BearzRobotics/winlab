@@ -4,7 +4,7 @@
 
 Offline-first Windows and Linux administration course. Written in Zig with DVUI; it runs on **Windows 10/11 and Linux**
 (x86-64). Product contract: `ai/specs.md`; engineering rules: `ai/AGENTS.md`. Design decisions are in `docs/decisions/`
-(0001-0007). The course outline (a draft for review) is `outline.md`.
+(numbered from 0001). The course outline (a draft for review) is `outline.md`.
 
 ## Download
 
@@ -94,10 +94,13 @@ VM disks, keys and installation media are under `%LOCALAPPDATA%\WinLab\` (Window
 missing, your choices: a winget command to copy, the QEMU download page, or a `qemu-path` setting. WinLab never installs
 software by itself. Reopen it from Help > Setup and requirements. The lessons need none of this; only the labs need QEMU.
 
-## Status (2026-11-22)
+## Status (2026-11-27)
 
-`winlab check course` reports **68 lessons, 69 labs, 68 quiz files (2,441 questions) and 13 learning paths** with no
-problems and no path-ordering warnings.
+`winlab check course` reports **69 lessons, 70 labs, 69 quiz files (2,669 questions), 14 learning paths and 86 diagrams**
+with no problems and no path-ordering warnings. One lab is a **challenge** with flags on an isolated network (the
+**Challenges** menu; decisions 0010 and 0011). It was tested with a Windows host only; on a Linux host neither the
+challenge nor the network isolation has been run. The latest source builds and passes its unit tests on Ubuntu 26.04
+under WSL2 (123 passed, 1 skipped). The test notes below date from 2026-11-22.
 **Every lesson is a draft for the course owner's review**; each states what was tested and what was not, and cites
 official documentation. Tracks: Windows administration, CMD, PowerShell (9 lessons), bash and POSIX sh, Linux
 administration (systemd, dinit), networking, security fundamentals, cybersecurity (7), home lab (4), package
