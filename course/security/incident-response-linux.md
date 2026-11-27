@@ -191,6 +191,10 @@ The last phase is a short written review, within days: what happened, how it was
 - **No timeline.** Without times you cannot connect the events; keep clocks right (not tested here).
 - **Trusting timestamps.** They are hints that an intruder can change.
 
+## Practice: the night visitor challenge
+
+The lab **Challenge: the night visitor** (open it from this lesson) gives you a server where something happened and does not say what. You find five **flags** in the traces, then contain the intrusion while a real service keeps running, using what is above: the order of collection, the persistence places, recovering a deleted program, and containment that keeps the evidence. The collector will not find everything for you. The flags are different each time the challenge is prepared. Everything planted is a harmless stand-in, and the VM's network is isolated. It was built and solved with the reference commands on Ubuntu 24.04 only.
+
 ## Check yourself
 
 1. Plant two artifacts of your own in a lab VM (a user, a cron line). Run the collector and say which file shows each.

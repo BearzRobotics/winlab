@@ -139,6 +139,23 @@ pub const Outcome = struct {
     }
 };
 
+/// How far the learner is with a challenge's flags, on the lab VM's current preparation.
+pub const FlagState = struct {
+    prepared: bool = false,
+    /// Bit n: flag n has been handed in.
+    solved: u8 = 0,
+    /// The containment check has passed.
+    contained: bool = false,
+};
+
+pub const FlagReply = union(enum) {
+    wrong,
+    correct: usize,
+    already: usize,
+    not_prepared,
+    failed,
+};
+
 /// Implemented by main.zig. `run` blocks and is called on a worker thread; `fixed` is called on the
 /// UI thread after a passing check (to record it in the learner's progress).
 pub const LabEngine = struct {
@@ -147,6 +164,9 @@ pub const LabEngine = struct {
     fixed: *const fn (ctx: *anyopaque, lab_index: usize) void,
     /// UI thread: the login of the VM the lab runs on, if known. The strings must outlive the window.
     login: *const fn (ctx: *anyopaque, lab_index: usize) ?LabLogin,
+    /// UI thread, never while `run` is working. Only asked for labs that have questions.
+    flag_state: *const fn (ctx: *anyopaque, lab_index: usize) FlagState,
+    submit: *const fn (ctx: *anyopaque, lab_index: usize, text: []const u8) FlagReply,
 };
 
 /// How to sign in at a lab VM's screen. Lab VMs are throwaway, so the password is shown as it is.
@@ -167,6 +187,10 @@ pub const Lab = struct {
     /// A scripting lab: the text is a task, and the learner writes a script at `script_path`.
     task: bool = false,
     script_path: []const u8 = "",
+    /// The lab VM boots with no way out to the network or to this computer.
+    isolated: bool = false,
+    /// A challenge: one question per flag.
+    questions: []const []const u8 = &.{},
 };
 
 pub const Options = struct {
@@ -230,6 +254,8 @@ const LabUi = struct {
     /// Start found no prepared snapshot; the Start button becomes "Prepare and start".
     needs_prepare: bool = false,
     login: ?LabLogin = null,
+    flags: FlagState = .{},
+    answer_buf: [64]u8 = @splat(0),
     busy: std.atomic.Value(bool) = .init(false),
     done: std.atomic.Value(bool) = .init(false),
     /// Worker -> UI: valid once `done` is set.
@@ -239,7 +265,9 @@ const LabUi = struct {
     status_len: usize = 0,
     log: std.ArrayList(u8) = .empty,
     scroll: dvui.ScrollInfo = .{},
-    scroll_to_end: bool = false,
+    /// Frames left to keep the log scrolled to its end. Two: a new line's height is only known after the frame
+    /// that first lays it out.
+    scroll_to_end: u2 = 0,
     /// The learner asked to close while the VM runs; ask whether to stop it.
     confirm_close: bool = false,
     close_after: bool = false,
@@ -1714,7 +1742,7 @@ fn setLabStatus(l: *LabUi, text: []const u8) void {
 fn labLog(a: *App, line: []const u8) void {
     a.lab.log.appendSlice(a.gpa, line) catch return;
     a.lab.log.append(a.gpa, '\n') catch return;
-    a.lab.scroll_to_end = true;
+    a.lab.scroll_to_end = 2;
 }
 
 fn openLab(a: *App, index: usize) void {
@@ -1735,8 +1763,78 @@ fn openLab(a: *App, index: usize) void {
     a.lab.needs_prepare = false;
     a.lab.login = a.o.lab_engine.?.login(a.o.lab_engine.?.ctx, index);
     a.lab.log.clearRetainingCapacity();
+    a.lab.answer_buf = @splat(0);
+    refreshFlags(a);
     setLabStatus(&a.lab, "Not started. Press Start to boot the lab VM.");
-    labLog(a, if (lab.task) "Press Start. The VM window opens; write your script in it (Notepad is fine), save it where the task says, then press Check." else "Press Start. The VM window opens; fix the problem inside it, then press Check.");
+    labLog(a, if (lab.questions.len > 0) "Press Start. The VM window opens. Investigate inside it and hand in each flag here; when you have contained the intrusion, press Check." else if (lab.task) "Press Start. The VM window opens; write your script in it (Notepad is fine), save it where the task says, then press Check." else "Press Start. The VM window opens; fix the problem inside it, then press Check.");
+}
+
+fn refreshFlags(a: *App) void {
+    const eng = a.o.lab_engine.?;
+    a.lab.flags = if (a.o.labs[a.lab.index].questions.len > 0) eng.flag_state(eng.ctx, a.lab.index) else .{};
+}
+
+fn allFlagsFound(l: *const LabUi, lab: Lab) bool {
+    return @popCount(l.flags.solved) == lab.questions.len;
+}
+
+fn labSubmitFlag(a: *App) void {
+    const l = &a.lab;
+    const eng = a.o.lab_engine.?;
+    const lab = a.o.labs[l.index];
+    const text = std.mem.trim(u8, std.mem.sliceTo(&l.answer_buf, 0), " \t");
+    if (text.len == 0) return;
+    var buf: [200]u8 = undefined;
+    const reply = eng.submit(eng.ctx, l.index, text);
+    const message: []const u8 = switch (reply) {
+        .wrong => "Not a flag from this preparation. Each flag looks like WL{...}; copy the whole thing.",
+        .correct => |i| std.fmt.bufPrint(&buf, "Correct: that is flag {d}.", .{i + 1}) catch "Correct.",
+        .already => |i| std.fmt.bufPrint(&buf, "You already handed in flag {d}.", .{i + 1}) catch "Already handed in.",
+        .not_prepared => "Prepare and start the lab first: its flags are made then.",
+        .failed => "The flag could not be checked.",
+    };
+    labLog(a, message);
+    if (reply == .correct) {
+        l.answer_buf = @splat(0);
+        refreshFlags(a);
+        if (allFlagsFound(l, lab) and l.flags.contained) {
+            setLabStatus(l, "Challenge complete.");
+            labLog(a, "Challenge complete: every flag found and the machine contained.");
+            eng.fixed(eng.ctx, l.index);
+        } else if (allFlagsFound(l, lab)) {
+            labLog(a, "All flags found. Now contain the intrusion and press Check.");
+        }
+    }
+}
+
+/// The questions of a challenge, what has been answered, and the box for handing in a flag.
+fn labFlagPanel(a: *App, lab: Lab, busy: bool) void {
+    const l = &a.lab;
+    {
+        var head: [80]u8 = undefined;
+        const title = std.fmt.bufPrint(&head, "Flags: {d} of {d} found", .{ @popCount(l.flags.solved), lab.questions.len }) catch "Flags";
+        dvui.labelNoFmt(@src(), title, .{}, .{ .font = dvui.Font.theme(.heading) });
+    }
+    {
+        var sc = dvui.scrollArea(@src(), .{}, .{ .expand = .horizontal, .min_size_content = .{ .h = 96 }, .max_size_content = .{ .w = std.math.floatMax(f32), .h = 260 }, .background = true, .style = .window, .margin = .{ .y = 4 }, .border = .all(1) });
+        defer sc.deinit();
+        var tl = dvui.textLayout(@src(), .{}, .{ .expand = .horizontal, .background = false, .padding = .all(8) });
+        md_view.selectable(tl);
+        for (lab.questions, 0..) |question, i| {
+            const found = l.flags.solved & (@as(u8, 1) << @intCast(i)) != 0;
+            var line: [24]u8 = undefined;
+            tl.addText(std.fmt.bufPrint(&line, "{s}{d}. {s}", .{ if (i == 0) "" else "\n", i + 1, if (found) "[found] " else "" }) catch "", .{});
+            tl.addText(question, .{});
+        }
+        tl.deinit();
+    }
+    var row = dvui.box(@src(), .{ .dir = .horizontal }, .{ .expand = .horizontal, .margin = .{ .y = 6, .h = 10 } });
+    defer row.deinit();
+    const send = labButton(@src(), "Submit flag", !busy and l.flags.prepared, null);
+    var te = dvui.textEntry(@src(), .{ .text = .{ .buffer = &l.answer_buf }, .placeholder = if (l.flags.prepared) "WL{...}  type a flag, then press Enter" else "Flags are made when the lab is prepared" }, .{ .expand = .horizontal });
+    const entered = te.enter_pressed;
+    te.deinit();
+    if ((send or entered) and !busy and l.flags.prepared) labSubmitFlag(a);
 }
 
 fn labWorker(a: *App, index: usize, op: Op) void {
@@ -1778,10 +1876,17 @@ fn pollLab(a: *App) void {
             l.needs_prepare = out.needs_prepare;
             // Preparing can settle which VM the lab is on. The worker has finished, so asking again is safe.
             if (out.ok) l.login = a.o.lab_engine.?.login(a.o.lab_engine.?.ctx, l.index);
-            setLabStatus(l, if (out.needs_prepare and l.op == .start) "Not prepared yet. Press Prepare and start." else if (!out.ok) "Could not start." else if (lab.task) "Running. Write your script in the VM window, then press Check." else "Running. Fix the problem in the VM window, then press Check.");
+            refreshFlags(a);
+            setLabStatus(l, if (out.needs_prepare and l.op == .start) "Not prepared yet. Press Prepare and start." else if (!out.ok) "Could not start." else if (lab.questions.len > 0) "Running. Investigate in the VM window." else if (lab.task) "Running. Write your script in the VM window, then press Check." else "Running. Fix the problem in the VM window, then press Check.");
         },
         .check => {
-            if (out.ok and out.passed) {
+            if (lab.questions.len > 0 and out.ok) {
+                refreshFlags(a);
+                if (out.passed and allFlagsFound(l, lab)) {
+                    setLabStatus(l, "Challenge complete.");
+                    a.o.lab_engine.?.fixed(a.o.lab_engine.?.ctx, l.index);
+                } else setLabStatus(l, if (out.passed) "Contained. Some flags are still to be found." else "Not contained yet.");
+            } else if (out.ok and out.passed) {
                 setLabStatus(l, "Fixed.");
                 a.o.lab_engine.?.fixed(a.o.lab_engine.?.ctx, l.index);
             } else if (out.ok) setLabStatus(l, "Not fixed yet.") else setLabStatus(l, "The check could not run.");
@@ -1808,16 +1913,53 @@ fn labWindow(a: *App) void {
     const lab = a.o.labs[l.index];
     const busy = l.busy.load(.acquire);
     var open = true;
-    var fw = dvui.floatingWindow(@src(), .{ .open_flag = &open }, .{ .rect = fitRect(720, 620), .min_size_content = .{ .w = 480, .h = 380 } });
+    const challenge = lab.questions.len > 0;
+    var fw = dvui.floatingWindow(@src(), .{ .open_flag = &open }, .{ .rect = if (challenge) fitRect(1240, 760) else fitRect(720, 620), .min_size_content = .{ .w = if (challenge) 760 else 480, .h = 380 } });
     defer fw.deinit();
     _ = dvui.windowHeader(.{ .title = lab.title, .open_flag = &open });
 
-    var body = dvui.box(@src(), .{}, .{ .expand = .both, .padding = .all(14) });
-    defer body.deinit();
-
-    dvui.labelNoFmt(@src(), if (lab.task) "Task" else "Reported problem", .{}, .{ .font = dvui.Font.theme(.heading) });
+    // A challenge puts the briefing and controls on the left, the flags and feedback on the right.
+    var columns = dvui.box(@src(), .{ .dir = .horizontal, .equal_space = challenge }, .{ .expand = .both });
+    defer columns.deinit();
     {
-        var sc = dvui.scrollArea(@src(), .{}, .{ .expand = .horizontal, .min_size_content = .{ .h = 90 }, .max_size_content = .{ .w = std.math.floatMax(f32), .h = 170 }, .background = true, .style = .window, .margin = .{ .y = 4, .h = 10 }, .border = .all(1) });
+        var body = dvui.box(@src(), .{}, .{ .expand = .both, .padding = .all(14) });
+        defer body.deinit();
+        labControls(a, lab, busy);
+        if (!challenge) labLogPanel(a);
+    }
+    if (challenge) {
+        var side = dvui.box(@src(), .{}, .{ .expand = .both, .padding = .all(14) });
+        defer side.deinit();
+        labFlagPanel(a, lab, busy);
+        labLogPanel(a);
+    }
+
+    if (!open or escapePressed()) {
+        if (busy) {
+            a.info = "A step is still running. Wait for it to finish, then close this window.";
+        } else if (l.running) {
+            l.confirm_close = true;
+            l.close_after = false;
+            l.close_lab_only = true;
+        } else {
+            l.open = false;
+        }
+    }
+}
+
+/// The briefing, status, buttons and login of the lab window.
+fn labControls(a: *App, lab: Lab, busy: bool) void {
+    const l = &a.lab;
+    const challenge = lab.questions.len > 0;
+    if (lab.isolated) {
+        var tl = dvui.textLayout(@src(), .{}, .{ .expand = .horizontal, .background = true, .style = .window, .border = .all(1), .padding = .all(6), .margin = .{ .h = 8 } });
+        md_view.selectable(tl);
+        tl.addText("Isolated network: this lab VM is cut off from the internet and from this computer. WinLab can still reach it.", .{ .font = dvui.Font.theme(.heading) });
+        tl.deinit();
+    }
+    dvui.labelNoFmt(@src(), if (lab.task) "Task" else if (lab.questions.len > 0) "Briefing" else "Reported problem", .{}, .{ .font = dvui.Font.theme(.heading) });
+    {
+        var sc = dvui.scrollArea(@src(), .{}, .{ .expand = .horizontal, .min_size_content = .{ .h = 90 }, .max_size_content = .{ .w = std.math.floatMax(f32), .h = if (challenge) 360 else 170 }, .background = true, .style = .window, .margin = .{ .y = 4, .h = 10 }, .border = .all(1) });
         defer sc.deinit();
         var tl = dvui.textLayout(@src(), .{}, .{ .expand = .horizontal, .background = false, .padding = .all(8) });
         md_view.selectable(tl);
@@ -1842,16 +1984,22 @@ fn labWindow(a: *App) void {
         } else if (labButton(@src(), "Start", !busy and !l.running, .highlight)) labBegin(a, .start);
         if (labButton(@src(), "Check", !busy and l.running, null)) labBegin(a, .check);
         if (labButton(@src(), "Hint", l.hints_shown < lab.hints.len, null)) {
-            var buf: [400]u8 = undefined;
-            if (std.fmt.bufPrint(&buf, "Hint {d} of {d}: {s}", .{ l.hints_shown + 1, lab.hints.len, lab.hints[l.hints_shown] })) |s| labLog(a, s) else |_| {}
-            l.hints_shown += 1;
+            // No fixed buffer: a long hint must not silently vanish.
+            if (std.fmt.allocPrint(a.gpa, "Hint {d} of {d}: {s}", .{ l.hints_shown + 1, lab.hints.len, lab.hints[l.hints_shown] })) |s| {
+                defer a.gpa.free(s);
+                labLog(a, s);
+                l.hints_shown += 1;
+            } else |_| {}
         }
         if (labButton(@src(), "Reset", !busy, null)) labBegin(a, .reset);
         if (labButton(@src(), "Stop VM", !busy and l.running, null)) labBegin(a, .end);
     }
 
     if (l.login) |login| labLoginPanel(login);
+}
 
+fn labLogPanel(a: *App) void {
+    const l = &a.lab;
     dvui.labelNoFmt(@src(), "Progress and hints", .{}, .{ .font = dvui.Font.theme(.heading) });
     var sc = dvui.scrollArea(@src(), .{ .scroll_info = &l.scroll }, .{ .expand = .both, .background = true, .style = .window, .border = .all(1), .margin = .{ .y = 4 } });
     defer sc.deinit();
@@ -1859,22 +2007,10 @@ fn labWindow(a: *App) void {
     md_view.selectable(tl);
     tl.addText(l.log.items, .{});
     tl.deinit();
-    if (l.scroll_to_end) {
-        l.scroll_to_end = false;
+    if (l.scroll_to_end > 0) {
+        l.scroll_to_end -= 1;
         l.scroll.scrollToFraction(.vertical, 1.0);
         dvui.refresh(null, @src(), null);
-    }
-
-    if (!open or escapePressed()) {
-        if (busy) {
-            a.info = "A step is still running. Wait for it to finish, then close this window.";
-        } else if (l.running) {
-            l.confirm_close = true;
-            l.close_after = false;
-            l.close_lab_only = true;
-        } else {
-            l.open = false;
-        }
     }
 }
 

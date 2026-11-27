@@ -26,6 +26,7 @@ const usage =
     \\       winlab vm autologin <vm-id> <snapshot>   make a saved snapshot log in by itself (boots it)
     \\       winlab lab build <lab.toml> <vm-id> [--rebuild]   bake a broken-machine scenario
     \\       winlab lab start|check|reset|end <lab.toml> <vm-id>   run a scenario as a learner would
+    \\       winlab lab submit <lab.toml> <vm-id> <flag>   hand in a flag from a challenge
     \\       winlab lab verify <lab.toml> <vm-id>   prove a scenario: broken, fixable, and reset restores it
     \\       winlab lab selftest <lab.toml> <vm-id>   run a lab end to end with its authoring solution
     \\
@@ -65,6 +66,7 @@ pub fn main(init: std.process.Init) !void {
     if (args.len == 3 and std.mem.eql(u8, args[1], "coverage")) return coverageCmd(init, args[2]);
     if (args.len == 5 and std.mem.eql(u8, args[1], "lab") and std.mem.eql(u8, args[2], "selftest")) return labSelfTest(init, args[3], args[4]);
     if (args.len >= 5 and std.mem.eql(u8, args[1], "lab") and std.mem.eql(u8, args[2], "verify-set")) return labVerifySet(init, args[3], args[4..]);
+    if (args.len == 6 and std.mem.eql(u8, args[1], "lab") and std.mem.eql(u8, args[2], "submit")) return labSubmit(init, args[3], args[4], args[5]);
     if ((args.len == 5 or args.len == 6) and std.mem.eql(u8, args[1], "lab")) {
         const sub = args[2];
         const rebuild = args.len == 6 and std.mem.eql(u8, args[5], "--rebuild");
@@ -277,7 +279,7 @@ const LabBackend = struct {
         defer self.busy.store(false, .release);
         const lab = self.parsed[idx].lab;
         const vm = self.pickVm(lab) orelse return gui.Outcome.make(false, false, noVmText(lab));
-        var s = winlab.lab.Scenario.init(self.gpa, self.q.provider(), vm, lab);
+        var s = self.scenario(vm, lab);
         switch (op) {
             .start, .prepare => {
                 if (op == .prepare) {
@@ -309,6 +311,10 @@ const LabBackend = struct {
                     const text = trimOut(r.output);
                     return gui.Outcome.make(true, r.passed, text);
                 }
+                if (lab.flags.len > 0) {
+                    if (r.passed) s.markContained() catch return gui.Outcome.make(false, false, errorText(error.FlagRecord));
+                    return gui.Outcome.make(true, r.passed, if (r.passed) "Containment check passed." else "Containment check failed: something the intruder left is still working, or the real service is not.");
+                }
                 return gui.Outcome.make(true, r.passed, if (r.passed) "Check passed: the machine is in the expected state." else "Check failed: the problem is still there.");
             },
             .reset => {
@@ -320,6 +326,36 @@ const LabBackend = struct {
                 return gui.Outcome.make(true, false, "The lab VM is stopped.");
             },
         }
+    }
+
+    fn scenario(self: *LabBackend, vm: winlab.vm_registry.Vm, lab: winlab.lab.Lab) winlab.lab.Scenario {
+        var s = winlab.lab.Scenario.init(self.gpa, self.q.provider(), vm, lab);
+        s.store = .{ .io = self.io, .vm_dir = std.fs.path.dirname(vm.disk) orelse "." };
+        return s;
+    }
+
+    /// UI thread, never while a step runs: how far the learner is with a challenge's flags.
+    fn flagState(ctx: *anyopaque, idx: usize) gui.FlagState {
+        const self: *LabBackend = @ptrCast(@alignCast(ctx));
+        const lab = self.parsed[idx].lab;
+        const vm = self.pickVm(lab) orelse return .{};
+        var s = self.scenario(vm, lab);
+        const rec = s.record() orelse return .{};
+        return .{ .prepared = true, .solved = rec.solved, .contained = rec.contained };
+    }
+
+    /// UI thread, never while a step runs.
+    fn submit(ctx: *anyopaque, idx: usize, text: []const u8) gui.FlagReply {
+        const self: *LabBackend = @ptrCast(@alignCast(ctx));
+        const lab = self.parsed[idx].lab;
+        const vm = self.pickVm(lab) orelse return .failed;
+        var s = self.scenario(vm, lab);
+        const result = s.submit(text) catch |e| return if (e == error.NoScenario) .not_prepared else .failed;
+        return switch (result) {
+            .wrong => .wrong,
+            .correct => |i| .{ .correct = i },
+            .already => |i| .{ .already = i },
+        };
     }
 
     const prepare_prompt = "This lab needs to be prepared once. Press \"Prepare and start\": WinLab boots the lab VM, " ++
@@ -397,6 +433,8 @@ fn openLabs(init: std.process.Init, cfg: *const winlab.settings.Loaded, root: []
     for (parsed.items) |p| {
         const hints = try arena.alloc([]const u8, p.lab.hints.len);
         for (p.lab.hints, hints) |src, *dst| dst.* = try arena.dupe(u8, src);
+        const questions = try arena.alloc([]const u8, p.lab.flags.len);
+        for (p.lab.flags, questions) |src, *dst| dst.* = try arena.dupe(u8, src.question);
         try entries.append(arena, .{
             .lesson = try arena.dupe(u8, p.lab.lesson),
             .id = try arena.dupe(u8, p.lab.id),
@@ -404,6 +442,8 @@ fn openLabs(init: std.process.Init, cfg: *const winlab.settings.Loaded, root: []
             .symptom = try arena.dupe(u8, p.lab.symptom),
             .hints = hints,
             .task = p.lab.kind == .script,
+            .isolated = p.lab.isolated,
+            .questions = questions,
             .script_path = try arena.dupe(u8, p.lab.script_path),
         });
     }
@@ -607,7 +647,7 @@ fn browse(init: std.process.Init, dir_arg: ?[]const u8) !void {
         .dark = dark,
         .tracking = store.tracking(),
         .labs = lab_entries,
-        .lab_engine = if (lab_backend_ready) .{ .ctx = &lab_backend, .run = LabBackend.run, .fixed = LabBackend.fixed, .login = LabBackend.login } else null,
+        .lab_engine = if (lab_backend_ready) .{ .ctx = &lab_backend, .run = LabBackend.run, .fixed = LabBackend.fixed, .login = LabBackend.login, .flag_state = LabBackend.flagState, .submit = LabBackend.submit } else null,
         .lab_note = lab_note,
         .badges = cfg.settings.badges,
         .setup = .{ .ctx = &setup_backend, .check = SetupBackend.check, .finish = SetupBackend.finish, .show_first = !cfg.settings.setup_done, .settings_path = settings_path },
@@ -1994,9 +2034,40 @@ const LabCtx = struct {
     }
 
     fn scenario(self: *LabCtx) winlab.lab.Scenario {
-        return winlab.lab.Scenario.init(self.gpa, self.q.provider(), self.vm, self.parsed.lab);
+        var s = winlab.lab.Scenario.init(self.gpa, self.q.provider(), self.vm, self.parsed.lab);
+        s.store = .{ .io = self.q.io, .vm_dir = std.fs.path.dirname(self.vm.disk) orelse "." };
+        return s;
     }
 };
+
+/// The questions of a challenge, marked with what has been answered on this preparation.
+fn printFlagProgress(s: *const winlab.lab.Scenario) void {
+    const rec = s.record() orelse return;
+    std.debug.print("\nFlags ({d} of {d} found):\n", .{ rec.count - rec.left(), rec.count });
+    for (s.lab.flags, 0..) |f, i| std.debug.print("  [{s}] {d}. {s}\n", .{ if (rec.isSolved(i)) "x" else " ", i + 1, f.question });
+}
+
+/// `winlab lab submit`: needs no running VM.
+fn labSubmit(init: std.process.Init, lab_path: []const u8, vm_id: []const u8, text: []const u8) !void {
+    var ctx: LabCtx = undefined;
+    try ctx.open(init, lab_path, vm_id);
+    defer ctx.deinit();
+    var s = ctx.scenario();
+    if (s.lab.flags.len == 0) {
+        std.debug.print("lab {s} has no flags\n", .{s.lab.id});
+        std.process.exit(1);
+    }
+    switch (s.submit(text) catch |e| scenarioFail("submit", e)) {
+        .wrong => {
+            std.debug.print("Not a flag from this preparation.\n", .{});
+            std.process.exit(1);
+        },
+        .correct => |i| std.debug.print("Correct: flag {d}.\n", .{i + 1}),
+        .already => |i| std.debug.print("You already handed in flag {d}.\n", .{i + 1}),
+    }
+    printFlagProgress(&s);
+    if (s.record()) |rec| if (rec.complete()) std.debug.print("\nCHALLENGE COMPLETE: every flag found and the machine contained.\n", .{});
+}
 
 fn scenarioFail(op: []const u8, err: anyerror) noreturn {
     const why = switch (err) {
@@ -2008,6 +2079,7 @@ fn scenarioFail(op: []const u8, err: anyerror) noreturn {
         error.VmNotStopped => "the VM is running; end the session first (winlab lab end ...)",
         error.MissingCapability => "the provider cannot start/snapshot/run commands in this VM",
         error.GuestFailed => "a script in the guest failed",
+        error.FlagRecord => "the flag record in the VM's folder could not be written",
         error.WrongState => "the VM is in the wrong state for that (running or stopped)",
         else => @errorName(err),
     };
@@ -2036,11 +2108,21 @@ fn scenarioCmd(init: std.process.Init, op: ScenarioOp, lab_path: []const u8, vm_
         .start => {
             s.begin() catch |e| scenarioFail("start", e);
             std.debug.print("\nScenario: {s}\n\nReported problem:\n  {s}\n\nThe VM is running (its window is open). Fix it, then run:\n  winlab lab check {s} {s}\n", .{ lab.title, lab.symptom, lab_path, vm_id });
+            if (lab.isolated) std.debug.print("\nIsolated network: this VM is cut off from the internet and from this computer. WinLab can still reach it.\n", .{});
+            if (lab.flags.len > 0) {
+                printFlagProgress(&s);
+                std.debug.print("Hand in a flag with:\n  winlab lab submit {s} {s} <flag>\n", .{ lab_path, vm_id });
+            }
         },
         .check => {
             const r = s.validate() catch |e| scenarioFail("check", e);
             defer gpa.free(r.output);
             std.debug.print("{s}\n", .{if (r.passed) "FIXED: the machine is in the expected state." else "NOT FIXED YET: the problem is still there."});
+            if (lab.flags.len > 0) {
+                if (r.passed) s.markContained() catch |e| scenarioFail("check", e);
+                printFlagProgress(&s);
+                if (s.record()) |rec| if (rec.complete()) std.debug.print("\nCHALLENGE COMPLETE: every flag found and the machine contained.\n", .{});
+            }
         },
         .reset => {
             s.reset() catch |e| scenarioFail("reset", e);
@@ -2061,6 +2143,20 @@ fn scenarioCmd(init: std.process.Init, op: ScenarioOp, lab_path: []const u8, vm_
             const before = s.validate() catch |e| scenarioFail("validate (before)", e);
             defer gpa.free(before.output);
             std.debug.print("[2] validation before the fix: {s} ({s})\n", .{ if (before.passed) "PASSED (unexpected!)" else "failed, as it should", trimOut(before.output) });
+            // Every flag must be recoverable from the machine as the learner gets it, before the solution
+            // changes anything.
+            var unrecovered: usize = 0;
+            if (lab.flags.len > 0) {
+                const rec = s.record() orelse scenarioFail("read the flags", error.FlagRecord);
+                for (lab.flags, 0..) |f, i| {
+                    const got = ctx.q.provider().runInGuest(gpa, ctx.vm.target(), f.recover) catch |e| scenarioFail("recover a flag", e);
+                    defer gpa.free(got.output);
+                    const ok = got.exit_code == 0 and std.mem.eql(u8, trimOut(got.output), &rec.values[i]);
+                    if (!ok) unrecovered += 1;
+                    std.debug.print("    flag '{s}': {s}\n", .{ f.name, if (ok) "recovered" else "NOT recovered" });
+                    if (!ok) std.debug.print("      exit {d}, output: {s}\n", .{ got.exit_code, trimOut(got.output) });
+                }
+            }
             // A solution that restarts Windows may drop the connection, or may return first and restart a while
             // later (slower with a user signed in). So remember the boot time and wait for it to change.
             const restarts = std.mem.indexOf(u8, lab.solution, "Restart-Computer") != null;
@@ -2087,7 +2183,7 @@ fn scenarioCmd(init: std.process.Init, op: ScenarioOp, lab_path: []const u8, vm_
             defer gpa.free(again.output);
             std.debug.print("[5] validation after reset: {s} ({s})\n", .{ if (again.passed) "PASSED (the reset did not restore the problem!)" else "failed, as it should", trimOut(again.output) });
             s.end() catch |e| scenarioFail("end", e);
-            const ok = !before.passed and after.passed and !again.passed;
+            const ok = !before.passed and after.passed and !again.passed and unrecovered == 0;
             std.debug.print("\nVERIFY {s}: {s}\n", .{ if (ok) "PASSED" else "FAILED", lab.id });
             if (!ok) std.process.exit(1);
         },
@@ -2138,6 +2234,10 @@ fn labSelfTest(init: std.process.Init, lab_path: []const u8, vm_id: []const u8) 
     };
     defer parsed.deinit();
     const lab = parsed.lab;
+    if (lab.flags.len > 0) {
+        std.debug.print("{s} has flags; prove it with: winlab lab build, then winlab lab verify\n", .{lab.id});
+        std.process.exit(1);
+    }
 
     var reg = try winlab.vm_registry.load(gpa, io, try openAppData(init));
     defer reg.deinit();

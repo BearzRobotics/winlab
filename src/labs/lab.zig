@@ -6,6 +6,8 @@ const std = @import("std");
 const toml = @import("toml");
 const manifest = @import("../content/manifest.zig");
 const script_lab = @import("script_lab.zig");
+const flags = @import("flags.zig");
+const guest = @import("../vm/guest.zig");
 const certs = @import("../content/certs.zig");
 const provider = @import("../vm/provider.zig");
 const registry = @import("../vm/registry.zig");
@@ -52,6 +54,8 @@ pub const Lab = struct {
     /// Optional nudges, shown one at a time on request, from vague to specific.
     hints: []const []const u8,
     validate: Validation,
+    /// `[[flags]]`: answers the learner digs out of an investigation scenario. Values are new on each preparation.
+    flags: []const flags.Spec = &.{},
 };
 
 pub const Validation = struct {
@@ -183,6 +187,7 @@ pub fn parse(gpa: std.mem.Allocator, text: []const u8, failure: ?*Failure) Parse
         },
     };
     if (kind == .script) try applyScript(a, t, &lab, failure);
+    if (t.get("flags") != null) try applyFlags(a, t, &lab, failure);
     const cleanup = t.getString("cleanup_strategy") orelse return bad(failure, "cleanup_strategy", "is required");
     if (!std.mem.eql(u8, cleanup, "snapshot-restore")) return bad(failure, "cleanup_strategy", "only snapshot-restore is supported");
     // A lab that changes guest state must be rolled back by a snapshot.
@@ -240,6 +245,39 @@ fn applyScript(a: std.mem.Allocator, t: *const toml.Table, lab: *Lab, failure: ?
     lab.requires_snapshot = true;
 }
 
+/// Reads `[[flags]]` and proves the placeholders in `setup` and `fault` match them.
+fn applyFlags(a: std.mem.Allocator, t: *const toml.Table, lab: *Lab, failure: ?*Failure) ParseError!void {
+    if (lab.kind != .scenario) return bad(failure, "flags", "only scenario labs can have flags");
+    const arr = t.getArray("flags") orelse return bad(failure, "flags", "must be [[flags]] tables");
+    const n = arr.items.items.len;
+    if (n == 0 or n > flags.max_flags) return bad(failure, "flags", "between 1 and 8 flags");
+    const specs = try a.alloc(flags.Spec, n);
+    for (arr.items.items, 0..) |item, i| {
+        const ft = switch (item) {
+            .table => |x| x,
+            else => return bad(failure, "flags", "each flag must be a table"),
+        };
+        specs[i] = .{
+            .name = try str(a, ft, "name", failure, true),
+            .question = try str(a, ft, "question", failure, true),
+            .recover = try str(a, ft, "recover", failure, true),
+        };
+        if (!flags.validName(specs[i].name)) return bad(failure, "flags.name", "lowercase letters, digits and hyphens, at most 24");
+        for (specs[0..i]) |other| if (std.mem.eql(u8, other.name, specs[i].name)) return bad(failure, "flags.name", "names must differ");
+    }
+    const sample: [flags.max_flags]flags.Value = @splat(flags.valueFrom(@splat(0)));
+    var used: u8 = 0;
+    for ([_][]const u8{ lab.setup, lab.fault }) |script| {
+        const full = flags.expand(a, script, specs, &sample, &used) catch |e| switch (e) {
+            error.OutOfMemory => return error.OutOfMemory,
+            error.BadPlaceholder => return bad(failure, "flags", "a {{flag...}} placeholder is malformed or names no [[flags]] entry"),
+        };
+        if (full.len > guest.max_script_bytes) return bad(failure, "flags", "setup and fault must each fit in 4000 bytes with the flags filled in");
+    }
+    if (used != @as(u8, @intCast((@as(u16, 1) << @intCast(n)) - 1))) return bad(failure, "flags", "every flag must be planted by setup or fault");
+    lab.flags = specs;
+}
+
 // ---- lifecycle -------------------------------------------------------------
 
 /// The VM as this lab uses it.
@@ -259,6 +297,8 @@ pub const RunError = error{
     StaleSnapshot,
     OutOfOrder,
     GuestFailed,
+    /// The self-test cannot run a lab with flags; it is built and verified as a scenario.
+    FlagsNeedScenario,
 } || provider.Error;
 
 pub const Validated = struct {
@@ -313,6 +353,7 @@ pub const Runner = struct {
     /// explicit "begin lab" action; nothing in the guest has changed yet.
     pub fn prepare(self: *Runner) RunError!void {
         if (self.phase != .idle) return error.OutOfOrder;
+        if (self.lab.flags.len > 0) return error.FlagsNeedScenario;
         try self.check();
         if ((try self.provider.state(self.target())) != .stopped) return error.VmNotStopped;
         const name = std.fmt.bufPrint(&self.snap_buf, "winlab-pre-{s}", .{self.lab.id}) catch return error.ProviderFailed;
@@ -406,6 +447,8 @@ pub const ScenarioError = error{
     NoCleanSnapshot,
     ScenarioExists,
     NoScenario,
+    /// The lab has flags and no place to keep them was given, or the record could not be written.
+    FlagRecord,
 } || RunError;
 
 pub const Scenario = struct {
@@ -419,6 +462,8 @@ pub const Scenario = struct {
     guest_exit: u32 = 0,
     guest_tail: [400]u8 = undefined,
     guest_tail_len: usize = 0,
+    /// Where a lab with flags keeps them: the VM's folder. Required for such labs.
+    store: ?flags.Store = null,
 
     pub fn failedOutput(self: *const Scenario) []const u8 {
         return self.guest_tail[0..self.guest_tail_len];
@@ -467,10 +512,41 @@ pub const Scenario = struct {
         }
     }
 
-    /// True if the baked snapshot exists.
+    /// True if the lab can begin: the baked snapshot exists and, for a lab with flags, so does the record of
+    /// the flags that were planted in it.
     pub fn isBuilt(self: *const Scenario) ScenarioError!bool {
         if (self.lab.kind == .script) return true; // always available: the starter file is written when it begins
+        if (!try self.hasScenarioSnapshot()) return false;
+        if (self.lab.flags.len == 0) return true;
+        const store = self.store orelse return error.FlagRecord;
+        return store.load(self.lab.id, self.lab.flags) != null;
+    }
+
+    fn hasScenarioSnapshot(self: *const Scenario) ScenarioError!bool {
         return self.provider.hasSnapshot(self.target(), self.snapshotName());
+    }
+
+    /// This preparation's flags; null for a lab without flags or one that is not prepared.
+    pub fn record(self: *const Scenario) ?flags.Record {
+        if (self.lab.flags.len == 0) return null;
+        const store = self.store orelse return null;
+        return store.load(self.lab.id, self.lab.flags);
+    }
+
+    /// Checks a flag the learner typed and remembers a correct one.
+    pub fn submit(self: *const Scenario, text: []const u8) ScenarioError!flags.Answer {
+        var rec = self.record() orelse return error.NoScenario;
+        const result = flags.answer(&rec, text);
+        if (result == .correct) try self.store.?.save(self.lab.id, self.lab.flags, rec);
+        return result;
+    }
+
+    /// Remembers that the containment check passed on this preparation.
+    pub fn markContained(self: *const Scenario) ScenarioError!void {
+        var rec = self.record() orelse return;
+        if (rec.contained) return;
+        rec.contained = true;
+        try self.store.?.save(self.lab.id, self.lab.flags, rec);
     }
 
     /// Builds the broken machine: restore the clean snapshot, boot, run setup and fault, shut down,
@@ -483,20 +559,44 @@ pub const Scenario = struct {
         if (self.lab.kind == .script) return; // nothing to bake: see `begin`
         const t = self.target();
         if (!try self.provider.hasSnapshot(t, clean_snapshot)) return error.NoCleanSnapshot;
-        if (try self.isBuilt()) {
-            if (!rebuild) return error.ScenarioExists;
+        if (self.lab.flags.len > 0 and self.store == null) return error.FlagRecord;
+        // A snapshot whose flag record is gone cannot be used, so it is replaced without being asked.
+        if (try self.hasScenarioSnapshot()) {
+            if (!rebuild and try self.isBuilt()) return error.ScenarioExists;
             try self.provider.deleteSnapshot(t, self.snapshotName());
         }
+
+        // New flags for every preparation.
+        var arena = std.heap.ArenaAllocator.init(self.gpa);
+        defer arena.deinit();
+        var setup_text = self.lab.setup;
+        var fault_text = self.lab.fault;
+        var fresh: flags.Record = .{ .count = self.lab.flags.len };
+        if (self.lab.flags.len > 0) {
+            const store = self.store.?;
+            try store.delete(self.lab.id);
+            for (fresh.values[0..fresh.count]) |*v| v.* = flags.generate(store.io);
+            var used: u8 = 0;
+            setup_text = flags.expand(arena.allocator(), setup_text, self.lab.flags, &fresh.values, &used) catch return error.OutOfMemory;
+            fault_text = flags.expand(arena.allocator(), fault_text, self.lab.flags, &fresh.values, &used) catch return error.OutOfMemory;
+        }
+
         try self.provider.restoreSnapshot(t, clean_snapshot);
         errdefer {
             self.provider.stop(t) catch {};
             self.provider.restoreSnapshot(t, clean_snapshot) catch {};
         }
         try self.provider.start(t);
-        try self.script(self.lab.setup);
-        try self.script(self.lab.fault);
+        try self.script(setup_text);
+        try self.script(fault_text);
         try self.provider.stop(t);
         try self.provider.createSnapshot(t, self.snapshotName());
+        if (self.lab.flags.len > 0) {
+            self.store.?.save(self.lab.id, self.lab.flags, fresh) catch |e| {
+                self.provider.deleteSnapshot(t, self.snapshotName()) catch {};
+                return e;
+            };
+        }
     }
 
     /// Learner flow: restore the broken machine and boot it. Returns once the guest is reachable.
@@ -555,7 +655,7 @@ pub fn pickVm(gpa: std.mem.Allocator, prov: provider.Provider, vms: []const regi
     // A VM whose snapshots cannot be listed (missing disk, say) must not hide a later good one.
     if (lab.kind != .script) for (vms) |vm| {
         var s = Scenario.init(gpa, prov, vm, lab);
-        if (s.isBuilt() catch false) return vm;
+        if (s.hasScenarioSnapshot() catch false) return vm;
     };
     for (vms) |vm| {
         if (prov.hasSnapshot(vm.target(), clean_snapshot) catch false) return vm;
@@ -905,4 +1005,96 @@ test "an isolated lab starts its VM isolated, as a lab run and as a scenario" {
     _ = runner.reset();
     try std.testing.expectEqual(@as(u32, 1), Spy.starts);
     try std.testing.expectEqual(@as(u32, 1), Spy.isolated_starts);
+}
+
+const flag_toml = scenario_toml ++
+    \\[[flags]]
+    \\name = "planted"
+    \\question = "Where is it?"
+    \\recover = "get secret"
+    \\
+;
+
+fn flagLabText(gpa: std.mem.Allocator, fault: []const u8) ![]u8 {
+    return std.mem.replaceOwned(u8, gpa, flag_toml, "fault = \"set dns=bad\"", fault);
+}
+
+test "flags must be planted, named properly and only in scenarios" {
+    const gpa = std.testing.allocator;
+    const good = try flagLabText(gpa, "fault = \"set secret={{flag_b64:planted}}\"");
+    defer gpa.free(good);
+    var p = try parse(gpa, good, null);
+    defer p.deinit();
+    try std.testing.expectEqual(@as(usize, 1), p.lab.flags.len);
+
+    for ([_][]const u8{
+        "fault = \"set dns=bad\"", // the flag is never planted
+        "fault = \"set secret={{flag:other}}\"", // no such flag
+        "fault = \"set secret={{flag:planted\"", // unfinished placeholder
+    }) |fault| {
+        const text = try flagLabText(gpa, fault);
+        defer gpa.free(text);
+        var f: Failure = .{};
+        try std.testing.expectError(error.InvalidLab, parse(gpa, text, &f));
+        try std.testing.expectEqualStrings("flags", f.field);
+    }
+}
+
+test "each preparation plants new flags; answers and containment are remembered" {
+    const gpa = std.testing.allocator;
+    const io = std.testing.io;
+    const text = try flagLabText(gpa, "fault = \"set secret={{flag:planted}}\"");
+    defer gpa.free(text);
+    var parsed = try parse(gpa, text, null);
+    defer parsed.deinit();
+    var tmp = std.testing.tmpDir(.{});
+    defer tmp.cleanup();
+    const dir = try tmp.dir.realPathFileAlloc(io, ".", gpa);
+    defer gpa.free(dir);
+
+    var m = mock.Mock.init(gpa);
+    defer m.deinit();
+    const vm = testVm(true);
+    try m.provider().createSnapshot(vm.target(), clean_snapshot);
+    var s = Scenario.init(gpa, m.provider(), vm, parsed.lab);
+    try std.testing.expectError(error.FlagRecord, s.build(false)); // nowhere to keep them
+    try std.testing.expect(!m.running);
+    s.store = .{ .io = io, .vm_dir = dir };
+
+    try s.build(false);
+    const first = s.record().?;
+    try std.testing.expectEqualStrings(&first.values[0], m.get("secret").?);
+    try std.testing.expectEqual(flags.Answer.wrong, try s.submit("WL{000000000000}"));
+    try std.testing.expectEqual(flags.Answer{ .correct = 0 }, try s.submit(&first.values[0]));
+    try std.testing.expect(!s.record().?.complete());
+    try s.markContained();
+    try std.testing.expect(s.record().?.complete());
+    try std.testing.expectError(error.ScenarioExists, s.build(false));
+
+    // Rebuilding draws a new flag and forgets the progress; the old answer is now wrong.
+    try s.build(true);
+    const second = s.record().?;
+    try std.testing.expect(!std.mem.eql(u8, &first.values[0], &second.values[0]));
+    try std.testing.expectEqual(@as(usize, 1), second.left());
+    try std.testing.expect(!second.contained);
+    try std.testing.expectEqual(flags.Answer.wrong, try s.submit(&first.values[0]));
+
+    // Without its record a snapshot cannot be played: it counts as unbuilt and is replaced.
+    try s.store.?.delete(parsed.lab.id);
+    try std.testing.expect(!try s.isBuilt());
+    try std.testing.expectError(error.NoScenario, s.begin());
+    try s.build(false);
+    try s.begin();
+    try std.testing.expectEqualStrings(&s.record().?.values[0], m.get("secret").?);
+
+    // A build that fails leaves no flags behind.
+    try s.end();
+    var broken = parsed.lab;
+    broken.setup = "bogus command";
+    s.lab = broken;
+    try std.testing.expectError(error.GuestFailed, s.build(true));
+    try std.testing.expect(s.record() == null);
+
+    var runner = Runner.init(gpa, m.provider(), vm, parsed.lab);
+    try std.testing.expectError(error.FlagsNeedScenario, runner.prepare());
 }
