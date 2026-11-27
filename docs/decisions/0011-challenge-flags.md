@@ -19,7 +19,8 @@ WinLab is to grow capture-the-flag style security practice. Labs until now could
 
 - **It does not stop cheating on one's own computer.** The record is plain text, the lab file shows how each flag is planted and recovered, and the learner is root in the VM. New values per preparation only stop answers being passed from one person or attempt to another. A scoreboard would need the checking to happen somewhere the learner does not control.
 - There is no button in the window for new flags; use `winlab lab build <lab> <vm> --rebuild`.
-- There is no separate list of challenges: a challenge is opened from its lesson, like any lab.
+
+The window has a **Challenges** menu listing every lab with flags (owner decision, 2026-11-27, after looking for the first challenge among the learning paths). A challenge can also be opened from its lesson's Practice menu. Learning paths do not list challenges separately.
 
 ## Writing a challenge
 
@@ -37,6 +38,7 @@ WinLab is to grow capture-the-flag style security practice. Labs until now could
 - In the guest: no file and no journal entry held a plain flag; nothing found from the setup scripts themselves; the VM had no default route and a connection to the internet failed while the intranet site answered; the deleted program was recovered from `/proc/PID/exe`; after killing only the process, the timer started it again; containing by expiring the account instead of restoring its shell reached the same final state, apart from the shell.
 - Command line: wrong, correct (with surrounding spaces) and repeated answers; rebuild made five new values and the old answers were refused; selftest refused the lab.
 - Window: briefing, isolation notice, hints, a failed and a passed check, a wrong flag, all five flags, "Challenge complete", completion saved to progress, and "Prepare and start" after the record was removed.
+- Challenges menu (full course, from an unrelated lesson): the menu listed the challenge with its flag count and opened it. The "completed" suffix was not exercised.
 - Unit tests cover placeholders, the record, manifest rules and the build/submit/rebuild lifecycle with the mock provider.
 
 **Not tested:** a person solving it from the hints alone (the checks above used the reference commands), AlmaLinux or Windows challenges, and a Linux host.

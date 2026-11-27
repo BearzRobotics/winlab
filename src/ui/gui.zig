@@ -782,6 +782,7 @@ fn menuBar(a: *App) void {
 
     if (a.o.paths.len > 0) pathsMenu(a, m);
     if (a.o.shells.len > 0 or a.o.labs.len > 0 or a.o.lab_note.len > 0) practiceMenu(a, m);
+    if (hasChallenges(a.o.labs)) challengesMenu(a, m);
 
     if (dvui.menuItemLabel(@src(), "View", .{ .submenu = true }, .{})) |r| {
         var fw = dvui.floatingMenu(@src(), .{ .from = r }, .{});
@@ -1091,6 +1092,30 @@ fn pickerWindow(a: *App) void {
             _ = t.save(t.save_ctx, t.progress);
         };
         a.show_picker = false;
+    }
+}
+
+/// A challenge is a lab with flags.
+fn hasChallenges(labs: []const Lab) bool {
+    for (labs) |l| if (l.questions.len > 0) return true;
+    return false;
+}
+
+/// Every challenge, whichever lesson is open (the Practice menu only lists the current lesson's labs).
+fn challengesMenu(a: *App, m: *dvui.MenuWidget) void {
+    const r = dvui.menuItemLabel(@src(), "Challenges", .{ .submenu = true }, .{}) orelse return;
+    var fw = dvui.floatingMenu(@src(), .{ .from = r }, .{});
+    defer fw.deinit();
+
+    for (a.o.labs, 0..) |l, i| {
+        if (l.questions.len == 0) continue;
+        const done = if (a.o.tracking) |t| t.progress.get(l.id).status == .completed else false;
+        var buf: [300]u8 = undefined;
+        const label = std.fmt.bufPrint(&buf, "{s}   ({d} {s}{s})", .{ l.title, l.questions.len, if (l.questions.len == 1) "flag" else "flags", if (done) ", completed" else "" }) catch l.title;
+        if (dvui.menuItemLabel(@src(), label, .{}, .{ .expand = .horizontal, .id_extra = i }) != null) {
+            openLab(a, i);
+            m.close();
+        }
     }
 }
 

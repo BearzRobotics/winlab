@@ -23,6 +23,7 @@ Then pick a **learning path** (advice, not a lock) or browse all lessons.
 - **Search:** Ctrl+F. **Text size:** Ctrl+= and Ctrl+-. **Dark theme:** View menu.
 - **Progress** is saved per lesson; take a lesson's quiz to mark what you already know.
 - **Practice** menu: open a real Command Prompt or PowerShell, or start a lab for the current lesson.
+- **Challenges** menu: investigation labs where you find flags, whichever lesson is open.
 - **Copy** buttons on code blocks, and Lesson > Copy whole lesson, copy text out of the app.
 
 ## Labs (optional)
